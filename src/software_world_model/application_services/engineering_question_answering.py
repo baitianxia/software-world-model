@@ -36,7 +36,7 @@ ENGINEERING_QA_PROTOCOL = "ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3"
 ENGINEERING_QA_PACKAGE_SCHEMA = "QUESTION_EVIDENCE_PACKAGE@2"
 ENGINEERING_QA_VERIFICATION_REQUEST_SCHEMA = "ENGINEERING_QA_VERIFICATION_REQUEST@1"
 ENGINEERING_QA_BROKER_POLICY = "ENGINEERING_QA_SOURCE_BROKER@2"
-COMPILED_SOURCE_OPERATION_SCHEMA = "COMPILED_SOURCE_OPERATION@2"
+COMPILED_SOURCE_OPERATION_SCHEMA = "COMPILED_SOURCE_OPERATION@3"
 ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA = (
     "ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_LOCATOR@1"
 )
@@ -130,6 +130,53 @@ def _path_allowed(path: str, allowlist: tuple[str, ...]) -> bool:
     return any(
         prefix == "." or normalized == prefix or normalized.startswith(prefix + "/")
         for prefix in allowlist
+    )
+
+
+def explicit_question_source_scopes(
+    question: str,
+    source_allowlist: Sequence[str],
+) -> frozenset[str]:
+    """Return exact top-level Source scopes named by the original question.
+
+    Scope recognition is derived only from the immutable user question and
+    the sealed Request allowlist.  It can restrict SEARCH, but never grants a
+    model-supplied path or READ capability.
+    """
+
+    normalized = question.casefold()
+    available: set[str] = set()
+    for path in source_allowlist:
+        first, separator, _ = path.partition("/")
+        if separator or (first not in {"", "."} and "." not in first):
+            available.add(first.casefold())
+    return frozenset(
+        scope
+        for scope in available
+        if re.search(
+            rf"(?<![0-9a-z_.-]){re.escape(scope)}(?![0-9a-z_.-])",
+            normalized,
+        )
+    )
+
+
+def explicit_question_source_path_prefixes(
+    question: str,
+    source_allowlist: Sequence[str],
+) -> tuple[str, ...]:
+    """Map exact question scopes to their canonical sealed path prefixes."""
+
+    scopes = explicit_question_source_scopes(question, source_allowlist)
+    if not scopes:
+        return ()
+    return tuple(
+        sorted(
+            {
+                _canonical_relative_path(path)
+                for path in source_allowlist
+                if path.partition("/")[0].casefold() in scopes
+            }
+        )
     )
 
 
@@ -1955,6 +2002,8 @@ class CompiledSourceOperation:
     result_modality: str
     query: str | None
     search_path_scope: tuple[str, ...]
+    search_path_prefix_scope: tuple[str, ...]
+    search_fallback_offset: int
     path: str | None
     locator_reference: StableId | None
     maximum_files: int
@@ -1987,6 +2036,18 @@ class CompiledSourceOperation:
                     }
                 )
             )
+            or self.search_path_prefix_scope
+            != tuple(
+                sorted(
+                    {
+                        _canonical_relative_path(path)
+                        for path in self.search_path_prefix_scope
+                    }
+                )
+            )
+            or isinstance(self.search_fallback_offset, bool)
+            or not isinstance(self.search_fallback_offset, int)
+            or self.search_fallback_offset < 0
             or not isinstance(self.result_modality, str)
             or not _SAFE_REFERENCE.fullmatch(self.result_modality)
             or any(
@@ -2003,6 +2064,14 @@ class CompiledSourceOperation:
                     self.query is None
                     or self.path is not None
                     or self.locator_reference is not None
+                    or (
+                        self.search_path_scope
+                        and self.search_path_prefix_scope
+                    )
+                    or (
+                        self.search_path_scope
+                        and self.search_fallback_offset != 0
+                    )
                     or any(
                         PurePosixPath(candidate).suffix != ".java"
                         or PurePosixPath(candidate).stem != self.query
@@ -2013,6 +2082,14 @@ class CompiledSourceOperation:
                         )
                         for candidate in self.search_path_scope
                     )
+                    or any(
+                        not _path_allowed(candidate, self.source_allowlist)
+                        or not _path_allowed(
+                            candidate,
+                            self.evidence_class_allowlist,
+                        )
+                        for candidate in self.search_path_prefix_scope
+                    )
                 )
             )
             or (
@@ -2020,6 +2097,8 @@ class CompiledSourceOperation:
                 and (
                     self.query is not None
                     or self.search_path_scope
+                    or self.search_path_prefix_scope
+                    or self.search_fallback_offset != 0
                     or self.path is None
                     or self.locator_reference is None
                 )
@@ -2045,6 +2124,8 @@ class CompiledSourceOperation:
             "result_modality": self.result_modality,
             "query": self.query,
             "search_path_scope": self.search_path_scope,
+            "search_path_prefix_scope": self.search_path_prefix_scope,
+            "search_fallback_offset": self.search_fallback_offset,
             "path": self.path,
             "locator_reference": (
                 self.locator_reference.value if self.locator_reference else None
@@ -2475,6 +2556,8 @@ class SourceBroker:
             StableId, RequiredEvidencePathLocator
         ] | None = None,
         trusted_search_path_scope: Sequence[str] = (),
+        trusted_search_path_prefix_scope: Sequence[str] = (),
+        trusted_search_fallback_offset: int = 0,
     ) -> SourceBrokerCompilation:
         self._require_binding(request=request, proposal=proposal, ledger=ledger)
         self.registered_evidence_classes(request=request)
@@ -2560,6 +2643,18 @@ class SourceBroker:
         path: str | None = None
         locator_reference: StableId | None = None
         search_path_scope: tuple[str, ...] = ()
+        search_path_prefix_scope: tuple[str, ...] = ()
+        if (
+            isinstance(trusted_search_fallback_offset, bool)
+            or not isinstance(trusted_search_fallback_offset, int)
+            or trusted_search_fallback_offset < 0
+            or trusted_search_fallback_offset
+            > request.limits.maximum_source_files
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "trusted Source search fallback offset is outside the Turn file fuse",
+            )
         if trusted_search_path_scope:
             search_path_scope = tuple(
                 sorted(
@@ -2590,6 +2685,49 @@ class SourceBroker:
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "trusted Source search path scope is not bound to the exact proposal",
                 )
+        if trusted_search_path_prefix_scope:
+            search_path_prefix_scope = tuple(
+                sorted(
+                    {
+                        _canonical_relative_path(candidate)
+                        for candidate in trusted_search_path_prefix_scope
+                    }
+                )
+            )
+            expected_prefix_scope = explicit_question_source_path_prefixes(
+                request.original_question,
+                request.source_allowlist,
+            )
+            if (
+                source_operation is not SourceReadOperation.SEARCH
+                or proposal.evidence_class is not EngineeringEvidenceClass.SOURCE
+                or proposal.query is None
+                or search_path_scope
+                or len(search_path_prefix_scope)
+                != len(tuple(trusted_search_path_prefix_scope))
+                or len(search_path_prefix_scope) > 64
+                or search_path_prefix_scope != expected_prefix_scope
+                or any(
+                    not _path_allowed(candidate, request.source_allowlist)
+                    or not self._source_profile.permits(
+                        evidence_class=proposal.evidence_class,
+                        path=candidate,
+                    )
+                    for candidate in search_path_prefix_scope
+                )
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "trusted Source search prefix scope is not bound to the original question",
+                )
+        if (
+            trusted_search_fallback_offset
+            and source_operation is not SourceReadOperation.SEARCH
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "trusted Source search fallback offset cannot authorize a read",
+            )
         if source_operation in {SourceReadOperation.READ, SourceReadOperation.PARSE}:
             locator_reference = proposal.locator_reference
             locator = locator_catalog.get(locator_reference) if locator_reference else None
@@ -2750,6 +2888,8 @@ class SourceBroker:
             "result_modality": result_modality,
             "query": proposal.query,
             "search_path_scope": search_path_scope,
+            "search_path_prefix_scope": search_path_prefix_scope,
+            "search_fallback_offset": trusted_search_fallback_offset,
             "path": path,
             "locator_reference": (
                 locator_reference.value if locator_reference else None
@@ -2780,6 +2920,8 @@ class SourceBroker:
             result_modality=result_modality,
             query=proposal.query,
             search_path_scope=search_path_scope,
+            search_path_prefix_scope=search_path_prefix_scope,
+            search_fallback_offset=trusted_search_fallback_offset,
             path=path,
             locator_reference=locator_reference,
             maximum_files=operation_core["maximum_files"],
@@ -8699,4 +8841,6 @@ __all__ = [
     "VerificationRequestProposal",
     "WorldModelCognitionContext",
     "WorldModelCognitionProjector",
+    "explicit_question_source_path_prefixes",
+    "explicit_question_source_scopes",
 ]

@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -57,6 +57,13 @@ lead。current `@19/@11/@14` candidate 保留补证后的完整 correction basel
 candidate 新增 exact `draft_disclosed_fragments[]`，要求每个 fragment 逐字存在于 current Draft；reference=false 且 fragments 为空只能
 `NOT_DISCLOSED_IN_DRAFT`，audit-only 必须对应真实 stale reference 或 fragment。15 次 authority、4-Review、route、fallback、freshness、retry
 与 Production 边界不变。Agent/Tool/Model 73 项验证 PASS；下一项是相邻验证、文档门禁、提交与 fresh run-093，仍不等待 Provider 或重复人工授权。
+
+`FINDING-010-216/217 / run-093` 证明 Ark trusted 429 后 DeepSeek 已自动接管 28 个 call；当前不等待 Provider 或人工授权。Q1 的
+Reviewer fragment 只缺 inline-code backticks，Q2/Q5 则因普通 Search 未继承 original-question exact module scope且重复扫描 canonical
+fallback 前缀而丢失关键 implementation read。current `@21/@13/@16` 使用 backtick-only presentation normalization；
+`COMPILED_SOURCE_OPERATION@3` 密封 Broker-recomputed prefix scope 与 current-Turn fallback offset，只轮转 rank-3 fallback并记录 actual
+coverage。`56/64` Source fuse、1 个 reserved READ、route/fallback/Production 边界不变；六模块 `154/154`、相邻十五模块 `229/229` 与可信父计划门禁均 PASS，下一项是提交和
+fresh run-094。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

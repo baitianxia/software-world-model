@@ -1647,6 +1647,12 @@ class EngineeringAgentBoundaryRelevanceChallenge:
         )
 
 
+def _draft_disclosure_presentation_text(value: str) -> str:
+    """Ignore only Markdown inline-code delimiter bytes for fragment matching."""
+
+    return value.replace("`", "")
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentBoundaryRelevanceAssessment:
     challenge_id: StableId
@@ -1712,13 +1718,25 @@ class EngineeringAgentBoundaryRelevanceAssessment:
                 ErrorCode.INVALID_ARGUMENT,
                 "boundary relevance Draft disclosed fragments exceed the maximum",
             )
-        if len(set(disclosed_fragments)) != len(disclosed_fragments):
+        presentation_normalized_fragments = tuple(
+            _draft_disclosure_presentation_text(item)
+            for item in disclosed_fragments
+        )
+        if any(not item.strip() for item in presentation_normalized_fragments):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
-                "boundary relevance Draft disclosed fragments must be unique",
+                "boundary relevance Draft disclosed fragments cannot contain only inline-code delimiters",
+            )
+        if (
+            len(set(presentation_normalized_fragments))
+            != len(presentation_normalized_fragments)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "boundary relevance Draft disclosed fragments must be presentation-unique",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@3",
+            "schema": "ENGINEERING_AGENT_BOUNDARY_RELEVANCE_ASSESSMENT@4",
             "challenge_id": challenge_id.value,
             "user_requirement": _bounded_text(
                 user_requirement,
@@ -2289,8 +2307,12 @@ def engineering_agent_boundary_relevance_assessment_matches_challenge(
     draft_content: str,
 ) -> bool:
     disclosed = bool(assessment.draft_disclosed_fragments)
+    normalized_draft_content = _draft_disclosure_presentation_text(
+        draft_content
+    )
     if any(
-        fragment not in draft_content
+        _draft_disclosure_presentation_text(fragment)
+        not in normalized_draft_content
         for fragment in assessment.draft_disclosed_fragments
     ):
         return False
@@ -3970,7 +3992,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
         review_id = self._new_id("agent_review")
         core = {
-            "schema": "ENGINEERING_AGENT_REVIEW@2",
+            "schema": "ENGINEERING_AGENT_REVIEW@3",
             "review_id": review_id.value,
             "turn_id": request.turn_id.value,
             "work_state_digest": work_state.digest.value,

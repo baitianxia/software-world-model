@@ -2359,10 +2359,20 @@ class Service {
             ledger=ledger,
             locator_catalog={},
             usage=EngineeringQuestionResourceUsage(),
+            trusted_search_path_prefix_scope=(
+                "mall-portal/src/main/java",
+            ),
+            trusted_search_fallback_offset=17,
         )
         self.assertEqual(authorized.decision.status.value, "AUTHORIZED")
         self.assertEqual(authorized.operation.query, "generateOrder")
         self.assertEqual(authorized.operation.maximum_files, 56)
+        self.assertEqual(
+            authorized.operation.search_path_prefix_scope,
+            ("mall-portal/src/main/java",),
+        )
+        self.assertEqual(authorized.operation.search_fallback_offset, 17)
+        authorized.operation.validate_identity()
 
     def test_broker_seals_only_exact_canonical_trusted_search_path_scope(self):
         req = request()

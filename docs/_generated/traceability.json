@@ -3940,6 +3940,32 @@
       "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
+  "FINDING-010-216": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-216.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-217": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-217.md",
+    "code": [
+      "src/software_world_model/application_services/engineering_question_answering.py",
+      "src/software_world_model/application_services/engineering_question_cognition.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/interface/engineering_qa_source.py"
+    ],
+    "tests": [
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_question_answering.py",
+      "tests/test_engineering_question_cognition.py",
+      "tests/test_conversational_engineering_tools.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

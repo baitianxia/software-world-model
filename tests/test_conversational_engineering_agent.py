@@ -8,6 +8,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     ApplicationOwnedEngineeringAgentTurnExecutor,
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
+    EngineeringAgentBoundaryRelevanceChallenge,
+    EngineeringAgentBoundaryRelevanceChallengeKind,
     EngineeringAgentClaimProposal,
     EngineeringAgentClaimSemanticScope,
     EngineeringAgentDeliveryAuthorization,
@@ -36,6 +38,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkStateProposal,
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
+    engineering_agent_boundary_relevance_assessment_matches_challenge,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_evidence_boundary_challenges,
 )
@@ -415,6 +418,66 @@ class ReplanningAnswerDriver:
 
 
 class ConversationalEngineeringAgentTests(unittest.TestCase):
+    def test_boundary_disclosure_fragments_ignore_only_backtick_presentation(
+        self,
+    ) -> None:
+        challenge = EngineeringAgentBoundaryRelevanceChallenge.create(
+            kind=(
+                EngineeringAgentBoundaryRelevanceChallengeKind
+                .BOUNDARY_MATERIALITY
+            ),
+            boundary_observation_id=StableId("observation_" + "8" * 32),
+            resolving_support_observation_ids=(),
+            draft_declared_boundary_reference=True,
+        )
+        assessment = EngineeringAgentBoundaryRelevanceAssessment.create(
+            challenge_id=challenge.challenge_id,
+            user_requirement="Explain the service boundary.",
+            boundary_scope="Runtime effects are outside the current evidence.",
+            draft_disclosed_fragments=(
+                "getResourceList cannot establish consumer refresh.",
+            ),
+            disposition=(
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                .MATERIAL_TO_USER_REQUEST
+            ),
+            finding_code=None,
+        )
+
+        self.assertTrue(
+            engineering_agent_boundary_relevance_assessment_matches_challenge(
+                challenge,
+                assessment,
+                draft_content=(
+                    "`getResourceList` cannot establish consumer refresh."
+                ),
+            )
+        )
+        self.assertFalse(
+            engineering_agent_boundary_relevance_assessment_matches_challenge(
+                challenge,
+                assessment,
+                draft_content=(
+                    "`getResourceList` does establish consumer refresh."
+                ),
+            )
+        )
+        with self.assertRaises(DomainError):
+            EngineeringAgentBoundaryRelevanceAssessment.create(
+                challenge_id=challenge.challenge_id,
+                user_requirement="Explain the service boundary.",
+                boundary_scope="Runtime effects are outside the current evidence.",
+                draft_disclosed_fragments=(
+                    "`getResourceList` cannot establish consumer refresh.",
+                    "getResourceList cannot establish consumer refresh.",
+                ),
+                disposition=(
+                    EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                    .MATERIAL_TO_USER_REQUEST
+                ),
+                finding_code=None,
+            )
+
     def test_audit_only_relevance_assessment_requires_global_no_evidence_finding(
         self,
     ) -> None:

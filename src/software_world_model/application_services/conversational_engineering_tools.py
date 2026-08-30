@@ -67,6 +67,7 @@ from .engineering_question_answering import (
     SourceReadOperation,
     WorldModelCognitionContext,
     WorldModelCognitionProjector,
+    explicit_question_source_path_prefixes,
 )
 
 
@@ -229,6 +230,7 @@ class _TurnToolState:
     cognition_source_search_path_scopes: dict[str, tuple[str, ...]] = field(
         default_factory=dict
     )
+    source_search_fallback_offset: int = 0
     world_model_receipt_recorded: bool = False
     lock: Lock = field(default_factory=Lock)
 
@@ -678,6 +680,21 @@ class EngineeringAgentEvidenceToolAdapter:
                 if evidence_class is EngineeringEvidenceClass.SOURCE
                 else ()
             )
+            trusted_search_path_prefix_scope = (
+                explicit_question_source_path_prefixes(
+                    state.evidence_request.original_question,
+                    state.evidence_request.source_allowlist,
+                )
+                if evidence_class is EngineeringEvidenceClass.SOURCE
+                and not trusted_search_path_scope
+                else ()
+            )
+            trusted_search_fallback_offset = (
+                state.source_search_fallback_offset
+                if evidence_class is EngineeringEvidenceClass.SOURCE
+                and not trusted_search_path_scope
+                else 0
+            )
         else:
             arguments = _arguments(request, expected=("locator_reference",))
             try:
@@ -709,6 +726,8 @@ class EngineeringAgentEvidenceToolAdapter:
             proposal_operation = InvestigationOperation.READ
             query = None
             trusted_search_path_scope = ()
+            trusted_search_path_prefix_scope = ()
+            trusted_search_fallback_offset = 0
 
         pre_proposal_ledger = state.ledger
         proposal = InvestigationStepProposal.create(
@@ -739,6 +758,12 @@ class EngineeringAgentEvidenceToolAdapter:
                 state.required_path_locator_catalog
             ),
             trusted_search_path_scope=trusted_search_path_scope,
+            trusted_search_path_prefix_scope=(
+                trusted_search_path_prefix_scope
+            ),
+            trusted_search_fallback_offset=(
+                trusted_search_fallback_offset
+            ),
         )
         state.next_step_index += 1
         proposal_details = {
@@ -768,6 +793,29 @@ class EngineeringAgentEvidenceToolAdapter:
                     ).value,
                     "search_path_scope_grants_read_authority": "false",
                 }
+            )
+        if trusted_search_path_prefix_scope:
+            proposal_details.update(
+                {
+                    "search_path_prefix_scope_origin": (
+                        "ORIGINAL_QUESTION_EXPLICIT_SOURCE_SCOPE"
+                    ),
+                    "search_path_prefix_scope_count": str(
+                        len(trusted_search_path_prefix_scope)
+                    ),
+                    "search_path_prefix_scope_digest": digest_of(
+                        [
+                            "ENGINEERING_AGENT_QUESTION_SOURCE_SEARCH_PREFIX_SCOPE@1",
+                            state.evidence_request.original_question,
+                            trusted_search_path_prefix_scope,
+                        ]
+                    ).value,
+                    "search_path_prefix_scope_grants_read_authority": "false",
+                }
+            )
+        if proposal_operation is InvestigationOperation.SEARCH:
+            proposal_details["search_fallback_offset"] = str(
+                trusted_search_fallback_offset
             )
         if locator_reference is not None:
             proposal_details["locator_reference"] = locator_reference.value
@@ -867,6 +915,33 @@ class EngineeringAgentEvidenceToolAdapter:
             operation=compiled,
             result=result,
         )
+        if (
+            compiled.operation is SourceReadOperation.SEARCH
+            and compiled.evidence_class is EngineeringEvidenceClass.SOURCE
+        ):
+            fallback_examined = dict(result.coverage).get(
+                "fallback_examined_file_count",
+                "0",
+            )
+            try:
+                fallback_examined_count = int(fallback_examined)
+            except (TypeError, ValueError) as exc:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source search fallback coverage is malformed",
+                ) from exc
+            if (
+                fallback_examined_count < 0
+                or fallback_examined_count > result.files_read
+                or state.source_search_fallback_offset
+                + fallback_examined_count
+                > state.evidence_request.limits.maximum_source_files
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source search fallback coverage exceeds the Turn file fuse",
+                )
+            state.source_search_fallback_offset += fallback_examined_count
         revalidation_option = (
             state.revalidation_options_by_reference.get(locator_reference)
             if locator_reference is not None
@@ -1060,6 +1135,20 @@ def _append_operation(
                 else "NONE"
             ),
             "search_path_scope_count": str(len(operation.search_path_scope)),
+            "search_path_prefix_scope_digest": (
+                digest_of(
+                    [
+                        "ENGINEERING_AGENT_COMPILED_SOURCE_SEARCH_PREFIX_SCOPE@1",
+                        operation.search_path_prefix_scope,
+                    ]
+                ).value
+                if operation.search_path_prefix_scope
+                else "NONE"
+            ),
+            "search_path_prefix_scope_count": str(
+                len(operation.search_path_prefix_scope)
+            ),
+            "search_fallback_offset": str(operation.search_fallback_offset),
         },
         maximum_bytes=maximum_bytes,
     )

@@ -419,10 +419,14 @@ class LocalGitRetrievalWorker:
         truncated = False
         failure_code: str | None = None
         allowed_entry_count = len(entries)
-        candidate_ordering = "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1"
+        candidate_ordering = (
+            "QUERY_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@2"
+        )
         search_scope_coverage: dict[str, str] = {
             "search_path_scope_count": "0",
             "search_path_scope_digest": "NONE",
+            "search_path_prefix_scope_count": "0",
+            "search_path_prefix_scope_digest": "NONE",
             "search_scope": "AUTHORIZED_EVIDENCE_CLASS_ALLOWLIST",
         }
         if operation.search_path_scope:
@@ -443,9 +447,11 @@ class LocalGitRetrievalWorker:
                         operation.search_path_scope,
                     ]
                 ).value,
+                "search_path_prefix_scope_count": "0",
+                "search_path_prefix_scope_digest": "NONE",
                 "search_scope": "TRUSTED_COGNITION_TARGET_PATHS",
             }
-            candidate_ordering = "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@1"
+            candidate_ordering = "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@2"
             if missing_paths:
                 return RetrievalResult.create(
                     operation=operation,
@@ -458,6 +464,10 @@ class LocalGitRetrievalWorker:
                         operation,
                         {
                             "allowed_entry_count": str(allowed_entry_count),
+                            "scoped_entry_count": str(
+                                len(operation.search_path_scope)
+                                - len(missing_paths)
+                            ),
                             "examined_file_count": "0",
                             "match_count": "0",
                             "unsafe_entry_count": "0",
@@ -472,6 +482,11 @@ class LocalGitRetrievalWorker:
                                 ]
                             ).value,
                             "candidate_ordering": candidate_ordering,
+                            "search_fallback_offset": str(
+                                operation.search_fallback_offset
+                            ),
+                            "search_fallback_offset_applied": "0",
+                            "fallback_examined_file_count": "0",
                             **search_scope_coverage,
                         },
                     ),
@@ -480,7 +495,30 @@ class LocalGitRetrievalWorker:
             entries = tuple(
                 entries_by_path[path] for path in operation.search_path_scope
             )
-        ranked_entries = tuple(
+        elif operation.search_path_prefix_scope:
+            entries = tuple(
+                entry
+                for entry in entries
+                if _allowed(entry.path, operation.search_path_prefix_scope)
+            )
+            search_scope_coverage = {
+                "search_path_scope_count": "0",
+                "search_path_scope_digest": "NONE",
+                "search_path_prefix_scope_count": str(
+                    len(operation.search_path_prefix_scope)
+                ),
+                "search_path_prefix_scope_digest": digest_of(
+                    [
+                        "ENGINEERING_QA_TRUSTED_SOURCE_SEARCH_PREFIX_SCOPE@1",
+                        operation.search_path_prefix_scope,
+                    ]
+                ).value,
+                "search_scope": "ORIGINAL_QUESTION_EXPLICIT_SOURCE_PREFIXES",
+            }
+            candidate_ordering = (
+                "QUESTION_PREFIX_QUERY_PATH_THEN_ROTATING_CANONICAL_FALLBACK@1"
+            )
+        ranked_candidates = tuple(
             sorted(
                 (
                     (_search_entry_rank(entry.path, operation.query), entry)
@@ -488,6 +526,22 @@ class LocalGitRetrievalWorker:
                 ),
                 key=lambda candidate: candidate[0],
             )
+        )
+        path_candidates = tuple(
+            candidate for candidate in ranked_candidates if candidate[0][0] <= 2
+        )
+        fallback_candidates = tuple(
+            candidate for candidate in ranked_candidates if candidate[0][0] == 3
+        )
+        fallback_offset_applied = (
+            operation.search_fallback_offset % len(fallback_candidates)
+            if fallback_candidates
+            else 0
+        )
+        ranked_entries = (
+            *path_candidates,
+            *fallback_candidates[fallback_offset_applied:],
+            *fallback_candidates[:fallback_offset_applied],
         )
         folded_query = operation.query.casefold()
         exact_stem_candidate_count = sum(
@@ -501,6 +555,7 @@ class LocalGitRetrievalWorker:
         filename_content_match_count = 0
         filename_unsafe_count = 0
         filename_early_stop = False
+        fallback_examined_file_count = 0
         for rank, entry in ranked_entries:
             filename_candidate = rank[0] <= 1
             if entry.object_type != "blob" or entry.mode not in _REGULAR_GIT_MODES:
@@ -527,6 +582,8 @@ class LocalGitRetrievalWorker:
                 )
             bytes_read += len(raw)
             files_read += 1
+            if rank[0] == 3:
+                fallback_examined_file_count += 1
             if b"\x00" in raw:
                 binary_entries += 1
                 if filename_candidate:
@@ -599,6 +656,7 @@ class LocalGitRetrievalWorker:
                 operation,
                 {
                     "allowed_entry_count": str(allowed_entry_count),
+                    "scoped_entry_count": str(len(entries)),
                     "examined_file_count": str(files_read),
                     "match_count": str(len(items)),
                     "unsafe_entry_count": str(unsafe_entries),
@@ -615,6 +673,15 @@ class LocalGitRetrievalWorker:
                         ["ENGINEERING_QA_LITERAL_QUERY@1", operation.query]
                     ).value,
                     "candidate_ordering": candidate_ordering,
+                    "search_fallback_offset": str(
+                        operation.search_fallback_offset
+                    ),
+                    "search_fallback_offset_applied": str(
+                        fallback_offset_applied
+                    ),
+                    "fallback_examined_file_count": str(
+                        fallback_examined_file_count
+                    ),
                     **search_scope_coverage,
                 },
             ),

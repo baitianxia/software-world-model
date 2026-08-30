@@ -638,7 +638,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1080,7 +1080,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1929,7 +1929,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2354,7 +2354,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16",
         )
         self.assertIsNone(
             final_preflight["format_repair"][

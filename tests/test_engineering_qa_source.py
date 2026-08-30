@@ -98,6 +98,8 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         query=None,
         path=None,
         search_path_scope=(),
+        search_path_prefix_scope=(),
+        search_fallback_offset=0,
         maximum_source_bytes=4096,
         maximum_files=16,
         evidence_class=EngineeringEvidenceClass.SOURCE,
@@ -131,6 +133,8 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             ),
             "query": query,
             "search_path_scope": tuple(search_path_scope),
+            "search_path_prefix_scope": tuple(search_path_prefix_scope),
+            "search_fallback_offset": search_fallback_offset,
             "path": path,
             "locator_reference": (
                 locator_reference.value if locator_reference else None
@@ -165,6 +169,8 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             ),
             query=query,
             search_path_scope=tuple(search_path_scope),
+            search_path_prefix_scope=tuple(search_path_prefix_scope),
+            search_fallback_offset=search_fallback_offset,
             path=path,
             locator_reference=locator_reference,
             maximum_files=maximum_files,
@@ -306,7 +312,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         coverage = dict(result.coverage)
         self.assertEqual(
             coverage["candidate_ordering"],
-            "QUERY_PATH_RELEVANCE_THEN_CANONICAL@1",
+            "QUERY_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@2",
         )
         self.assertEqual(coverage["exact_stem_candidate_count"], "1")
         self.assertEqual(coverage["filename_candidate_count"], "1")
@@ -469,7 +475,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         self.assertEqual(coverage["search_path_scope_count"], "1")
         self.assertEqual(
             coverage["candidate_ordering"],
-            "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@1",
+            "TRUSTED_TARGET_PATH_SCOPE_THEN_CANONICAL@2",
         )
 
     def test_trusted_target_path_scope_missing_from_exact_tree_fails_closed(self):
@@ -521,6 +527,98 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         self.assertEqual(
             coverage["search_scope"],
             "TRUSTED_COGNITION_TARGET_PATHS",
+        )
+
+    def test_question_prefix_scope_rotates_only_the_canonical_fallback_cohort(
+        self,
+    ) -> None:
+        module_a = self.repository / "module-a/src/main/java/example"
+        module_b = self.repository / "module-b/src/main/java/example"
+        module_a.mkdir(parents=True)
+        module_b.mkdir(parents=True)
+        for index in range(70):
+            content = (
+                "final class Fixture { void needleSecond() {} }\n"
+                if index == 62
+                else "final class Fixture {}\n"
+            )
+            (module_a / f"AFile{index:02d}.java").write_text(
+                content,
+                encoding="utf-8",
+            )
+        (module_b / "AFile00.java").write_text(
+            "final class WrongModule { void needleSecond() {} }\n",
+            encoding="utf-8",
+        )
+        self.git("add", "module-a", "module-b")
+        self.git("commit", "-q", "-m", "rotating scoped search fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-rotating-prefix-scope-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: (
+                    "module-a/src/main/java",
+                    "module-b/src/main/java",
+                ),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+        )
+        allowlist = (
+            "module-a/src/main/java",
+            "module-b/src/main/java",
+        )
+        prefix_scope = ("module-a/src/main/java",)
+
+        first = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=allowlist,
+                query="absentFirst",
+                search_path_prefix_scope=prefix_scope,
+                maximum_files=56,
+                maximum_source_bytes=64_000,
+            )
+        )
+        second = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=allowlist,
+                query="needleSecond",
+                search_path_prefix_scope=prefix_scope,
+                search_fallback_offset=56,
+                maximum_files=7,
+                maximum_source_bytes=64_000,
+            )
+        )
+
+        self.assertEqual(first.files_read, 56)
+        self.assertEqual(
+            dict(first.coverage)["fallback_examined_file_count"],
+            "56",
+        )
+        self.assertEqual(second.files_read, 7)
+        self.assertEqual(len(second.items), 1)
+        self.assertEqual(
+            second.items[0].path,
+            "module-a/src/main/java/example/AFile62.java",
+        )
+        coverage = dict(second.coverage)
+        self.assertEqual(coverage["allowed_entry_count"], "71")
+        self.assertEqual(coverage["scoped_entry_count"], "70")
+        self.assertEqual(coverage["search_fallback_offset_applied"], "56")
+        self.assertEqual(coverage["fallback_examined_file_count"], "7")
+        self.assertEqual(
+            coverage["search_scope"],
+            "ORIGINAL_QUESTION_EXPLICIT_SOURCE_PREFIXES",
         )
 
     def test_worker_rejects_another_repository_identity(self):

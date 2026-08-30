@@ -206,6 +206,11 @@ Clarification 保持；Q1/Q2/Q5 因同一 resolved Search diagnostic 被反复�
 current `@20/@12/@15` 要求 relevance assessment 返回可逐字核验的 exact Draft fragments，并机械拒绝未绑定、未披露的 no-op audit-only；
 Agent/Tool/Model 73 tests 已 PASS，fresh run-093 待验证。run-092 仍不取得质量或 MVP PASS。
 
+`FINDING-010-216/217 / run-093` 密封 Ark 19、DeepSeek 28；3 个 Ark sealed 429 后备用路线自动激活，无重复人工授权。Q1 的 exact
+fragment 只因 inline-code backticks 展示差异被拒；Q2/Q5 的 ordinary Source Search 未继承显式 module scope，并从同一 canonical fallback
+前缀重复扫描。current `@21/@13/@16` 只忽略 backtick delimiter presentation，`COMPILED_SOURCE_OPERATION@3` 由 Broker 重算 prefix scope
+并轮转 rank-3 fallback；`56/64` fuse和 reserved READ 不变，六模块 `154/154`、相邻十五模块 `229/229` PASS，fresh run-094 待验证。run-093 仍不取得质量或 MVP PASS。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

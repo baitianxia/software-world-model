@@ -827,6 +827,66 @@ class TwoSearchThenReadDriver:
         )
 
 
+class ScopedRotatingTwoSearchThenReadDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls <= 2:
+            query = "absentFirst" if self.calls == 1 else "needleSecond"
+            return proposal(
+                invocation,
+                call_ref=f"scoped-rotating-search-{self.calls}",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", EngineeringEvidenceClass.SOURCE.value),
+                        ("query", query),
+                    ),
+                    evidence_need=f"inspect {query} inside the requested module",
+                ),
+            )
+        if self.calls == 3:
+            locator = next(
+                observation.citation_refs[0]
+                for observation in reversed(invocation.observations)
+                if observation.operation
+                is EngineeringAgentToolOperation.SOURCE_SEARCH
+                and observation.citation_refs
+            )
+            return proposal(
+                invocation,
+                call_ref="scoped-rotating-read",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(("locator_reference", locator),),
+                    evidence_need="read the exact locator found after bounded rotation",
+                ),
+            )
+        read_support = tuple(
+            observation.observation_id
+            for observation in invocation.observations
+            if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+            and observation.disposition
+            is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref="scoped-rotating-answer",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="目标实现已在问题指定模块内定位并精确读取。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="目标实现来自问题指定模块。",
+                        support_observation_ids=read_support,
+                    ),
+                ),
+            ),
+        )
+
+
 class RawPathReadDriver:
     def propose(self, invocation):
         return proposal(
@@ -1686,6 +1746,104 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             )
         )
         self.assertIn("LoginService.java", support[-1].content)
+
+    def test_explicit_question_scope_rotates_fallback_and_preserves_read_slot(
+        self,
+    ) -> None:
+        module_a = self.repository / "module-a/src/main/java/example"
+        module_b = self.repository / "module-b/src/main/java/example"
+        module_a.mkdir(parents=True)
+        module_b.mkdir(parents=True)
+        for index in range(70):
+            content = (
+                "final class Fixture { void needleSecond() {} }\n"
+                if index == 62
+                else "final class Fixture {}\n"
+            )
+            (module_a / f"AFile{index:02d}.java").write_text(
+                content,
+                encoding="utf-8",
+            )
+        (module_b / "AFile00.java").write_text(
+            "final class WrongModule { void needleSecond() {} }\n",
+            encoding="utf-8",
+        )
+        self.git("add", "module-a", "module-b")
+        self.git("commit", "-q", "-m", "adapter rotating scope fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-agent-rotating-scope-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: (
+                    "module-a/src/main/java",
+                    "module-b/src/main/java",
+                ),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+            },
+        )
+        self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name="fixture",
+            response_language="zh-CN",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.profile.profile_ref,
+            source_profile_digest=self.profile.profile_digest,
+            world_model_read_authority_digest=self.world_authority,
+            source_allowlist=(
+                "README.md",
+                "module-a/src/main/java",
+                "module-b/src/main/java",
+            ),
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.profile,
+        )
+        driver = ScopedRotatingTwoSearchThenReadDriver()
+        reviewer = RecordingReviewer()
+        service = self.service(driver, reviewer)
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="module-a 中目标调用如何实现？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(driver.calls, 4)
+        package = reviewer.requests[-1].package
+        second_search = next(
+            observation
+            for observation in package.support_observations
+            if observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        )
+        retrieval = json.loads(second_search.content)["retrieval_result"]
+        self.assertEqual(retrieval["files_read"], 7)
+        self.assertTrue(
+            retrieval["items"][0]["locator"].startswith(
+                "module-a/src/main/java/example/AFile62.java:L"
+            )
+        )
+        self.assertEqual(
+            retrieval["coverage"]["search_fallback_offset_applied"],
+            "56",
+        )
+        self.assertEqual(
+            retrieval["coverage"]["search_scope"],
+            "ORIGINAL_QUESTION_EXPLICIT_SOURCE_PREFIXES",
+        )
+        final_usage = dict(
+            package.support_observations[-1]
+            .authority_receipt.ledger_entries[-1]
+            .details
+        )
+        self.assertEqual(final_usage["source_files"], "64")
+        self.assertNotIn("module-b", second_search.content)
 
     def test_configuration_rejects_allowlist_that_contains_resources(self) -> None:
         with self.assertRaises(DomainError):

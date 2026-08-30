@@ -21,6 +21,7 @@ from software_world_model.application_services.engineering_question_answering im
     CognitionItem,
     EngineeringQuestionRequest,
     WorldModelCognitionContext,
+    explicit_question_source_scopes,
 )
 from software_world_model.application_services.structure_read_bundle import (
     StructureSnapshotReadBundle,
@@ -1032,7 +1033,7 @@ class MultiProfileWorldModelCognitionProjector:
             manifest=self.manifest,
         )
         required = set(assessment.required_dimensions)
-        explicit_source_scopes = _explicit_question_source_scopes(
+        explicit_source_scopes = explicit_question_source_scopes(
             request.original_question,
             request.source_allowlist,
         )
@@ -1594,26 +1595,6 @@ def _relation_endpoint_root_ids(item: CognitionItem) -> tuple[str, ...]:
     )
     return tuple(
         dict.fromkeys(root for root in roots if isinstance(root, str) and root)
-    )
-
-
-def _explicit_question_source_scopes(
-    question: str,
-    source_allowlist: Sequence[str],
-) -> frozenset[str]:
-    normalized = question.casefold()
-    available: set[str] = set()
-    for path in source_allowlist:
-        first, separator, _ = path.partition("/")
-        if separator or (first not in {"", "."} and "." not in first):
-            available.add(first.casefold())
-    return frozenset(
-        scope
-        for scope in available
-        if re.search(
-            rf"(?<![0-9a-z_.-]){re.escape(scope)}(?![0-9a-z_.-])",
-            normalized,
-        )
     )
 
 

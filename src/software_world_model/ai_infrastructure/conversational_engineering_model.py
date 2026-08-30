@@ -93,20 +93,20 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@20"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@21"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@20"
+    "conversational-engineering-agent-no-tools-prompt@21"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@20"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@12"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@21"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@13"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@15"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@16"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@7"
+    "engineering-agent-independent-review-proposal@8"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -648,18 +648,22 @@ For every boundary_relevance_challenge, copy disposition only from that
 challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
 disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
 For every boundary relevance assessment, return draft_disclosed_fragments as
-the exact, non-empty, unique substrings copied from draft.content that actually
-disclose the challenged Boundary. Use the smallest complete clause or sentence
-that demonstrates each disclosure; do not copy a generic word shared with an
-unrelated statement. Return an empty array when no challenged Boundary fragment
-is disclosed. The Application verifies every string byte-for-byte against the
-Draft. NOT_DISCLOSED_IN_DRAFT requires both no structured Boundary reference and
-an empty fragment array. MATERIAL_TO_USER_REQUEST requires both the structured
-Boundary reference and at least one exact disclosed fragment. An audit-only
-disposition requires at least one stale structured Boundary reference or at
-least one exact disclosed fragment; when both are absent, audit-only is a no-op
-Finding and is forbidden. Every audit-only Finding must identify removal of at
-least one such reference or exact fragment.
+the exact, non-empty, presentation-unique substrings copied from draft.content
+that actually disclose the challenged Boundary. Inline Markdown backtick
+delimiters may be omitted or retained; after removing only those delimiter
+bytes, every other character, word, punctuation mark, and order must remain
+verbatim. Use the smallest complete clause or sentence that demonstrates each
+disclosure; do not copy a generic word shared with an unrelated statement.
+Return an empty array when no challenged Boundary fragment is disclosed. The
+Application verifies every normalized string against the Draft and rejects
+semantic paraphrase, invented text, or duplicates that differ only by
+backticks. NOT_DISCLOSED_IN_DRAFT requires both no structured Boundary reference
+and an empty fragment array. MATERIAL_TO_USER_REQUEST requires both the
+structured Boundary reference and at least one exact disclosed fragment. An
+audit-only disposition requires at least one stale structured Boundary
+reference or at least one exact disclosed fragment; when both are absent,
+audit-only is a no-op Finding and is forbidden. Every audit-only Finding must
+identify removal of at least one such reference or exact fragment.
 Every authored string field must contain non-whitespace text and must not begin
 or end with whitespace. Exact sealed values that the input requires you to copy
 remain exact.
