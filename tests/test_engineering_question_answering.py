@@ -2266,6 +2266,104 @@ class Service {
         self.assertEqual(no_locator.decision.status.value, "AUTHORIZED")
         self.assertEqual(no_locator.operation.maximum_files, 1)
 
+    def test_broker_rejects_allowlist_path_segment_before_source_scan(self):
+        profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-module-source-profile:1",
+            binding_id=sid("binding", "2"),
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: (
+                    "mall-portal/src/main/java",
+                ),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("pom.xml",),
+            },
+        )
+        req = EngineeringQuestionRequest.create(
+            request_ref="path-segment-query",
+            original_question="How does mall-portal create an order?",
+            response_language="en",
+            repository_id=sid("repository", "1"),
+            binding_id=profile.binding_id,
+            repository_revision=REVISION,
+            source_profile_ref=profile.profile_ref,
+            source_profile_digest=profile.profile_digest,
+            world_model_read_authority_digest=Digest("sha256:" + "3" * 64),
+            source_allowlist=("mall-portal/src/main/java", "pom.xml"),
+        )
+        ledger = EvidenceLedger.start(
+            request=req,
+            cognition=CognitionProjector().project(request=req),
+        )
+        input_stub = type(
+            "InitialInput",
+            (),
+            {
+                "ledger": ledger,
+                "attempt_id": sid("investigation_attempt", "6"),
+                "role_context_id": sid("role_context", "7"),
+                "step_index": 1,
+                "request": req,
+            },
+        )()
+        broker = SourceBroker(source_profile=profile)
+
+        path_query = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="mall-portal",
+        )
+        rejected = broker.compile(
+            request=req,
+            proposal=path_query,
+            ledger=ledger,
+            locator_catalog={},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+
+        self.assertEqual(rejected.decision.status.value, "REJECTED")
+        self.assertEqual(
+            rejected.decision.reason_code,
+            "SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT",
+        )
+        self.assertIsNone(rejected.operation)
+
+        file_name_query = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.BUILD_CONFIGURATION,
+            query="pom.xml",
+        )
+        file_name_rejected = broker.compile(
+            request=req,
+            proposal=file_name_query,
+            ledger=ledger,
+            locator_catalog={},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+        self.assertEqual(file_name_rejected.decision.status.value, "REJECTED")
+        self.assertEqual(
+            file_name_rejected.decision.reason_code,
+            "SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT",
+        )
+        self.assertIsNone(file_name_rejected.operation)
+
+        content_query = step_proposal(
+            input_stub,
+            operation=InvestigationOperation.SEARCH,
+            evidence_class=EngineeringEvidenceClass.SOURCE,
+            query="generateOrder",
+        )
+        authorized = broker.compile(
+            request=req,
+            proposal=content_query,
+            ledger=ledger,
+            locator_catalog={},
+            usage=EngineeringQuestionResourceUsage(),
+        )
+        self.assertEqual(authorized.decision.status.value, "AUTHORIZED")
+        self.assertEqual(authorized.operation.query, "generateOrder")
+        self.assertEqual(authorized.operation.maximum_files, 56)
+
     def test_broker_seals_only_exact_canonical_trusted_search_path_scope(self):
         req = request()
         cognition = CognitionProjector().project(request=req)

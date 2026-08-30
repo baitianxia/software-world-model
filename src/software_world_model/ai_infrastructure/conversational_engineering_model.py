@@ -132,6 +132,9 @@ _TERMINAL_SOURCE_DENIAL_REASONS = frozenset(
         "SOURCE_BYTE_FUSE_EXHAUSTED",
     }
 )
+_SOURCE_REPLAN_REQUIRED_REJECTION_REASONS = frozenset(
+    {"SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT"}
+)
 _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS = 32
 _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
 _WORLD_MODEL_SUPPORT_SCHEMA = "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4"
@@ -349,7 +352,13 @@ never a semantic description or natural-language search request. Select the
 literal for the unread target resource: when locating a declaration or
 implementation, prefer its exact source-native type or member identifier from
 current cognition instead of a caller expression found only in an already-read
-resource. When investigation_policy.first_source_search_requires_cognition_target_copy
+resource. A module, directory, or file-name path segment is navigation metadata, not evidence
+that the same text occurs in file content; never use an authorized path segment
+as a content query merely because it names the requested scope. A sealed
+SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT Broker rejection executes no Worker
+scan and obtains no evidence. When Source remains legal and completion_policy
+still requires a follow-up, choose a different content literal rather than
+returning a premature LIMITATION. When investigation_policy.first_source_search_requires_cognition_target_copy
 is true, the first Source search is a closed navigation step: copy query exactly
 from tool_reference_policy.cognition_source_search_target_projection.options[].literal
 and from SOURCE_SEARCH.value_constraints.allowed_exact_values. Do not shorten a
@@ -3577,8 +3586,8 @@ def _tool_contract_view(
             ),
             "query": (
                 "one new short case-sensitive literal token expected verbatim in selected "
-                "evidence; semantic descriptions and natural-language search requests "
-                "are forbidden"
+                "evidence; semantic descriptions, natural-language search requests, and "
+                "authorized module/directory/file-name path segments used only for navigation are forbidden"
             ),
             "forbidden_exact_values": tool_reference_policy[
                 "source_search_queries_already_attempted"
@@ -3894,6 +3903,9 @@ def _tool_reference_policy(
     terminal_source_denial_reason = _terminal_source_denial_reason(
         invocation.observations
     )
+    latest_source_broker_decision = _latest_source_broker_decision(
+        invocation.observations
+    )
     if (
         terminal_source_denial_reason is not None
         or (
@@ -3931,6 +3943,7 @@ def _tool_reference_policy(
             )
         ),
         "terminal_source_denial_reason": terminal_source_denial_reason,
+        "latest_source_broker_decision": latest_source_broker_decision,
         "exact_action_repetition_forbidden": True,
         "unlisted_source_read_reference_forbidden": True,
         "same_resource_read_repetition_forbidden": True,
@@ -3940,6 +3953,45 @@ def _tool_reference_policy(
 def _source_resource_locator(locator: str) -> str:
     match = _SOURCE_LINE_LOCATOR.fullmatch(locator)
     return match.group("resource") if match is not None else locator
+
+
+def _latest_source_broker_decision(
+    observations: Sequence[EngineeringAgentToolObservation],
+) -> dict[str, str] | None:
+    latest_coordinates: tuple[int, int] | None = None
+    latest_value: dict[str, str] | None = None
+    for observation in observations:
+        receipt = observation.authority_receipt
+        if (
+            receipt is None
+            or receipt.authority_kind
+            is not EngineeringAgentToolAuthorityKind.SOURCE
+        ):
+            continue
+        for entry in receipt.ledger_entries:
+            if entry.kind != "BROKER_DECISION":
+                continue
+            details = dict(entry.details)
+            status = details.get("status")
+            reason = details.get("reason")
+            if status not in {"AUTHORIZED", "REJECTED"} or not isinstance(
+                reason, str
+            ) or not reason:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source Broker decision receipt is malformed",
+                )
+            coordinates = (receipt.ledger_generation, entry.sequence)
+            value = {"status": status, "reason": reason}
+            if coordinates == latest_coordinates and value != latest_value:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source Broker decision receipt drifted at one ledger position",
+                )
+            if latest_coordinates is None or coordinates > latest_coordinates:
+                latest_coordinates = coordinates
+                latest_value = value
+    return latest_value
 
 
 def _terminal_source_denial_reason(
@@ -4071,6 +4123,7 @@ def _investigation_policy(
         "paraphrased_semantic_need_is_new_need": False,
         "world_model_gap_requery_for_same_missing_implementation_allowed": False,
         "source_search_literal_targets_unread_material_resource": True,
+        "source_search_path_segment_as_content_literal_allowed": False,
         "source_read_must_match_current_unresolved_material_target": True,
     }
 
@@ -4078,21 +4131,29 @@ def _investigation_policy(
 def _source_follow_up_required_before_limitation(
     invocation: EngineeringAgentInvocation,
 ) -> bool:
-    if (
-        invocation.mode
-        is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS
-        or not any(
-            item.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
-            and item.disposition.value == "BOUNDARY"
-            for item in invocation.observations
-        )
-    ):
+    if invocation.mode is EngineeringAgentInvocationMode.EVIDENCE_ONLY_SYNTHESIS:
+        return False
+    latest_broker_decision = _latest_source_broker_decision(
+        invocation.observations
+    )
+    source_search_replan_required = (
+        latest_broker_decision is not None
+        and latest_broker_decision["status"] == "REJECTED"
+        and latest_broker_decision["reason"]
+        in _SOURCE_REPLAN_REQUIRED_REJECTION_REASONS
+    )
+    world_model_boundary = any(
+        item.operation is EngineeringAgentToolOperation.WORLD_MODEL_QUERY
+        and item.disposition.value == "BOUNDARY"
+        for item in invocation.observations
+    )
+    if not world_model_boundary and not source_search_replan_required:
         return False
     effective_operations = set(_effective_available_operations(invocation))
     source_search_attempted = any(
         item.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
         for item in invocation.action_history
-    )
+    ) and not source_search_replan_required
     source_read_attempted = any(
         item.operation is EngineeringAgentToolOperation.SOURCE_READ
         for item in invocation.action_history

@@ -3114,6 +3114,188 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ("CLARIFICATION", "LIMITATION"),
         )
 
+    def test_path_segment_source_rejection_requires_distinct_content_query(self) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="确认 mall-portal 的订单创建顺序",
+        )
+        world_action = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            arguments=(),
+            evidence_need="identify the order creation boundary",
+        )
+        path_search = EngineeringAgentToolActionProposal.create(
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            arguments=(
+                ("evidence_class", "SOURCE"),
+                ("query", "mall-portal"),
+            ),
+            evidence_need="locate the order implementation",
+        )
+        world_boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'1' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'2' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="world-model-order-gap",
+            content="The requested order behavior is outside current cognition.",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("world-order-boundary-evidence"),
+            digest=digest_of("world-order-boundary-observation"),
+        )
+        ledger_ref = "evidence_ledger_" + "3" * 32
+        entry_details = (
+            ("reason", "SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT"),
+            ("status", "REJECTED"),
+        )
+        entry_core = {
+            "ledger_id": ledger_ref,
+            "sequence": 1,
+            "kind": "BROKER_DECISION",
+            "subject_id": "broker_decision_" + "4" * 32,
+            "subject_digest": digest_of("path-query-rejection").value,
+            "references": (),
+            "details": entry_details,
+            "previous_entry_digest": None,
+        }
+        source_entry_digest = digest_of(
+            ["EVIDENCE_LEDGER_ENTRY@1", entry_core]
+        )
+        ledger_entry = EngineeringAgentLedgerEntryReceipt.create(
+            sequence=1,
+            kind="BROKER_DECISION",
+            subject_ref=entry_core["subject_id"],
+            subject_digest=digest_of("path-query-rejection"),
+            references=(),
+            details=entry_details,
+            previous_entry_digest=None,
+            source_entry_digest=source_entry_digest,
+        )
+        evidence_request_digest = digest_of("path-query-source-request")
+        receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=EngineeringAgentToolAuthorityKind.SOURCE,
+            turn_request_digest=capture.request.request_digest,
+            tool_request_digest=digest_of("path-query-tool-request"),
+            evidence_request_digest=evidence_request_digest,
+            repository_revision=capture.request.binding.repository_revision,
+            evidence_digest=digest_of("path-query-source-evidence"),
+            ledger_ref=ledger_ref,
+            ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of(
+                [
+                    "EVIDENCE_LEDGER_PREFIX@1",
+                    ledger_ref,
+                    evidence_request_digest.value,
+                    1,
+                    None,
+                    (source_entry_digest.value,),
+                ]
+            ),
+            ledger_entries=(ledger_entry,),
+        )
+        source_boundary = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'5' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'6' * 32}"),
+            operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+            result_ref="path-query-rejected",
+            content="The Source query equals an authorized directory segment.",
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            progress=False,
+            citation_refs=(),
+            authority_receipt=receipt,
+            tool_evidence_digest=digest_of("path-query-boundary-evidence"),
+            digest=digest_of("path-query-boundary-observation"),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(world_boundary, source_boundary),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(
+                EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+            action_history=(world_action, path_search),
+        )
+
+        rendered = _primary_input_view(invocation)
+        self.assertEqual(
+            rendered["tool_reference_policy"]["latest_source_broker_decision"],
+            {
+                "status": "REJECTED",
+                "reason": "SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT",
+            },
+        )
+        self.assertTrue(
+            rendered["completion_policy"]
+            ["source_follow_up_required_before_limitation"]
+        )
+        self.assertEqual(
+            rendered["completion_policy"]["allowed_response_kinds"],
+            ("CLARIFICATION",),
+        )
+        source_tool = next(
+            item
+            for item in rendered["tool_catalog"]
+            if item["operation"] == "SOURCE_SEARCH"
+        )
+        self.assertEqual(
+            source_tool["value_constraints"]["forbidden_exact_values"],
+            ("mall-portal",),
+        )
+
+        limitation = {
+            "goal": "确认 mall-portal 的订单创建顺序",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "observation_ids": [
+                world_boundary.observation_id.value,
+                source_boundary.observation_id.value,
+            ],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "LIMITATION",
+                "content": "当前 Source 证据不足。",
+                "claims": [],
+                "boundary_observation_ids": [
+                    world_boundary.observation_id.value,
+                    source_boundary.observation_id.value,
+                ],
+            },
+        }
+        with self.assertRaises(DomainError) as premature:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(limitation),
+                invocation=invocation,
+                model_call_ref="path-query-premature-limitation",
+            )
+        self.assertEqual(
+            premature.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
     def test_evidence_only_synthesis_is_a_response_only_model_contract(self) -> None:
         capture = CapturingTurnExecutor()
         service = InMemoryEngineeringConversationService(

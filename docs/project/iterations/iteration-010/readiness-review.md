@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -31,7 +31,7 @@ CURRENT READINESS ACCEPTED / PDR-012 PRODUCT DEVELOPMENT ACTIVE。
 SLICE-001 是唯一 active coding input。当前公开 mall exact revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的
 standing authority 仍有效，因此产品代码、主工程 Agent、Prompt/Reviewer、loopback Web 和范围内 Provider dispatch 可以直接继续。
 PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-012、run-052/053 及
-run-074/075/076/077 trace、当前 System Contracts 与公开 mall exact revision。
+run-074/075/076/077/078 trace、当前 System Contracts 与公开 mall exact revision。
 
 ## Outcome, scope and non-goals
 
@@ -72,7 +72,12 @@ call/request/isolation-bound evidence 并贯穿 receipt，可信 owner 只从 ty
 `{402,408,425,429,500,502,503,504}` 作出 verdict。相邻组合 `162/162` PASS；历史 run 不补判，fresh live 待验证。
 `FINDING-010-199` 再把 post-terminal capture/persistence 从 conformance-bound core 移到原样委托 exact Adapter 的 Gateway decorator；
 run-078 首次 pre-dispatch qualification rejection、Ark fresh `2/2` PASS 与 DeepSeek refresh HTTP=0 均如实保留。两家 current aggregate
-恢复既有 PASS Result exact identity，loader 未降级；clean successor fresh live 待验证。
+恢复既有 PASS Result exact identity，loader 未降级。
+`FINDING-010-200 / run-078` 随后真实执行冻结五题：Ark typed pre-HTTP unavailable 已在 Q2/Q3 启动 DeepSeek，Q1/Q3 post-dispatch
+unknown 则保持 0 retry/不继续回退；因此 current fallback route 已有 live 证据。Q4 隔离 probe 通过，Q5 `SUCCEEDED / ACCEPTED`。Q2 却将
+`mall-portal` directory segment 当作 content literal，空扫 56 文件后交付假 Limitation。current Broker 在 Worker 前零读取拒绝该 query，
+Primary 读取 sealed rejection 后必须选不同正文 literal；`82/82` 定向 PASS，fresh exact Browser successor 待验证。run-078 的 1 accepted、
+1 reviewed limitation、2 failed engineering Turn 和 1 local clarification 不能取得质量或 MVP PASS。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -104,6 +104,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   `{402,408,425,429,500,502,503,504}`；auth/config/client status 和没有 digest 的字符串/status 失败关闭。fallback profile 的资格、standing
   authority 派生与 fresh admission 仍逐 route 独立验证；外围 evidence implementation 不改变 exact Provider Conformance identity，也不放宽
   既有 manifest/config/model/fixture/validity 校验。
+- Source content Search 不能把 authorized module/directory/file-name path segment 当作正文 literal。Broker 必须在 Worker 与资源消费前 typed reject；该
+  Boundary 不等于 Source 撤销，并且在 Source 仍可用时不满足 material follow-up。Primary 必须读取 latest sealed Broker decision、禁止重复
+  rejected query，并改用可能在目标正文逐字出现的不同 source-native literal，不能交付假 Limitation。
 
 该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
 组合成普通用户可直接判断方向的产品结果。

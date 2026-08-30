@@ -133,6 +133,21 @@ def _path_allowed(path: str, allowlist: tuple[str, ...]) -> bool:
     )
 
 
+def _source_search_query_equals_allowlist_path_segment(
+    query: str,
+    evidence_class_allowlist: Sequence[str],
+) -> bool:
+    """Reject path navigation metadata masquerading as a content literal."""
+
+    for candidate in evidence_class_allowlist:
+        normalized = _canonical_relative_path(candidate)
+        if normalized == ".":
+            continue
+        if query in PurePosixPath(normalized).parts:
+            return True
+    return False
+
+
 def _unique_texts(
     values: Sequence[str],
     label: str,
@@ -2498,6 +2513,20 @@ class SourceBroker:
                 proposal=proposal,
                 ledger=ledger,
                 reason="OPERATION_NOT_REGISTERED",
+            )
+        if (
+            source_operation is SourceReadOperation.SEARCH
+            and proposal.query is not None
+            and _source_search_query_equals_allowlist_path_segment(
+                proposal.query,
+                evidence_class_allowlist,
+            )
+        ):
+            return self._reject(
+                request=request,
+                proposal=proposal,
+                ledger=ledger,
+                reason="SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT",
             )
         if _duplicates_prior_action_intent(proposal=proposal, ledger=ledger):
             return self._reject(
