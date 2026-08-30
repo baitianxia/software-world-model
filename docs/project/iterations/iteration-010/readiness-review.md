@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -124,6 +124,13 @@ Claim inventory 保持 `4 → 5 → 6 → 6 → 6`，旧 rejected-Draft 缺口�
 global-completeness exception 与 Limitation closed branch 冲突，以及 opaque Boundary binding 的假 disclosure Finding。current `@15/@8/@10`
 已闭合这些通用合同并保持 15 次 authority、route、fallback、budget、retry 与 Production 不变；144 tests PASS、外调 0。fresh run-088 是
 质量 Gate 的下一执行证据。
+
+`FINDING-010-211 / run-088` 的 Q4 继续零 dispatch Clarification；Q1/Q5 在下一 Reviewer 前耗尽 dispatch authority，Q2 达到 Review
+limit，Q3 是合法 no-retry post-dispatch unknown。Ark 4 个 sealed 429 后，DeepSeek fallback 52 个 call 完成、1 个 outcome unknown，证明
+周末备用路线继续可用且无需重复授权。新的 first divergence 是 Reviewer 逐缺陷收敛、重复 Finding identity、closed focused body 与
+decision/Finding 自相矛盾，以及 Primary 未一次解决全部 ordered Findings。current `@16/@9/@11` 已闭合 full-audit、focused exact closure、
+Reviewer-authored decision repair、未引用 duplicate local-code disambiguation 与 all-Findings rewrite，并保持 15 次 authority、route、fallback、budget、
+retry 与 Production 不变；146 tests PASS、外调 0。fresh run-089 是质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

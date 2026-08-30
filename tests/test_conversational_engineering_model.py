@@ -17,6 +17,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     _boundary_relevance_allowed_dispositions,
     _output_preflight_view,
     _primary_input_view,
+    _review_output_with_unique_finding_codes,
     decode_engineering_agent_primary_output,
     decode_engineering_agent_review_output,
 )
@@ -593,7 +594,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1008,7 +1009,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1851,7 +1852,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1899,9 +1900,52 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "existing_shape_repair_values_may_not_be_changed_for_consistency"
             ]
         )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "focused_defect_claims_equal_exceeded_challenge_claims"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "focused_findings_equal_challenge_bound_findings"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "successful_empty_finding_decision_must_repair_to_approved"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "unreferenced_duplicate_finding_codes_are_stably_disambiguated"
+            ]
+        )
         reviewer_policy = reviewer_repair_payload[
             "review_reference_policy"
         ]
+        self.assertTrue(
+            reviewer_policy[
+                "focused_defect_claims_equal_exceeded_challenge_claims"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "focused_findings_equal_challenge_bound_findings"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "review_reports_all_observed_material_defects_in_one_pass"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "successful_empty_finding_decision_must_repair_to_approved"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy["finding_code_is_nonsemantic_local_identity"]
+        )
         self.assertTrue(
             reviewer_policy[
                 "container_context_is_part_of_contained_assertion"
@@ -2031,6 +2075,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ]
         )
         reviewer_prompt = adapter.requests[2].messages[0].content
+        reviewer_prompt_compact = " ".join(reviewer_prompt.split())
         self.assertIn(
             "Compare the complete draft.content against the enumerated claims",
             reviewer_prompt,
@@ -2111,6 +2156,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn(
             "Do not reject a Draft that states only",
             reviewer_prompt,
+        )
+        self.assertIn(
+            "report every independently observed material defect in this one Review",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "exact set of DEFECT Claim indices",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "change only decision to APPROVED",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "Never manufacture a Finding about the Review contract",
+            reviewer_prompt_compact,
         )
         self.assertEqual(tool.requests, [])
         self.assertEqual(len(response.requests), 1)
@@ -4432,6 +4493,163 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             inconsistent_scope.exception.code,
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+        contradictory_within = {
+            "decision": "FINDINGS",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "DEFECT"}
+            ],
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": challenge.challenge_id.value,
+                    "evidence_boundary": "The source proves only invocation.",
+                    "draft_scope": "The Claim states only invocation.",
+                    "draft_semantic_scopes": ["CALLER_INVOCATION"],
+                    "disposition": "WITHIN_CALLER_EVIDENCE",
+                    "finding_code": None,
+                }
+            ],
+            "boundary_relevance_assessments": [],
+            "findings": [
+                {
+                    "code": "CONTRADICTORY_CALLER_FINDING",
+                    "message": "The Claim allegedly exceeds caller evidence.",
+                    "requires_evidence": False,
+                    "claim_index": 0,
+                }
+            ],
+        }
+        with self.assertRaises(DomainError) as contradictory:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(contradictory_within),
+                request=request,
+                model_call_ref="focused-review-contradictory-within",
+            )
+        self.assertEqual(
+            contradictory.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn("DEFECT Claim indices", str(contradictory.exception))
+
+        narrow_claim = EngineeringAgentClaimProposal.create(
+            statement="ProductService 调用 productRepository.saveAll(items)。",
+            support_observation_ids=(observation_id,),
+        )
+        narrow_draft = replace(
+            draft,
+            content=narrow_claim.statement,
+            claims=(narrow_claim,),
+            digest=digest_of("narrow-caller-draft"),
+        )
+        narrow_challenge = project_engineering_agent_evidence_boundary_challenges(
+            package,
+            narrow_draft,
+        )[0]
+        redundant_findings_decision = {
+            "decision": "FINDINGS",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": narrow_challenge.challenge_id.value,
+                    "evidence_boundary": "The source proves the caller invocation.",
+                    "draft_scope": "The Claim states the caller invocation.",
+                    "draft_semantic_scopes": ["CALLER_INVOCATION"],
+                    "disposition": "WITHIN_CALLER_EVIDENCE",
+                    "finding_code": None,
+                }
+            ],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as redundant_decision:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(redundant_findings_decision),
+                request=SimpleNamespace(
+                    draft=narrow_draft,
+                    package=package,
+                    focus=(
+                        EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                    ),
+                ),
+                model_call_ref="focused-review-redundant-decision",
+            )
+        self.assertEqual(
+            redundant_decision.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "non-approved Review requires Findings",
+            str(redundant_decision.exception),
+        )
+
+        duplicate_codes = decode_engineering_agent_review_output(
+            output_text=json.dumps(
+                {
+                    "decision": "FINDINGS",
+                    "claim_assessments": [
+                        {"claim_index": 0, "verdict": "DEFECT"}
+                    ],
+                    "evidence_boundary_assessments": [],
+                    "boundary_relevance_assessments": [],
+                    "findings": [
+                        {
+                            "code": "DUPLICATED_CODE",
+                            "message": "First complete-Draft defect.",
+                            "requires_evidence": False,
+                            "claim_index": 0,
+                        },
+                        {
+                            "code": "DUPLICATED_CODE",
+                            "message": "Second complete-Draft defect.",
+                            "requires_evidence": False,
+                            "claim_index": 0,
+                        },
+                    ],
+                }
+            ),
+            request=SimpleNamespace(
+                draft=narrow_draft,
+                package=package,
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+            ),
+            model_call_ref="comprehensive-review-duplicate-codes",
+        )
+        self.assertEqual(
+            tuple(item.code for item in duplicate_codes.findings),
+            ("DUPLICATED_CODE__1", "DUPLICATED_CODE__2"),
+        )
+
+    def test_duplicate_finding_code_normalization_leaves_referenced_codes_untouched(
+        self,
+    ) -> None:
+        normalized = _review_output_with_unique_finding_codes(
+            {
+                "decision": "FINDINGS",
+                "claim_assessments": [],
+                "evidence_boundary_assessments": [],
+                "boundary_relevance_assessments": [
+                    {"finding_code": "AUDIT_ONLY"},
+                    {"finding_code": "AUDIT_ONLY"},
+                ],
+                "findings": [
+                    {"code": "AUDIT_ONLY", "message": "first"},
+                    {"code": "AUDIT_ONLY", "message": "second"},
+                ],
+            }
+        )
+        self.assertEqual(
+            tuple(item["code"] for item in normalized["findings"]),
+            ("AUDIT_ONLY", "AUDIT_ONLY"),
+        )
+        self.assertEqual(
+            tuple(
+                item["finding_code"]
+                for item in normalized["boundary_relevance_assessments"]
+            ),
+            ("AUDIT_ONLY", "AUDIT_ONLY"),
         )
 
     def test_downstream_full_read_projects_search_boundary_relevance_challenge(self) -> None:

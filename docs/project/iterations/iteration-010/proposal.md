@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -61,6 +61,13 @@ dispatch Clarification 保持；Q1/Q2/Q5 的 Review limit 又暴露 semantic Cla
 Claim exception 与 `LIMITATION` 零 Claim branch 冲突，以及 opaque Boundary binding 被误作正文披露。current `@15/@8/@10` candidate 现按
 semantic coverage、response kind 与 hidden binding 收窄合同；15 次 Turn authority、route、fallback、预算、retry 与 Production 边界不变，
 144 tests PASS；fresh run-088 是下一项真实证据。
+
+`FINDING-010-211 / run-088` 又证明 Ark 的 4 个 sealed 429 可合法启动 DeepSeek 周末 fallback；DeepSeek 52 个 call 完成、1 个
+post-dispatch unknown，retry/人工审批/Production 仍为 0。Q4 零 dispatch Clarification 保持，其余四题仍未交付。新的最早通用偏差是
+Reviewer 未在一次完整 Draft audit 中报告全部已见 defects、重复 local Finding code 消耗 repair、focused assessment/Claim verdict/Finding
+body 不双向闭合，以及 Primary 没有在一个 replacement 中解决全部 ordered Findings。current `@16/@9/@11` candidate 密封 full-audit、
+exact focused closure、Reviewer-authored empty-Finding decision repair、未引用 duplicate local-code disambiguation 与 all-Findings rewrite；15 次 Turn
+authority、route、fallback、预算、retry 与 Production 边界不变，146 tests PASS；fresh run-089 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

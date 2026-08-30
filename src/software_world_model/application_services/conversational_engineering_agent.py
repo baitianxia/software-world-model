@@ -3867,6 +3867,25 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                         ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                         "an audit-only boundary must bind one global no-evidence relevance Finding",
                     )
+        if focus is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE:
+            expected_finding_codes = {
+                assessment.finding_code
+                for assessment in proposal.evidence_boundary_assessments
+                if assessment.disposition
+                is EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+                and assessment.finding_code is not None
+            } | {
+                assessment.finding_code
+                for assessment in proposal.boundary_relevance_assessments
+                if assessment.disposition
+                in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
+                and assessment.finding_code is not None
+            }
+            if set(finding_by_code) != expected_finding_codes:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "focused Reviewer Findings must equal the exact challenge-bound Finding set",
+                )
         if proposal.decision is EngineeringAgentReviewDecision.APPROVED and (
             any(
                 item.disposition

@@ -545,6 +545,74 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             challenges[0].challenge_id,
         )
 
+    def test_focused_review_cannot_add_a_finding_unbound_to_a_challenge(
+        self,
+    ) -> None:
+        class ExtraFindingReviewer:
+            def __init__(self) -> None:
+                self.requests = []
+
+            def review(self, request):
+                self.requests.append(request)
+                if request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE:
+                    return EngineeringAgentReviewProposal.create(
+                        model_call_ref="extra-finding-comprehensive",
+                        decision=EngineeringAgentReviewDecision.APPROVED,
+                        focus=request.focus,
+                    )
+                challenge = project_engineering_agent_evidence_boundary_challenges(
+                    request.package,
+                    request.draft,
+                )[0]
+                return EngineeringAgentReviewProposal.create(
+                    model_call_ref="extra-finding-focused",
+                    decision=EngineeringAgentReviewDecision.FINDINGS,
+                    findings=(
+                        EngineeringAgentReviewFinding.create(
+                            code="UNBOUND_FOCUSED_FINDING",
+                            message="A comprehensive defect invented in focused Review.",
+                            requires_evidence=False,
+                            claim_index=None,
+                        ),
+                    ),
+                    focus=request.focus,
+                    evidence_boundary_assessments=(
+                        EngineeringAgentEvidenceBoundaryAssessment.create(
+                            challenge_id=challenge.challenge_id,
+                            evidence_boundary="Caller invocation only.",
+                            draft_scope="Caller invocation only.",
+                            draft_semantic_scopes=(
+                                EngineeringAgentClaimSemanticScope.CALLER_INVOCATION,
+                            ),
+                            disposition=(
+                                EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
+                            ),
+                            finding_code=None,
+                        ),
+                    ),
+                )
+
+        reviewer = ExtraFindingReviewer()
+        response = RecordingResponseControl()
+        service, _, _, _ = _service(
+            JavaCallerAnswerDriver(),
+            tool=JavaCallerToolPort(),
+            reviewer=reviewer,
+            response=response,
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="这个保存调用在哪里？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.failure_code, "AGENT_PROTOCOL_VIOLATION")
+        self.assertEqual(len(reviewer.requests), 2)
+        self.assertEqual(len(response.requests), 0)
+
     def test_fourth_review_closes_comprehensive_and_focused_rewrites(self) -> None:
         class RewriteDriver:
             def __init__(self) -> None:

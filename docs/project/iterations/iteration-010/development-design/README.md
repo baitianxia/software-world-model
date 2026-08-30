@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -30,6 +30,10 @@ Provider 或重复人工授权。
 `FINDING-010-210 / run-087` 已证明 exact rejected-Draft edit base 生效，并把新偏差定位到 semantic Claim coverage、Limitation 分支重写与
 opaque Boundary binding。current `@15/@8/@10` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-088，仍不等待
 Provider 或重复人工授权。
+
+`FINDING-010-211 / run-088` 已把新偏差定位到逐缺陷 Review、重复 local Finding identity、focused typed body 自相矛盾，以及 Primary
+未一次解决全部 ordered Findings。current `@16/@9/@11` candidate 已通用闭合，146 项定向验证 PASS；下一项执行是 fresh run-089，仍不
+等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

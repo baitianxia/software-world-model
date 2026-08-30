@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-RESULT-V-MVP-EXPERIENCE-001, ITER-010-RESULT-V-USER-DIRECTION-DECISION-001, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-178, FINDING-010-179, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, ITER-011-INDEX]
 code: []
 tests: []
 as_of: 2026-08-30
@@ -251,3 +251,14 @@ branch 冲突，以及 opaque Boundary binding 被误作正文披露义务。cur
 response kind 密封 rewrite，并明确 hidden Boundary ID 不需出现在正文；15 次 authority、route、budget、retry、fallback 与 Production 边界
 不变，相邻 Chat/route/launcher 边界 144 tests PASS、外调 0。下一步是不暂停地提交 candidate 并执行 fresh run-088 五问 Browser successor；
 run-087 保持真实质量 FAIL。
+
+`FINDING-010-211 / run-088` 已执行该 successor。Ark 4 个 call 全部得到 sealed `429 / AccountQuotaExceeded`，DeepSeek 因而在
+first real preflight 取得周末 `ALLOWED_OFF_PEAK` active receipt并创建 53 个 call，其中 52 个完成、1 个 post-dispatch
+`REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`；retry、人工审批和 Production 均为 0。Q4 fresh Conversation 继续零 dispatch
+Clarification；Q1/Q5 在下一 Reviewer 前耗尽 dispatch authority，Q2 达到 Review limit，Q3 按 unknown no-retry 失败。新的 first
+divergence 是 comprehensive Reviewer 逐轮只报一个 defect、重复 Finding identity 浪费 repair call，focused Reviewer 又让 closed
+challenge body 与 decision/Finding 自相矛盾；Primary rewrite 也未在一个 replacement 中解决全部 ordered Findings。current
+`@16/@9/@11` candidate 现要求一次完整 Draft audit、focused assessment/Claim/Finding exact 双向闭合、仅由 Reviewer repair 空 Finding 的
+redundant decision，并只对未被 focused assessment 引用的重复 local code 作稳定 disambiguation；Primary 必须一次解决全部 Findings。15 次 authority、
+route、budget、retry、fallback 与 Production 边界不变，相邻 Chat/route/launcher 边界 146 tests PASS、外调 0。下一步是不暂停地提交
+candidate 并执行 fresh run-089 五问 Browser successor；run-088 保持真实质量 FAIL。

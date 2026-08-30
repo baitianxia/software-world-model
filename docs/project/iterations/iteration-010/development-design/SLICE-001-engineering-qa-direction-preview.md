@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -83,6 +83,11 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   bound Boundary、resolved/non-material audit-only 与 not-disclosed。Response Control 重算 exact ordered assessment set；Observation prefix 由
   Application 直接绑定，不作为 Provider output copy obligation；每 Turn `11 Agent + 4 Review = 15`，不提高 Tool/Source fuse、retry 或 dispatch
   authority。
+- Reviewer 必须在一次完整 Draft audit 中报告全部已观察到的独立 material defects；Primary 的同包 replacement 必须解决全部 ordered
+  Findings，而不是只改第一个或无关 Boundary。focused Review 的 exact DEFECT Claim indices 必须等于 exceeded caller challenges，exact
+  Finding codes 必须等于 exceeded caller 与 audit-only relevance assessments 所引用的集合；focused role 不引入 comprehensive Finding。
+  `decision` 只由 Reviewer 按 typed body 修复，Application 不生成 approval。Finding code 仅是 local identity；只有完全未被 focused
+  assessment 引用的重复 code 才稳定 disambiguate，且不得改变 message、binding 或顺序；任何被引用的重复 code 仍失败关闭。
 - DeepSeek fallback 的 listener preparation 只密封 non-dispatching decision；真正的 600 秒 active receipt 在 trusted Ark unavailable 后的 first
   DeepSeek preflight 以同一 plan 激活，并重新核验 900 秒 pricing freshness、闲时/override、run authority 和完整质量预算。激活与任何拒绝都
   发生在 credential/TLS/HTTP 前；后续 request 不得重新延长 receipt。
@@ -216,7 +221,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206、207、208 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206、207、208、209、210、211 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@15"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@16"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@15"
+    "conversational-engineering-agent-no-tools-prompt@16"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@15"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@8"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@16"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@9"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -340,8 +340,15 @@ must retain zero Claims: resolve a global-completeness Finding by deleting or
 narrowing adjacent affirmative diagnostics to a pure material boundary, or change
 to ANSWER only when an already-present assertion has current SUPPORT and can be
 enumerated without adding a new material conclusion. Before returning, compare
-the replacement Draft with the sealed reviewed Draft and remove every assertion
-not needed to satisfy the Findings.
+the replacement Draft with the sealed reviewed Draft and resolve every ordered
+Finding in the same replacement. Do not stop after the first Finding, change only
+an unrelated Boundary reference, or return a Claim/content fragment that still
+asserts the exact semantic defect named by a Finding. A caller-evidence Finding
+must narrow both the challenged Claim and every matching content fragment to the
+observed invocation or source-visible local order. A Finding about an adjacent
+unsupported diagnostic must delete or narrow that diagnostic to the pure material
+boundary; it must not turn that boundary into a new affirmative Claim. Remove
+every assertion not needed to satisfy the Findings.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
@@ -498,6 +505,15 @@ SUPPORT observations establish it; a SUPPORTED claim must not receive a Finding.
 Mark it DEFECT only when an actual claim defect exists, and bind at least one
 Finding to that claim index. Do not create a Finding that merely restates that a
 claim is supported or that no defect exists.
+Audit the complete Draft before returning and report every independently observed
+material defect in this one Review. Do not intentionally stop after the first
+Finding and defer another defect to a later fresh Review. Finding code is a local
+identifier, not review semantics: use a distinct code for each distinct Finding.
+The decision is the redundant summary of the typed body: use FINDINGS exactly
+when findings is non-empty; when every Claim assessment and focused challenge is
+closed and findings is empty, use APPROVED. Never invent a Finding about the
+Review object needing a Finding, and never demand that the Draft itself contain a
+Review Finding.
 review_focus is a closed Application-owned discriminator. For COMPREHENSIVE,
 return empty evidence_boundary_assessments and boundary_relevance_assessments
 arrays. For EVIDENCE_BOUNDARY_CHALLENGE, perform a fresh focused comparison for
@@ -563,6 +579,13 @@ requires_evidence false so the primary Agent removes non-material prose or a
 stale Boundary reference without another tool action. Approval is forbidden unless every caller
 challenge is WITHIN_CALLER_EVIDENCE, every relevance challenge is either
 MATERIAL_TO_USER_REQUEST or NOT_DISCLOSED_IN_DRAFT, and every Finding is empty.
+In focused Review, the relationship is bidirectional: the exact set of DEFECT
+Claim indices and claim-scoped Finding codes must be the set projected by
+CLAIM_EXCEEDS_CALLER_EVIDENCE assessments, and the exact set of global Finding
+codes must be the set projected by audit-only relevance assessments. A
+WITHIN_CALLER_EVIDENCE assessment cannot coexist with an unbound caller-evidence
+Finding on that Claim. Do not introduce a comprehensive/global completeness
+Finding during focused Review.
 For every boundary_relevance_challenge, copy disposition only from that
 challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
 disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
@@ -599,6 +622,11 @@ consistency violation without deleting a concrete defect merely because its
 claim_index binding was invalid. A defect about material draft.content that is
 absent from the enumerated Draft claims is a global completeness Finding: retain
 it with claim_index null and preserve its evidence requirement.
+If the validator says that a non-approved Review requires Findings, the prior
+findings array is empty, every Claim assessment is SUPPORTED, and every focused
+assessment uses a closed disposition, change only decision to APPROVED. Never
+manufacture a Finding about the Review contract, and never demand that the Draft
+contain a Review Finding merely to make FINDINGS non-empty.
 The final-output-preflight item follows the sealed review input. It is trusted
 only as a redundant structured-output form checklist and grants no evidence,
 review, or delivery authority. Apply its json_serialization rules and compare
@@ -3022,6 +3050,10 @@ def _output_preflight_view(
             "approved_requires_empty_findings": True,
             "findings_decision_requires_non_empty_findings": True,
             "audit_only_assessment_requires_global_no_evidence_finding": True,
+            "focused_defect_claims_equal_exceeded_challenge_claims": True,
+            "focused_findings_equal_challenge_bound_findings": True,
+            "successful_empty_finding_decision_must_repair_to_approved": True,
+            "unreferenced_duplicate_finding_codes_are_stably_disambiguated": True,
             "existing_shape_repair_values_may_not_be_changed_for_consistency": True,
         }
     return preflight
@@ -4253,6 +4285,10 @@ def _review_feedback_view(
                     "DELETE_OR_NARROW_TO_PURE_MATERIAL_BOUNDARY"
                 ),
                 "answer_conversion_requires_existing_assertion_and_current_support": True,
+                "all_ordered_findings_must_be_resolved_in_one_replacement": True,
+                "unchanged_named_semantic_defect_forbidden": True,
+                "caller_effect_finding_narrows_claim_and_matching_content": True,
+                "pure_boundary_must_not_be_promoted_to_affirmative_claim": True,
                 "allowed_targeted_transformations": (
                     "DELETE",
                     "NARROW",
@@ -5355,6 +5391,12 @@ def _review_input_view(
             "challenge_approval_requires_all_within_caller_evidence": True,
             "caller_scope_classification_must_match_trusted_challenge": True,
             "exceeded_challenge_requires_matching_claim_finding": True,
+            "focused_defect_claims_equal_exceeded_challenge_claims": True,
+            "focused_findings_equal_challenge_bound_findings": True,
+            "review_reports_all_observed_material_defects_in_one_pass": True,
+            "successful_empty_finding_decision_must_repair_to_approved": True,
+            "finding_code_is_nonsemantic_local_identity": True,
+            "unreferenced_duplicate_finding_codes_are_stably_disambiguated": True,
             "all_package_boundaries_require_assessment": True,
             "boundary_relevance_approval_allows_material_or_not_disclosed": True,
             "material_relevance_requires_declared_boundary_reference": True,
@@ -5961,6 +6003,67 @@ def _action_signature(
     )
 
 
+def _review_output_with_unique_finding_codes(
+    output: Mapping[str, object],
+) -> Mapping[str, object]:
+    """Disambiguate only mechanically unambiguous local Finding identities.
+
+    Finding messages, evidence requirements, Claim bindings, ordering, and
+    challenge dispositions remain model-authored.  A duplicated code has no
+    semantic authority of its own, but any assessment reference makes its
+    intended Finding relationship ambiguous.  Only completely unreferenced
+    duplicates are normalized; every referenced shape remains untouched for
+    the closed decoder to reject.
+    """
+
+    normalized = deepcopy(dict(output))
+    raw_findings = normalized.get("findings")
+    if not isinstance(raw_findings, list):
+        return normalized
+    indices_by_code: dict[str, list[int]] = {}
+    for index, raw_finding in enumerate(raw_findings):
+        if not isinstance(raw_finding, dict):
+            return normalized
+        code = raw_finding.get("code")
+        if not isinstance(code, str):
+            return normalized
+        indices_by_code.setdefault(code, []).append(index)
+    duplicated = {
+        code: indices
+        for code, indices in indices_by_code.items()
+        if len(indices) > 1
+    }
+    if not duplicated:
+        return normalized
+
+    referenced_codes: set[str] = set()
+    for field in (
+        "evidence_boundary_assessments",
+        "boundary_relevance_assessments",
+    ):
+        raw_assessments = normalized.get(field)
+        if not isinstance(raw_assessments, list):
+            return normalized
+        for raw_assessment in raw_assessments:
+            if not isinstance(raw_assessment, dict):
+                return normalized
+            finding_code = raw_assessment.get("finding_code")
+            if isinstance(finding_code, str):
+                referenced_codes.add(finding_code)
+
+    occupied_codes = set(indices_by_code)
+    for code, finding_indices in duplicated.items():
+        if code in referenced_codes:
+            continue
+        for ordinal, finding_index in enumerate(finding_indices, start=1):
+            candidate = f"{code}__{ordinal}"
+            while candidate in occupied_codes:
+                candidate += "_"
+            occupied_codes.add(candidate)
+            raw_findings[finding_index]["code"] = candidate
+    return normalized
+
+
 def _decode_review_output(
     output: Mapping[str, object],
     *,
@@ -5968,6 +6071,12 @@ def _decode_review_output(
     model_call_ref: str,
 ) -> EngineeringAgentReviewProposal:
     try:
+        focus = getattr(
+            request,
+            "focus",
+            EngineeringAgentReviewFocus.COMPREHENSIVE,
+        )
+        output = _review_output_with_unique_finding_codes(output)
         claim_assessments = tuple(
             (
                 _integer(
@@ -6105,11 +6214,6 @@ def _decode_review_output(
                 ),
             )
             for item in _sequence(output["findings"], "Review Findings")
-        )
-        focus = getattr(
-            request,
-            "focus",
-            EngineeringAgentReviewFocus.COMPREHENSIVE,
         )
         proposal = EngineeringAgentReviewProposal.create(
             model_call_ref=model_call_ref,
@@ -6275,6 +6379,48 @@ def _decode_review_output(
                     ErrorCode.STRUCTURED_OUTPUT_INVALID,
                     "an audit-only boundary challenge must bind a global no-evidence Finding",
                 )
+    if focus is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE:
+        exceeded_assessments = tuple(
+            item
+            for item in evidence_boundary_assessments
+            if item.disposition
+            is EngineeringAgentEvidenceBoundaryAssessmentDisposition.CLAIM_EXCEEDS_CALLER_EVIDENCE
+        )
+        exceeded_claim_indices = {
+            challenge_by_id[item.challenge_id].claim_index
+            for item in exceeded_assessments
+        }
+        defect_claim_indices = {
+            index
+            for index, verdict in claim_assessments
+            if verdict == "DEFECT"
+        }
+        expected_finding_codes = {
+            item.finding_code
+            for item in exceeded_assessments
+            if item.finding_code is not None
+        } | {
+            item.finding_code
+            for item in boundary_relevance_assessments
+            if item.disposition
+            in {
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition.RESOLVED_AUDIT_ONLY,
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition.NON_MATERIAL_AUDIT_ONLY,
+            }
+            and item.finding_code is not None
+        }
+        if defect_claim_indices != exceeded_claim_indices:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "focused Reviewer DEFECT Claim indices must equal the exact "
+                "caller challenges classified as exceeding evidence",
+            )
+        if set(findings_by_code) != expected_finding_codes:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "focused Reviewer Findings must equal the exact challenge-bound "
+                "Finding set",
+            )
     if (
         proposal.decision is EngineeringAgentReviewDecision.APPROVED
         and any(verdict != "SUPPORTED" for _, verdict in claim_assessments)
