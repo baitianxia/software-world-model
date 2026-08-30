@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -131,6 +131,14 @@ limit，Q3 是合法 no-retry post-dispatch unknown。Ark 4 个 sealed 429 后�
 decision/Finding 自相矛盾，以及 Primary 未一次解决全部 ordered Findings。current `@16/@9/@11` 已闭合 full-audit、focused exact closure、
 Reviewer-authored decision repair、未引用 duplicate local-code disambiguation 与 all-Findings rewrite，并保持 15 次 authority、route、fallback、budget、
 retry 与 Production 不变；146 tests PASS、外调 0。fresh run-089 是质量 Gate 的下一执行证据。
+
+`FINDING-010-212 / run-089` 的 Q4 继续零 dispatch Clarification；Q1 是 Reviewer invalid output，Q2 是合法 no-retry post-dispatch
+unknown，Q3 是 Primary invalid output，Q5 达到 Review limit。Ark 4 个 sealed 429 后，DeepSeek fallback 27 个 call 完成、1 个 outcome
+unknown，证明周末备用路线继续可用且无需重复授权。新的 first divergence 是 contract repair 原样复制 invalid Review/Source action、同包
+rewrite 原样复制 rejected Draft，以及 Limitation Reviewer 要求非法 Claim、误报已有 Boundary binding并把 Search/interface 当实现证据。
+current `@17/@10/@12` 已闭合 changed-replacement guard、typed convergence directive、focused actual index diagnostic 与 response-kind-aware
+pure-boundary review，并保持 15 次 authority、route、fallback、budget、retry 与 Production 不变；147 tests PASS、外调 0。fresh run-090 是
+质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

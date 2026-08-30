@@ -15,6 +15,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     PolicyEnforcingEngineeringAgentModelGateway,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     _boundary_relevance_allowed_dispositions,
+    _closed_contract_repair_directive,
     _output_preflight_view,
     _primary_input_view,
     _review_output_with_unique_finding_codes,
@@ -308,6 +309,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.database = SqliteDatabase()
         self.addCleanup(self.database.close)
 
+    def test_closed_contract_repair_directives_are_specific_to_convergence(self) -> None:
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "Engineering Agent repeated a forbidden current-Turn Source query"
+            ),
+            "CHOOSE_DIFFERENT_LEGAL_ACTION_OR_ALLOWED_PURE_BOUNDARY_DRAFT",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "focused Reviewer DEFECT Claim indices must equal the exact caller challenges"
+            ),
+            "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "same-Package review rewrite returned the exact rejected Draft"
+            ),
+            "CHANGE_THE_REPLACEMENT_DRAFT_TO_RESOLVE_EVERY_ORDERED_FINDING",
+        )
+
     def _service(
         self,
         *,
@@ -594,7 +615,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -779,6 +800,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("Rewording a prior semantic", rendered)
         self.assertIn("need does not make it new", rendered)
         self.assertIn("source-native type or member identifier", rendered)
+        self.assertIn(
+            "replacement Draft must differ from the exact rejected Draft",
+            rendered,
+        )
+        self.assertIn(
+            "forbidden exact action value must not reappear",
+            rendered,
+        )
+        self.assertIn(
+            "closed_contract_repair_directive",
+            rendered,
+        )
         self.assertIn("prior_answer_restatement_requires_current_turn_evidence", rendered)
         self.assertIn(
             "source_follow_up_required_before_limitation", rendered
@@ -926,6 +959,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(first_payload["format_repair_policy"]["attempt"], 0)
         self.assertEqual(repair_payload["format_repair_policy"]["attempt"], 1)
+        self.assertFalse(
+            first_payload["format_repair_policy"][
+                "prior_output_exact_repeat_forbidden"
+            ]
+        )
+        self.assertTrue(
+            repair_payload["format_repair_policy"][
+                "prior_output_exact_repeat_forbidden"
+            ]
+        )
+        self.assertIsNone(
+            repair_payload["format_repair_policy"][
+                "closed_contract_repair_directive"
+            ]
+        )
         self.assertEqual(
             repair_payload["format_repair_policy"]["prior_model_call_ref"],
             model.audits[0].receipt.model_call_ref,
@@ -1009,7 +1057,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1744,6 +1792,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "CLOSED_OUTPUT_CONTRACT",
         )
         self.assertEqual(
+            repair_payload["format_repair_policy"][
+                "closed_contract_repair_directive"
+            ],
+            "CORRECT_THE_NAMED_CONTRACT_WITHOUT_COPYING_THE_INVALID_PROPOSAL",
+        )
+        self.assertEqual(
             repair_payload["format_repair_policy"]["prior_model_call_ref"],
             model.audits[1].receipt.model_call_ref,
         )
@@ -1852,7 +1906,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@11",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@12",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1920,6 +1974,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "unreferenced_duplicate_finding_codes_are_stably_disambiguated"
             ]
         )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "limitation_finding_must_not_require_claim_addition"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "search_or_interface_evidence_is_not_implementation_evidence"
+            ]
+        )
         reviewer_policy = reviewer_repair_payload[
             "review_reference_policy"
         ]
@@ -1945,6 +2009,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_policy["finding_code_is_nonsemantic_local_identity"]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "pure_limitation_missing_requested_answer_is_not_completeness_defect"
+            ]
+        )
+        self.assertEqual(
+            reviewer_policy["limitation_adjacent_diagnostic_remedy"],
+            "DELETE_OR_NARROW_TO_PURE_BOUNDARY",
         )
         self.assertTrue(
             reviewer_policy[
@@ -2171,6 +2244,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "Never manufacture a Finding about the Review contract",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "Never issue a Finding whose remedy is to add a Claim to a LIMITATION",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "Search hit, filename inventory, or interface declaration",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "caller-only semantics require WITHIN, SUPPORTED",
             reviewer_prompt_compact,
         )
         self.assertEqual(tool.requests, [])
@@ -2449,6 +2534,42 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "forbidden_exact_values"
             ],
             ("login",),
+        )
+        repeated_search_output = {
+            "goal": "确认登录流程",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "open_items": [],
+            "phase": "INVESTIGATING",
+            "action": {
+                "operation": "SOURCE_SEARCH",
+                "arguments": [
+                    {"name": "evidence_class", "value": "SOURCE"},
+                    {"name": "query", "value": "login"},
+                ],
+                "evidence_need": "locate login behavior",
+            },
+            "draft": None,
+        }
+        with self.assertRaises(DomainError) as repeated_search:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(repeated_search_output),
+                invocation=invocation,
+                model_call_ref="repeated-current-turn-source-query",
+            )
+        self.assertEqual(
+            repeated_search.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "different legal source-native literal",
+            str(repeated_search.exception),
         )
         self.assertEqual(
             rendered_tools["SOURCE_READ"]["value_constraints"][
@@ -3093,6 +3214,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "limitation_claim_inventory_must_remain_empty"
             ]
         )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "replacement_draft_must_differ_from_exact_rejected_draft"
+            ]
+        )
+        self.assertEqual(
+            same_package_feedback["review_rewrite_contract"][
+                "limitation_global_finding_preferred_repair"
+            ],
+            "DELETE_AFFIRMATIVE_DIAGNOSTICS_AND_STATE_ONLY_"
+            "THE_MATERIAL_UNRESOLVED_BOUNDARY",
+        )
         with self.assertRaises(DomainError) as forged_reviewed_draft:
             _primary_input_view(
                 replace(
@@ -3143,6 +3276,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "boundary_observation_ids": [],
             },
         }
+        with self.assertRaises(DomainError) as unchanged_review_rewrite:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(evidence_required_draft),
+                invocation=same_package_invocation,
+                model_call_ref="unchanged-same-package-review-rewrite",
+            )
+        self.assertEqual(
+            unchanged_review_rewrite.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "exact rejected Draft",
+            str(unchanged_review_rewrite.exception),
+        )
         with self.assertRaises(DomainError) as review_redraft:
             decode_engineering_agent_primary_output(
                 output_text=json.dumps(evidence_required_draft),

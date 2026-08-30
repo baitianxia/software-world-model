@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -34,6 +34,11 @@ Provider 或重复人工授权。
 `FINDING-010-211 / run-088` 已把新偏差定位到逐缺陷 Review、重复 local Finding identity、focused typed body 自相矛盾，以及 Primary
 未一次解决全部 ordered Findings。current `@16/@9/@11` candidate 已通用闭合，146 项定向验证 PASS；下一项执行是 fresh run-089，仍不
 等待 Provider 或重复人工授权。
+
+`FINDING-010-212 / run-089` 又把偏差定位到 closed-contract repair 原样复制 invalid output、forbidden Source action 未用现有 Boundary
+收敛，以及 Limitation 审核在 Claim/inventory/diagnostic 间摆动。current `@17/@10/@12` candidate 已机械拒绝 unchanged replacement，密封
+typed repair convergence directive、focused actual index diagnostic 与 response-kind-aware Limitation Review；147 项定向验证 PASS；下一项执行
+是 fresh run-090，仍不等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

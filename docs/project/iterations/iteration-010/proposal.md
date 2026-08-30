@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -68,6 +68,13 @@ Reviewer 未在一次完整 Draft audit 中报告全部已见 defects、重复 l
 body 不双向闭合，以及 Primary 没有在一个 replacement 中解决全部 ordered Findings。current `@16/@9/@11` candidate 密封 full-audit、
 exact focused closure、Reviewer-authored empty-Finding decision repair、未引用 duplicate local-code disambiguation 与 all-Findings rewrite；15 次 Turn
 authority、route、fallback、预算、retry 与 Production 边界不变，146 tests PASS；fresh run-089 是下一项真实证据。
+
+`FINDING-010-212 / run-089` 再次由 Ark 4 个 sealed 429 合法进入 DeepSeek；DeepSeek 27 个 call 完成、1 个 post-dispatch unknown，
+retry/人工审批/Production 仍为 0。Q4 零 dispatch Clarification 保持；Q1 的 focused guard 拒绝矛盾 Review 后，repair 原样复制 invalid
+object；Q3 在两个 reportable Boundary 已允许 Limitation 时仍复制 forbidden Source query；Q5 的 Primary 两次原样返回 rejected Draft，Reviewer
+又在 Limitation 上要求 Claim、误报已有 Boundary binding并把 Search/interface 当实现证据。current `@17/@10/@12` candidate 密封
+changed-replacement guard、typed contract-repair directive、actual focused index diagnostic 与 pure-boundary Limitation review；15 次 Turn
+authority、route、fallback、预算、retry 与 Production 边界不变，147 tests PASS；fresh run-090 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。
