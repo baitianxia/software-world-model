@@ -25,7 +25,7 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 | Connection policy | `DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1` | `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` |
 | Credential resolution | verified TLS 后、每次 HTTP dispatch 前 | verified TLS 后、每次 HTTP dispatch 前 |
 | TLS / session dispatch bound | 每 request 1 次 TLS attempt；每 session 1 次 HTTP | transport lifetime 最多 3 次 pre-dispatch TLS；每 session 最多 20 次 HTTP |
-| Pre-dispatch persistent-session health | 不复用 session | fully consumed socket 可读/异常或 idle ≥60 秒时，credential/HTTP 前关闭并在同一 TLS bound 内轮转 |
+| Engineering Chat runtime pre-dispatch session health | 不适用 | runtime ref `DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3`；fully consumed socket 可读/异常或 idle ≥60 秒时，在 qualified transport call 前关闭并在同一 TLS bound 内轮转 |
 | Request retry | `false` | `false` |
 | Tools/session/stream | 禁用 | 禁用 |
 | Thinking | `thinking.type=disabled` | 按 exact qualification 冻结 |

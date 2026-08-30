@@ -16,10 +16,8 @@ import http.client
 import json
 import os
 import re
-import select
 import socket
 import ssl
-from time import monotonic
 from typing import Callable, Mapping, Protocol
 from urllib.parse import urlsplit
 
@@ -55,7 +53,6 @@ DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY = (
 )
 DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES = 3
 DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION = 20
-DEFAULT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION = 60
 SUPPORTED_DEEPSEEK_MODELS = frozenset(
     {"deepseek-v4-pro", "deepseek-v4-flash"}
 )
@@ -271,33 +268,15 @@ class _VerifiedTLSSocket(Protocol):
     def close(self) -> None: ...
 
 
-def _tls_socket_has_pending_state(tls_socket: _VerifiedTLSSocket) -> bool:
-    """Return true when a fully consumed keep-alive socket is no longer idle."""
-
-    fileno = getattr(tls_socket, "fileno", None)
-    if not callable(fileno):
-        return False
-    try:
-        readable, _, exceptional = select.select(
-            [tls_socket], (), [tls_socket], 0
-        )
-    except (OSError, TypeError, ValueError):
-        return True
-    return bool(readable or exceptional)
-
-
 class PersistentDeepSeekChatTransport:
     """Direct exact-host HTTPS with bounded persistent TLS sessions.
 
     Up to three credential-free TLS handshakes may be attempted across the
     transport lifetime.  Each verified session carries at most twenty HTTP
     dispatches so a long bounded run does not depend on an intermediary keeping
-    one connection alive indefinitely.  A connection idle for sixty seconds is
-    also closed before the next credential resolution or HTTP dispatch so an
-    interactive pause does not reuse a stale keep-alive session.  The credential
-    is resolved only after a verified connection exists.  Once HTTP dispatch
-    begins, a network failure is never retried and is conservatively reported as
-    outcome unknown.
+    one connection alive indefinitely.  The credential is resolved only after
+    a verified connection exists.  Once HTTP dispatch begins, a network failure
+    is never retried and is conservatively reported as outcome unknown.
     """
 
     def __init__(
@@ -308,10 +287,6 @@ class PersistentDeepSeekChatTransport:
         tls_context: ssl.SSLContext | None = None,
         maximum_pre_dispatch_tls_handshakes: int = (
             DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
-        ),
-        monotonic_clock: Callable[[], float] = monotonic,
-        stale_connection_probe: Callable[[_VerifiedTLSSocket], bool] = (
-            _tls_socket_has_pending_state
         ),
     ) -> None:
         if (
@@ -326,11 +301,8 @@ class PersistentDeepSeekChatTransport:
         self._api_key_resolver = api_key_resolver
         self._tls_context = tls_context or build_verified_tls_context()
         self._connection_factory = connection_factory or self._new_tls_socket
-        self._monotonic_clock = monotonic_clock
-        self._stale_connection_probe = stale_connection_probe
         self._maximum_tls_handshakes = maximum_pre_dispatch_tls_handshakes
         self._tls_socket: _VerifiedTLSSocket | None = None
-        self._last_http_completion_at: float | None = None
         self._tls_handshake_attempt_count = 0
         self._tls_handshake_success_count = 0
         self._connection_reuse_count = 0
@@ -429,7 +401,6 @@ class PersistentDeepSeekChatTransport:
         tls_socket = self._tls_socket
         self._tls_socket = None
         self._active_tls_dispatch_count = 0
-        self._last_http_completion_at = None
         if tls_socket is not None:
             tls_socket.close()
 
@@ -462,26 +433,6 @@ class PersistentDeepSeekChatTransport:
                 ErrorCode.INVALID_ARGUMENT,
                 "DeepSeek timeout must be positive",
             )
-        if self._tls_socket is not None and self._stale_connection_probe(
-            self._tls_socket
-        ):
-            self.close()
-        if (
-            self._tls_socket is not None
-            and self._last_http_completion_at is not None
-        ):
-            idle_seconds = self._monotonic_clock() - self._last_http_completion_at
-            if idle_seconds < 0:
-                self.close()
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "DeepSeek monotonic transport clock moved backwards",
-                )
-            if (
-                idle_seconds
-                >= DEFAULT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION
-            ):
-                self.close()
         if (
             self._tls_socket is not None
             and self._active_tls_dispatch_count
@@ -555,8 +506,6 @@ class PersistentDeepSeekChatTransport:
                 or headers.get("connection", "").lower() == "close"
             ):
                 self.close()
-            else:
-                self._last_http_completion_at = self._monotonic_clock()
             return result
         except (
             OSError,
@@ -1135,7 +1084,6 @@ __all__ = [
     "DEFAULT_DEEPSEEK_CONNECTION_POLICY",
     "DEFAULT_DEEPSEEK_CREDENTIAL_RESOLUTION_POLICY",
     "DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION",
-    "DEFAULT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION",
     "DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES",
     "DEFAULT_DEEPSEEK_MODEL",
     "DEFAULT_DEEPSEEK_OPENAI_BASE_URL",

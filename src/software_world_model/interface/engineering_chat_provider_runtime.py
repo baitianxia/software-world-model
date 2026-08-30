@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import select
+import ssl
+from time import monotonic
 from typing import Callable
 
 from software_world_model.ai_infrastructure.ark_chat_conformance import (
@@ -26,6 +29,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     engineering_agent_output_schemas,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
+    DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekModelConfiguration,
     PersistentDeepSeekChatTransport,
@@ -40,6 +44,9 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelExecutionContext,
     ModelGatewayResult,
     ModelGatewayRepository,
+)
+from software_world_model.ai_infrastructure.openai_responses_adapter import (
+    ProviderHTTPResponse,
 )
 from software_world_model.ai_infrastructure.provider_http_failure_evidence import (
     ProviderHTTPFailureCapturingAdapter,
@@ -81,8 +88,108 @@ ENGINEERING_CHAT_ARK_TRANSPORT_REF = (
     "VOLCENGINE_ARK_DIRECT_VERIFIED_HTTPS_NO_RETRY@1"
 )
 ENGINEERING_CHAT_DEEPSEEK_TRANSPORT_REF = (
-    "DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@2"
+    "DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3"
 )
+ENGINEERING_CHAT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION = 60
+
+
+def _engineering_chat_tls_socket_has_pending_state(tls_socket: object) -> bool:
+    """Detect EOF or exceptional state on a fully consumed persistent socket."""
+
+    fileno = getattr(tls_socket, "fileno", None)
+    if not callable(fileno):
+        return False
+    try:
+        readable, _, exceptional = select.select(
+            [tls_socket], (), [tls_socket], 0
+        )
+    except (OSError, TypeError, ValueError):
+        return True
+    return bool(readable or exceptional)
+
+
+class EngineeringChatDeepSeekTransport(PersistentDeepSeekChatTransport):
+    """Add interactive-session health rotation outside the qualified Adapter.
+
+    The underlying transport retains its qualified request, TLS, credential,
+    HTTP, audit, and no-retry behavior.  This product runtime only closes a
+    fully consumed persistent session before the next qualified dispatch when
+    the socket is no longer idle or has been idle for sixty seconds.
+    """
+
+    def __init__(
+        self,
+        *,
+        api_key_resolver: Callable[[], str],
+        connection_factory: Callable[[float], object] | None = None,
+        tls_context: ssl.SSLContext | None = None,
+        maximum_pre_dispatch_tls_handshakes: int = (
+            DEFAULT_DEEPSEEK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES
+        ),
+        monotonic_clock: Callable[[], float] = monotonic,
+        stale_connection_probe: Callable[[object], bool] = (
+            _engineering_chat_tls_socket_has_pending_state
+        ),
+    ) -> None:
+        super().__init__(
+            api_key_resolver=api_key_resolver,
+            connection_factory=connection_factory,
+            tls_context=tls_context,
+            maximum_pre_dispatch_tls_handshakes=(
+                maximum_pre_dispatch_tls_handshakes
+            ),
+        )
+        self._engineering_chat_monotonic_clock = monotonic_clock
+        self._engineering_chat_stale_connection_probe = stale_connection_probe
+        self._engineering_chat_last_http_completion_at: float | None = None
+
+    def close(self) -> None:
+        self._engineering_chat_last_http_completion_at = None
+        super().close()
+
+    def post_json(
+        self,
+        *,
+        endpoint: str,
+        body: bytes,
+        client_request_id: str,
+        timeout_milliseconds: int,
+    ) -> ProviderHTTPResponse:
+        tls_socket = self._tls_socket
+        if tls_socket is not None and self._engineering_chat_stale_connection_probe(
+            tls_socket
+        ):
+            self.close()
+        if (
+            self._tls_socket is not None
+            and self._engineering_chat_last_http_completion_at is not None
+        ):
+            idle_seconds = (
+                self._engineering_chat_monotonic_clock()
+                - self._engineering_chat_last_http_completion_at
+            )
+            if idle_seconds < 0:
+                self.close()
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Chat DeepSeek monotonic clock moved backwards",
+                )
+            if (
+                idle_seconds
+                >= ENGINEERING_CHAT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION
+            ):
+                self.close()
+        result = super().post_json(
+            endpoint=endpoint,
+            body=body,
+            client_request_id=client_request_id,
+            timeout_milliseconds=timeout_milliseconds,
+        )
+        if self._tls_socket is not None:
+            self._engineering_chat_last_http_completion_at = (
+                self._engineering_chat_monotonic_clock()
+            )
+        return result
 
 
 @dataclass(frozen=True, slots=True)
@@ -328,7 +435,7 @@ def create_deepseek_engineering_chat_provider_model_runtime(
             ErrorCode.QUALIFICATION_INVALID,
             "Engineering Chat DeepSeek model configuration drifted from Conformance",
         )
-    transport = PersistentDeepSeekChatTransport(
+    transport = EngineeringChatDeepSeekTransport(
         api_key_resolver=provider_configuration.resolve_api_key
     )
     adapter = DeepSeekChatCompletionsNoToolsAdapter(
@@ -651,9 +758,11 @@ def _text(value: str, label: str) -> str:
 
 __all__ = [
     "ENGINEERING_CHAT_ARK_TRANSPORT_REF",
+    "ENGINEERING_CHAT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION",
     "ENGINEERING_CHAT_DEEPSEEK_TRANSPORT_REF",
     "ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_SCHEMA",
     "ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS",
+    "EngineeringChatDeepSeekTransport",
     "EngineeringChatProviderModelRuntime",
     "create_ark_engineering_chat_provider_model_runtime",
     "create_deepseek_engineering_chat_provider_model_runtime",

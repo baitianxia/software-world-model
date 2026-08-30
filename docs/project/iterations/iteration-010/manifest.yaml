@@ -1440,6 +1440,12 @@ conversational_engineering_agent:
   availability_owner_unsealed_http_status_allowed: false
   current_provider_http_availability_evidence_ref: FINDING-010-198
   current_provider_conformance_identity_boundary_ref: FINDING-010-199
+  current_engineering_chat_deepseek_transport_ref: DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3
+  current_engineering_chat_deepseek_base_transport_policy: PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2
+  current_engineering_chat_deepseek_maximum_idle_seconds_per_tls_session: 60
+  current_engineering_chat_deepseek_pre_dispatch_stale_probe: fully-consumed-socket-readable-or-exceptional-closes-before-qualified-transport-call
+  current_engineering_chat_deepseek_rotation_changes-adapter-or-conformance-identity: false
+  current_engineering_chat_deepseek_rotation_evidence_ref: FINDING-010-219
   cognition_source_search_target_schema: ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1
   cognition_source_search_first_literal_policy: exact-closed-domain-from-current-nontruncated-world-model-projection
   cognition_source_search_path_scope_operation_schema: COMPILED_SOURCE_OPERATION@3
@@ -1535,7 +1541,7 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: q1-accepted-q2-provider-outcome-unknown-q3-reviewer-model-call-rejected-q5-accepted
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-current-deepseek-fresh-conformance-required-after-transport-implementation-change
+  current_dual_provider_qualification_status: ark-current-deepseek-current-loader-reverified-exact-adapter-configuration-endpoint-model-transport-and-rendering-identity
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
   successor_semantic_query_finding_ref: FINDING-010-138
@@ -1544,7 +1550,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-095-deepseek-fallback-verified-q1-q5-accepted-q2-stale-keepalive-unknown-q3-focused-review-rejected-q4-zero-dispatch-clarification-current-transport-and-review-closure-local-candidate-awaiting-conformance-and-run-096
+  agent_execution_status: run-095-deepseek-fallback-verified-q1-q5-accepted-q2-stale-keepalive-unknown-q3-focused-review-rejected-q4-zero-dispatch-clarification-current-engineering-chat-runtime-and-review-closure-local-candidate-base-conformance-loader-pass-awaiting-run-096
   status: implemented-not-qualified
 
 question_evidence_package_classes:
@@ -1894,7 +1900,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:3ff364bbc7e1025bd709d184b9b9a478ac32a0a0f58b986780ffc7d2e5a87b24
+  system_contract_set_digest: sha256:e9e365386ed4a1ab4b9c21bea1e553800e93f008582573747266c41a9ec172e8
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

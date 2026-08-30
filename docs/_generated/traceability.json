@@ -3980,10 +3980,10 @@
   "FINDING-010-219": {
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-219.md",
     "code": [
-      "src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py"
+      "src/software_world_model/interface/engineering_chat_provider_runtime.py"
     ],
     "tests": [
-      "tests/test_deepseek_chat_adapter.py"
+      "tests/test_engineering_chat_provider_runtime.py"
     ]
   },
   "FINDING-010-220": {

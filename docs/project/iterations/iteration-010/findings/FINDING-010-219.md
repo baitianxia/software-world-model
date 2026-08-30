@@ -3,15 +3,15 @@ id: FINDING-010-219
 kind: implementation-finding
 status: dispositioned
 authority: execution-evidence
-owners: [ai, operations, quality]
+owners: [interface, ai, operations, quality]
 depends_on: [FINDING-010-218, ITER-010-PDR-012, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-ARCH-FLOWS, SYS-OPS-CONFIGURATION]
-code: [src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py]
-tests: [tests/test_deepseek_chat_adapter.py]
+code: [src/software_world_model/interface/engineering_chat_provider_runtime.py]
+tests: [tests/test_engineering_chat_provider_runtime.py]
 iteration: ITER-010
 classification: system-contract
 scope: systemic
-disposition: rotate-stale-or-idle-deepseek-session-before-dispatch
-target: SYS-CONTRACT-AI-MODEL-GATEWAY
+disposition: rotate-stale-or-idle-engineering-chat-deepseek-session-before-dispatch
+target: SYS-ARCH-FLOWS
 ---
 
 # FINDING-010-219：run-095 暴露 DeepSeek 闲置 keep-alive 在下一 Turn 首次 HTTP 时失效
@@ -58,18 +58,25 @@ post-dispatch `REMOTE_DISCONNECTED` 1、retry 0。也就是说，旧 transport �
 
 这是 `system-contract / systemic` Finding，不按问题、等待时长样本或 Provider 响应内容特判。
 
-1. fully consumed HTTP response 后用进程内 monotonic clock 记录最后完成时刻。下一次 credential
-   resolution 或 HTTP dispatch 前，如果连接已闲置至少 60 秒，则先关闭连接；clock 回退失败关闭。
-2. 下一次 dispatch 前对 fully consumed persistent socket 做 non-blocking readiness probe。可读、
-   exceptional 或 probe 失败都表示连接不再是可信 idle session，先关闭再 acquisition；尚未可读才可复用。
-3. stale/idle rotation 是 credential-free pre-dispatch acquisition，仍受 transport lifetime 最多 3 次
-   TLS handshake 和每条 session 最多 20 dispatch 约束。credential 仍只在 verified TLS 后解析，HTTP
-   一旦开始后的失败仍密封 outcome unknown，绝不 replay/retry。
-4. `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` 与 Session audit `@2` 的既有最大值和字段均不变；
-   exact Adapter bytes 已变化，因此旧 DeepSeek Conformance 不可复用，fresh Conformance 与 run-096
-   才能验证真实链。socket-pair stale detection、60 秒 idle rotation、stale probe rotation 与 audit
-   回归均已加入；相邻十七模块 `255/255` targeted tests PASS。
+1. `EngineeringChatDeepSeekTransport` 只在 Engineering Chat Provider runtime 外层管理已资格 transport
+   的 persistent-session lifecycle；base Adapter 的 request rendering、TLS verification、credential、HTTP、
+   response parsing、audit 与 no-retry bytes 全部保持 exact 不变。runtime transport ref 升级为
+   `DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3`。
+2. fully consumed HTTP response 后用进程内 monotonic clock 记录最后完成时刻。下一次 qualified transport
+   call 前，如果连接已闲置至少 60 秒，则先关闭连接；clock 回退失败关闭。
+3. 下一次 qualified call 前对 fully consumed persistent socket 做 non-blocking readiness probe。可读、
+   exceptional 或 probe 失败都表示连接不再是可信 idle session，先关闭再由 base transport acquisition；
+   尚未可读才可复用。
+4. stale/idle rotation 发生在 credential 和 HTTP 前，仍受 base transport lifetime 最多 3 次 TLS handshake
+   和每条 session 最多 20 dispatch 约束。credential 仍只在 verified TLS 后解析，HTTP 一旦开始后的失败
+   仍密封 outcome unknown，绝不 replay/retry。
+5. `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`、DeepSeek Adapter `@7` 与 Session audit `@2` 的 exact
+   bytes/字段均不变；existing current Conformance `ccrun_4d8cc3ebefb3401a87a6c60165ba70d0`
+   已由 loader 对 current implementation/configuration 重新核验通过，有效至 `2026-09-25T14:50:31Z`。
+   两次 interim direct-CLI refresh 均在受限执行环境以 3 个 `DNS_RESOLUTION_FAILED` 于 credential/HTTP 前
+   关闭，不能冒充 Conformance 或 Provider dispatch。socket-pair stale detection、60 秒 idle rotation、
+   stale probe rotation 与 base audit 回归均已加入；相邻十七模块 `255/255` targeted tests PASS。
 
-该变化细化既有 DeepSeek Adapter owner，不改变 route、Provider、预算、披露、admission 或 Product
-职责，故不需要新 ADR。本 Finding 与同步后的 `SYS-CONTRACT-AI-MODEL-GATEWAY`、
+该变化细化既有 Engineering Chat Provider runtime owner，不改变 route、Provider、预算、披露、admission
+或 Adapter 职责，故不需要新 ADR。本 Finding 与同步后的 `SYS-CONTRACT-AI-MODEL-GATEWAY`、
 `SYS-ARCH-FLOWS`、`SYS-OPS-CONFIGURATION` 是 current system write-back。

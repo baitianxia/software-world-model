@@ -4,17 +4,21 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+import socket
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from software_world_model.ai_infrastructure.ark_chat_conformance import (
     ARK_CHAT_CONFORMANCE_FIXTURE_ID,
     ArkChatConformanceQualification,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
+    DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
     DeepSeekChatCompletionsNoToolsAdapter,
     DeepSeekModelConfiguration,
     PersistentDeepSeekChatTransport,
+    verify_deepseek_transport_session_audit,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_conformance import (
     DEEPSEEK_CHAT_CONFORMANCE_FIXTURE_ID,
@@ -64,8 +68,11 @@ from software_world_model.interface.engineering_chat_candidate import (
 )
 from software_world_model.interface.engineering_chat_provider_runtime import (
     ENGINEERING_CHAT_ARK_TRANSPORT_REF,
+    ENGINEERING_CHAT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION,
     ENGINEERING_CHAT_DEEPSEEK_TRANSPORT_REF,
     ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS,
+    EngineeringChatDeepSeekTransport,
+    _engineering_chat_tls_socket_has_pending_state,
     create_ark_engineering_chat_provider_model_runtime,
     create_deepseek_engineering_chat_provider_model_runtime,
     engineering_chat_ark_model_configuration,
@@ -149,6 +156,41 @@ class _UnusedSourceBroker:
 class _UnusedRetrievalWorker:
     def execute(self, operation):
         raise AssertionError(f"Session preparation read Source: {operation}")
+
+
+class _ProviderRuntimeConnection:
+    def __init__(self) -> None:
+        self.timeout = None
+        self.response = _ProviderRuntimeConnectionResponse()
+        self.sent = b""
+        self.closed = False
+
+    def settimeout(self, value) -> None:
+        self.timeout = value
+
+    def getpeercert(self, *, binary_form=False):
+        return b"provider-runtime-certificate" if binary_form else {}
+
+    def sendall(self, value: bytes) -> None:
+        self.sent += value
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class _ProviderRuntimeConnectionResponse:
+    status = 200
+    will_close = False
+
+    def begin(self) -> None:
+        return None
+
+    def read(self, maximum) -> bytes:
+        self.maximum = maximum
+        return b"{}"
+
+    def getheaders(self):
+        return [("Connection", "keep-alive")]
 
 
 class EngineeringChatProviderRuntimeTests(unittest.TestCase):
@@ -289,6 +331,116 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
             admitted_at=self.now,
             clock=lambda: self.now,
         )
+
+    def test_runtime_stale_probe_detects_peer_close(self) -> None:
+        active, peer = socket.socketpair()
+        self.addCleanup(active.close)
+        self.assertFalse(_engineering_chat_tls_socket_has_pending_state(active))
+
+        peer.close()
+
+        self.assertTrue(_engineering_chat_tls_socket_has_pending_state(active))
+
+    def test_runtime_rotates_idle_deepseek_session_before_dispatch(self) -> None:
+        connections = [_ProviderRuntimeConnection(), _ProviderRuntimeConnection()]
+        factory_calls = 0
+        clock = 100.0
+
+        def factory(_):
+            nonlocal factory_calls
+            connection = connections[factory_calls]
+            factory_calls += 1
+            return connection
+
+        transport = EngineeringChatDeepSeekTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=factory,
+            monotonic_clock=lambda: clock,
+        )
+        with patch(
+            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="runtime-before-idle",
+                timeout_milliseconds=1000,
+            )
+            clock += ENGINEERING_CHAT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="runtime-after-idle",
+                timeout_milliseconds=1000,
+            )
+
+        audit = verify_deepseek_transport_session_audit(
+            transport.session_audit()
+        )
+        self.assertEqual(factory_calls, 2)
+        self.assertTrue(connections[0].closed)
+        self.assertFalse(connections[1].closed)
+        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
+        self.assertEqual(audit["http_dispatch_count"], 2)
+        self.assertEqual(audit["connection_reuse_count"], 0)
+        self.assertEqual(audit["request_retry_count"], 0)
+
+        clock -= 1
+        with self.assertRaises(DomainError):
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="runtime-after-clock-regression",
+                timeout_milliseconds=1000,
+            )
+        self.assertTrue(connections[1].closed)
+        self.assertEqual(transport.http_dispatch_count, 2)
+
+    def test_runtime_rotates_stale_deepseek_session_before_dispatch(self) -> None:
+        connections = [_ProviderRuntimeConnection(), _ProviderRuntimeConnection()]
+        factory_calls = 0
+        stale = False
+
+        def factory(_):
+            nonlocal factory_calls
+            connection = connections[factory_calls]
+            factory_calls += 1
+            return connection
+
+        transport = EngineeringChatDeepSeekTransport(
+            api_key_resolver=lambda: "fixture-key",
+            connection_factory=factory,
+            stale_connection_probe=lambda _: stale,
+        )
+        with patch(
+            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
+            side_effect=lambda active: active.response,
+        ):
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="runtime-before-stale",
+                timeout_milliseconds=1000,
+            )
+            stale = True
+            transport.post_json(
+                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
+                body=b"{}",
+                client_request_id="runtime-after-stale",
+                timeout_milliseconds=1000,
+            )
+
+        audit = verify_deepseek_transport_session_audit(
+            transport.session_audit()
+        )
+        self.assertEqual(factory_calls, 2)
+        self.assertTrue(connections[0].closed)
+        self.assertFalse(connections[1].closed)
+        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
+        self.assertEqual(audit["http_dispatch_count"], 2)
+        self.assertEqual(audit["connection_reuse_count"], 0)
+        self.assertEqual(audit["request_retry_count"], 0)
 
     def test_real_provider_runtimes_prepare_without_io_or_credentials(self) -> None:
         ark = create_ark_engineering_chat_provider_model_runtime(

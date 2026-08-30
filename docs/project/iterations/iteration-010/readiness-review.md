@@ -172,9 +172,9 @@ prefix selection 已闭合且六模块 `154/154`、相邻十五模块 `229/229` 
 
 `FINDING-010-219/220 / run-095` 的 4 个 Ark sealed 429 已自动触发 DeepSeek；27 个 fallback call完成、1 个 post-dispatch unknown，
 证明 fallback 与 standing authority仍无阻塞。Q1/Q5 ACCEPTED、Q4零调用Clarification通过；Q2 stale keep-alive unknown 与 Q3 focused
-Review reject 使质量 Gate仍未通过。current transport 在 credential/HTTP 前轮转可读/异常或 idle ≥60 秒的 session，current
-`@22/@14/@17` repair 对 retained Finding 做 exact challenge binding 或删除并 APPROVE；相邻十七模块 `255/255` tests PASS。
-文档/可信父计划门禁、提交、fresh DeepSeek Conformance 与 run-096 是下一质量 Gate 证据。
+Review reject 使质量 Gate仍未通过。current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转可读/异常或 idle ≥60 秒
+的 session，base Adapter/Conformance identity不变；current `@22/@14/@17` repair 对 retained Finding 做 exact challenge binding 或删除
+并 APPROVE。相邻十七模块 `255/255` tests与 current Conformance loader PASS。文档/可信父计划门禁、提交与 run-096 是下一质量 Gate 证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

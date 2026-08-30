@@ -220,8 +220,9 @@ SOURCE-only operation；current 修复只从 current evidence-class allowlist选
 `FINDING-010-219/220 / run-095` 密封 Ark 4、DeepSeek 28；4 个 Ark sealed 429 后备用路线自动激活，DeepSeek 27 completed、1
 post-dispatch unknown，retry/人工审批/Production 均为 0。Q1/Q5 ACCEPTED，Q4 零 dispatch Clarification，证明 run-094 prefix 修复真实
 通过。Q2 暴露 browser idle 后 stale keep-alive 仍被复用；Q3 暴露 challenge assessments 与额外 unbound Finding 的 generic repair 不收敛。
-current transport 在 credential/HTTP 前轮转 stale 或 idle ≥60 秒的 session；current `@22/@14/@17` 以专用 directive 绑定 retained
-Finding 或删除它并 APPROVE。相邻十七模块 `255/255` tests PASS，fresh DeepSeek Conformance 与 run-096 待验证。run-095 仍不取得质量或 MVP PASS。
+current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转 stale 或 idle ≥60 秒的 session，base Adapter/Conformance
+identity不变；current `@22/@14/@17` 以专用 directive 绑定 retained Finding 或删除它并 APPROVE。相邻十七模块 `255/255` tests PASS，
+current Conformance loader PASS，run-096 待验证。run-095 仍不取得质量或 MVP PASS。
 
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 

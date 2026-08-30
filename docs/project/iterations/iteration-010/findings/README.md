@@ -16,8 +16,9 @@ iteration: ITER-010
   却又返回额外 Finding；generic repair 原样重复矛盾对象。current `@22/@14/@17` 用专用二选一 directive 要求 retained Finding 绑定
   exact challenge，或删除 unbound Findings 并 APPROVE；相邻十七模块 `255/255` 定向测试 PASS，fresh run-096 待验证。
 - [FINDING-010-219](FINDING-010-219.md)：run-095 的 DeepSeek fallback 完成 27/28 call；Q2 在 Q1 后闲置约 141 秒时复用已失效
-  keep-alive，于 HTTP 后密封 unknown。current transport 在 credential/HTTP 前轮转可读/异常或 idle ≥60 秒的 session，仍保留最多
-  3 acquisition、每 session 20 dispatch 和零 retry；相邻十七模块 `255/255` 定向测试 PASS，fresh Conformance 与 run-096 待验证。
+  keep-alive，于 HTTP 后密封 unknown。current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转可读/异常或 idle ≥60 秒
+  的 session，仍保留最多 3 acquisition、每 session 20 dispatch 和零 retry；base Adapter/Conformance exact identity不变，loader与相邻
+  十七模块 `255/255` 定向测试 PASS，run-096 待验证。
 - [FINDING-010-218](FINDING-010-218.md)：run-094 的 Q1 ACCEPTED/Q4 零调用 Clarification 通过；Q2 unknown、Q3 limitation、Q5
   protocol violation 使整体仍 FAIL。Q5 的 valid SOURCE Search 证明 initial question-scope helper 把同 module POM/TEST prefixes 混入
   SOURCE-only operation；current fix 只从 current evidence-class allowlist 选择 prefix，六模块 `154/154`、相邻十五模块 `229/229` tests PASS，

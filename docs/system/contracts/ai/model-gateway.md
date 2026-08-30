@@ -136,9 +136,11 @@ contract 把 schema authority 与 leading semantic authority 合并为恰好一�
 这些差异由各自 Conformance 和 execution profile 拥有，不定义通用 route 分支。
 
 当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、transport lifetime 最多
-3 次 acquisition。fully consumed persistent socket 在下一次 credential resolution/HTTP 前若 non-blocking readiness probe 为可读或异常，
-或自最后一次 HTTP completion 起已 idle 至少 60 秒，必须先关闭并在上述 acquisition bound 内取得新 verified TLS；credential 仍只在
-verified TLS 后解析，已经开始的 HTTP 不 replay/retry。profile 同时使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
+3 次 acquisition，并使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。Engineering Chat 以独立 runtime lifecycle ref
+`DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 包住 exact qualified transport：fully consumed persistent socket 在下一次
+qualified transport call 前若 non-blocking readiness probe 为可读或异常，或自最后一次 HTTP completion 起已 idle 至少 60 秒，则 runtime
+先关闭，再由 base transport 在上述 acquisition bound 内取得 verified TLS。该 wrapper 不改变 Adapter request/response/TLS/credential/HTTP
+bytes 或 Session audit；已经开始的 HTTP 仍不 replay/retry。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
 fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
 clean identity 上 PASS。当前状态是
 `ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /

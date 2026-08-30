@@ -633,6 +633,7 @@ ACCEPTED、Q4 零 dispatch Clarification，证明 evidence-class-only prefix clo
 DeepSeek keep-alive 并按 no-retry 失败；Q3 的 focused Reviewer 把全部 disclosed Boundary 判为 material/null code，却又返回额外
 Finding，generic repair 原样重复后失败。`FINDING-010-219/220` 分别形成 credential/HTTP 前的 stale-or-60-second-idle session rotation，
 以及 retained Finding 绑定 exact challenge 或删除 unbound Finding 并 APPROVE 的专用 repair closure。相邻十七模块 255 项定向测试 PASS；
-fresh DeepSeek Conformance 与 run-096 仍须证明真实 transport/Answer/Review，run-095 保持质量 FAIL。
+DeepSeek Adapter exact bytes 已恢复并由 current Conformance loader 重新核验通过；Engineering Chat runtime transport ref `@3` 与 run-096
+仍须证明真实 stale/idle rotation、Answer/Review，run-095 保持质量 FAIL。
 旧
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。

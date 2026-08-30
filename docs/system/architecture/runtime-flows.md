@@ -213,8 +213,10 @@ admission plugin 使用 `DEEPSEEK_DISPATCH_ADMISSION@1`，当前允许窗口与�
 通用 route 分支、质量或授权语义。
 
 当前 DeepSeek bounded profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`：最多 3 次 credential-free TLS acquisition，每条
-verified session 最多 20 次 HTTP dispatch；下一 dispatch 前可读/异常的 fully consumed socket 或 idle 至少 60 秒的 socket 必须先关闭，
-再在同一 acquisition bound 内重建 verified TLS，不能把该 pre-dispatch rotation 当作 request retry。40-call Capability qualification 通常
+verified session 最多 20 次 HTTP dispatch。Engineering Chat runtime 以
+`DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 在下一 qualified call 前关闭可读/异常的 fully consumed socket 或 idle 至少
+60 秒的 socket，再由 exact base transport 在同一 acquisition bound 内重建 verified TLS；该 product lifecycle rotation 不改变 qualified
+Adapter bytes、Session audit 或 request retry 语义。40-call Capability qualification 通常
 使用 2 条 session 并保留第 3 次 acquisition 余量，正式产品单题 4—6 calls 通常只使用第一条。当前 Ark profile 使用其独立的一请求一连接策略。这些数值是 execution profile 的当前实例和历史
 实现证据，不可借给其他 profile。
 

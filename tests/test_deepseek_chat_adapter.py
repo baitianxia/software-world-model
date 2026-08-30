@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import http.client
 import json
-import socket
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -12,7 +11,6 @@ from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DEFAULT_DEEPSEEK_ACTUAL_MODEL_FINGERPRINT,
     DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
     DEFAULT_DEEPSEEK_MAXIMUM_HTTP_DISPATCHES_PER_TLS_SESSION,
-    DEFAULT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION,
     DEFAULT_DEEPSEEK_MODEL,
     DEFAULT_DEEPSEEK_OPENAI_BASE_URL,
     DEFAULT_DEEPSEEK_TEMPERATURE,
@@ -20,7 +18,6 @@ from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DeepSeekModelConfiguration,
     PersistentDeepSeekChatTransport,
     RecordingDeepSeekChatCompletionsTransport,
-    _tls_socket_has_pending_state,
     verify_deepseek_transport_session_audit,
 )
 from software_world_model.ai_infrastructure.model_gateway import (
@@ -139,15 +136,6 @@ def success_response(
 
 
 class DeepSeekChatAdapterTests(unittest.TestCase):
-    def test_stale_connection_probe_detects_peer_close(self) -> None:
-        active, peer = socket.socketpair()
-        self.addCleanup(active.close)
-        self.assertFalse(_tls_socket_has_pending_state(active))
-
-        peer.close()
-
-        self.assertTrue(_tls_socket_has_pending_state(active))
-
     def request(self, **changes) -> ProviderRequest:
         values = {
             "model_ref": DEFAULT_DEEPSEEK_MODEL,
@@ -596,98 +584,6 @@ class DeepSeekChatAdapterTests(unittest.TestCase):
         self.assertEqual(audit["tls_handshake_success_count"], 2)
         self.assertEqual(audit["http_dispatch_count"], 2)
         self.assertEqual(audit["connection_reuse_count"], 0)
-
-    def test_transport_rotates_idle_session_before_next_dispatch(self) -> None:
-        connections = [_Connection(), _Connection()]
-        factory_calls = 0
-        clock = 100.0
-
-        def factory(_):
-            nonlocal factory_calls
-            connection = connections[factory_calls]
-            factory_calls += 1
-            return connection
-
-        transport = PersistentDeepSeekChatTransport(
-            api_key_resolver=lambda: "fixture-key",
-            connection_factory=factory,
-            monotonic_clock=lambda: clock,
-        )
-        with patch(
-            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
-            side_effect=lambda active: active.response,
-        ):
-            transport.post_json(
-                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
-                body=b"{}",
-                client_request_id="fixture-before-idle",
-                timeout_milliseconds=1000,
-            )
-            clock += DEFAULT_DEEPSEEK_MAXIMUM_IDLE_SECONDS_PER_TLS_SESSION
-            transport.post_json(
-                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
-                body=b"{}",
-                client_request_id="fixture-after-idle",
-                timeout_milliseconds=1000,
-            )
-
-        audit = verify_deepseek_transport_session_audit(
-            transport.session_audit()
-        )
-        self.assertEqual(factory_calls, 2)
-        self.assertTrue(connections[0].closed)
-        self.assertFalse(connections[1].closed)
-        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
-        self.assertEqual(audit["tls_handshake_success_count"], 2)
-        self.assertEqual(audit["http_dispatch_count"], 2)
-        self.assertEqual(audit["connection_reuse_count"], 0)
-        self.assertEqual(audit["request_retry_count"], 0)
-
-    def test_transport_rotates_stale_session_before_next_dispatch(self) -> None:
-        connections = [_Connection(), _Connection()]
-        factory_calls = 0
-        stale = False
-
-        def factory(_):
-            nonlocal factory_calls
-            connection = connections[factory_calls]
-            factory_calls += 1
-            return connection
-
-        transport = PersistentDeepSeekChatTransport(
-            api_key_resolver=lambda: "fixture-key",
-            connection_factory=factory,
-            stale_connection_probe=lambda _: stale,
-        )
-        with patch(
-            "software_world_model.ai_infrastructure.deepseek_chat_adapter.http.client.HTTPResponse",
-            side_effect=lambda active: active.response,
-        ):
-            transport.post_json(
-                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
-                body=b"{}",
-                client_request_id="fixture-before-stale",
-                timeout_milliseconds=1000,
-            )
-            stale = True
-            transport.post_json(
-                endpoint=DEFAULT_DEEPSEEK_CHAT_COMPLETIONS_ENDPOINT,
-                body=b"{}",
-                client_request_id="fixture-after-stale",
-                timeout_milliseconds=1000,
-            )
-
-        audit = verify_deepseek_transport_session_audit(
-            transport.session_audit()
-        )
-        self.assertEqual(factory_calls, 2)
-        self.assertTrue(connections[0].closed)
-        self.assertFalse(connections[1].closed)
-        self.assertEqual(audit["tls_handshake_attempt_count"], 2)
-        self.assertEqual(audit["tls_handshake_success_count"], 2)
-        self.assertEqual(audit["http_dispatch_count"], 2)
-        self.assertEqual(audit["connection_reuse_count"], 0)
-        self.assertEqual(audit["request_retry_count"], 0)
 
     def test_transport_rotates_before_twenty_first_dispatch_on_one_session(self) -> None:
         connections = [_Connection(), _Connection()]

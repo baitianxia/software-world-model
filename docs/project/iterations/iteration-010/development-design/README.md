@@ -74,8 +74,9 @@ scope 下同 module POM/TEST prefixes 被错误送入 SOURCE operation。current
 `FINDING-010-219/220 / run-095` 证明该 prefix closure 已让 Q5 以 2 个 exact Citations ACCEPTED，Q1也保持 ACCEPTED、Q4保持零
 dispatch Clarification；Q2/Q3 仍使整体 FAIL。Q2 的首个 DeepSeek fallback 在前一 Turn 后闲置约 141 秒，复用 stale keep-alive 后形成
 post-dispatch unknown；Q3 的 focused Review 让 material/null-code assessments 与 unbound Finding 并存且 generic repair 原样重复。
-current transport 在 credential/HTTP 前轮转 stale 或 idle ≥60 秒的 session，current `@22/@14/@17` repair 要求 Finding 与 exact
-challenge 闭合或删除并 APPROVE；相邻十七模块 `255/255` tests PASS，下一项是门禁、提交、fresh Conformance 与 run-096。
+current Engineering Chat runtime ref `@3` 在 qualified transport call 前轮转 stale 或 idle ≥60 秒的 session，base Adapter/Conformance
+identity不变；current `@22/@14/@17` repair 要求 Finding 与 exact challenge 闭合或删除并 APPROVE。相邻十七模块 `255/255` tests与
+current Conformance loader PASS，下一项是门禁、提交与 run-096。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

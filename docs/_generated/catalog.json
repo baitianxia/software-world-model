@@ -4616,6 +4616,7 @@
     "status": "dispositioned",
     "authority": "execution-evidence",
     "owners": [
+      "interface",
       "ai",
       "operations",
       "quality"

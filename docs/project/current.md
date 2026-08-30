@@ -317,7 +317,8 @@ POM/TEST prefixes 被初版 helper 混入 SOURCE-only scope，Broker 按 evidenc
 `FINDING-010-219/220 / run-095` 已执行该 successor。Ark 4 个 dispatch 全为 sealed 429，DeepSeek 自动接管 28 个 call，其中 27
 completed、1 个 post-dispatch unknown；retry、人工审批与 Production 均为 0。Q1/Q5 ACCEPTED，Q4 零 dispatch Clarification，证明
 evidence-class prefix closure 已真实通过。Q2 在前一 Turn 后闲置约 141 秒时复用 stale keep-alive，于首次 HTTP 密封 unknown；Q3 的
-focused Reviewer 让 material/null-code assessments 与额外 Finding 并存，专用 repair 缺失而原样重复。current transport 在 credential/HTTP
-前轮转可读/异常或 idle ≥60 秒的 persistent session，仍受 3 acquisition/20 dispatch/零 retry 约束；current `@22/@14/@17` repair
+focused Reviewer 让 material/null-code assessments 与额外 Finding 并存，专用 repair 缺失而原样重复。current Engineering Chat runtime
+`DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 在 qualified transport call 前轮转可读/异常或 idle ≥60 秒的 persistent session，
+仍受 3 acquisition/20 dispatch/零 retry 约束；base Adapter bytes不变且 current Conformance loader PASS。current `@22/@14/@17` repair
 要求 retained Finding 绑定 exact challenge，或删除 unbound Findings 并 APPROVE。相邻十七模块 `255/255` 定向测试 PASS。下一连续执行项是
-完成文档与可信父计划门禁，提交 successor，取得 fresh DeepSeek Conformance 并执行 run-096；run-095 保持真实质量 FAIL。
+完成文档与可信父计划门禁，提交 exact runtime successor 并执行 run-096；run-095 保持真实质量 FAIL。

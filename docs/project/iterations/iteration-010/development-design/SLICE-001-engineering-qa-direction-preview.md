@@ -100,9 +100,10 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - DeepSeek fallback 的 listener preparation 只密封 non-dispatching decision；真正的 600 秒 active receipt 在 trusted Ark unavailable 后的 first
   DeepSeek preflight 以同一 plan 激活，并重新核验 900 秒 pricing freshness、闲时/override、run authority 和完整质量预算。激活与任何拒绝都
   发生在 credential/TLS/HTTP 前；后续 request 不得重新延长 receipt。
-- DeepSeek persistent TLS 在每次 credential/HTTP 前检查 fully consumed socket：non-blocking readiness 为可读/异常，或自最后 HTTP
-  completion 起 idle ≥60 秒时先关闭并重新 acquisition。轮转仍受 transport lifetime 3 次 TLS 和每 session 20 dispatch 约束，不构成
-  request retry；HTTP 开始后的失败仍 outcome unknown、零 replay。
+- Engineering Chat DeepSeek runtime ref `DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 在每次 qualified transport call 前检查
+  fully consumed socket：non-blocking readiness 为可读/异常，或自最后 HTTP completion 起 idle ≥60 秒时先关闭，再由 exact base
+  transport acquisition。轮转仍受 transport lifetime 3 次 TLS 和每 session 20 dispatch 约束，不构成 request retry；base Adapter、
+  Conformance identity与HTTP开始后的 outcome-unknown/零 replay语义不变。
 - World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
   coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
   Coverage，且该全局边界只在 BOUNDARY 中呈现。
