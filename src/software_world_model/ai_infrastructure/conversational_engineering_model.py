@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@14"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@15"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@14"
+    "conversational-engineering-agent-no-tools-prompt@15"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@14"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@7"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@15"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@8"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -210,12 +210,30 @@ audit fragment in the underlying Observation. Only text actually present in
 draft.content is user-visible disclosure. Keep at least one material Boundary
 binding for a LIMITATION even when removing unrelated audit detail from its
 content.
+Do not remove a material Boundary binding merely because draft.content does not
+name its opaque ID or quote the raw Observation. The user-visible prose states
+the material unresolved requirement; the structured ID binds that prose without
+becoming prose itself.
 Every material affirmative conclusion in draft.content, including one repeated in a
 summary, table, diagram, or code comment, must have a corresponding draft.claims
 entry with direct current SUPPORT. A caveat elsewhere does not turn an
 unsupported affirmative statement into a boundary. When evidence for a requested
 chain segment is missing, report only that boundary and never render the unknown
 relation as an affirmative chain step.
+Claim coverage is semantic, not one Claim entry per phrase or call. One Claim may
+cover several content assertions when its statement expressly preserves every
+material category, scope, condition, certainty, negation, and local ordering
+qualifier and its current SUPPORT covers them. Do not add a redundant Claim for an
+assertion already covered that way. A heading or footer that attributes already
+enumerated conclusions to the exact repository_revision sealed in turn.binding is
+trusted provenance context, not another domain conclusion requiring a standalone
+Claim; a different or invented revision remains a defect. A pure boundary
+statement that current evidence does not confirm or establish a requested
+relation, order, effect, or guarantee is not an affirmative Claim. An affirmative
+diagnostic about what a file, search, tool, or model did or did not contain does
+not become a boundary merely because it appears in a LIMITATION. If that adjacent
+diagnostic has no legal SUPPORT-bound Claim, delete it and state only the material
+unresolved boundary.
 A heading, table column header, list lead-in, label, or surrounding sentence adds
 inherited category, scope, condition, certainty, and negation to every assertion
 it contains. Each corresponding draft.claims[].statement must restate every
@@ -317,8 +335,13 @@ increase the Claim inventory merely to rewrite prose. A new Claim entry is
 allowed only when a global completeness Finding explicitly identifies a material
 assertion already present in reviewed_draft.content but absent from its Claim
 inventory; the new entry must only enumerate that existing assertion and must use
-current SUPPORT. Before returning, compare the replacement Draft with the sealed
-reviewed Draft and remove every assertion not needed to satisfy the Findings.
+current SUPPORT. That exception applies directly only to an ANSWER. A LIMITATION
+must retain zero Claims: resolve a global-completeness Finding by deleting or
+narrowing adjacent affirmative diagnostics to a pure material boundary, or change
+to ANSWER only when an already-present assertion has current SUPPORT and can be
+enumerated without adding a new material conclusion. Before returning, compare
+the replacement Draft with the sealed reviewed Draft and remove every assertion
+not needed to satisfy the Findings.
 The first non-whitespace output character must be { and the last must be }.
 Never emit analysis, narration, a Markdown fence, or any text outside that one
 JSON object.
@@ -521,6 +544,10 @@ structured draft.boundary_observation_ids reference is evidence binding, not
 automatic user-visible disclosure of the complete raw Boundary Observation.
 Apply the fragment test only to text actually present in the complete Draft;
 retained metrics or diagnostics absent from draft.content are not disclosed.
+Never return a Finding merely because draft.content does not name an opaque
+Boundary ID or reproduce the raw Observation. When the Draft states the material
+unresolved requirement and binds the corresponding Boundary, the hidden ID is
+working as intended.
 For a LIMITATION, do not demand removal of its last material Boundary binding
 merely because the underlying audit Observation also retains metadata that the
 Draft does not quote. If the Draft actually mixes a material limitation with
@@ -595,6 +622,22 @@ approval. Any material affirmative conclusion in prose, a summary, table,
 diagram, or code comment that lacks a corresponding claim is a global
 completeness Finding with claim_index null. A boundary caveat cannot authorize
 the same unknown relation when it is asserted affirmatively elsewhere.
+Perform this comparison semantically, not by requiring one Claim per phrase,
+call, or sentence. A single Claim covers multiple content fragments when it
+expressly carries all of their material category, scope, condition, certainty,
+negation, and local-order qualifiers and the cited current SUPPORT covers them.
+Before emitting a global-completeness Finding, inspect every ordered Claim and do
+not report an assertion as missing when any Claim already provides that semantic
+coverage. A heading or footer that attributes already-enumerated conclusions to
+the exact repository_revision sealed in turn.binding is provenance context and
+does not require a standalone Claim; a mismatched or invented revision is still a
+concrete defect. A pure boundary statement that current evidence does not confirm
+or establish a requested relation, order, effect, or guarantee is not an
+affirmative Claim and does not make an otherwise valid LIMITATION with an empty
+Claim inventory incomplete. An affirmative diagnostic about a file, search,
+tool, or model remains affirmative; when it is not SUPPORT-bound and is not
+materially requested, require its deletion or narrowing instead of asking a
+LIMITATION to add an illegal Claim.
 Reconstruct every content assertion with the category, scope, condition,
 certainty, and negation inherited from its heading, table column, list lead-in,
 label, or surrounding sentence. If a claim inventory entry records only the
@@ -4190,6 +4233,7 @@ def _review_feedback_view(
     rewrite_contract: dict[str, object] = {
         "active": rewrite_active,
         "reviewed_draft_digest": reviewed_draft.digest.value,
+        "reviewed_response_kind": reviewed_draft.response_kind.value,
         "reviewed_draft_is_evidence": False,
         "evidence_required_finding_present": evidence_required,
     }
@@ -4201,8 +4245,14 @@ def _review_feedback_view(
                 "finding_claim_indices_bind_reviewed_draft_order": True,
                 "preserve_non_defective_requested_conclusions": True,
                 "new_user_visible_material_assertions_forbidden": True,
-                "claim_inventory_increase_forbidden_except_global_completeness": True,
+                "claim_inventory_increase_forbidden_except_answer_global_completeness": True,
                 "global_completeness_exception_requires_existing_content_assertion": True,
+                "global_completeness_claim_addition_requires_answer_response_kind": True,
+                "limitation_claim_inventory_must_remain_empty": True,
+                "limitation_global_completeness_without_answer_conversion": (
+                    "DELETE_OR_NARROW_TO_PURE_MATERIAL_BOUNDARY"
+                ),
+                "answer_conversion_requires_existing_assertion_and_current_support": True,
                 "allowed_targeted_transformations": (
                     "DELETE",
                     "NARROW",
@@ -4286,6 +4336,7 @@ def _primary_input_view(
             "limitation_requires_at_least_one_boundary_reference": True,
             "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
             "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+            "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
             "container_context_is_part_of_contained_assertion": True,
             "claim_statement_required_inherited_material_qualifiers": (
                 "category",
@@ -4294,6 +4345,17 @@ def _primary_input_view(
                 "certainty",
                 "negation",
             ),
+            "claim_coverage_is_semantic_not_one_entry_per_phrase": True,
+            "grouped_claim_may_cover_multiple_assertions_when_all_material_qualifiers_present": True,
+            "redundant_claim_for_semantically_covered_assertion_forbidden": True,
+            "trusted_repository_revision_attribution": (
+                request.binding.repository_revision
+            ),
+            "matching_repository_revision_attribution_is_not_standalone_claim": True,
+            "mismatched_or_invented_revision_attribution_is_defect": True,
+            "pure_unresolved_boundary_statement_is_not_affirmative_claim": True,
+            "limitation_affirmative_diagnostic_requires_support_or_omission": True,
+            "limitation_claims_must_be_empty": True,
             "evidence_gap_is_not_authority_denial": True,
             "authorization_limitation_requires_exact_boundary": True,
             "producer_invocation_is_not_consumer_visible_effect": True,
@@ -5236,6 +5298,7 @@ def _review_input_view(
                 "mixed_material_and_non_material_disclosure_requires_audit_only_finding": True,
                 "material_gap_does_not_authorize_adjacent_global_metrics": True,
                 "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+                "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
                 "materiality_applies_only_to_text_present_in_draft_content": True,
                 "retained_metadata_absent_from_draft_content_is_not_disclosed": True,
                 "digest": item.digest.value,
@@ -5251,6 +5314,17 @@ def _review_input_view(
             "container_context_is_part_of_contained_assertion": True,
             "inherited_material_qualifier_omission_is_global_completeness_finding": True,
             "global_completeness_finding_claim_index": None,
+            "claim_coverage_is_semantic_not_one_entry_per_phrase": True,
+            "grouped_claim_may_cover_multiple_assertions_when_all_material_qualifiers_present": True,
+            "global_completeness_requires_no_semantically_covering_claim": True,
+            "trusted_repository_revision_attribution": (
+                request.turn_request.binding.repository_revision
+            ),
+            "matching_repository_revision_attribution_is_not_standalone_claim": True,
+            "mismatched_or_invented_revision_attribution_is_defect": True,
+            "pure_unresolved_boundary_statement_is_not_affirmative_claim": True,
+            "limitation_empty_claim_inventory_is_valid_for_pure_boundaries": True,
+            "limitation_affirmative_diagnostic_requires_support_or_omission": True,
             "evidence_gap_is_not_authority_denial": True,
             "authorization_limitation_requires_exact_boundary": True,
             "producer_invocation_is_not_consumer_visible_effect": True,
@@ -5258,6 +5332,7 @@ def _review_input_view(
             "audit_retention_requires_answer_disclosure": False,
             "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
             "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+            "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
             "limitation_requires_at_least_one_boundary_reference": True,
             "removing_last_material_limitation_boundary_without_replacement_forbidden": True,
             (

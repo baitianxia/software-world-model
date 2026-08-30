@@ -18,7 +18,7 @@ historical_authorized_at: 2026-08-21T09:18:34Z
 critical_assumption_catalog_digest: sha256:ba681104ffe22692479dcc6e929f3677d582b26db6059a7d6f280134334670ca
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -117,6 +117,13 @@ post-dispatch outcome unknown；没有 trusted pre-dispatch unavailable，故 De
 SUPPORT/BOUNDARY ID domains，以及 Q3 Review successor 没有 exact rejected Draft、只能重建并扩张 Claims。current `@14/@7/@9` 已闭合
 exact edit base、targeted rewrite 与 redundant reference domains，并保持 15 次 authority、route、fallback、budget、retry 与 Production
 不变；144 tests PASS、外调 0。fresh run-087 是质量 Gate 的下一执行证据。
+
+`FINDING-010-210 / run-087` 的 Q4 继续零 dispatch Clarification；Q1/Q2/Q5 为 Review limit，Q3 是合法 no-retry post-dispatch unknown。
+Ark 10 个 call 完成、4 个 sealed 429 后，DeepSeek fallback 42 个 call 完成、1 个 outcome unknown，证明周末 route 可用且无需重复授权。Q1
+Claim inventory 保持 `4 → 5 → 6 → 6 → 6`，旧 rejected-Draft 缺口已关闭；新的 first divergence 是 semantic Claim 被按 phrase 拆分、
+global-completeness exception 与 Limitation closed branch 冲突，以及 opaque Boundary binding 的假 disclosure Finding。current `@15/@8/@10`
+已闭合这些通用合同并保持 15 次 authority、route、fallback、budget、retry 与 Production 不变；144 tests PASS、外调 0。fresh run-088 是
+质量 Gate 的下一执行证据。
 
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 

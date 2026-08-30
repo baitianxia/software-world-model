@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -25,6 +25,10 @@ binding/disclosure。current `@13/@7/@8` candidate 已通用闭合，144 项定�
 
 `FINDING-010-209 / run-086` 进一步把偏差定位到 Review successor 丢失 exact rejected Draft，以及 final preflight 未重复 exact
 SUPPORT/BOUNDARY ID domains。current `@14/@7/@9` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-087，仍不等待
+Provider 或重复人工授权。
+
+`FINDING-010-210 / run-087` 已证明 exact rejected-Draft edit base 生效，并把新偏差定位到 semantic Claim coverage、Limitation 分支重写与
+opaque Boundary binding。current `@15/@8/@10` candidate 已通用闭合，144 项定向验证 PASS；下一项执行是 fresh run-088，仍不等待
 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |

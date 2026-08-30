@@ -470,6 +470,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "boundary_metadata_absent_from_draft_content_is_not_disclosed": policy[
                         "boundary_metadata_absent_from_draft_content_is_not_disclosed"
                     ],
+                    "bound_boundary_id_need_not_be_named_or_raw_disclosed": policy[
+                        "bound_boundary_id_need_not_be_named_or_raw_disclosed"
+                    ],
                     "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": policy[
                         "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request"
                     ],
@@ -509,6 +512,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "limitation_requires_at_least_one_boundary_reference": True,
                 "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
                 "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+                "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
                 "answer_boundary_requires_unresolved_material_requirement_or_explicit_diagnostic_request": True,
                 "resolved_acquisition_candidate_requires_relevance_review": True,
                 "resolved_acquisition_candidate_is_automatic_exclusion": False,
@@ -589,7 +593,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1004,7 +1008,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1847,7 +1851,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@9",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@10",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -1912,6 +1916,40 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             reviewer_policy["global_completeness_finding_claim_index"]
         )
         self.assertTrue(
+            reviewer_policy[
+                "claim_coverage_is_semantic_not_one_entry_per_phrase"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "grouped_claim_may_cover_multiple_assertions_when_all_material_qualifiers_present"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "global_completeness_requires_no_semantically_covering_claim"
+            ]
+        )
+        self.assertEqual(
+            reviewer_policy["trusted_repository_revision_attribution"],
+            _binding().repository_revision,
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "matching_repository_revision_attribution_is_not_standalone_claim"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "pure_unresolved_boundary_statement_is_not_affirmative_claim"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "limitation_empty_claim_inventory_is_valid_for_pure_boundaries"
+            ]
+        )
+        self.assertTrue(
             reviewer_policy["evidence_gap_is_not_authority_denial"]
         )
         self.assertTrue(
@@ -1940,6 +1978,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "boundary_metadata_absent_from_draft_content_is_not_disclosed"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "bound_boundary_id_need_not_be_named_or_raw_disclosed"
             ]
         )
         self.assertTrue(
@@ -1997,6 +2040,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             reviewer_prompt,
         )
         self.assertIn(
+            "Perform this comparison semantically, not by requiring one Claim per phrase",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "exact repository_revision sealed in turn.binding is provenance context",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "does not make an otherwise valid LIMITATION with an empty",
+            reviewer_prompt,
+        )
+        self.assertIn(
             "Reconstruct every content assertion with the category, scope, condition",
             reviewer_prompt,
         )
@@ -2014,6 +2069,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "automatic user-visible disclosure",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "Never return a Finding merely because draft.content does not name an opaque",
             reviewer_prompt,
         )
         self.assertIn(
@@ -2952,9 +3011,25 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             same_package_feedback["review_rewrite_contract"]["active"]
         )
+        self.assertEqual(
+            same_package_feedback["review_rewrite_contract"][
+                "reviewed_response_kind"
+            ],
+            "ANSWER",
+        )
         self.assertTrue(
             same_package_feedback["review_rewrite_contract"][
                 "new_user_visible_material_assertions_forbidden"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "global_completeness_claim_addition_requires_answer_response_kind"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "limitation_claim_inventory_must_remain_empty"
             ]
         )
         with self.assertRaises(DomainError) as forged_reviewed_draft:
@@ -4874,6 +4949,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "limitation_requires_at_least_one_boundary_reference": True,
                 "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
                 "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
+                "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
                 "container_context_is_part_of_contained_assertion": True,
                 "claim_statement_required_inherited_material_qualifiers": (
                     "category",
@@ -4882,6 +4958,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "certainty",
                     "negation",
                 ),
+                "claim_coverage_is_semantic_not_one_entry_per_phrase": True,
+                "grouped_claim_may_cover_multiple_assertions_when_all_material_qualifiers_present": True,
+                "redundant_claim_for_semantically_covered_assertion_forbidden": True,
+                "trusted_repository_revision_attribution": _binding().repository_revision,
+                "matching_repository_revision_attribution_is_not_standalone_claim": True,
+                "mismatched_or_invented_revision_attribution_is_defect": True,
+                "pure_unresolved_boundary_statement_is_not_affirmative_claim": True,
+                "limitation_affirmative_diagnostic_requires_support_or_omission": True,
+                "limitation_claims_must_be_empty": True,
                 "evidence_gap_is_not_authority_denial": True,
                 "authorization_limitation_requires_exact_boundary": True,
                 "producer_invocation_is_not_consumer_visible_effect": True,

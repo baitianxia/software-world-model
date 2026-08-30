@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -54,6 +54,13 @@ post-dispatch outcome unknown，故 DeepSeek 0 正确且不重发。Q4 零 dispa
 偏差是 final preflight 未重复 exact SUPPORT/BOUNDARY ID domains，以及 Review successor 丢失 exact rejected Draft 后重建并扩张 Claims。
 current `@14/@7/@9` candidate 把 rejected Draft 作为 same-Package targeted edit base，并在 final preflight 重复 exact reference domains；
 15 次 Turn authority、route、fallback、预算、retry 与 Production 边界不变，144 tests PASS；fresh run-087 是下一项真实证据。
+
+`FINDING-010-210 / run-087` 已证明上述 exact edit base 生效：Q1 的 rejected Draft Claim 数保持 `4 → 5 → 6 → 6 → 6`。Ark 4 个 sealed
+429 后按现行策略合法切换 DeepSeek；DeepSeek 42 个 call 完成、1 个 post-dispatch unknown，retry/人工审批/Production 仍为 0。Q4 零
+dispatch Clarification 保持；Q1/Q2/Q5 的 Review limit 又暴露 semantic Claim coverage 被按 phrase 重复拆分、generic global-completeness
+Claim exception 与 `LIMITATION` 零 Claim branch 冲突，以及 opaque Boundary binding 被误作正文披露。current `@15/@8/@10` candidate 现按
+semantic coverage、response kind 与 hidden binding 收窄合同；15 次 Turn authority、route、fallback、预算、retry 与 Production 边界不变，
+144 tests PASS；fresh run-088 是下一项真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

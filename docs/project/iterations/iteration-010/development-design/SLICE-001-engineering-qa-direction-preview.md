@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -69,6 +69,10 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   State/digest/reference domain 错配时在 Provider 前失败关闭。无需新 Evidence 的同包 rewrite 以 rejected Draft 为 exact edit base，只按
   Finding 删除、收窄、限定、重排或重述，不增加新的用户可见物质断言；global completeness 只能枚举原正文已有断言。final preflight
   重复 exact SUPPORT/BOUNDARY ID domains 和 active rewrite contract，但不新增 Evidence/Tool/Review/Delivery authority。
+- Claim coverage 是 semantic/many-fragment-to-one，不要求每个 phrase、call 或 sentence 单列 Claim；matching exact-revision attribution 是
+  sealed provenance context，不能制造 redundant Claim。纯 material evidence boundary 不属于 affirmative Claim；Limitation 保持零 Claim，
+  同包 global-completeness rewrite 通过删除/收窄无 SUPPORT 的相邻 diagnostic 收敛，只有既有 assertion 有 current SUPPORT 时才可转 Answer。
+  structured Boundary ID 是非正文 binding，不要求显示 opaque ID 或 raw Observation。
 - 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并为每个
   Package Boundary 投影 ordered relevance challenge；`SOURCE_SEARCH / LITERAL_TEXT_SEARCH_HIT` item 被后续
   `SOURCE_READ / EXACT_STATIC_SOURCE_TEXT / coverage_complete=true` 闭合时使用 `RESOLVED_ACQUISITION`，其余使用
