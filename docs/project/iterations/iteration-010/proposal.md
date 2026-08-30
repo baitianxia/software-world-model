@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -118,6 +118,12 @@ ACCEPTED、Q4 零调用 Clarification，Q2 structured-invalid、Q3 reviewed limi
 Reviewer 从 method vocabulary或 prior Finding 向 exact caller-only Claim 重导入 database effect，随后 Primary 两次 exact-repeat rejected
 Draft。current `@23/@15/@18` 把 exact challenged Claim 独立投影给 Reviewer，并要求 repeat repair 显式区分 invocation/order 与未确认 effect
 或删除 assertion；wire output schema、authority、route、budget、retry 与 Production 边界不变，fresh run-097 是下一真实证据。
+
+`FINDING-010-222 / run-097` 密封 Ark 40 dispatch（39 completed、1 post-dispatch unknown），DeepSeek 0；Q1/Q5 ACCEPTED、Q4
+零调用 Clarification。Q3 的 13 个 caller challenge 全部 WITHIN，随后 bound + empty Boundary 被 Reviewer/repair 错选
+`NOT_DISCLOSED_IN_DRAFT`。current `@24/@16/@19` 逐 challenge 投影 sealed reference flag 与 fragment-state closed disposition 表；
+targeted `34/34`、相邻 16 模块 `261/261` PASS，wire output schema、authority、route、budget、retry 与 Production 边界不变，fresh
+run-098 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

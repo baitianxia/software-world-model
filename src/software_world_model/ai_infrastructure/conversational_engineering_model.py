@@ -93,14 +93,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@23"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@24"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@23"
+    "conversational-engineering-agent-no-tools-prompt@24"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@23"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@15"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@24"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@16"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -662,6 +662,16 @@ Finding during focused Review.
 For every boundary_relevance_challenge, copy disposition only from that
 challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
 disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
+Treat draft_declared_boundary_reference and closed_dispositions_by_fragment_state
+as sealed exact inputs for each challenge. When the reference flag is true,
+NOT_DISCLOSED_IN_DRAFT is forbidden even if draft_disclosed_fragments is empty;
+with empty fragments, select the supplied kind_specific_audit_only_disposition
+and bind one global no-evidence Finding that removes the stale structured
+reference. When the reference flag is false and fragments are empty, use
+NOT_DISCLOSED_IN_DRAFT. When the reference flag is false but an exact fragment
+is present, use the kind-specific audit-only disposition. User requirement,
+boundary_scope, or a statement that the Draft does not disclose the Boundary
+cannot override the sealed reference flag or substitute for an exact fragment.
 For every boundary relevance assessment, return draft_disclosed_fragments as
 the exact, non-empty, presentation-unique substrings copied from draft.content
 that actually disclose the challenged Boundary. Inline Markdown backtick
@@ -3163,6 +3173,9 @@ def _output_preflight_view(
         relevance_challenge_ids = reference_policy.get(
             "boundary_relevance_assessment_ids_required_exact_order"
         )
+        relevance_challenges = role_input_payload.get(
+            "boundary_relevance_challenges"
+        )
         exact_claim_scope_only = reference_policy.get(
             "scope_classification_must_use_exact_claim_statement_only"
         )
@@ -3173,12 +3186,23 @@ def _output_preflight_view(
             "user_requirement_neighboring_content_and_prior_review_"
             "are_not_claim_scope"
         )
+        relevance_dispositions_are_exhaustive = reference_policy.get(
+            "boundary_relevance_allowed_exact_dispositions_are_exhaustive"
+        )
+        bound_empty_fragments_require_audit_only = reference_policy.get(
+            "bound_empty_boundary_fragments_require_kind_specific_audit_only_"
+            "and_global_reference_removal_finding"
+        )
+        unbound_empty_fragments_require_not_disclosed = reference_policy.get(
+            "unbound_empty_boundary_fragments_require_not_disclosed"
+        )
         if not all(
             isinstance(value, (tuple, list))
             for value in (
                 claim_indices,
                 caller_challenge_ids,
                 relevance_challenge_ids,
+                relevance_challenges,
             )
         ) or not all(
             value is True
@@ -3186,11 +3210,133 @@ def _output_preflight_view(
                 exact_claim_scope_only,
                 method_name_has_no_effect_semantics,
                 neighboring_context_is_not_claim_scope,
+                relevance_dispositions_are_exhaustive,
+                bound_empty_fragments_require_audit_only,
+                unbound_empty_fragments_require_not_disclosed,
             )
-        ):
+        ) or len(relevance_challenge_ids) != len(relevance_challenges):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent output preflight Review domains are invalid",
+            )
+        relevance_disposition_contracts: list[dict[str, object]] = []
+        for expected_id, challenge in zip(
+            relevance_challenge_ids,
+            relevance_challenges,
+            strict=True,
+        ):
+            if not isinstance(challenge, Mapping):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight relevance challenge is invalid",
+                )
+            challenge_id = challenge.get("challenge_id")
+            challenge_kind = challenge.get("kind")
+            declared_reference = challenge.get(
+                "draft_declared_boundary_reference"
+            )
+            allowed_dispositions = challenge.get(
+                "allowed_exact_dispositions"
+            )
+            audit_only_disposition = challenge.get(
+                "kind_specific_audit_only_disposition"
+            )
+            dispositions_by_fragment_state = challenge.get(
+                "closed_dispositions_by_fragment_state"
+            )
+            if (
+                challenge_id != expected_id
+                or challenge_kind
+                not in {
+                    EngineeringAgentBoundaryRelevanceChallengeKind
+                    .RESOLVED_ACQUISITION.value,
+                    EngineeringAgentBoundaryRelevanceChallengeKind
+                    .BOUNDARY_MATERIALITY.value,
+                }
+                or type(declared_reference) is not bool
+                or not isinstance(allowed_dispositions, (tuple, list))
+                or not all(
+                    isinstance(item, str) for item in allowed_dispositions
+                )
+                or not isinstance(audit_only_disposition, str)
+                or not isinstance(dispositions_by_fragment_state, Mapping)
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight relevance disposition contract is invalid",
+                )
+            empty_fragments = dispositions_by_fragment_state.get(
+                "empty_fragments"
+            )
+            nonempty_fragments = dispositions_by_fragment_state.get(
+                "nonempty_exact_fragments"
+            )
+            if not all(
+                isinstance(value, (tuple, list))
+                and all(isinstance(item, str) for item in value)
+                for value in (empty_fragments, nonempty_fragments)
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight relevance fragment-state contract is invalid",
+                )
+            allowed_tuple = tuple(allowed_dispositions)
+            empty_tuple = tuple(empty_fragments)
+            nonempty_tuple = tuple(nonempty_fragments)
+            expected_audit_only = (
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                .RESOLVED_AUDIT_ONLY.value
+                if challenge_kind
+                == EngineeringAgentBoundaryRelevanceChallengeKind
+                .RESOLVED_ACQUISITION.value
+                else EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                .NON_MATERIAL_AUDIT_ONLY.value
+            )
+            expected_closed = (
+                EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                .MATERIAL_TO_USER_REQUEST.value
+                if declared_reference
+                else EngineeringAgentBoundaryRelevanceAssessmentDisposition
+                .NOT_DISCLOSED_IN_DRAFT.value
+            )
+            expected_empty = (
+                (expected_audit_only,)
+                if declared_reference
+                else (expected_closed,)
+            )
+            expected_nonempty = (
+                (expected_closed, expected_audit_only)
+                if declared_reference
+                else (expected_audit_only,)
+            )
+            if (
+                allowed_tuple != (expected_closed, expected_audit_only)
+                or audit_only_disposition != expected_audit_only
+                or empty_tuple != expected_empty
+                or nonempty_tuple != expected_nonempty
+                or challenge.get(
+                    "allowed_exact_dispositions_are_exhaustive"
+                )
+                is not True
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight relevance closure is inconsistent",
+                )
+            relevance_disposition_contracts.append(
+                {
+                    "challenge_id": challenge_id,
+                    "kind": challenge_kind,
+                    "draft_declared_boundary_reference": declared_reference,
+                    "allowed_exact_dispositions": allowed_tuple,
+                    "kind_specific_audit_only_disposition": (
+                        audit_only_disposition
+                    ),
+                    "closed_dispositions_by_fragment_state": {
+                        "empty_fragments": empty_tuple,
+                        "nonempty_exact_fragments": nonempty_tuple,
+                    },
+                }
             )
         preflight["review_output_contract"] = {
             "claim_assessment_indices_required_exact_order": tuple(
@@ -3202,6 +3348,15 @@ def _output_preflight_view(
             "boundary_relevance_assessment_ids_required_exact_order": tuple(
                 relevance_challenge_ids
             ),
+            "boundary_relevance_disposition_contracts": tuple(
+                relevance_disposition_contracts
+            ),
+            "boundary_relevance_allowed_exact_dispositions_are_exhaustive": True,
+            (
+                "bound_empty_boundary_fragments_require_kind_specific_"
+                "audit_only_and_global_reference_removal_finding"
+            ): True,
+            "unbound_empty_boundary_fragments_require_not_disclosed": True,
             "challenge_id_field_name_exact": "challenge_id",
             "approved_requires_empty_findings": True,
             "findings_decision_requires_non_empty_findings": True,
@@ -3658,9 +3813,11 @@ def _closed_contract_repair_directive(message: str) -> str:
         or "must use exact Draft disclosure fragments" in message
     ):
         return (
-            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
-            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
-            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING"
+            "FOR_THE_NAMED_BOUNDARY_CHALLENGE_COPY_ONLY_A_SUPPLIED_CLOSED_"
+            "DISPOSITION_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_TRUE_USE_"
+            "KIND_SPECIFIC_AUDIT_ONLY_PLUS_ONE_GLOBAL_REFERENCE_REMOVAL_"
+            "FINDING_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_FALSE_USE_NOT_"
+            "DISCLOSED_OTHERWISE_RECOMPUTE_EXACT_DRAFT_FRAGMENTS"
         )
     if (
         "the first Source search query must copy one cognition-derived target literal"
@@ -5525,6 +5682,66 @@ def _evidence_boundary_challenge_view(
     }
 
 
+def _boundary_relevance_challenge_view(
+    challenge: EngineeringAgentBoundaryRelevanceChallenge,
+) -> dict[str, object]:
+    """Project the exact reference/fragment disposition closure."""
+
+    allowed_dispositions = _boundary_relevance_allowed_dispositions(
+        challenge
+    )
+    audit_only_disposition = allowed_dispositions[1]
+    if challenge.draft_declared_boundary_reference:
+        empty_fragment_dispositions = (audit_only_disposition,)
+        nonempty_fragment_dispositions = allowed_dispositions
+    else:
+        empty_fragment_dispositions = (
+            EngineeringAgentBoundaryRelevanceAssessmentDisposition
+            .NOT_DISCLOSED_IN_DRAFT.value,
+        )
+        nonempty_fragment_dispositions = (audit_only_disposition,)
+    return {
+        "challenge_id": challenge.challenge_id.value,
+        "kind": challenge.kind.value,
+        "boundary_observation_id": challenge.boundary_observation_id.value,
+        "resolving_support_observation_ids": tuple(
+            value.value
+            for value in challenge.resolving_support_observation_ids
+        ),
+        "draft_declared_boundary_reference": (
+            challenge.draft_declared_boundary_reference
+        ),
+        "review_rule": (
+            "ASSESS_COMPLETE_DRAFT_AS_MATERIAL_BOUND_DISCLOSURE_"
+            "NOT_DISCLOSED_OR_KIND_SPECIFIC_AUDIT_ONLY"
+        ),
+        "allowed_exact_dispositions": allowed_dispositions,
+        "allowed_exact_dispositions_are_exhaustive": True,
+        "kind_specific_audit_only_disposition": audit_only_disposition,
+        "closed_dispositions_by_fragment_state": {
+            "empty_fragments": empty_fragment_dispositions,
+            "nonempty_exact_fragments": nonempty_fragment_dispositions,
+        },
+        "not_disclosed_in_draft_allowed": (
+            not challenge.draft_declared_boundary_reference
+        ),
+        (
+            "bound_empty_fragments_require_kind_specific_audit_only_"
+            "and_global_reference_removal_finding"
+        ): challenge.draft_declared_boundary_reference,
+        "materiality_applies_to_every_disclosed_fragment": True,
+        "mixed_material_and_non_material_disclosure_requires_audit_only_finding": True,
+        "material_gap_does_not_authorize_adjacent_global_metrics": True,
+        "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
+        "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
+        "materiality_applies_only_to_text_present_in_draft_content": True,
+        "retained_metadata_absent_from_draft_content_is_not_disclosed": True,
+        "draft_disclosed_fragments_are_exact_draft_content_substrings": True,
+        "unbound_undisclosed_audit_only_is_forbidden": True,
+        "digest": challenge.digest.value,
+    }
+
+
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
@@ -5595,37 +5812,7 @@ def _review_input_view(
             for item in challenges
         ),
         "boundary_relevance_challenges": tuple(
-            {
-                "challenge_id": item.challenge_id.value,
-                "kind": item.kind.value,
-                "boundary_observation_id": (
-                    item.boundary_observation_id.value
-                ),
-                "resolving_support_observation_ids": tuple(
-                    value.value
-                    for value in item.resolving_support_observation_ids
-                ),
-                "draft_declared_boundary_reference": (
-                    item.draft_declared_boundary_reference
-                ),
-                "review_rule": (
-                    "ASSESS_COMPLETE_DRAFT_AS_MATERIAL_BOUND_DISCLOSURE_"
-                    "NOT_DISCLOSED_OR_KIND_SPECIFIC_AUDIT_ONLY"
-                ),
-                "allowed_exact_dispositions": (
-                    _boundary_relevance_allowed_dispositions(item)
-                ),
-                "materiality_applies_to_every_disclosed_fragment": True,
-                "mixed_material_and_non_material_disclosure_requires_audit_only_finding": True,
-                "material_gap_does_not_authorize_adjacent_global_metrics": True,
-                "structured_boundary_reference_is_evidence_binding_not_full_text_disclosure": True,
-                "bound_boundary_id_need_not_be_named_or_raw_disclosed": True,
-                "materiality_applies_only_to_text_present_in_draft_content": True,
-                "retained_metadata_absent_from_draft_content_is_not_disclosed": True,
-                "draft_disclosed_fragments_are_exact_draft_content_substrings": True,
-                "unbound_undisclosed_audit_only_is_forbidden": True,
-                "digest": item.digest.value,
-            }
+            _boundary_relevance_challenge_view(item)
             for item in relevance_challenges
         ),
         "review_reference_policy": {
@@ -5661,6 +5848,12 @@ def _review_input_view(
             "boundary_metadata_absent_from_draft_content_is_not_disclosed": True,
             "draft_disclosed_fragments_required_for_every_relevance_assessment": True,
             "draft_disclosed_fragments_must_be_exact_unique_draft_content_substrings": True,
+            "boundary_relevance_allowed_exact_dispositions_are_exhaustive": True,
+            (
+                "bound_empty_boundary_fragments_require_kind_specific_"
+                "audit_only_and_global_reference_removal_finding"
+            ): True,
+            "unbound_empty_boundary_fragments_require_not_disclosed": True,
             "not_disclosed_requires_empty_fragments_and_no_reference": True,
             "material_requires_nonempty_fragments_and_reference": True,
             "audit_only_requires_reference_or_nonempty_fragments": True,
@@ -6724,7 +6917,11 @@ def _decode_review_output(
                 f"challenge {challenge.challenge_id.value} "
                 "(allowed_exact=["
                 + ",".join(_boundary_relevance_allowed_dispositions(challenge))
-                + "])",
+                + "], draft_declared_boundary_reference="
+                + str(challenge.draft_declared_boundary_reference).lower()
+                + ", submitted_exact_fragment_count="
+                + str(len(assessment.draft_disclosed_fragments))
+                + ")",
             )
         if (
             assessment.disposition

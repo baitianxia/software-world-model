@@ -8,15 +8,18 @@ import unittest
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
     ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
+    ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
     ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2,
     EngineeringAgentModelConfiguration,
     EngineeringAgentSessionDisclosureAuthority,
     ModelBackedConversationalEngineeringAgent,
     PolicyEnforcingEngineeringAgentModelGateway,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
+    _boundary_relevance_challenge_view,
     _boundary_relevance_allowed_dispositions,
     _closed_contract_repair_directive,
     _evidence_boundary_challenge_view,
+    _initial_format_repair_policy,
     _output_preflight_view,
     _primary_input_view,
     _review_output_with_unique_finding_codes,
@@ -342,17 +345,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             _closed_contract_repair_directive(
                 "an audit-only boundary relevance assessment requires a Finding code"
             ),
-            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
-            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
-            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING",
+            "FOR_THE_NAMED_BOUNDARY_CHALLENGE_COPY_ONLY_A_SUPPLIED_CLOSED_"
+            "DISPOSITION_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_TRUE_USE_"
+            "KIND_SPECIFIC_AUDIT_ONLY_PLUS_ONE_GLOBAL_REFERENCE_REMOVAL_"
+            "FINDING_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_FALSE_USE_NOT_"
+            "DISCLOSED_OTHERWISE_RECOMPUTE_EXACT_DRAFT_FRAGMENTS",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
                 "assessment must use exact Draft disclosure fragments"
             ),
-            "RECOMPUTE_EXACT_DRAFT_DISCLOSED_FRAGMENTS_THEN_USE_NOT_DISCLOSED_"
-            "WHEN_REFERENCE_AND_FRAGMENTS_ARE_ABSENT_OTHERWISE_BIND_AUDIT_ONLY_"
-            "TO_ONE_REAL_REFERENCE_OR_FRAGMENT_REMOVAL_FINDING",
+            "FOR_THE_NAMED_BOUNDARY_CHALLENGE_COPY_ONLY_A_SUPPLIED_CLOSED_"
+            "DISPOSITION_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_TRUE_USE_"
+            "KIND_SPECIFIC_AUDIT_ONLY_PLUS_ONE_GLOBAL_REFERENCE_REMOVAL_"
+            "FINDING_IF_FRAGMENTS_ARE_EMPTY_AND_REFERENCE_IS_FALSE_USE_NOT_"
+            "DISCLOSED_OTHERWISE_RECOMPUTE_EXACT_DRAFT_FRAGMENTS",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -648,7 +655,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1090,7 +1097,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1939,7 +1946,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2008,6 +2015,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "method_or_call_expression_name_has_no_effect_semantics"
             ]
         )
+        self.assertEqual(
+            reviewer_preflight["review_output_contract"][
+                "boundary_relevance_disposition_contracts"
+            ],
+            [],
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "boundary_relevance_allowed_exact_dispositions_are_exhaustive"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "bound_empty_boundary_fragments_require_kind_specific_"
+                "audit_only_and_global_reference_removal_finding"
+            ]
+        )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
                 "successful_empty_finding_decision_must_repair_to_approved"
@@ -2055,6 +2079,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             reviewer_policy[
                 "user_requirement_neighboring_content_and_prior_review_"
                 "are_not_claim_scope"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "boundary_relevance_allowed_exact_dispositions_are_exhaustive"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "bound_empty_boundary_fragments_require_kind_specific_"
+                "audit_only_and_global_reference_removal_finding"
             ]
         )
         self.assertTrue(
@@ -2402,7 +2437,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@18",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@19",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -5328,6 +5363,24 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertFalse(
             unbound_challenges[0].draft_declared_boundary_reference
         )
+        unbound_challenge_view = _boundary_relevance_challenge_view(
+            unbound_challenges[0]
+        )
+        self.assertEqual(
+            unbound_challenge_view[
+                "closed_dispositions_by_fragment_state"
+            ]["empty_fragments"],
+            ("NOT_DISCLOSED_IN_DRAFT",),
+        )
+        self.assertEqual(
+            unbound_challenge_view[
+                "closed_dispositions_by_fragment_state"
+            ]["nonempty_exact_fragments"],
+            ("RESOLVED_AUDIT_ONLY",),
+        )
+        self.assertTrue(
+            unbound_challenge_view["not_disclosed_in_draft_allowed"]
+        )
         unbound_request = SimpleNamespace(
             draft=unbound_draft,
             package=package,
@@ -5366,6 +5419,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "allowed_exact=[NOT_DISCLOSED_IN_DRAFT,RESOLVED_AUDIT_ONLY]",
+            str(unbound_material.exception),
+        )
+        self.assertIn(
+            "draft_declared_boundary_reference=false",
+            str(unbound_material.exception),
+        )
+        self.assertIn(
+            "submitted_exact_fragment_count=1",
             str(unbound_material.exception),
         )
         not_disclosed = decode_engineering_agent_review_output(
@@ -5523,6 +5584,130 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 materiality_challenges[0]
             ),
             ("MATERIAL_TO_USER_REQUEST", "NON_MATERIAL_AUDIT_ONLY"),
+        )
+        materiality_challenge_view = _boundary_relevance_challenge_view(
+            materiality_challenges[0]
+        )
+        self.assertEqual(
+            materiality_challenge_view[
+                "closed_dispositions_by_fragment_state"
+            ]["empty_fragments"],
+            ("NON_MATERIAL_AUDIT_ONLY",),
+        )
+        self.assertEqual(
+            materiality_challenge_view[
+                "closed_dispositions_by_fragment_state"
+            ]["nonempty_exact_fragments"],
+            ("MATERIAL_TO_USER_REQUEST", "NON_MATERIAL_AUDIT_ONLY"),
+        )
+        self.assertFalse(
+            materiality_challenge_view["not_disclosed_in_draft_allowed"]
+        )
+        self.assertTrue(
+            materiality_challenge_view[
+                "bound_empty_fragments_require_kind_specific_audit_only_"
+                "and_global_reference_removal_finding"
+            ]
+        )
+        materiality_preflight = _output_preflight_view(
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            role_input_payload={
+                "format_repair_policy": _initial_format_repair_policy(),
+                "boundary_relevance_challenges": (
+                    materiality_challenge_view,
+                ),
+                "review_reference_policy": {
+                    "claim_indices": (),
+                    "challenge_assessment_ids_required_exact_order": (),
+                    (
+                        "boundary_relevance_assessment_ids_required_"
+                        "exact_order"
+                    ): (materiality_challenges[0].challenge_id.value,),
+                    (
+                        "scope_classification_must_use_exact_claim_"
+                        "statement_only"
+                    ): True,
+                    "method_or_call_expression_name_has_no_effect_semantics": True,
+                    (
+                        "user_requirement_neighboring_content_and_prior_"
+                        "review_are_not_claim_scope"
+                    ): True,
+                    (
+                        "boundary_relevance_allowed_exact_dispositions_"
+                        "are_exhaustive"
+                    ): True,
+                    (
+                        "bound_empty_boundary_fragments_require_kind_"
+                        "specific_audit_only_and_global_reference_"
+                        "removal_finding"
+                    ): True,
+                    (
+                        "unbound_empty_boundary_fragments_require_not_"
+                        "disclosed"
+                    ): True,
+                },
+            },
+            output_schema_ref=ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
+        )
+        self.assertEqual(
+            materiality_preflight["review_output_contract"][
+                "boundary_relevance_disposition_contracts"
+            ][0]["closed_dispositions_by_fragment_state"],
+            {
+                "empty_fragments": ("NON_MATERIAL_AUDIT_ONLY",),
+                "nonempty_exact_fragments": (
+                    "MATERIAL_TO_USER_REQUEST",
+                    "NON_MATERIAL_AUDIT_ONLY",
+                ),
+            },
+        )
+        with self.assertRaises(DomainError) as bound_not_disclosed:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(
+                    {
+                        "decision": "APPROVED",
+                        "claim_assessments": [],
+                        "evidence_boundary_assessments": [],
+                        "boundary_relevance_assessments": [
+                            {
+                                "challenge_id": (
+                                    materiality_challenges[
+                                        0
+                                    ].challenge_id.value
+                                ),
+                                "user_requirement": (
+                                    "Explain the material state gap."
+                                ),
+                                "boundary_scope": "Bound but not disclosed.",
+                                "draft_disclosed_fragments": [],
+                                "disposition": "NOT_DISCLOSED_IN_DRAFT",
+                                "finding_code": None,
+                            }
+                        ],
+                        "findings": [],
+                    }
+                ),
+                request=SimpleNamespace(
+                    draft=materiality_draft,
+                    package=materiality_package,
+                    focus=(
+                        EngineeringAgentReviewFocus
+                        .EVIDENCE_BOUNDARY_CHALLENGE
+                    ),
+                ),
+                model_call_ref="bound-empty-not-disclosed",
+            )
+        self.assertIn(
+            "allowed_exact=[MATERIAL_TO_USER_REQUEST,NON_MATERIAL_AUDIT_ONLY]",
+            str(bound_not_disclosed.exception),
+        )
+        self.assertIn(
+            "draft_declared_boundary_reference=true",
+            str(bound_not_disclosed.exception),
+        )
+        self.assertIn(
+            "submitted_exact_fragment_count=0",
+            str(bound_not_disclosed.exception),
         )
         materiality_finding = decode_engineering_agent_review_output(
             output_text=json.dumps(

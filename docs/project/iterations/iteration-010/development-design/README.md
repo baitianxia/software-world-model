@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -83,6 +83,11 @@ Clarification；Q2/Q3 仍使整体 FAIL。Q2 focused Reviewer 没有把已经收
 Review successor 与 format repair 两次原样返回 rejected Draft。current `@23/@15/@18` 给每个 caller challenge 增加 exact current Claim
 anchor，排除 User requirement/邻接正文/prior Review/method name 的 effect semantics，并为 exact-repeat caller Finding 密封 stricter
 rewrite；targeted `34/34`、相邻 16 模块 `261/261` PASS，下一项是文档/可信父门禁、提交与 run-097。
+
+`FINDING-010-222 / run-097` 已验证 Ark 主路线 40 dispatch；Q1/Q5 ACCEPTED、Q4 零 dispatch Clarification，Q2 为单一
+post-dispatch unknown。Q3 的 exact-Claim/caller-effect closure 已通过 13 个 challenge，但 bound + empty Boundary 被 focused Reviewer
+与 repair 两次错标 `NOT_DISCLOSED_IN_DRAFT`。current `@24/@16/@19` 密封逐 challenge reference/fragment-state disposition 表；targeted
+`34/34`、相邻 16 模块 `261/261`、documentation check `628`、plan snapshot/diff 与 current hook 均 PASS，下一项是提交与 run-098。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
