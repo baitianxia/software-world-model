@@ -662,7 +662,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1104,7 +1104,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1953,7 +1953,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2444,7 +2444,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -2829,6 +2829,111 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             tuple(item["operation"] for item in unreceipted_view["tool_catalog"]),
             ("SOURCE_SEARCH",),
+        )
+
+        navigation_citation = EngineeringAgentCitation.create(
+            citation_ref=locator_reference,
+            evidence_class=citation.evidence_class,
+            source_revision=citation.source_revision,
+            locator=citation.locator,
+            modality="IDENTIFIER_PATH_NAVIGATION_CANDIDATE",
+            content_digest=citation.content_digest,
+        )
+        navigation_receipt = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=authority_receipt.authority_kind,
+            turn_request_digest=authority_receipt.turn_request_digest,
+            tool_request_digest=authority_receipt.tool_request_digest,
+            evidence_request_digest=authority_receipt.evidence_request_digest,
+            repository_revision=authority_receipt.repository_revision,
+            evidence_digest=authority_receipt.evidence_digest,
+            ledger_ref=authority_receipt.ledger_ref,
+            ledger_generation=authority_receipt.ledger_generation,
+            ledger_parent_seal_digest=(
+                authority_receipt.ledger_parent_seal_digest
+            ),
+            ledger_prefix_digest=authority_receipt.ledger_prefix_digest,
+            ledger_entries=authority_receipt.ledger_entries,
+            citations=(navigation_citation,),
+        )
+        navigation_payload = {
+            "schema": "ENGINEERING_AGENT_SOURCE_BOUNDARY@2",
+            "reasons": ["SOURCE_IDENTIFIER_NAVIGATION_CANDIDATES"],
+            "navigation_candidates": [
+                {
+                    "locator_reference": locator_reference,
+                    "locator": citation.locator,
+                    "resource_locator": (
+                        "src/main/java/example/LoginService.java"
+                    ),
+                }
+            ],
+            "navigation_candidates_are_claim_support": False,
+            "navigation_candidates_require_source_read": True,
+        }
+        navigation_observation = replace(
+            observation,
+            result_ref="search-navigation-boundary",
+            content=json.dumps(navigation_payload),
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            citation_refs=(locator_reference,),
+            authority_receipt=navigation_receipt,
+            digest=digest_of("search-navigation-observation"),
+        )
+        navigation_view = _primary_input_view(
+            replace(invocation, observations=(navigation_observation,))
+        )
+        navigation_policy = navigation_view["tool_reference_policy"]
+        self.assertEqual(
+            navigation_policy["identifier_path_navigation_candidate_count"],
+            1,
+        )
+        self.assertFalse(
+            navigation_policy["identifier_path_navigation_is_claim_support"]
+        )
+        self.assertTrue(
+            navigation_policy["identifier_path_navigation_requires_source_read"]
+        )
+        self.assertEqual(
+            navigation_policy["source_read_options"][0]["origin"],
+            "CURRENT_TURN_IDENTIFIER_PATH_NAVIGATION",
+        )
+        self.assertEqual(
+            navigation_policy["source_read_options"][0]["locator_reference"],
+            locator_reference,
+        )
+        self.assertFalse(
+            navigation_view["investigation_policy"][
+                "identifier_path_navigation_is_claim_support"
+            ]
+        )
+        self.assertTrue(
+            navigation_view["investigation_policy"][
+                "identifier_path_navigation_requires_source_read"
+            ]
+        )
+
+        malformed_navigation_payload = dict(navigation_payload)
+        malformed_navigation_payload["navigation_candidates"] = [
+            {
+                **navigation_payload["navigation_candidates"][0],
+                "resource_locator": "src/main/java/example/Other.java",
+            }
+        ]
+        with self.assertRaises(DomainError) as malformed_navigation:
+            _primary_input_view(
+                replace(
+                    invocation,
+                    observations=(
+                        replace(
+                            navigation_observation,
+                            content=json.dumps(malformed_navigation_payload),
+                        ),
+                    ),
+                )
+            )
+        self.assertEqual(
+            malformed_navigation.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
         )
 
         preissued_reference = StableId(

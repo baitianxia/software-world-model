@@ -66,6 +66,7 @@ from software_world_model.application_services.engineering_conversation import (
     EngineeringTurnExecutionRequest,
 )
 from software_world_model.application_services.engineering_question_answering import (
+    ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY,
     EngineeringEvidenceClass,
 )
 from software_world_model.cross_cutting import (
@@ -93,14 +94,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@25"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@26"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@25"
+    "conversational-engineering-agent-no-tools-prompt@26"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@25"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@26"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@16"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@20"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@2"
@@ -155,6 +156,11 @@ _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
 _WORLD_MODEL_SUPPORT_SCHEMA = "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4"
 _COGNITION_SOURCE_SEARCH_TARGET_SCHEMA = (
     "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"
+)
+_SOURCE_NAVIGATION_BOUNDARY_SCHEMA = "ENGINEERING_AGENT_SOURCE_BOUNDARY@2"
+_SOURCE_LITERAL_MATCH_ORIGIN = "CURRENT_TURN_LITERAL_SEARCH_MATCH"
+_SOURCE_IDENTIFIER_NAVIGATION_ORIGIN = (
+    "CURRENT_TURN_IDENTIFIER_PATH_NAVIGATION"
 )
 
 
@@ -474,6 +480,14 @@ resource identity and current-Turn read capability; it is not evidence and does
 not support any claim until this Turn executes SOURCE_READ and receives a new
 SUPPORT observation. When such an option is material to a follow-up, prefer its
 bounded direct read before spending the Source file fuse on a new content search.
+An entry whose origin is CURRENT_TURN_IDENTIFIER_PATH_NAVIGATION is a bounded
+tree-metadata navigation candidate emitted only after the full query literal had
+zero content hits in that bounded Search observation. Its path affinity, line locator, and content
+digest are BOUNDARY navigation metadata, never Claim support. When it materially
+matches the unresolved implementation target, select its opaque reference and
+execute SOURCE_READ before making any fact claim about that resource. Do not
+cite, quote, summarize, or infer implementation behavior from the navigation
+candidate itself.
 tool_reference_policy.source_file_budget is the Application-owned projection of
 the latest sealed Source resource receipt, or null when no such receipt exists.
 source_read_options contains only opaque locators that are executable under that
@@ -4945,7 +4959,8 @@ def _tool_contract_view(
             "value_constraints": {
                 "locator_reference": (
                     "opaque reference from a current-Turn Source observation or "
-                    "current-Turn prior-evidence revalidation option; path forbidden"
+                    "current-Turn prior-evidence revalidation option; path forbidden; "
+                    "identifier-path navigation options require SOURCE_READ and are not evidence"
                 ),
                 "allowed_exact_values": tuple(
                     item["locator_reference"]
@@ -5163,11 +5178,13 @@ def _tool_reference_policy(
             "origin_citation_digest": option.origin_citation_digest.value,
         }
 
-    citation_catalog: dict[str, tuple[EngineeringAgentCitation, str]] = {}
+    citation_catalog: dict[
+        str,
+        tuple[EngineeringAgentCitation, str, str],
+    ] = {}
     for observation in invocation.observations:
         if (
             observation.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH
-            or observation.disposition.value != "SUPPORT"
             or observation.authority_receipt is None
         ):
             continue
@@ -5175,16 +5192,31 @@ def _tool_reference_policy(
             item.citation_ref: item
             for item in observation.authority_receipt.citations
         }
-        for reference in observation.citation_refs:
+        if observation.disposition.value == "SUPPORT":
+            references = observation.citation_refs
+            origin = _SOURCE_LITERAL_MATCH_ORIGIN
+        elif observation.disposition.value == "BOUNDARY":
+            references = _source_navigation_references(
+                observation,
+                citations=citations,
+            )
+            origin = _SOURCE_IDENTIFIER_NAVIGATION_ORIGIN
+        else:
+            continue
+        for reference in references:
             citation = citations.get(reference)
             if citation is None:
                 continue
             citation_catalog.setdefault(
                 reference,
-                (citation, observation.observation_id.value),
+                (citation, observation.observation_id.value, origin),
             )
 
-    for reference, (citation, source_observation_id) in citation_catalog.items():
+    for reference, (
+        citation,
+        source_observation_id,
+        origin,
+    ) in citation_catalog.items():
         resource_locator = _source_resource_locator(citation.locator)
         previous_resource = reference_resources.get(reference)
         if previous_resource is not None and previous_resource != resource_locator:
@@ -5203,6 +5235,7 @@ def _tool_reference_policy(
             "modality": citation.modality,
             "content_digest": citation.content_digest.value,
             "source_observation_id": source_observation_id,
+            "origin": origin,
         }
     attempted_resources = {
         reference_resources[reference]
@@ -5230,6 +5263,11 @@ def _tool_reference_policy(
     ):
         options = {}
     target_projection = _cognition_source_search_target_projection(invocation)
+    identifier_navigation_options = tuple(
+        item
+        for item in options.values()
+        if item.get("origin") == _SOURCE_IDENTIFIER_NAVIGATION_ORIGIN
+    )
     return {
         "prior_actions": prior_actions,
         "source_search_queries_already_attempted": tuple(
@@ -5249,6 +5287,11 @@ def _tool_reference_policy(
             sorted(attempted_resources)
         ),
         "source_read_options": tuple(options.values()),
+        "identifier_path_navigation_candidate_count": len(
+            identifier_navigation_options
+        ),
+        "identifier_path_navigation_is_claim_support": False,
+        "identifier_path_navigation_requires_source_read": True,
         "source_file_budget": source_file_budget,
         "cognition_source_search_target_projection": target_projection,
         "first_source_search_requires_cognition_target_copy": (
@@ -5263,6 +5306,80 @@ def _tool_reference_policy(
         "unlisted_source_read_reference_forbidden": True,
         "same_resource_read_repetition_forbidden": True,
     }
+
+
+def _source_navigation_references(
+    observation: EngineeringAgentToolObservation,
+    *,
+    citations: Mapping[str, EngineeringAgentCitation],
+) -> tuple[str, ...]:
+    """Validate and project typed path-only navigation from one Boundary."""
+
+    try:
+        payload = json.loads(observation.content)
+    except json.JSONDecodeError:
+        return ()
+    if (
+        not isinstance(payload, dict)
+        or payload.get("schema") != _SOURCE_NAVIGATION_BOUNDARY_SCHEMA
+    ):
+        return ()
+    candidates = payload.get("navigation_candidates")
+    reasons = payload.get("reasons")
+    if (
+        not isinstance(candidates, list)
+        or not isinstance(reasons, list)
+        or any(not isinstance(item, str) for item in reasons)
+        or payload.get("navigation_candidates_are_claim_support") is not False
+        or payload.get("navigation_candidates_require_source_read")
+        is not bool(candidates)
+        or (
+            "SOURCE_IDENTIFIER_NAVIGATION_CANDIDATES" in reasons
+        )
+        is not bool(candidates)
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Source identifier navigation Boundary is malformed",
+        )
+    references: list[str] = []
+    for candidate in candidates:
+        if (
+            not isinstance(candidate, dict)
+            or set(candidate)
+            != {"locator_reference", "locator", "resource_locator"}
+            or not isinstance(candidate.get("locator_reference"), str)
+            or not isinstance(candidate.get("locator"), str)
+            or not isinstance(candidate.get("resource_locator"), str)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source identifier navigation candidate is malformed",
+            )
+        reference = candidate["locator_reference"]
+        citation = citations.get(reference)
+        if (
+            citation is None
+            or citation.modality
+            != ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY
+            or candidate["locator"] != citation.locator
+            or candidate["resource_locator"]
+            != _source_resource_locator(citation.locator)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source identifier navigation candidate differs from its Citation",
+            )
+        references.append(reference)
+    if (
+        len(references) != len(set(references))
+        or tuple(references) != observation.citation_refs
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Source identifier navigation references differ from the sealed Boundary",
+        )
+    return tuple(references)
 
 
 def _source_resource_locator(locator: str) -> str:
@@ -5443,6 +5560,8 @@ def _investigation_policy(
         "world_model_gap_requery_for_same_missing_implementation_allowed": False,
         "source_search_literal_targets_unread_material_resource": True,
         "source_search_path_segment_as_content_literal_allowed": False,
+        "identifier_path_navigation_is_claim_support": False,
+        "identifier_path_navigation_requires_source_read": True,
         "source_read_must_match_current_unresolved_material_target": True,
     }
 

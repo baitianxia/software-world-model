@@ -349,7 +349,7 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             )
         target = search_root / "OmsPortalOrderServiceImpl.java"
         target.write_text(
-            "final class OmsPortalOrderServiceImpl { void createOrder() {} }\n",
+            "final class OmsPortalOrderServiceImpl { void generateOrder() {} }\n",
             encoding="utf-8",
         )
         for index in range(8):
@@ -393,13 +393,30 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         self.assertEqual(result.files_read, 56)
         self.assertEqual(len(result.items), 1)
         self.assertEqual(
+            result.navigation_candidate_item_ids,
+            (result.items[0].item_id,),
+        )
+        self.assertEqual(
+            result.items[0].modality,
+            "IDENTIFIER_PATH_NAVIGATION_CANDIDATE",
+        )
+        self.assertEqual(
             result.items[0].path,
             "module/src/main/java/example/OmsPortalOrderServiceImpl.java",
         )
         coverage = dict(result.coverage)
         self.assertEqual(coverage["scoped_entry_count"], "84")
         self.assertEqual(coverage["fallback_examined_file_count"], "55")
+        self.assertEqual(coverage["match_count"], "0")
         self.assertEqual(coverage["identifier_navigation_term_count"], "2")
+        self.assertEqual(
+            coverage["identifier_navigation_candidate_count"],
+            "1",
+        )
+        self.assertEqual(
+            coverage["identifier_navigation_candidate_total_count"],
+            "1",
+        )
         self.assertEqual(
             coverage["candidate_ordering"],
             "QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2",

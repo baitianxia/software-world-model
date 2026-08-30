@@ -16,6 +16,8 @@ from typing import Mapping, Sequence
 
 from software_world_model.application_services.engineering_question_answering import (
     ENGINEERING_QA_BROKER_POLICY,
+    ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY,
+    MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES,
     CompiledSourceOperation,
     EngineeringEvidenceClass,
     RetrievalItem,
@@ -131,6 +133,20 @@ def _identifier_navigation_terms(value: str) -> tuple[str, ...]:
     )
 
 
+def _identifier_navigation_shared_terms(
+    path: str,
+    query: str,
+) -> tuple[str, ...]:
+    stem_terms = frozenset(
+        _identifier_navigation_terms(PurePosixPath(path).stem)
+    )
+    return tuple(
+        term
+        for term in _identifier_navigation_terms(query)
+        if term in stem_terms
+    )
+
+
 def _search_entry_rank(path: str, query: str) -> tuple[int, str]:
     """Prefer authorized path names that contain the literal search token.
 
@@ -144,15 +160,12 @@ def _search_entry_rank(path: str, query: str) -> tuple[int, str]:
     folded_path = path.casefold()
     name = PurePosixPath(path).name.casefold()
     stem = PurePosixPath(path).stem.casefold()
-    query_terms = frozenset(_identifier_navigation_terms(query))
-    stem_terms = frozenset(
-        _identifier_navigation_terms(PurePosixPath(path).stem)
-    )
+    shared_identifier_terms = _identifier_navigation_shared_terms(path, query)
     if stem == folded_query or name == folded_query:
         priority = 0
     elif folded_query in name:
         priority = 1
-    elif folded_query in folded_path or query_terms.intersection(stem_terms):
+    elif folded_query in folded_path or shared_identifier_terms:
         priority = 2
     else:
         priority = 3
@@ -586,6 +599,7 @@ class LocalGitRetrievalWorker:
         filename_unsafe_count = 0
         filename_early_stop = False
         fallback_examined_file_count = 0
+        pending_navigation_candidates: list[tuple[str, int, str]] = []
         for rank, entry in ranked_entries:
             filename_candidate = rank[0] <= 1
             if entry.object_type != "blob" or entry.mode not in _REGULAR_GIT_MODES:
@@ -628,8 +642,9 @@ class LocalGitRetrievalWorker:
                     filename_candidates_processed += 1
                     filename_unsafe_count += 1
                 continue
+            content_lines = content.splitlines()
             matches_before_entry = len(items)
-            for line_number, line in enumerate(content.splitlines(), 1):
+            for line_number, line in enumerate(content_lines, 1):
                 if operation.query not in line:
                     continue
                 if len(items) >= operation.maximum_result_items:
@@ -651,6 +666,28 @@ class LocalGitRetrievalWorker:
                 )
             if truncated and failure_code == "SOURCE_RESULT_ITEM_FUSE_EXHAUSTED":
                 break
+            shared_identifier_terms = _identifier_navigation_shared_terms(
+                entry.path,
+                operation.query,
+            )
+            if (
+                len(items) == matches_before_entry
+                and rank[0] == 2
+                and shared_identifier_terms
+            ):
+                shared = frozenset(shared_identifier_terms)
+                representative = next(
+                    (
+                        (line_number, line)
+                        for line_number, line in enumerate(content_lines, 1)
+                        if shared.intersection(_identifier_navigation_terms(line))
+                    ),
+                    None,
+                )
+                if representative is not None:
+                    pending_navigation_candidates.append(
+                        (entry.path, representative[0], representative[1])
+                    )
             if filename_candidate:
                 filename_candidates_processed += 1
                 filename_content_match_count += len(items) - matches_before_entry
@@ -671,6 +708,44 @@ class LocalGitRetrievalWorker:
                     filename_early_stop = True
                     failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
                     break
+        literal_match_count = len(items)
+        navigation_candidate_item_ids = ()
+        selected_navigation_candidates: tuple[tuple[str, int, str], ...] = ()
+        if not items and pending_navigation_candidates:
+            navigation_capacity = min(
+                operation.maximum_result_items,
+                MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES,
+            )
+            selected_navigation_candidates = tuple(
+                pending_navigation_candidates[:navigation_capacity]
+            )
+            for path, line_number, line in selected_navigation_candidates:
+                items.append(
+                    RetrievalItem.create(
+                        operation_id=operation.operation_id,
+                        ordinal=len(items) + 1,
+                        evidence_class=operation.evidence_class,
+                        path=path,
+                        line_start=line_number,
+                        line_end=line_number,
+                        content=line,
+                        modality=(
+                            ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY
+                        ),
+                        coverage_complete=True,
+                    )
+                )
+            navigation_candidate_item_ids = tuple(
+                item.item_id for item in items
+            )
+            if len(selected_navigation_candidates) < len(
+                pending_navigation_candidates
+            ):
+                truncated = True
+                failure_code = (
+                    failure_code
+                    or "SOURCE_SEARCH_NAVIGATION_CANDIDATE_LIMIT_REACHED"
+                )
         if unsafe_entries or binary_entries:
             truncated = True
             failure_code = failure_code or "UNSUPPORTED_SOURCE_ENTRY"
@@ -679,6 +754,7 @@ class LocalGitRetrievalWorker:
             operation=operation,
             status=status,
             items=items,
+            navigation_candidate_item_ids=navigation_candidate_item_ids,
             bytes_read=bytes_read,
             files_read=files_read,
             truncated=truncated,
@@ -688,7 +764,7 @@ class LocalGitRetrievalWorker:
                     "allowed_entry_count": str(allowed_entry_count),
                     "scoped_entry_count": str(len(entries)),
                     "examined_file_count": str(files_read),
-                    "match_count": str(len(items)),
+                    "match_count": str(literal_match_count),
                     "unsafe_entry_count": str(unsafe_entries),
                     "binary_entry_count": str(binary_entries),
                     "exact_stem_candidate_count": str(
@@ -710,6 +786,29 @@ class LocalGitRetrievalWorker:
                             ]
                         ).value
                         if identifier_navigation_terms
+                        else "NONE"
+                    ),
+                    "identifier_navigation_candidate_count": str(
+                        len(selected_navigation_candidates)
+                    ),
+                    "identifier_navigation_candidate_total_count": str(
+                        len(pending_navigation_candidates)
+                    ),
+                    "identifier_navigation_candidate_limit": str(
+                        MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES
+                    ),
+                    "identifier_navigation_candidate_digest": (
+                        digest_of(
+                            [
+                                "ENGINEERING_QA_IDENTIFIER_NAVIGATION_CANDIDATES@1",
+                                tuple(
+                                    (path, line_number)
+                                    for path, line_number, _
+                                    in selected_navigation_candidates
+                                ),
+                            ]
+                        ).value
+                        if selected_navigation_candidates
                         else "NONE"
                     ),
                     "query_digest": digest_of(

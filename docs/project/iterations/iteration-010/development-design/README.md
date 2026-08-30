@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -94,6 +94,11 @@ completed。Q1/Q4 通过，Q2 的第 76 个 implementation 越过 file fuse并�
 empty-Findings Review 缺少 decision-only repair。current Worker 做 bounded identifier-component path navigation；current `@25/@16/@20`
 分别闭合 effect-label rewrite 与 empty-Findings repair。六模块 `155/155`、相邻 19 模块 `265/265`、documentation check `631`、plan
 snapshot/diff 与 current hook 均 PASS，下一项是提交与 run-099。
+
+`FINDING-010-226 / run-099` 已验证 route/fallback 正常：Ark 4 个 sealed 429 后 DeepSeek 39/39 completed；Q1/Q5 ACCEPTED、Q4
+zero-dispatch，Q2/Q3 仍未达质量。真实 `createOrder` lexical mismatch 证明 path ranking 不能签发 literal hit；current
+`IDENTIFIER_PATH_NAVIGATION_CANDIDATE` 只形成 `BOUNDARY@2` 与 opaque full-READ option，Search SUPPORT 为空。current
+`@26/@16/@21`、六模块 `157/157` PASS，下一项是完成文档/可信父门禁、提交与 run-100。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

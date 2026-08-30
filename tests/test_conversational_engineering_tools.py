@@ -591,6 +591,68 @@ class SearchReadAnswerDriver:
         )
 
 
+class IdentifierNavigationReadAnswerDriver:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def propose(self, invocation):
+        self.calls += 1
+        if self.calls == 1:
+            return proposal(
+                invocation,
+                call_ref="identifier-navigation-agent-1",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", EngineeringEvidenceClass.SOURCE.value),
+                        ("query", "createOrder"),
+                    ),
+                    evidence_need="locate the order-creation implementation",
+                ),
+            )
+        if self.calls == 2:
+            navigation = next(
+                item
+                for item in invocation.observations
+                if item.operation
+                is EngineeringAgentToolOperation.SOURCE_SEARCH
+                and item.disposition
+                is EngineeringAgentEvidenceDisposition.BOUNDARY
+                and item.citation_refs
+            )
+            return proposal(
+                invocation,
+                call_ref="identifier-navigation-agent-2",
+                action=EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(
+                        ("locator_reference", navigation.citation_refs[0]),
+                    ),
+                    evidence_need="read the materially matching order implementation",
+                ),
+            )
+        read_support = tuple(
+            item.observation_id
+            for item in invocation.observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+            and item.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+        )
+        return proposal(
+            invocation,
+            call_ref="identifier-navigation-agent-3",
+            draft=EngineeringAgentDraftProposal.create(
+                response_kind=EngineeringAgentResponseKind.ANSWER,
+                content="订单实现的当前精确源码声明了 generateOrder。",
+                claims=(
+                    EngineeringAgentClaimProposal.create(
+                        statement="订单实现声明了 generateOrder。",
+                        support_observation_ids=read_support,
+                    ),
+                ),
+            ),
+        )
+
+
 class CrossTurnSourceRevalidationDriver:
     def __init__(self) -> None:
         self.calls_by_turn = {}
@@ -1384,6 +1446,111 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
             self.assertEqual(citation.locator, authority_citation.locator)
             self.assertEqual(citation.content_digest, authority_citation.content_digest)
             self.assertEqual(citation.digest, authority_citation.digest)
+
+    def test_identifier_path_candidate_is_boundary_until_opaque_read(self) -> None:
+        source = (
+            self.repository
+            / "src/main/java/example/OmsPortalOrderServiceImpl.java"
+        )
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            "public final class OmsPortalOrderServiceImpl {\n"
+            "    public void generateOrder() {}\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        self.git("add", "src/main/java")
+        self.git("commit", "-q", "-m", "order implementation fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.configuration = EngineeringAgentEvidenceToolConfiguration.create(
+            project_name="fixture",
+            response_language="zh-CN",
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            repository_revision=self.revision,
+            source_profile_ref=self.profile.profile_ref,
+            source_profile_digest=self.profile.profile_digest,
+            world_model_read_authority_digest=self.world_authority,
+            source_allowlist=("README.md", "src/main/java"),
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.profile,
+        )
+        reviewer = RecordingReviewer()
+        service = self.service(
+            IdentifierNavigationReadAnswerDriver(),
+            reviewer,
+            available_operations=(
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ),
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="订单创建实现在哪里，实际方法是什么？",
+        )
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        package = reviewer.requests[0].package
+        self.assertEqual(len(package.support_observations), 1)
+        self.assertEqual(len(package.boundary_observations), 1)
+        search_boundary = package.boundary_observations[0]
+        self.assertIs(
+            search_boundary.operation,
+            EngineeringAgentToolOperation.SOURCE_SEARCH,
+        )
+        self.assertEqual(len(search_boundary.citation_refs), 1)
+        navigation_citation = next(
+            item
+            for item in search_boundary.authority_receipt.citations
+            if item.citation_ref == search_boundary.citation_refs[0]
+        )
+        self.assertEqual(
+            navigation_citation.modality,
+            "IDENTIFIER_PATH_NAVIGATION_CANDIDATE",
+        )
+        boundary_payload = json.loads(search_boundary.content)
+        self.assertEqual(
+            boundary_payload["schema"],
+            "ENGINEERING_AGENT_SOURCE_BOUNDARY@2",
+        )
+        self.assertFalse(
+            boundary_payload["navigation_candidates_are_claim_support"]
+        )
+        self.assertTrue(
+            boundary_payload["navigation_candidates_require_source_read"]
+        )
+        self.assertEqual(
+            boundary_payload["navigation_candidates"][0]["resource_locator"],
+            "src/main/java/example/OmsPortalOrderServiceImpl.java",
+        )
+        read_support = package.support_observations[0]
+        self.assertIs(
+            read_support.operation,
+            EngineeringAgentToolOperation.SOURCE_READ,
+        )
+        self.assertIn("generateOrder", read_support.content)
+        read_proposal = next(
+            item
+            for item in read_support.authority_receipt.ledger_entries
+            if item.kind == "INVESTIGATION_PROPOSAL"
+            and "locator_reference" in dict(item.details)
+        )
+        self.assertEqual(
+            dict(read_proposal.details)["locator_reference"],
+            search_boundary.citation_refs[0],
+        )
+        self.assertEqual(len(submission.turn.citations), 1)
+        self.assertEqual(
+            submission.turn.citations[0].locator,
+            "src/main/java/example/OmsPortalOrderServiceImpl.java",
+        )
 
     def test_follow_up_revalidates_prior_full_source_without_search(self) -> None:
         driver = CrossTurnSourceRevalidationDriver()

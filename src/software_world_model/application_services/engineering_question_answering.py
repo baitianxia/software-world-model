@@ -40,6 +40,10 @@ COMPILED_SOURCE_OPERATION_SCHEMA = "COMPILED_SOURCE_OPERATION@3"
 ENGINEERING_QA_REQUIRED_PATH_LOCATOR_SCHEMA = (
     "ENGINEERING_QA_REQUIRED_EVIDENCE_PATH_LOCATOR@1"
 )
+ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY = (
+    "IDENTIFIER_PATH_NAVIGATION_CANDIDATE"
+)
+MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES = 16
 MAXIMUM_MATERIAL_OBSERVATIONS_PER_DISPOSITION = 16
 MAXIMUM_REQUIRED_EVIDENCE_PATHS = 4
 
@@ -2216,6 +2220,7 @@ class RetrievalResult:
     repository_revision: str
     status: RetrievalStatus
     items: tuple[RetrievalItem, ...]
+    navigation_candidate_item_ids: tuple[StableId, ...]
     bytes_read: int
     files_read: int
     truncated: bool
@@ -2231,6 +2236,7 @@ class RetrievalResult:
         operation: CompiledSourceOperation,
         status: RetrievalStatus,
         items: Sequence[RetrievalItem],
+        navigation_candidate_item_ids: Sequence[StableId] = (),
         bytes_read: int,
         files_read: int,
         truncated: bool,
@@ -2238,6 +2244,21 @@ class RetrievalResult:
         failure_code: str | None = None,
     ) -> "RetrievalResult":
         item_tuple = tuple(items)
+        navigation_ids = tuple(navigation_candidate_item_ids)
+        navigation_total_raw = coverage.get(
+            "identifier_navigation_candidate_total_count"
+        )
+        try:
+            navigation_total = (
+                int(navigation_total_raw)
+                if navigation_total_raw is not None
+                else 0
+            )
+        except (TypeError, ValueError) as exc:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "retrieval navigation candidate coverage is malformed",
+            ) from exc
         if bytes_read < 0 or files_read < 0:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "retrieval resource usage cannot be negative"
@@ -2245,6 +2266,42 @@ class RetrievalResult:
         if len({item.item_id for item in item_tuple}) != len(item_tuple):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT, "retrieval result contains duplicate items"
+            )
+        if (
+            len(set(navigation_ids)) != len(navigation_ids)
+            or not set(navigation_ids).issubset(
+                {item.item_id for item in item_tuple}
+            )
+            or (
+                navigation_ids
+                and (
+                    operation.operation is not SourceReadOperation.SEARCH
+                    or navigation_ids
+                    != tuple(item.item_id for item in item_tuple)
+                    or any(item.line_start is None for item in item_tuple)
+                    or operation.query is None
+                    or any(
+                        operation.query in item.content
+                        for item in item_tuple
+                    )
+                    or len(navigation_ids)
+                    > MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES
+                    or coverage.get("match_count") != "0"
+                    or coverage.get(
+                        "identifier_navigation_candidate_count"
+                    )
+                    != str(len(navigation_ids))
+                    or coverage.get(
+                        "identifier_navigation_candidate_limit"
+                    )
+                    != str(MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES)
+                    or navigation_total < len(navigation_ids)
+                )
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "retrieval navigation candidates are invalid",
             )
         for item in item_tuple:
             expected_item = RetrievalItem.create(
@@ -2263,10 +2320,16 @@ class RetrievalResult:
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "retrieval item identity is invalid",
                 )
+        navigation_id_set = frozenset(navigation_ids)
         if any(
             item.operation_id != operation.operation_id
             or item.evidence_class is not operation.evidence_class
-            or item.modality != operation.result_modality
+            or item.modality
+            != (
+                ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY
+                if item.item_id in navigation_id_set
+                else operation.result_modality
+            )
             for item in item_tuple
         ):
             raise DomainError(
@@ -2315,6 +2378,9 @@ class RetrievalResult:
                 }
                 for item in item_tuple
             ),
+            "navigation_candidate_item_ids": tuple(
+                item.value for item in navigation_ids
+            ),
             "bytes_read": bytes_read,
             "files_read": files_read,
             "truncated": bool(truncated),
@@ -2331,6 +2397,9 @@ class RetrievalResult:
             "repository_revision": operation.repository_revision,
             "status": status.value,
             "items": tuple(item.digest.value for item in item_tuple),
+            "navigation_candidate_item_ids": tuple(
+                item.value for item in navigation_ids
+            ),
             "bytes_read": bytes_read,
             "files_read": files_read,
             "truncated": bool(truncated),
@@ -2346,6 +2415,7 @@ class RetrievalResult:
             repository_revision=operation.repository_revision,
             status=status,
             items=item_tuple,
+            navigation_candidate_item_ids=navigation_ids,
             bytes_read=bytes_read,
             files_read=files_read,
             truncated=bool(truncated),
@@ -2362,6 +2432,9 @@ class RetrievalResult:
             "repository_revision": self.repository_revision,
             "status": self.status.value,
             "items": [item.model_view() for item in self.items],
+            "navigation_candidate_item_ids": [
+                item.value for item in self.navigation_candidate_item_ids
+            ],
             "bytes_read": self.bytes_read,
             "files_read": self.files_read,
             "truncated": self.truncated,
@@ -8570,6 +8643,9 @@ class EngineeringQuestionAnsweringService:
             operation=operation,
             status=result.status,
             items=result.items,
+            navigation_candidate_item_ids=(
+                result.navigation_candidate_item_ids
+            ),
             bytes_read=result.bytes_read,
             files_read=result.files_read,
             truncated=result.truncated,
@@ -8593,13 +8669,21 @@ class EngineeringQuestionAnsweringService:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Retrieval Worker Result violates the compiled operation authority",
             )
+        navigation_candidate_ids = frozenset(
+            result.navigation_candidate_item_ids
+        )
         if any(
             not _path_allowed(item.path, operation.source_allowlist)
             or not _path_allowed(
                 item.path, operation.evidence_class_allowlist
             )
             or item.evidence_class is not operation.evidence_class
-            or item.modality != operation.result_modality
+            or item.modality
+            != (
+                ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY
+                if item.item_id in navigation_candidate_ids
+                else operation.result_modality
+            )
             or (
                 operation.operation
                 in {SourceReadOperation.READ, SourceReadOperation.PARSE}
@@ -8794,6 +8878,7 @@ class EngineeringQuestionAnsweringService:
 __all__ = [
     "COMPILED_SOURCE_OPERATION_SCHEMA",
     "ENGINEERING_QA_BROKER_POLICY",
+    "ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY",
     "ENGINEERING_QA_MODE",
     "ENGINEERING_QA_PACKAGE_SCHEMA",
     "ENGINEERING_QA_PROTOCOL",
@@ -8846,6 +8931,7 @@ __all__ = [
     "InvestigationStepProposal",
     "LedgerEntryKind",
     "LedgerTerminalStatus",
+    "MAXIMUM_IDENTIFIER_PATH_NAVIGATION_CANDIDATES",
     "MaterialObservation",
     "MaterialObservationKind",
     "PackageBoundaryKind",

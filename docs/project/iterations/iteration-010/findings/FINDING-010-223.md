@@ -85,3 +85,10 @@ fuse 之后的情形。提高 `56/64` 不是修复；正确的最早偏差是 au
 
 该变化细化既有 Source Worker owner，不改变组件职责，故不需要新 ADR。本 Finding 与同步后的
 `SYS-CONTRACT-SOURCE-ARTIFACT` 是 current system write-back。
+
+## run-099 correction
+
+`FINDING-010-226` 保留本 Finding 的 identifier-component ranking 决策，但纠正了 regression 与真实 mall source 的关键差异：真实
+`OmsPortalOrderServiceImpl.java` 不含 `createOrder`，而是 `generateOrder`。因此 ranking 只能把目标文件带入 bounded observation，不能生成
+literal Search hit；current successor 以独立 navigation-only modality 和 Boundary opaque-read option 表达该事实。本文的 run-098 observation 与
+当时 fixture 结果仍是历史执行证据，不再单独定义 current zero-literal-hit 行为。

@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -131,6 +131,12 @@ Clarification；Q2 错误 ACCEPTED 一份仅含 12 个无关 Controller Citation
 整体仍 FAIL。current Worker 以 Java identifier components 导航 authorized tree path 而不提高 56/64 fuse；current `@25/@16/@20` 删除
 caller-only rewrite 的 authored effect labels，并把 closed body + empty Findings 的 repair 收敛为 decision-only APPROVED。wire output schema、
 authority、route、budget、retry 与 Production 边界不变，fresh run-099 是下一真实证据。
+
+`FINDING-010-226 / run-099` 密封 Ark 4 个 sealed 429 与 DeepSeek 39/39 completed；Q1/Q5 ACCEPTED、Q4 zero-dispatch Clarification，
+Q2 Reviewer reject、Q3 reviewed limitation 使整体仍 FAIL。真实 exact source 使用 `generateOrder` 而不是 `createOrder`，所以 run-098 的
+identifier ranking 已把目标带入 56-file observation，却不能合法生成 literal hit。current successor 把最多 16 个零-hit identifier-path item
+标为 navigation-only Boundary opaque READ options，禁止 Search SUPPORT，fresh full READ 后才允许 Claim；current protocol
+`@26/@16/@21`、六模块 `157/157` PASS。authority、route、fallback、budget、retry 与 Production 边界不变，fresh run-100 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

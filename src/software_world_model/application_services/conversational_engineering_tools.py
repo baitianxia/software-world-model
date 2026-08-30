@@ -45,6 +45,7 @@ from .engineering_conversation import (
     RuntimeCapabilityStatus,
 )
 from .engineering_question_answering import (
+    ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY,
     BrokerDecisionStatus,
     CognitionDimension,
     CognitionItem,
@@ -985,6 +986,31 @@ class EngineeringAgentEvidenceToolAdapter:
             )
             for item in result.items
         )
+        citations_by_item_id = {
+            item.item_id: citation
+            for item, citation in zip(result.items, citations, strict=True)
+        }
+        navigation_candidate_ids = frozenset(
+            result.navigation_candidate_item_ids
+        )
+        navigation_candidates = tuple(
+            item
+            for item in result.items
+            if item.item_id in navigation_candidate_ids
+        )
+        literal_items = tuple(
+            item
+            for item in result.items
+            if item.item_id not in navigation_candidate_ids
+        )
+        navigation_citations = tuple(
+            citations_by_item_id[item.item_id]
+            for item in navigation_candidates
+        )
+        literal_citations = tuple(
+            citations_by_item_id[item.item_id]
+            for item in literal_items
+        )
         receipt = self._receipt(
             request=request,
             state=state,
@@ -995,7 +1021,7 @@ class EngineeringAgentEvidenceToolAdapter:
         fresh = result.progress_digest not in state.progress_digests
         state.progress_digests.add(result.progress_digest)
         evidence: list[EngineeringAgentToolEvidence] = []
-        if result.items and result.status in {
+        if literal_items and result.status in {
             RetrievalStatus.COMPLETE,
             RetrievalStatus.PARTIAL,
         }:
@@ -1014,7 +1040,7 @@ class EngineeringAgentEvidenceToolAdapter:
                         disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
                         progress=fresh,
                         citation_refs=tuple(
-                            item.citation_ref for item in citations
+                            item.citation_ref for item in literal_citations
                         ),
                         authority_receipt=receipt,
                     )
@@ -1028,7 +1054,11 @@ class EngineeringAgentEvidenceToolAdapter:
             boundary_reasons.append(result.failure_code)
         if not result.items:
             boundary_reasons.append("SOURCE_RESULT_HAS_NO_ITEMS")
-        if result.items and not evidence:
+        if navigation_candidates:
+            boundary_reasons.append(
+                "SOURCE_IDENTIFIER_NAVIGATION_CANDIDATES"
+            )
+        elif result.items and not evidence:
             boundary_reasons.append("SOURCE_OBSERVATION_BYTE_LIMIT")
         if boundary_reasons:
             evidence.append(
@@ -1037,7 +1067,7 @@ class EngineeringAgentEvidenceToolAdapter:
                     result_ref=f"{result.result_id.value}-boundary",
                     content=_required_payload(
                         {
-                            "schema": "ENGINEERING_AGENT_SOURCE_BOUNDARY@1",
+                            "schema": "ENGINEERING_AGENT_SOURCE_BOUNDARY@2",
                             "retrieval_result_id": result.result_id.value,
                             "retrieval_result_digest": result.digest.value,
                             "status": result.status.value,
@@ -1045,10 +1075,28 @@ class EngineeringAgentEvidenceToolAdapter:
                             "failure_code": result.failure_code,
                             "truncated": result.truncated,
                             "reasons": boundary_reasons,
+                            "navigation_candidates": tuple(
+                                {
+                                    "locator_reference": (
+                                        item.locator_reference.value
+                                    ),
+                                    "locator": item.display_locator,
+                                    "resource_locator": item.path,
+                                }
+                                for item in navigation_candidates
+                            ),
+                            "navigation_candidates_are_claim_support": False,
+                            "navigation_candidates_require_source_read": bool(
+                                navigation_candidates
+                            ),
                         }
                     ),
                     disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
                     progress=fresh,
+                    citation_refs=tuple(
+                        item.citation_ref
+                        for item in navigation_citations
+                    ),
                     authority_receipt=receipt,
                 )
             )
@@ -1220,6 +1268,7 @@ def _validate_retrieval_result(
         operation=operation,
         status=result.status,
         items=result.items,
+        navigation_candidate_item_ids=result.navigation_candidate_item_ids,
         bytes_read=result.bytes_read,
         files_read=result.files_read,
         truncated=result.truncated,
@@ -1239,11 +1288,19 @@ def _validate_retrieval_result(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Retrieval Worker result violates its compiled Source authority",
         )
+    navigation_candidate_ids = frozenset(
+        result.navigation_candidate_item_ids
+    )
     if any(
         not _path_allowed(item.path, operation.source_allowlist)
         or not _path_allowed(item.path, operation.evidence_class_allowlist)
         or item.evidence_class is not operation.evidence_class
-        or item.modality != operation.result_modality
+        or item.modality
+        != (
+            ENGINEERING_QA_IDENTIFIER_PATH_NAVIGATION_MODALITY
+            if item.item_id in navigation_candidate_ids
+            else operation.result_modality
+        )
         or (
             operation.operation is SourceReadOperation.READ
             and item.path != operation.path
