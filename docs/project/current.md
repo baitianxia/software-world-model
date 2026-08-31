@@ -433,3 +433,10 @@ Conversation 仍为 zero-dispatch Clarification。400 不具备 fallback 资格�
 报告为 `glm-5.3`，不是获准/已资格的 `glm-5.2`。所有临时 variant 已恢复，产品代码 worktree clean。exact-model identity drift 是 material
 scope delta，不能靠删字段或放宽 fingerprint 继续 disclosure；下一外调等待 Ark 恢复 `glm-5.2`，或用户明确批准 preferred profile 升到
 `glm-5.3` 后重新冻结 request contract 与资格。本地开发证据已提交，run-108 尚未创建。
+
+用户随后以
+`local-user-message-utf8:sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd`
+明确批准 ITER-010 Ark preferred actual model 从 `glm-5.2` 更新为 `glm-5.3`，并将 run-108 保持在此前相同的数据、预算、loopback
+evaluation 与非 Production scope。`FINDING-010-238` 因而把 current Adapter 升为 `@9`，requested alias 不变，只移除已证实不兼容的
+`thinking` field，并升级 Conformance fixture `1.9.0`。当前不再等待人工授权；下一连续动作是目标测试、文档/计划门禁、clean commit 和
+fresh Ark Conformance，PASS 后立即创建并执行 run-108。

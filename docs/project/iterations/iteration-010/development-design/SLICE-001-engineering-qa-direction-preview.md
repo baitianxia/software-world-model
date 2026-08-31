@@ -257,6 +257,12 @@ parameter-name 未进入安全 evidence。current candidate 升级 evidence/SQLi
 actual `glm-5.3`。该值不匹配 current frozen `glm-5.2`，所以 exact-identity gate 正确阻断；临时 variant 已恢复。下一产品 dispatch 等
 Provider restore 或用户批准 exact model delta 后重做 request contract/Conformance/Capability qualification。
 
+用户现已用 exact authority delta
+`sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd` 批准 actual `glm-5.3`，并把 run-108 严格限定在此前相同的数据、预算、
+loopback evaluation 和非 Production scope。`FINDING-010-238` 将 current preferred Adapter 升为 `@9`：requested alias 不变，只删除已由
+one-field differential 证明不兼容的 `thinking`，Conformance fixture 升为 `1.9.0`。下一连续动作是目标验证、可信父提交、fresh Ark
+Conformance；PASS 后立即创建并执行 run-108，旧 `glm-5.2/@8` 结果不得复用。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

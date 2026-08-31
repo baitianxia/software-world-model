@@ -147,6 +147,10 @@ clean run-108 Q5 定位具体 request field。
 `glm-5.3` 而不是获准/资格化的 `glm-5.2`。临时 differential 全部恢复；本 Slice 不允许静默放宽 fingerprint 或向新模型继续披露，run-108
 等待 Provider restore 或用户 exact delta。
 
+`FINDING-010-238` 已取得该 exact human delta：actual `glm-5.3` 与此前相同 disclosure/budget/loopback/non-Production scope 获准。current
+request contract 以 Adapter `@9` 删除不兼容的 `thinking`，保持 alias、endpoint、no-tools、structured output、no-retry 与 route 不变；fresh
+Conformance `1.9.0` 和 exact Session preparation 通过后继续 run-108。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

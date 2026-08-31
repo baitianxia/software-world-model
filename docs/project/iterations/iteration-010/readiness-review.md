@@ -298,3 +298,9 @@ qualification 对新 implementation digest 为 stale，不能启动 run-108。
 `FINDING-010-237` 的 fresh differential 已证明 full-envelope 400 由 `thinking` compatibility drift 触发，同时 minimal successful response 的
 actual fingerprint 已变为 `glm-5.3`。这不是 readiness 可自动吸收的普通 failure：current authority/profile/qualification 冻结
 `glm-5.2`。所有诊断 patch 已恢复；Provider restore 或 exact human model delta 之前，Ark 与 DeepSeek 产品外调均为 held，本地工作不受影响。
+
+`FINDING-010-238` 已记录用户 exact human delta
+`sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd`，授权 actual `glm-5.3` 且保持原 disclosure、预算、loopback 与
+非 Production scope。current preferred candidate 因而更新为 requested alias `glm-5-2-260617`、actual `glm-5.3`、Adapter `@9`，并移除
+current Provider 不接受的 `thinking` field；人工授权 readiness 已恢复。旧 Conformance 失效，fresh `1.9.0` PASS 与 exact Session preparation
+仍是 run-108 产品 dispatch 前的机器门禁。

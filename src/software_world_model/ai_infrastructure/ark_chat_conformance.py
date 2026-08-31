@@ -46,7 +46,7 @@ from .volcengine_ark_chat_adapter import (
 
 
 ARK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-ARK-CHAT-NO-TOOLS-001"
-ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.8.0"
+ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.9.0"
 ARK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.ark-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "ark-conformance-live"
@@ -60,7 +60,6 @@ _WIRE_ALLOWLIST = frozenset(
         "stream",
         "n",
         "max_tokens",
-        "thinking",
         "response_format",
     }
 )
@@ -687,7 +686,7 @@ def _evaluate_cases(
         and body["messages"][0].get("role") == "system"
         and "closed JSON Schema" in body["messages"][0].get("content", "")
         and '"additionalProperties":false' in body["messages"][0].get("content", "")
-        and body.get("thinking") == {"type": "disabled"}
+        and "thinking" not in body
         for body in bodies
     )
     separated = two_live and canaries[0].encode() in recording.requests[0].body and canaries[0].encode() not in recording.requests[1].body

@@ -4868,6 +4868,21 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-237.md"
   },
   {
+    "id": "FINDING-010-238",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "human-authority-and-execution-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "quality",
+      "project",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-238.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

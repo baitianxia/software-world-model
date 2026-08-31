@@ -43,7 +43,7 @@ DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT = (
     f"{DEFAULT_VOLCENGINE_ARK_OPENAI_BASE_URL}/chat/completions"
 )
 DEFAULT_VOLCENGINE_ARK_MODEL = "glm-5-2-260617"
-DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT = "glm-5.2"
+DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT = "glm-5.3"
 DEFAULT_VOLCENGINE_ARK_API_KEY_ENV = "ARK_API_KEY"
 DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY = (
     "DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1"
@@ -599,7 +599,7 @@ UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
     provider_type = "VOLCENGINE_ARK"
-    adapter_version = "openai-chat-completions-no-tools@8"
+    adapter_version = "openai-chat-completions-no-tools@9"
 
     def __init__(
         self,
@@ -683,7 +683,6 @@ class VolcengineArkChatCompletionsNoToolsAdapter:
             "stream": False,
             "n": 1,
             "max_tokens": request.max_output_tokens,
-            "thinking": {"type": "disabled"},
             "response_format": {"type": "json_object"},
         }
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")

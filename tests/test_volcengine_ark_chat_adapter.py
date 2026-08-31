@@ -197,7 +197,7 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertFalse(payload["parallel_tool_calls"])
         self.assertFalse(payload["stream"])
         self.assertEqual(payload["n"], 1)
-        self.assertEqual(payload["thinking"], {"type": "disabled"})
+        self.assertNotIn("thinking", payload)
         self.assertEqual(payload["response_format"], {"type": "json_object"})
         self.assertNotIn("store", payload)
         self.assertNotIn("metadata", payload)

@@ -20,7 +20,8 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 | Base URL | `https://ark.cn-beijing.volces.com/api/coding/v3` | `https://api.deepseek.com` |
 | Endpoint | `/chat/completions` | `/chat/completions` |
 | Request model reference | `glm-5-2-260617` | `deepseek-v4-pro` |
-| Adapter | `openai-chat-completions-no-tools@8` | `deepseek-chat-completions-no-tools@7` |
+| Expected actual model fingerprint | `glm-5.3` | `deepseek-v4-pro` |
+| Adapter | `openai-chat-completions-no-tools@9` | `deepseek-chat-completions-no-tools@7` |
 | Secret reference | `env:ARK_API_KEY` | `env:DEEPSEEK_API_KEY` |
 | Connection policy | `DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1` | `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` |
 | Credential resolution | verified TLS 后、每次 HTTP dispatch 前 | verified TLS 后、每次 HTTP dispatch 前 |
@@ -28,7 +29,7 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 | Engineering Chat runtime pre-dispatch session health | 不适用 | runtime ref `DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3`；fully consumed socket 可读/异常或 idle ≥60 秒时，在 qualified transport call 前关闭并在同一 TLS bound 内轮转 |
 | Request retry | `false` | `false` |
 | Tools/session/stream | 禁用 | 禁用 |
-| Thinking | `thinking.type=disabled` | 按 exact qualification 冻结 |
+| Thinking | request field omitted | 按 exact qualification 冻结 |
 
 请求别名与 Provider 实际返回身份是不同字段，只有符合性和能力结果可以证明其当前匹配。Adapter/Configuration/endpoint/model/transport/
 rendering identity 或有效期变化会使旧 Conformance 失效；领域 Prompt、答案 Schema 或不改变上述 identity 的产品变化不得强制重复取得

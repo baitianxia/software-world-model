@@ -287,3 +287,10 @@ fresh Conformance/differential 已由 `FINDING-010-237` 定位：current `thinki
 fingerprint 是 `glm-5.3`，不是冻结的 `glm-5.2`。临时 variant 全部恢复；该 material model delta 超出 current standing profile，故 run-108
 不创建。只有 Provider 恢复 exact `glm-5.2` 或用户批准 `glm-5.3` 并完成新的 request contract/Conformance/Capability qualification，才恢复
 产品外调。
+
+用户随后以
+`local-user-message-utf8:sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd`
+明确批准 Ark preferred actual model 更新为 `glm-5.3`，同时重申原数据、预算、loopback evaluation 与非 Production 边界。按
+`FINDING-010-238`，requested alias 保持 `glm-5-2-260617`，Adapter `@9` 只删除不兼容的 `thinking` field，并把 Conformance fixture
+升级到 `1.9.0`。该 delta 已解除人工授权阻塞；run-108 仍须等待新 exact implementation 的目标测试、门禁和 fresh Ark Conformance PASS，
+不能复用 `glm-5.2/@8` 资格。

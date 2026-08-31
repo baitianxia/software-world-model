@@ -614,6 +614,9 @@ authorization_continuation_policy:
   current_request_status: no-human-request-required-within-standing-scope
   current_human_authority_status: active-public-oss-evaluation-standing-authority
   current_human_reauthorization_required: false
+  current_model_delta_authorization_ref: local-user-message-utf8:sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd
+  current_model_delta_authorization_digest: sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd
+  current_model_delta_finding_ref: FINDING-010-238
   current_blocker: none-ordinary-failures-remain-inside-active-build
 
 public_oss_evaluation_standing_authority:
@@ -1594,6 +1597,7 @@ conversational_engineering_agent:
     - FINDING-010-235
     - FINDING-010-236
     - FINDING-010-237
+    - FINDING-010-238
   latest_browser_product_commit: 0e66247159422d8da4f1a001bb14b11c5d8dff20
   latest_browser_product_tree: af167050807543b371d596cef2388ab5b521e5fc
   latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
@@ -1637,7 +1641,7 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: q2-agent-pre-dispatch-rejected-provider-unavailable-then-fallback-admission-denied,q3-agent-model-call-rejected-provider-http400,q4-correct-zero-dispatch-clarification,q5-agent-model-call-rejected-provider-http400,q1-not-executed
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-fresh-conformance-fail-full-envelope-thinking-invalid-minimal-response-actual-glm-5-3-does-not-match-frozen-glm-5-2-awaiting-provider-restore-or-exact-human-model-delta-deepseek-current-but-product-route-held
+  current_dual_provider_qualification_status: ark-glm-5-3-human-delta-authorized-adapter-9-conformance-1-9-pending-deepseek-current-product-route-held-until-fresh-pass
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
   successor_semantic_query_finding_ref: FINDING-010-138
@@ -1646,7 +1650,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: post-run-107-fresh-no-source-conformance-differential-localized-http400-to-thinking-and-proved-frozen-alias-now-returns-actual-glm-5-3-not-authorized-or-qualified-temporary-variants-restored-run-108-not-created-await-provider-restore-or-exact-human-model-delta
+  agent_execution_status: post-run-107-glm-5-3-human-delta-authorized-request-contract-adapter-9-under-targeted-validation-run-108-not-created-until-fresh-conformance-pass
   status: implemented-not-qualified
 
 question_evidence_package_classes:
@@ -1996,7 +2000,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:c66861ac319293cdc761e05b42b1260a31139832972a489a08da0911c79ca34e
+  system_contract_set_digest: sha256:ae9e69bc8d21b16735365db7f5a57e07f8a267eefd52fb40cc0ef7dbf67a8675
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

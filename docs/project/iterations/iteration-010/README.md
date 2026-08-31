@@ -300,6 +300,10 @@ parameter validation；最小 request 两次完成，但 actual fingerprint 已�
 Conformance 中。所有临时 request variant 已恢复；下一产品 dispatch 等 Ark 恢复 `glm-5.2`，或用户明确批准 `glm-5.3` material delta 后
 重新冻结/资格化，不能以旧授权静默升级模型。
 
+`FINDING-010-238` 已记录用户对 actual `glm-5.3` 的 exact delta 授权以及原数据、预算、loopback evaluation、非 Production scope 不变的
+限制。current Ark preferred candidate 为 alias `glm-5-2-260617` → actual `glm-5.3`、Adapter `@9`，wire contract 删除 `thinking`；fresh
+Conformance `1.9.0` 与 clean exact Session preparation 通过后继续 run-108。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization
