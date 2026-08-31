@@ -188,6 +188,9 @@ run-113 已令 Ark 7 个 attempts 全部完成并把网络从 first divergence �
 输出 selected SUPPORT Observation 与其 Citation domain 的 1-based ordinals，Application 从 sealed invocation 确定性解析。current protocol
 为 `@31 / Primary @30 / output @4 / preflight @25`；下一动作是门禁、clean commit、fresh Ark qualification 和 run-114。
 
+上述门禁已由 clean `912712c… / e40ba2f…` 与 fresh Ark `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 闭合，13/13 case PASS、
+TLS/credential/HTTP `2/2/2`、retry/unknown 0；下一动作收敛为 fresh pricing/exact run-114 Session。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

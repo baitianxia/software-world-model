@@ -308,6 +308,9 @@ run-113 已取得 Ark TLS/credential/HTTP `7/7/7`、DeepSeek/retry/unknown 0；�
 Observation/Citation ordinal selection，由 Application 从 current sealed invocation 解析回 exact Domain refs；route、预算、Evidence authority
 与 Production hold 不变。目标/文档/计划门禁和 clean commit 后，fresh qualification 与 run-114 是下一验证。
 
+clean `912712c… / e40ba2f…` 的 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 已令 Ark `@12 / 1.12.0` 13/13 case PASS，
+actual `glm-5.3`、retry/unknown 0；下一验证现为 fresh pricing/exact run-114 Session 与同一 Q4。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

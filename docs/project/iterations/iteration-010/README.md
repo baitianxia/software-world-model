@@ -341,6 +341,9 @@ run-113 的周期性 Ark 重试已成功越过网络层：7 个 calls 全部完�
 Primary Claim 改为 1-based Observation/Citation ordinal selection，Application 再解析为 exact refs；目标门禁和 clean commit 后执行
 fresh qualification 与 run-114，当前仍没有新的 Draft seal、Review、Delivery 或质量 verdict。
 
+clean `912712c… / e40ba2f…` 的 fresh Ark `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 已 13/13 case PASS；current candidate 现在直接
+进入 fresh pricing/exact run-114 Session，短 qualification 不冒充产品或质量证据。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

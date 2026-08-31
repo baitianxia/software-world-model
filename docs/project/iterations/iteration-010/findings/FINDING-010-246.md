@@ -76,4 +76,12 @@ GLM-5.3 的 current official contract 中 `low` 已是最低 reasoning effort �
 新增回归已验证：合法 1-based selections 稳定解析为原 exact refs；Provider 回传旧 opaque-ref field 被 closed schema 拒绝；越界 ordinal 在
 Application decode 前失败关闭；final preflight 同时投影 ordinal selector contract。model-boundary、Agent、Tool、Conversation、runtime、
 Browser、holdout、live harness 与 model-source 目标集合共 `146/146` PASS。文档检查 `652 current documents`、trusted-base plan snapshot/diff
-与 whitespace check PASS。clean commit、fresh Ark qualification 与 fresh Browser 证据仍待本 change 后续完成。
+与 whitespace check PASS。clean implementation commit/tree 为
+`912712cffc625348887837382d0b4cadf57ab5cb / e40ba2f83ef672f5d4f2ac2b54eb600b89280fe2`。
+
+该 clean identity 随后以 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 再次取得 Ark `@12 / 1.12.0` 13/13 case PASS：actual
+`glm-5.3`、input/output `387/76`、TLS/credential/HTTP `2/2/2`、retry/post-dispatch unknown 0，duration `5879ms`。result digest 与
+artifact file SHA-256 分别为
+`sha256:45e2d53abb5fc07bb4f5778a095077780a01b089e0a79399961287d235cbcc76 /
+c88824d8091f5fa3b8ed477b97614eabbd2f97e11075ea067f253973d5c0b45a`，有效至 `2026-09-30T16:28:47.475684Z`。该短资格只确认
+Adapter/provider compatibility 与当前网络探针，不替代 ordinal output 的长产品验证；fresh run-114 仍是下一证据。

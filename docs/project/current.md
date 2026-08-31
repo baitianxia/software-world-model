@@ -513,3 +513,7 @@ Draft seal、Review 或 Delivery。current `@31 / Primary input @30 / Primary ou
 Observation/Citation ordinals，由 Application 从 current invocation 解析回 exact refs 并拒绝缺项、重复、乱序或越界；Domain Citation
 identity、Evidence authority、route、budget 与 Production 边界不变。下一连续动作是目标/文档/计划门禁、clean commit、fresh Ark
 qualification 和 run-114；周期性网络重试只创建 fresh logical request，不重放 outcome unknown。
+
+clean `912712c… / e40ba2f…` 的 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 已令 Ark `@12 / 1.12.0` 再次 13/13 case PASS，
+actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0。机器资格与网络探针现已闭合，下一连续动作是 fresh pricing/exact
+run-114 Session 和同一 Q4；短 canary 不替代 ordinal protocol 的产品证明。

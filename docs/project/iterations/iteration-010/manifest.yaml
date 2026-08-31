@@ -1654,12 +1654,12 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: mall-search-citation-selection-invalid-after-two-bounded-repairs
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-glm-5-3-adapter-12-conformance-1-12-pass-valid-through-2026-09-30-deepseek-current-qualified-run-113-no-fallback
+  current_dual_provider_qualification_status: ark-glm-5-3-adapter-12-conformance-1-12-fresh-pass-valid-through-2026-09-30-deepseek-current-qualified-run-113-no-fallback
   current_ark_conformance_status: pass-current-for-adapter-12
-  current_ark_conformance_run_id: ccrun_74a415e279f24556a605f6213a26b41e
-  current_ark_conformance_result_digest: sha256:fe8121dd60a43a9853dffdfa2590136ece921df4f321e5f61f6a2c33ca890ad3
-  current_ark_conformance_file_sha256: 3075d99f0a61af871639774eae71e6354c89b5cf30f3bba80b15d4be99a8dc50
-  current_ark_conformance_valid_until: "2026-09-30T14:53:57.525485Z"
+  current_ark_conformance_run_id: ccrun_d92ca17528c84bb7a403b3f3ea48d463
+  current_ark_conformance_result_digest: sha256:45e2d53abb5fc07bb4f5778a095077780a01b089e0a79399961287d235cbcc76
+  current_ark_conformance_file_sha256: c88824d8091f5fa3b8ed477b97614eabbd2f97e11075ea067f253973d5c0b45a
+  current_ark_conformance_valid_until: "2026-09-30T16:28:47.475684Z"
   current_ark_conformance_actual_model: glm-5.3
   current_ark_conformance_request_count: 2
   current_ark_conformance_request_retry_count: 0
@@ -1671,7 +1671,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-113-sealed-ark-network-recovered-citation-ordinal-protocol-repair-under-targeted-validation-run-114-next
+  agent_execution_status: run-113-sealed-citation-ordinal-protocol-clean-commit-and-fresh-ark-qualification-pass-run-114-next
   status: qualified-candidate
 
 question_evidence_package_classes:

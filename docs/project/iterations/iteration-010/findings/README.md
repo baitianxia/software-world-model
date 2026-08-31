@@ -15,7 +15,7 @@ iteration: ITER-010
 - [FINDING-010-246](FINDING-010-246.md)：run-113 的 Ark TLS/credential/HTTP `7/7/7`、DeepSeek/retry/unknown 0，证明网络重试成功；
   第一份 Answer Draft 因 long opaque Citation ref 单字符抄写漂移被拒，两个 repairs 未收敛。current Primary output 改为 1-based
   Observation/Citation ordinal selection，由 Application 解析 exact refs；协议族升为 `@31 / Primary @30 / output @4 / preflight @25`，
-  fresh qualification 与 run-114 待执行。
+  clean `912712c…` 的 fresh Ark qualification 已 13/13 PASS，run-114 待执行。
 - [FINDING-010-245](FINDING-010-245.md)：run-112 以 low-effort 连续完成四个 Ark calls 并推进到两次 Source read；第五个 pre-dispatch
   TLS failure 依法激活 fallback，DeepSeek 明确 HTTP 402。unknown/retry 0；保留 `@12` repair，并在 bounded delay 后执行 fresh run-113。
 - [FINDING-010-244](FINDING-010-244.md)：run-111 前两次 Ark SSE calls completed；第二次 output 精确触及 `8192`、finish `length`，

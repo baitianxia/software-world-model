@@ -341,3 +341,6 @@ run-113 的 Ark 7 个 attempts 已全部完成 TLS、credential 和 HTTP，证�
 未收敛。`FINDING-010-246` 因而把 Provider-facing citation proposal 改为 1-based Observation/Citation ordinals，由 trusted Application
 解析为 exact Domain refs；不改变 Citation authority、Provider route、预算或 Production。该通用 candidate 通过目标/文档/计划门禁与 clean
 commit 后，以 fresh qualification 和 run-114 复验同一 Q4。
+
+clean `912712c… / e40ba2f…` 的 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 已令 Ark `@12 / 1.12.0` 13/13 case PASS，
+actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0；run-114 现可在 fresh pricing 与 exact Session authority 下启动。

@@ -353,3 +353,7 @@ run-113 已在同一 readiness 内完成 7 个 Ark HTTP responses，TLS/credenti
 `FINDING-010-246` 的 ordinal-selection candidate 只改变 Provider-facing representation，Application 仍从 sealed current invocation 重算并
 解析 exact Citation refs；authority、route、budget、disclosure 与 Production hold 不变。readiness 允许完成门禁、clean commit、fresh Ark
 qualification 和 run-114，不要求新的人工授权。
+
+该机器 readiness 已由 clean `912712c… / e40ba2f…` 与 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 闭合：Ark `@12 / 1.12.0`
+13/13 case PASS、actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0。run-114 可在 fresh pricing 与 exact Session
+authority 验证后启动；Production hold 与全部 standing scope 不变。
