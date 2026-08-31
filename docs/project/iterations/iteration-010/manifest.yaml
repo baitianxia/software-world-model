@@ -1646,12 +1646,12 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: mall-search-agent-model-call-rejected-provider-output-invalid-provider-response-invalid
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-glm-5-3-adapter-11-conformance-1-11-pending-deepseek-current-qualified-run-111-blocked-only-on-fresh-ark-qualification
-  current_ark_conformance_status: stale-adapter-10-pass-not-valid-for-adapter-11
-  current_ark_conformance_run_id: ccrun_b222fc9abdf641469baae1cec7080f5d
-  current_ark_conformance_result_digest: sha256:d49d3fbfe61e72f9b5b7c3f35d46316bfac9ceb9845e2652fbd0d1d64949ac27
-  current_ark_conformance_file_sha256: 6fc2b1f99781f83d3812e224bf95521a24794b9c7bf9b22eea923d292e714b57
-  current_ark_conformance_valid_until: "2026-09-30T12:57:14.025703Z"
+  current_dual_provider_qualification_status: ark-glm-5-3-adapter-11-conformance-1-11-pass-valid-through-2026-09-30-deepseek-current-qualified-run-111-pending
+  current_ark_conformance_status: pass-current-for-adapter-11
+  current_ark_conformance_run_id: ccrun_e837a716a9e243c29c4affc4fcd113a0
+  current_ark_conformance_result_digest: sha256:bee27baec52f897d82b028c704a4adf8a61a255232b97013eda10894d0a8e3b2
+  current_ark_conformance_file_sha256: 9a64c7a0434989ec8a431d34cc569b421f0063dc345adebd88a7e7cd4e381dd1
+  current_ark_conformance_valid_until: "2026-09-30T13:57:32.710257Z"
   current_ark_conformance_actual_model: glm-5.3
   current_ark_conformance_request_count: 2
   current_ark_conformance_request_retry_count: 0
@@ -1663,8 +1663,8 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-110-sealed-first-long-sse-call-completed-second-parser-invalid-adapter-11-comment-compatibility-local-candidate-fresh-conformance-then-run-111-next
-  status: implemented-not-qualified
+  agent_execution_status: run-110-sealed-adapter-11-sse-comment-compatibility-qualified-run-111-fresh-pricing-session-and-long-product-differential-next
+  status: qualified-candidate
 
 question_evidence_package_classes:
   support_and_citation:

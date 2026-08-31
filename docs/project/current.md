@@ -481,3 +481,8 @@ DeepSeek 0 正确。raw response 按安全合同未持久化，因此具体帧�
 keep-alive。current `@11 / 1.11.0` candidate 仅在 framing 层丢弃 comment/重复空分隔，继续拒绝其他控制字段并保持 terminal、no-retry、
 fallback、预算、披露与非 Production 语义。下一连续动作是完成定向/文档/计划门禁、clean commit、fresh Ark Conformance，再以 run-111
 验证原失败与异质题；若仍失败，comment 只保持假设而不追认根因。
+
+该机器门禁现已由 clean `8d7927f… / fffe078…` 与 fresh `ccrun_e837a716a9e243c29c4affc4fcd113a0` 闭合：`@11 / 1.11.0`
+13/13 case PASS、actual `glm-5.3`、Usage 完整、TLS/credential/HTTP `2/2/2`、retry/unknown 0，result digest
+`sha256:bee27baec52f897d82b028c704a4adf8a61a255232b97013eda10894d0a8e3b2`。下一连续动作现为 fresh pricing/exact run-111 Session，
+先复验 run-110 的已知 parser failure；qualification 本身不确认 comment 假设，也不产生产品质量/MVP verdict。

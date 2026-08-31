@@ -68,8 +68,16 @@ human approval 0、Production `NOT_EXECUTED`。
 
 新增确定性测试用合法 standalone/mixed/after-DONE comment keep-alive 证明其被丢弃且 terminal output 不变，并证明 `event/id/retry` 仍被拒绝。
 Adapter/Conformance、Gateway、双 Provider、Session/runtime/launcher/Browser 和相邻 Agent/Conversation/route 定向测试共 `198/198`
-PASS；文档检查为 `649 current documents`，trusted-base plan diff PASS。fresh live Conformance 和 run-111 尚未执行，因此此时只能称
-local candidate，不能声明实际 run-110 frame 已确认、产品质量 PASS 或 MVP。
+PASS；文档检查为 `649 current documents`，trusted-base plan diff PASS。clean implementation commit/tree 为
+`8d7927fabfc068f2df00c7f7ae48ab1ebf04bdb4 / fffe078b22a59c4188880108932f518acb38acda`。
+
+该 exact `@11 / 1.11.0` identity 随后完成 fresh live Conformance
+`ccrun_e837a716a9e243c29c4affc4fcd113a0`：13/13 case PASS，actual model `glm-5.3`，input/output tokens `327/199`，Usage 完整，
+TLS/credential/HTTP `2/2/2`，retry 与 post-dispatch unknown 均为 0。result digest 为
+`sha256:bee27baec52f897d82b028c704a4adf8a61a255232b97013eda10894d0a8e3b2`，artifact file SHA-256 为
+`9a64c7a0434989ec8a431d34cc569b421f0063dc345adebd88a7e7cd4e381dd1`，valid until
+`2026-09-30T13:57:32.710257Z`。该 PASS 恢复新 Adapter identity 的机器资格；短 canary 未证明实际收到 comment，也不替代 run-111 长产品
+differential、答案质量或 MVP 验证。
 
 规范依据：
 

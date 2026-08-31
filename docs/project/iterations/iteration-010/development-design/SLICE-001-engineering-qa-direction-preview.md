@@ -287,6 +287,10 @@ retry/unknown 0 取得 2/2 PASS。run-110 现进入 fresh pricing/exact Session 
 但 current parser 确定违反 SSE comment-ignore 规则。`@11 / 1.11.0` candidate 仅忽略 comment/重复空分隔并保留其他 closed framing、terminal、
 no-retry/fallback 约束。下一动作是 clean qualification 后执行 run-111，而不是停工、重复历史 unknown request 或切 fallback 碰答案。
 
+clean `8d7927f… / fffe078…` 的 `ccrun_e837a716a9e243c29c4affc4fcd113a0` 现已令该 identity 13/13 case PASS，actual
+`glm-5.3`、Usage 完整、retry/unknown 0。下一动作收敛为 fresh pricing/exact run-111 Session 与原失败长问题复验；若仍拒绝，继续定位下一
+parser divergence，不把短 Conformance 或 comment 假设写成产品结论。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

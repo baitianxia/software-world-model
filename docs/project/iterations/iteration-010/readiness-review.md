@@ -330,3 +330,7 @@ run-110 已在该 readiness 内密封：首个 Ark SSE response 约 `80.333s` co
 parser 以 `PROVIDER_RESPONSE_INVALID` 失败关闭，Ark transport 仍为 `2/2/2` 且 unknown 0，DeepSeek 0 正确。`FINDING-010-243` 只修复
 已确认的 SSE comment compatibility 缺口并把 Adapter/fixture 升为 `@11 / 1.11.0`；旧 qualification 已失效。readiness 允许完成 targeted/
 docs/plan gate、clean commit 和 fresh Conformance，PASS 后启动 run-111；scope、budget、route、no-retry 与 Production hold 不变。
+
+该 readiness 已由 clean `8d7927f… / fffe078…` 和 `ccrun_e837a716a9e243c29c4affc4fcd113a0` 闭合：`@11 / 1.11.0` fresh
+Conformance 13/13 case PASS，actual `glm-5.3`、Usage 完整、retry/unknown 0。run-111 现可在 fresh pricing 与 exact Session authority
+验证后启动；该资格不替代长产品 response differential，Production hold 与全部 standing scope 不变。

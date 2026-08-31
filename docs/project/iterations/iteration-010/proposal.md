@@ -318,3 +318,7 @@ run-110 长产品验证。
 DeepSeek。raw SSE 未持久化，具体 frame 保持未知；代码却确定会拒绝 SSE 标准允许的 comment keep-alive。current `@11 / 1.11.0`
 candidate 只丢弃 comment/重复空分隔，其他控制字段与既有 terminal validation 继续失败关闭。fresh qualification 与 run-111 differential
 通过前，不把 comment 假设写成已确认根因，也不产生质量/MVP verdict。
+
+clean `8d7927f… / fffe078…` 的 fresh `ccrun_e837a716a9e243c29c4affc4fcd113a0` 已令 `@11 / 1.11.0` 取得 13/13 case
+PASS：actual `glm-5.3`、Usage 完整、TLS/credential/HTTP `2/2/2`、retry/unknown 0。机器资格现已恢复；下一动作是 fresh pricing/exact
+run-111 Session 和长产品 differential，仍不提前确认 comment 假设或质量/MVP。

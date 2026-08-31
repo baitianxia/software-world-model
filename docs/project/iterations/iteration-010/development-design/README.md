@@ -169,6 +169,9 @@ run-110 随后把层次进一步分开：约 `80.333s` 的首个 Ark call comple
 拒绝的标准 SSE comment keep-alive。current `@11 / 1.11.0` 仍拒绝非 comment 控制字段、保持单 terminal/no-retry/fallback 边界；fresh
 Conformance 后以 run-111 验证原失败与异质题。
 
+fresh `ccrun_e837a716a9e243c29c4affc4fcd113a0` 已在 clean `8d7927f… / fffe078…` 上 13/13 case PASS；当前直接进入 fresh
+pricing/exact run-111 Session 和长产品 differential，不把短 qualification 当作 comment 或质量证明。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

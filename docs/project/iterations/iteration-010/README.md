@@ -322,6 +322,9 @@ run-110 首个 Ark SSE call 已在约 `80.333s` completed，证明旧网络边�
 `PROVIDER_RESPONSE_INVALID` 拒绝，transport unknown 0。`FINDING-010-243` 记录 raw frame 未保存，故 comment keep-alive 只是待验证假设；
 但 `@10` 确定会误拒 SSE comment。current `@11 / Conformance 1.11.0` 只修该通用 framing 缺口，fresh qualification 后执行 run-111。
 
+该 fresh qualification 已由 `ccrun_e837a716a9e243c29c4affc4fcd113a0` 在 clean `8d7927f… / fffe078…` 上取得 13/13 case PASS；
+下一步是 fresh pricing/exact run-111 Session 与长产品复验，仍不把短 canary 当作 comment 或质量证明。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

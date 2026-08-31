@@ -14,7 +14,7 @@ iteration: ITER-010
 
 - [FINDING-010-243](FINDING-010-243.md)：run-110 首个 SSE call 在约 `80.333s` completed，第二个约 `102.925s` 后被本地 parser 以
   `PROVIDER_RESPONSE_INVALID` 拒绝；Ark transport `2/2/2`、unknown 0，故不是网络不可用。raw frame 未保存，所以 comment 仍是待验证
-  假设；current `@11 / 1.11.0` 修复确定存在的 SSE comment-ignore 缺口，fresh qualification 后执行 run-111。
+  假设；current `@11 / 1.11.0` 修复确定存在的 SSE comment-ignore 缺口，fresh Conformance 已 13/13 PASS，下一步执行 run-111。
 - [FINDING-010-242](FINDING-010-242.md)：fresh Ark 短 canary 2/2 成功后，run-109 的异质长问题仍在约 `55.996s` 后
   `REMOTE_DISCONNECTED`；与 run-108 的 `56.075s` 高度一致，证明短网络探针会假阳性。current `@10 / Conformance 1.10.0` 保持 Gateway
   单终态语义，把 Provider wire 改为官方 SSE 并在 Adapter 内严格重组；clean live Conformance 已 2/2 PASS，run-110 是下一产品验证。
