@@ -96,12 +96,12 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@29"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@30"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@29"
+    "conversational-engineering-agent-no-tools-prompt@30"
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@29"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@19"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@20"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
     "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24"
 )
@@ -687,6 +687,17 @@ Boundary must be added. In COMPREHENSIVE, the Application intentionally projects
 evidence_package.boundary_observations and draft.boundary_observation_ids as
 empty; that stage-specific omission is not evidence that the complete Package or
 Draft lacks boundaries and must never produce an add/remove-reference Finding.
+The boundary_challenge_projection separately preserves the trusted actual
+Package Boundary count and Draft-declared Boundary-reference count without
+exposing any identifier or Boundary content. These are presence-only metadata,
+not evidence and not authority to assess exact materiality. When the declared
+reference count is nonzero, do not treat a pure unresolved-boundary statement as
+an unclaimed affirmative assertion and do not create a Finding alleging missing
+SUPPORT, missing Claim inventory, or missing Boundary binding merely because the
+redacted arrays are empty. Exact binding validity and materiality remain solely
+for the focused Review. Continue reporting an independently identifiable
+non-Boundary semantic or requirement defect; presence metadata does not approve
+the complete Draft.
 For EVIDENCE_BOUNDARY_CHALLENGE, perform a fresh focused comparison for
 every exact item in both challenge arrays and return one assessment for every
 required challenge ID in each supplied order. For evidence_boundary_challenges,
@@ -6489,6 +6500,36 @@ def _boundary_relevance_challenge_view(
     }
 
 
+def _boundary_challenge_projection_view(
+    request: EngineeringAgentReviewRequest,
+    *,
+    focused_boundary_review: bool,
+) -> dict[str, object]:
+    """Preserve trusted Boundary presence while exact values remain focused."""
+
+    return {
+        "owner_focus": (
+            EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE.value
+        ),
+        "deferred_to_focused_review": not focused_boundary_review,
+        "comprehensive_empty_boundary_fields_are_not_absence_evidence": True,
+        "actual_package_boundary_observation_count": len(
+            request.package.boundary_observations
+        ),
+        "actual_draft_declared_boundary_reference_count": len(
+            request.draft.boundary_observation_ids
+        ),
+        "counts_are_presence_only_not_boundary_evidence": True,
+        (
+            "nonzero_draft_count_forbids_missing_binding_claim_or_"
+            "support_inference_from_redaction"
+        ): True,
+        "add_or_remove_boundary_reference_finding_allowed": (
+            focused_boundary_review
+        ),
+    }
+
+
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
@@ -6566,16 +6607,10 @@ def _review_input_view(
             ) if focused_boundary_review else (),
             "digest": request.draft.digest.value,
         },
-        "boundary_challenge_projection": {
-            "owner_focus": (
-                EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE.value
-            ),
-            "deferred_to_focused_review": not focused_boundary_review,
-            "comprehensive_empty_boundary_fields_are_not_absence_evidence": True,
-            "add_or_remove_boundary_reference_finding_allowed": (
-                focused_boundary_review
-            ),
-        },
+        "boundary_challenge_projection": _boundary_challenge_projection_view(
+            request,
+            focused_boundary_review=focused_boundary_review,
+        ),
         "current_requirement_coverage_challenge": {
             "current_user_requirement": (
                 request.turn_request.user_message.content
@@ -6686,6 +6721,9 @@ def _review_input_view(
             "comprehensive_boundary_projection_is_intentionally_empty": (
                 request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
             ),
+            "comprehensive_boundary_presence_counts_are_authoritative": True,
+            "comprehensive_nonzero_draft_boundary_count_forbids_redaction_absence_inference": True,
+            "comprehensive_bound_pure_boundary_statement_is_not_missing_claim_support": True,
             "focused_review_owns_exact_boundary_challenges": True,
             "challenge_assessment_ids_required_exact_order": tuple(
                 item.challenge_id.value for item in challenges

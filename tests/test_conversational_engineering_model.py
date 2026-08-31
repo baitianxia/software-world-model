@@ -19,6 +19,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     _boundary_relevance_challenge_view,
     _boundary_relevance_allowed_dispositions,
+    _boundary_challenge_projection_view,
     _closed_contract_repair_directive,
     _format_repair_input_view,
     _evidence_boundary_challenge_view,
@@ -2325,6 +2326,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "owner_focus": "EVIDENCE_BOUNDARY_CHALLENGE",
                 "deferred_to_focused_review": True,
                 "comprehensive_empty_boundary_fields_are_not_absence_evidence": True,
+                "actual_package_boundary_observation_count": 0,
+                "actual_draft_declared_boundary_reference_count": 0,
+                "counts_are_presence_only_not_boundary_evidence": True,
+                "nonzero_draft_count_forbids_missing_binding_claim_or_support_inference_from_redaction": True,
                 "add_or_remove_boundary_reference_finding_allowed": False,
             },
         )
@@ -2478,6 +2483,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "comprehensive_boundary_projection_is_intentionally_empty"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_boundary_presence_counts_are_authoritative"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_nonzero_draft_boundary_count_forbids_redaction_absence_inference"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_bound_pure_boundary_statement_is_not_missing_claim_support"
             ]
         )
         self.assertTrue(
@@ -2773,6 +2793,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "do not demand that the Draft label later-statement reachability",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "preserves the trusted actual\nPackage Boundary count",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "missing Claim inventory, or missing Boundary binding merely because",
             reviewer_prompt,
         )
         self.assertIn(
@@ -6306,6 +6334,40 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             claims=(),
             boundary_observation_ids=(materiality_boundary.observation_id,),
             digest=digest_of("materiality-draft"),
+        )
+        comprehensive_projection = _boundary_challenge_projection_view(
+            SimpleNamespace(
+                package=materiality_package,
+                draft=materiality_draft,
+            ),
+            focused_boundary_review=False,
+        )
+        self.assertEqual(
+            comprehensive_projection[
+                "actual_package_boundary_observation_count"
+            ],
+            1,
+        )
+        self.assertEqual(
+            comprehensive_projection[
+                "actual_draft_declared_boundary_reference_count"
+            ],
+            1,
+        )
+        self.assertTrue(
+            comprehensive_projection[
+                "nonzero_draft_count_forbids_missing_binding_claim_or_"
+                "support_inference_from_redaction"
+            ]
+        )
+        self.assertFalse(
+            comprehensive_projection[
+                "add_or_remove_boundary_reference_finding_allowed"
+            ]
+        )
+        self.assertNotIn(
+            materiality_boundary.observation_id.value,
+            json.dumps(comprehensive_projection),
         )
         materiality_challenges = (
             project_engineering_agent_boundary_relevance_challenges(

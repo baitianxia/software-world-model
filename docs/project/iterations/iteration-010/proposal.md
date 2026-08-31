@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -256,3 +256,10 @@ zero-dispatch Clarification，整体仍 Quality FAIL。最早通用偏差是 foc
 follow-up 沿用 previous goal并把 caller local reachability 与 transaction/rollback/remote effect unknown 混为一体。current
 `@29/@19/@24` 保留 Review semantic anchor并让当前 requirement/failure condition 成为 Primary 与 Reviewer 的显式 rewrite contract；fresh
 committed run-104 是下一证据，不需要新人工授权。
+
+run-104 已在该 committed candidate 上执行：Q1 的 Ark 1 + DeepSeek 14 命中 exact 15-call fuse，Q2 的 Ark 429 后 DeepSeek 首个 dispatch
+返回 sealed HTTP 402，Q4 仍为零 dispatch Clarification；同签名停止边界下 Q3/Q5 未发送，本次不形成完整五问质量 verdict。Q1 证明
+comprehensive redaction 丢失可信 Boundary presence 并诱发 add/delete Review 振荡。current `@30/@20/@24` 只新增 trusted Package/Draft
+Boundary counts 作为 presence-only metadata，exact binding/materiality 与 reference add/remove 仍由 focused Review 独占。402 不改变产品
+契约或 standing authority；模型协议 `37/37`、相邻定向测试 `137/137` PASS。本地开发继续，下一 live run 只等待 materially new Provider
+availability evidence，不重复请求人工授权。

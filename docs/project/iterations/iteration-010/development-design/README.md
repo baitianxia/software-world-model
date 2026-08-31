@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -121,6 +121,12 @@ ACCEPTED、Q4 zero-dispatch，Q1 focused Review repair 擦除 Reviewer defect，
 后 pre-dispatch reject。current `@29/@19/@24` 机械恢复 focused semantic anchor、固定本轮 User Message 为 current goal，并把 failure 的
 local reachability 与 persistence/commit/rollback/remote effects 分开；模型协议 `37/37`、相邻定向测试 `137/137` PASS，下一项是文档/可信
 父门禁、提交与 fresh run-104。
+
+`FINDING-010-233 / run-104` 已密封 Q1 的 Ark 1 + DeepSeek 14 exact-budget failure、Q2 的 Ark 429 后 DeepSeek sealed HTTP 402，以及 Q4
+zero-dispatch Clarification；Q3/Q5 按同签名停止边界未发送，故无完整五问质量 verdict。Q1 的 first divergence 是 comprehensive redaction
+丢失 trusted Boundary presence。current `@30/@20/@24` 投影 presence-only Package/Draft counts，同时继续隐藏 exact values 并保留 focused
+ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。下一项是文档/可信父门禁和提交；live run 等 materially new Provider
+availability evidence。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
