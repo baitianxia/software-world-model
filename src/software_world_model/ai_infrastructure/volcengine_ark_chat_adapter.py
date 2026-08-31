@@ -600,7 +600,7 @@ UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
     provider_type = "VOLCENGINE_ARK"
-    adapter_version = "openai-chat-completions-no-tools@10"
+    adapter_version = "openai-chat-completions-no-tools@11"
 
     def __init__(
         self,
@@ -999,7 +999,7 @@ def _sse_json_chunks(body: bytes) -> tuple[Mapping[str, object], ...]:
             ErrorCode.PROVIDER_RESPONSE_INVALID,
             "Ark SSE framing is invalid",
         )
-    records = text.replace("\r\n", "\n").split("\n\n")
+    records = re.split(r"\n{2,}", text.replace("\r\n", "\n"))
     while records and records[-1] == "":
         records.pop()
     if not records:
@@ -1010,18 +1010,31 @@ def _sse_json_chunks(body: bytes) -> tuple[Mapping[str, object], ...]:
 
     chunks: list[Mapping[str, object]] = []
     done = False
-    for index, record in enumerate(records):
-        lines = record.split("\n")
+    data_records: list[str] = []
+    for record in records:
+        lines = [
+            line for line in record.split("\n") if not line.startswith(":")
+        ]
+        if not lines:
+            # SSE comments are transport keep-alives, not application events.
+            continue
         if len(lines) != 1 or not lines[0].startswith("data:"):
             raise DomainError(
                 ErrorCode.PROVIDER_RESPONSE_INVALID,
                 "Ark SSE event framing is invalid",
             )
-        data = lines[0][5:]
+        data_records.append(lines[0][5:])
+    if not data_records:
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE response is empty",
+        )
+
+    for index, data in enumerate(data_records):
         if data.startswith(" "):
             data = data[1:]
         if data == "[DONE]":
-            if done or index != len(records) - 1:
+            if done or index != len(data_records) - 1:
                 raise DomainError(
                     ErrorCode.PROVIDER_RESPONSE_INVALID,
                     "Ark SSE terminal marker is invalid",

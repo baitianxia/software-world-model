@@ -318,6 +318,10 @@ response transfer：Adapter `@10 / Conformance 1.10.0` 在内部严格重组一�
 非 Production 均不变。fresh `ccrun_b222fc9abdf641469baae1cec7080f5d` 已在 clean `e95fa929… / 95431f1c…` 上 2/2 PASS；下一步
 是 run-110 长产品验证，不重发两条 outcome-unknown request。
 
+run-110 首个 Ark SSE call 已在约 `80.333s` completed，证明旧网络边界消除；第二个约 `102.925s` 后由本地 parser 以
+`PROVIDER_RESPONSE_INVALID` 拒绝，transport unknown 0。`FINDING-010-243` 记录 raw frame 未保存，故 comment keep-alive 只是待验证假设；
+但 `@10` 确定会误拒 SSE comment。current `@11 / Conformance 1.11.0` 只修该通用 framing 缺口，fresh qualification 后执行 run-111。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

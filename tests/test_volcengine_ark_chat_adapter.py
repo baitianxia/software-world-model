@@ -279,6 +279,37 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(result.output_text, '{"answer":"ok"}')
         self.assertNotIn("private reasoning", result.output_text)
 
+    def test_stream_ignores_sse_comment_keepalives(self) -> None:
+        valid = success_response()
+        body = valid.body.replace(
+            b"\n\ndata:",
+            b"\n\n\n: keep-alive\n\n: second comment\ndata:",
+            1,
+        ) + b": after-done\n\n"
+        adapter, _, _ = self.adapter(
+            ProviderHTTPResponse(200, valid.headers, body)
+        )
+
+        result = adapter.invoke(self.request())
+
+        self.assertEqual(result.output_text, '{"answer":"ok"}')
+        self.assertEqual(result.termination_reason, "stop")
+
+    def test_stream_rejects_non_comment_sse_control_fields(self) -> None:
+        valid = success_response()
+        for control in (b"event: message", b"id: provider-event", b"retry: 1000"):
+            body = valid.body.replace(
+                b"\n\ndata:", b"\n\n" + control + b"\n\ndata:", 1
+            )
+            adapter, _, _ = self.adapter(
+                ProviderHTTPResponse(200, valid.headers, body)
+            )
+            with self.subTest(control=control), self.assertRaises(
+                DomainError
+            ) as raised:
+                adapter.invoke(self.request())
+            self.assertEqual(raised.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
+
     def test_stream_requires_consistent_identity_terminal_marker_and_content_type(self) -> None:
         valid = success_response()
         inconsistent_body = valid.body.replace(

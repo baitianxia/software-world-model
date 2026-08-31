@@ -325,3 +325,8 @@ transfer 改为 SSE 并在 Adapter 内失败关闭地重组。该 wire/parser id
 TLS/credential/HTTP `2/2/2`、retry/unknown 0，result digest
 `sha256:d49d3fbfe61e72f9b5b7c3f35d46316bfac9ceb9845e2652fbd0d1d64949ac27`。run-110 现可在 fresh pricing 和 exact Session authority
 验证后启动；Production hold 与全部 scope 边界不变。
+
+run-110 已在该 readiness 内密封：首个 Ark SSE response 约 `80.333s` completed，证明旧网络断连已越过；第二个约 `102.925s` 后由本地
+parser 以 `PROVIDER_RESPONSE_INVALID` 失败关闭，Ark transport 仍为 `2/2/2` 且 unknown 0，DeepSeek 0 正确。`FINDING-010-243` 只修复
+已确认的 SSE comment compatibility 缺口并把 Adapter/fixture 升为 `@11 / 1.11.0`；旧 qualification 已失效。readiness 允许完成 targeted/
+docs/plan gate、clean commit 和 fresh Conformance，PASS 后启动 run-111；scope、budget、route、no-retry 与 Production hold 不变。

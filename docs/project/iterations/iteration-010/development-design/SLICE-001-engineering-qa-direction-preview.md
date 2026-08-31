@@ -282,6 +282,11 @@ network evidence；本 Slice 的本地开发、证据和计划门禁继续。
 retry/unknown 0 取得 2/2 PASS。run-110 现进入 fresh pricing/exact Session preparation；Conformance 只证明 SSE adapter compatibility，不提前
 证明长产品答案、Review、质量或 MVP。
 
+`FINDING-010-243 / run-110` 已证明 SSE 令首个长 call 在约 `80.333s` completed；第二个约 `102.925s` 后则由本地 parser 以
+`PROVIDER_RESPONSE_INVALID` 拒绝，transport unknown 0。raw frame 未持久化，所以 comment keep-alive 仍是待 successor differential 的假设；
+但 current parser 确定违反 SSE comment-ignore 规则。`@11 / 1.11.0` candidate 仅忽略 comment/重复空分隔并保留其他 closed framing、terminal、
+no-retry/fallback 约束。下一动作是 clean qualification 后执行 run-111，而不是停工、重复历史 unknown request 或切 fallback 碰答案。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

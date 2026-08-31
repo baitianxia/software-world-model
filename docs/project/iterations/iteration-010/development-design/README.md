@@ -164,6 +164,11 @@ Clarification。旧 400 已不再复现，但没有 completed answer 或质量 v
 disclosure 或 Production。fresh `ccrun_b222fc9abdf641469baae1cec7080f5d` 已在 clean `e95fa929… / 95431f1c…` 上 2/2 PASS，故
 下一动作是 fresh pricing/exact Session 与 run-110 长产品验证。
 
+run-110 随后把层次进一步分开：约 `80.333s` 的首个 Ark call completed，约 `102.925s` 的第二个 call 被本地 strict parser 以
+`PROVIDER_RESPONSE_INVALID` 拒绝；network unknown 为 0。`FINDING-010-243` 保留 raw frame 未持久化这一证据限制，并修复 parser 确定会
+拒绝的标准 SSE comment keep-alive。current `@11 / 1.11.0` 仍拒绝非 comment 控制字段、保持单 terminal/no-retry/fallback 边界；fresh
+Conformance 后以 run-111 验证原失败与异质题。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

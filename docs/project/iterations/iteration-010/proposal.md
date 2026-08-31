@@ -312,3 +312,9 @@ Provider/model/endpoint/account、数据、预算和非 Production scope 内采�
 资格失效。clean `e95fa929… / 95431f1c…` 已通过目标/文档/计划门禁；fresh `ccrun_b222fc9abdf641469baae1cec7080f5d`
 Conformance `1.10.0` 又以 actual `glm-5.3`、Usage 完整、retry/unknown 0 取得 2/2 PASS。下一动作是 fresh pricing/exact Session 和
 run-110 长产品验证。
+
+`FINDING-010-243 / run-110` 进一步证明 SSE 网络修复有效但 parser profile 仍过窄：第一个 Ark call 在约 `80.333s` completed，第二个在约
+`102.925s` 后被本地 `PROVIDER_RESPONSE_INVALID` 拒绝；transport TLS/credential/HTTP `2/2/2`、unknown 0，故不是网络不可用且不触发
+DeepSeek。raw SSE 未持久化，具体 frame 保持未知；代码却确定会拒绝 SSE 标准允许的 comment keep-alive。current `@11 / 1.11.0`
+candidate 只丢弃 comment/重复空分隔，其他控制字段与既有 terminal validation 继续失败关闭。fresh qualification 与 run-111 differential
+通过前，不把 comment 假设写成已确认根因，也不产生质量/MVP verdict。
