@@ -646,6 +646,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "unbound_empty_boundary_fragments_require_not_disclosed": True,
                     "source_search_citation_support_is_exact_locator_only": True,
                     "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                     "requirement_coverage_assessment_required": True,
@@ -1000,7 +1001,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1145,6 +1146,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "It is not evidence of the callee implementation",
+            rendered,
+        )
+        self.assertIn(
+            "A declared parameter, return, or generic type proves only",
+            rendered,
+        )
+        self.assertIn(
+            "not locate that transformation inside the callee",
             rendered,
         )
         self.assertIn(
@@ -1459,7 +1468,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2309,7 +2318,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2370,6 +2379,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             comparison_contract[
                 "echoed_query_or_evidence_need_is_not_boundary_fact"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location"
             ]
         )
         self.assertTrue(
@@ -2505,6 +2524,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
                 "model_authored_acquisition_intent_is_not_evidence"
             ]
         )
@@ -2600,6 +2624,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "multi_resource_claim_requires_each_exact_resource_citation_or_split"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location"
             ]
         )
         self.assertTrue(
@@ -2901,6 +2935,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             reviewer_prompt_compact,
         )
         self.assertIn(
+            "A declared parameter, return, or generic type establishes only",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "narrow type-shape or caller-absence Claim does not semantically cover it",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
             "caller-only semantics require WITHIN, SUPPORTED",
             reviewer_prompt_compact,
         )
@@ -2982,7 +3024,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -6691,6 +6733,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ): True,
                     "source_search_citation_support_is_exact_locator_only": True,
                     "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                 },
@@ -6871,6 +6914,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         current_evidence = primary_view["current_turn_evidence"]
         self.assertTrue(
             policy_view[
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            policy_view[
+                "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location"
+            ]
+        )
+        self.assertTrue(
+            policy_view[
                 "container_context_is_part_of_contained_assertion"
             ]
         )
@@ -7019,6 +7072,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "same_observation_sibling_citation_does_not_support_named_resource": True,
                 "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
                 "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
+                "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
                 "model_authored_acquisition_intent_is_not_evidence": True,
                 "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                 "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,

@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@32"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@33"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@32"
+    "conversational-engineering-agent-no-tools-prompt@33"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@31"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@21"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@32"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@22"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -302,6 +302,14 @@ It is not evidence of the callee implementation, dynamic target, return
 semantics, type inheritance, or external side effect. State the observed call
 or order independently and keep those unobserved semantics at the evidence
 boundary.
+A declared parameter, return, or generic type proves only that declared API
+shape. It does not prove where values are populated, mapped, converted, loaded,
+or persisted. The absence of an explicit transformation in one read caller does
+not locate that transformation inside the callee, a mapper, a framework, or any
+other unread implementation. A narrow Claim that states the declared type or
+the caller's lack of conversion does not cover a broader content assertion that
+the conversion happens at a named layer. Give that location its own directly
+supported Claim or state that the implementation location is not established.
 Keep authorization, evidence coverage, tool availability, and runtime outcome
 separate. A cognition gap, unread implementation, absent locator, exhausted
 tool or Source budget, or Provider failure is not an authorization denial.
@@ -971,6 +979,13 @@ not establish the callee implementation, dynamic target, return semantics, type
 inheritance, or external side effect. Do not reject a Draft that states only
 that observed invocation or order and explicitly leaves the callee semantics
 unknown.
+A declared parameter, return, or generic type establishes only the declared API
+shape, not where a value is populated, mapped, converted, loaded, or persisted.
+The absence of explicit transformation statements in a read caller does not
+locate transformation inside the callee, mapper, framework, or another unread
+implementation. Reject content that asserts such a location unless a distinct
+Claim states that same location and cites direct implementation evidence; a
+narrow type-shape or caller-absence Claim does not semantically cover it.
 Do not conflate an evidence or coverage gap with an authorization denial. A
 claim that a fact or source is unauthorized or outside the authorized scope
 requires a current BOUNDARY observation that explicitly records that exact
@@ -3684,6 +3699,7 @@ def _output_preflight_view(
             "source_search_citation_support_is_exact_locator_only": True,
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "draft_boundary_observation_ids_allowed_exact": tuple(
                 boundary_observation_ids
             ),
@@ -3751,6 +3767,9 @@ def _output_preflight_view(
         multi_resource_claim_requires_exact_citations = reference_policy.get(
             "multi_resource_claim_requires_each_exact_resource_citation_or_split"
         )
+        declared_shape_does_not_locate_transformation = reference_policy.get(
+            "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+        )
         acquisition_intent_is_not_evidence = reference_policy.get(
             "model_authored_acquisition_intent_is_not_evidence"
         )
@@ -3796,6 +3815,7 @@ def _output_preflight_view(
                 unbound_empty_fragments_require_not_disclosed,
                 source_search_citation_is_exact_locator_only,
                 multi_resource_claim_requires_exact_citations,
+                declared_shape_does_not_locate_transformation,
                 acquisition_intent_is_not_evidence,
                 echoed_query_is_not_boundary_fact,
                 requirement_coverage_required,
@@ -3983,6 +4003,7 @@ def _output_preflight_view(
             "search_or_interface_evidence_is_not_implementation_evidence": True,
             "source_search_citation_support_is_exact_locator_only": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
             "echoed_query_or_evidence_need_is_not_boundary_fact": True,
             "existing_shape_repair_values_may_not_be_changed_for_consistency": True,
@@ -5673,6 +5694,8 @@ def _primary_input_view(
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
             "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
+            "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
             "echoed_query_or_evidence_need_is_not_boundary_fact": True,
             "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,
@@ -6842,6 +6865,8 @@ def _review_input_view(
                 "user_request_noun_phrase_is_not_evidence_of_fact": True,
                 "model_authored_acquisition_intent_is_not_evidence_of_fact": True,
                 "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+                "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
+                "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
                 "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
                 "unknown_category_must_not_be_promoted_to_affirmative_fact": True,
                 "global_finding_must_name_exact_missing_or_misaligned_delta": True,
@@ -6925,6 +6950,8 @@ def _review_input_view(
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
             "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
+            "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
             "echoed_query_or_evidence_need_is_not_boundary_fact": True,
             "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,
