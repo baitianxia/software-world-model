@@ -111,7 +111,7 @@ Primary model 可以读取 previous committed Work State 中延续 Conversation 
 `work_state_reference_policy`：exact current-Turn Observation prefix、accepted-correction prefix、superseded-conclusion prefix、sealed current
 User Message ID 与允许的 append rule。每个 invocation 的 goal 必须以 current User Message 为当前任务权威，并包含 follow-up 的 material
 delta；previous Work State goal 只能帮助解析 Context，不能因主题或源码相同而继续替代本轮目标。Observation prefix 完全由 Application 持有，
-`engineering-agent-work-state-proposal@3` 不再把
+`engineering-agent-work-state-proposal@4` 不再把
 `observation_ids` 作为 Provider output field；Application 必须从 current invocation 直接绑定完整有序 prefix，Provider 若输出、遗漏或尝试改写该
 field 均不能改变 Work State identity。accepted-correction 与 superseded-conclusion 仍由 Provider 原序复制；只有 current User Message 明确纠正
 更早 Context 时才可追加 sealed Message ID。Application 从原 Request、current observations、previous committed Work State 和 Context 重算并
@@ -177,7 +177,7 @@ Provider unavailable 或允许过早 Limitation 的依据。
 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
 投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
 一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
-并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@29` 必须把这些 literal 投影为第一次
+并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@30` 必须把这些 literal 投影为第一次
 `SOURCE_SEARCH.query` 的 exhaustive `allowed_exact_values`；Provider 只能精确复制，decoder 从原 World Model SUPPORT Observation 重算并
 拒绝宽泛 member word 或其他域外值。该闭域只负责第一次 cognition→Source 导航；执行一次 Source action 后，新 Observation 中出现的
 source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
@@ -322,9 +322,16 @@ no-progress failure 关闭。
    自动重写 Provider Draft。
 
    成功 Turn 的不可变 Result 还必须只投影 Draft 实际选择的 ordered unique Citation；每个 ANSWER Claim 除 exact SUPPORT Observation IDs 外，
-   还须在 `support_citation_refs` 中选择直接支撑该 Claim 的最小 exact Citation set。Claim 选择的每个含 Citation 的 SUPPORT Observation
-   至少贡献一个 reference，所有 selected references 必须属于该 Claim 已选择的 Observation；Source Search 的完整结果清单不得因其中一个结果
-   material 而整批进入答案。Application 从 authority receipt 重算 selected reference identity，并只投影 Claim 选择的 refs；Draft 绑定的 material
+   还须选择直接支撑该 Claim 的最小 exact Citation set。`ENGINEERING_AGENT_PRIMARY_INPUT@30` 为每个 SUPPORT Observation 投影 ordered
+   Citation refs 与固定 `citation_ordinal_base=1`；Provider-facing `engineering-agent-work-state-proposal@4` 不再回传长 opaque Citation
+   reference，而是为每个已选择且含 Citation 的 SUPPORT Observation 恰好返回一个 `support_citation_selections` item：
+   `support_observation_ordinal` 是该 Observation 在本 Claim `support_observation_ids` 中的 1-based 位置，`citation_ordinals` 是对应 ordered
+   ref domain 中严格递增、无重复的 1-based 位置。Application 只从 current invocation 重算两个 ordinal domain，拒绝缺项、重复、乱序、越界、
+   non-SUPPORT 或无 Citation Observation，并按 selection 顺序解析为 Domain `support_citation_refs`；Provider 不能输出 opaque Citation ref，ordinal
+   也不承载新的 Evidence 或 authority。Claim 选择的每个含 Citation 的 SUPPORT Observation 至少贡献一个 resolved reference，所有 resolved
+   references 必须属于该 Claim 已选择的 Observation；同一 exact ref 在多个 selected Observations 中出现时只作稳定 first-occurrence 去重，仍须
+   满足每个 Observation 的 selection coverage。Source Search 的完整结果清单不得因其中一个结果 material 而整批进入答案。Application 从
+   authority receipt 重算 selected reference identity，并只投影 Claim 解析出的 refs；Draft 绑定的 material
    Boundary 仍投影其绑定 Observation 的 Citation。每项保留 evidence class、exact source revision、locator、modality、content digest、Citation
    ref 与 authority digest。未被 Claim/boundary 实际选择的 Package Citation 不得顺带暴露，同一 ref 在不同 receipt 上 identity 不一致必须在浏览器
    投影前失败关闭。Browser 必须在对应助手消息下提供可展开 Citation，并同时显示本 Turn 的 Evidence
@@ -456,7 +463,7 @@ no-progress failure 关闭。
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
-   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
    可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
    已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
    array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。final preflight 还必须
@@ -479,7 +486,7 @@ no-progress failure 关闭。
    projection 中全部既有合法 exact value，再补 missing field，不能借 shape repair 协调 decision、Finding 或其他语义。model-authored object
    进入 typed domain constructor 后产生的 `INVALID_ARGUMENT` 必须归一化为 `STRUCTURED_OUTPUT_INVALID`；Application 自身 authority/invariant 的
    非该类 DomainError 必须原样传播，不能被这条 untrusted-output 边界掩盖。
-   `engineering-agent-work-state-proposal@3` 由 Application 从 invocation 直接绑定 Observation prefix，不属于 repair 或 Provider output
+   `engineering-agent-work-state-proposal@4` 由 Application 从 invocation 直接绑定 Observation prefix，不属于 repair 或 Provider output
    正规化：该字段不在 output schema 中，Provider 若输出它必须按 unexpected field 拒绝，Application 不能从 raw output 猜测或模糊纠正 ID。
    `CLOSED_OUTPUT_CONTRACT` repair 若发现真实缺口只是绑定到错误 Claim，不得为满足一致性
    而删除缺口；针对未枚举正文结论的 Finding 应保留并使用 `claim_index=null`。diagnostic 只定位 exact closed output violation，不授予
@@ -509,8 +516,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@30 / conversational-engineering-agent-no-tools-prompt@30 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@29 / ENGINEERING_AGENT_REVIEW_INPUT@20 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24` 协议族；每次
+   `conversational-engineering-agent@31 / conversational-engineering-agent-no-tools-prompt@31 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@30 / ENGINEERING_AGENT_REVIEW_INPUT@20 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生

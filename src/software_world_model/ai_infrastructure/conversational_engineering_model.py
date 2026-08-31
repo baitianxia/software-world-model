@@ -96,17 +96,17 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@30"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@31"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@30"
+    "conversational-engineering-agent-no-tools-prompt@31"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@29"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@30"
 ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@20"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-work-state-proposal@3"
+    "engineering-agent-work-state-proposal@4"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
     "engineering-agent-independent-review-proposal@9"
@@ -229,13 +229,19 @@ reachability into "unknown" merely because rollback or external effects remain
 unknown, and do not infer abrupt completion from the word "failure" alone.
 current_turn_evidence is
 partitioned by its only legal Draft use. An ANSWER claim may cite only exact
-SUPPORT observation IDs and exact Citation references carried by those selected
-Observations; a LIMITATION may cite only exact BOUNDARY IDs. Copy those IDs and
-Citation references only from the corresponding arrays in
-draft_reference_policy. For every selected SUPPORT Observation that carries
-Citation references, copy the smallest exact subset that directly supports that
-Claim into support_citation_refs; never copy an entire Source Search inventory
-merely because one result is relevant. An
+SUPPORT observation IDs and Citation references carried by those selected
+Observations; a LIMITATION may cite only exact BOUNDARY IDs. Copy SUPPORT and
+BOUNDARY IDs only from the corresponding arrays in draft_reference_policy. Do
+not copy opaque Citation-reference strings into the output. For every selected
+SUPPORT Observation that carries Citation references, emit exactly one
+support_citation_selections item. support_observation_ordinal is the 1-based
+position of that Observation in the Claim's support_observation_ids array;
+citation_ordinals are the 1-based positions in the matching
+draft_reference_policy.answer_claim_support_citation_refs_by_observation entry,
+whose citation_ordinal_base is 1. Select the smallest ordered ordinal subset
+that directly supports the Claim; never select an entire Source Search
+inventory merely because one result is relevant. The trusted Application
+resolves those ordinals to the exact opaque Citation references after decode. An
 ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
@@ -1045,6 +1051,34 @@ _ACTION_SCHEMA = _closed_object(
     }
 )
 
+_CLAIM_CITATION_SELECTION_SCHEMA = _closed_object(
+    {
+        "support_observation_ordinal": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 128,
+            "description": (
+                "1-based position in this Claim's support_observation_ids."
+            ),
+        },
+        "citation_ordinals": _array(
+            {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 128,
+                "description": (
+                    "1-based position in the selected SUPPORT Observation's "
+                    "ordered Citation-reference domain."
+                ),
+            },
+            minimum=1,
+            maximum=128,
+            unique=True,
+        ),
+    }
+)
+
+
 _CLAIM_SCHEMA = _closed_object(
     {
         "statement": _STRING,
@@ -1060,15 +1094,8 @@ _CLAIM_SCHEMA = _closed_object(
             maximum=128,
             unique=True,
         ),
-        "support_citation_refs": _array(
-            {
-                "type": "string",
-                "description": (
-                    "Copy only exact Citation references disclosed for the "
-                    "Claim's selected SUPPORT observations. Select the smallest "
-                    "directly supporting set; do not copy a search inventory."
-                ),
-            },
+        "support_citation_selections": _array(
+            _CLAIM_CITATION_SELECTION_SCHEMA,
             maximum=128,
             unique=True,
         ),
@@ -3146,6 +3173,14 @@ def _closed_nested_object_fields(
             ),
             label="Agent Draft claims",
         )
+        claim_citation_selections = _closed_schema_array_item(
+            _closed_schema_property(
+                draft_claims,
+                "support_citation_selections",
+                label="Agent Draft claim",
+            ),
+            label="Agent Draft Claim Citation selections",
+        )
         return {
             "$.action": _closed_schema_required_fields(
                 _ACTION_SCHEMA,
@@ -3162,6 +3197,12 @@ def _closed_nested_object_fields(
             "$.draft.claims[]": _closed_schema_required_fields(
                 draft_claims,
                 label="Agent Draft claim",
+            ),
+            "$.draft.claims[].support_citation_selections[]": (
+                _closed_schema_required_fields(
+                    claim_citation_selections,
+                    label="Agent Draft Claim Citation selection",
+                )
             ),
         }
     return {
@@ -3468,6 +3509,7 @@ def _output_preflight_view(
             or not all(
                 isinstance(item, Mapping)
                 and isinstance(item.get("observation_id"), str)
+                and item.get("citation_ordinal_base") == 1
                 and isinstance(item.get("citation_refs"), (tuple, list))
                 and all(
                     isinstance(reference, str)
@@ -3573,10 +3615,23 @@ def _output_preflight_view(
             "answer_claim_support_citation_refs_by_observation_allowed_exact": tuple(
                 {
                     "observation_id": item["observation_id"],
+                    "citation_ordinal_base": item["citation_ordinal_base"],
                     "citation_refs": tuple(item["citation_refs"]),
                 }
                 for item in support_citation_refs_by_observation
             ),
+            "model_output_opaque_citation_references_forbidden": True,
+            "model_output_citation_selector_schema": (
+                "ONE_BASED_SUPPORT_OBSERVATION_AND_CITATION_ORDINALS@1"
+            ),
+            "support_observation_ordinal_is_one_based_claim_position": True,
+            "citation_ordinal_is_one_based_reference_position": True,
+            (
+                "one_selection_per_selected_citation_bearing_"
+                "observation_required"
+            ): True,
+            "selection_order_follows_support_observation_order": True,
+            "citation_ordinal_order_follows_reference_order": True,
             "each_citation_bearing_support_observation_requires_selected_reference": True,
             "claim_citation_selection_must_be_minimal_and_direct": True,
             "whole_search_inventory_copy_forbidden": True,
@@ -4326,6 +4381,12 @@ def _closed_contract_repair_directive(message: str) -> str:
         return (
             "USE_A_MATERIAL_ALLOWED_COGNITION_LITERAL_OR_A_DIFFERENT_"
             "WORLD_MODEL_QUERY"
+        )
+    if "support_citation_selections" in message:
+        return (
+            "KEEP_THE_CLAIM_SEMANTICS_AND_SELECT_ONLY_ORDERED_ONE_BASED_"
+            "SUPPORT_OBSERVATION_AND_CITATION_ORDINALS_FROM_THE_CURRENT_"
+            "SEALED_DOMAINS_WITHOUT_EMITTING_OPAQUE_CITATION_REFERENCES"
         )
     return "CORRECT_THE_NAMED_CONTRACT_WITHOUT_COPYING_THE_INVALID_PROPOSAL"
 
@@ -5413,6 +5474,7 @@ def _primary_input_view(
             "answer_claim_support_citation_refs_by_observation": tuple(
                 {
                     "observation_id": item.observation_id.value,
+                    "citation_ordinal_base": 1,
                     "citation_refs": item.citation_refs,
                 }
                 for item in invocation.observations
@@ -7006,7 +7068,10 @@ def _decode_primary_output(
         draft = (
             None
             if draft_payload is None
-            else _decode_draft(_mapping(draft_payload, "Agent draft"))
+            else _decode_draft(
+                _mapping(draft_payload, "Agent draft"),
+                invocation=invocation,
+            )
         )
         proposal = EngineeringAgentWorkStateProposal.create(
             model_call_ref=model_call_ref,
@@ -7097,30 +7162,157 @@ def _decode_action(
     )
 
 
-def _decode_draft(payload: Mapping[str, object]) -> EngineeringAgentDraftProposal:
-    claims = tuple(
-        EngineeringAgentClaimProposal.create(
-            statement=_string(
-                _mapping(item, "answer claim")["statement"],
-                "claim statement",
-            ),
-            support_observation_ids=_stable_id_sequence(
-                _mapping(item, "answer claim")["support_observation_ids"],
-                "claim support observation IDs",
-            ),
-            support_citation_refs=_string_sequence(
-                _mapping(item, "answer claim")["support_citation_refs"],
-                "claim support Citation references",
-            ),
-        )
-        for item in _sequence(payload["claims"], "answer claims")
+def _decode_claim_support_citation_refs(
+    payload: Mapping[str, object],
+    *,
+    support_observation_ids: tuple[StableId, ...],
+    invocation: EngineeringAgentInvocation,
+    claim_index: int,
+) -> tuple[str, ...]:
+    observations_by_id = {
+        item.observation_id: item for item in invocation.observations
+    }
+    selections = _sequence(
+        payload["support_citation_selections"],
+        "claim support Citation selections",
     )
+    selected_observation_ordinals: list[int] = []
+    resolved_references: list[str] = []
+    for selection_index, raw_selection in enumerate(selections):
+        selection = _mapping(
+            raw_selection,
+            "claim support Citation selection",
+        )
+        observation_ordinal = selection["support_observation_ordinal"]
+        if (
+            type(observation_ordinal) is not int
+            or observation_ordinal < 1
+            or observation_ordinal > len(support_observation_ids)
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                f"$.draft.claims[{claim_index}].support_citation_selections"
+                f"[{selection_index}].support_observation_ordinal must be a "
+                "1-based position in this Claim's support_observation_ids",
+            )
+        if (
+            selected_observation_ordinals
+            and observation_ordinal <= selected_observation_ordinals[-1]
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                f"$.draft.claims[{claim_index}].support_citation_selections "
+                "must follow support_observation_ids order without duplicates",
+            )
+        observation_id = support_observation_ids[observation_ordinal - 1]
+        observation = observations_by_id.get(observation_id)
+        if (
+            observation is None
+            or observation.disposition.value != "SUPPORT"
+            or not observation.citation_refs
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                f"$.draft.claims[{claim_index}].support_citation_selections"
+                f"[{selection_index}] must identify a selected current SUPPORT "
+                "Observation that carries Citation references",
+            )
+        raw_citation_ordinals = _sequence(
+            selection["citation_ordinals"],
+            "claim Citation ordinals",
+        )
+        citation_ordinals: list[int] = []
+        for citation_index, citation_ordinal in enumerate(
+            raw_citation_ordinals
+        ):
+            if (
+                type(citation_ordinal) is not int
+                or citation_ordinal < 1
+                or citation_ordinal > len(observation.citation_refs)
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    f"$.draft.claims[{claim_index}].support_citation_selections"
+                    f"[{selection_index}].citation_ordinals[{citation_index}] "
+                    "must be a 1-based position in the selected SUPPORT "
+                    "Observation's Citation-reference domain",
+                )
+            if citation_ordinals and citation_ordinal <= citation_ordinals[-1]:
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    f"$.draft.claims[{claim_index}].support_citation_selections"
+                    f"[{selection_index}].citation_ordinals must follow exact "
+                    "reference order without duplicates",
+                )
+            citation_ordinals.append(citation_ordinal)
+            resolved_references.append(
+                observation.citation_refs[citation_ordinal - 1]
+            )
+        selected_observation_ordinals.append(observation_ordinal)
+    expected_observation_ordinals = tuple(
+        ordinal
+        for ordinal, observation_id in enumerate(
+            support_observation_ids,
+            start=1,
+        )
+        if (
+            (observation := observations_by_id.get(observation_id)) is not None
+            and observation.disposition.value == "SUPPORT"
+            and observation.citation_refs
+        )
+    )
+    if tuple(selected_observation_ordinals) != expected_observation_ordinals:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            f"$.draft.claims[{claim_index}].support_citation_selections must "
+            "contain exactly one ordered selection for every selected SUPPORT "
+            "Observation that carries Citation references",
+        )
+    unique_references = tuple(dict.fromkeys(resolved_references))
+    if len(unique_references) > 128:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            f"$.draft.claims[{claim_index}].support_citation_selections resolves "
+            "more than 128 unique Citation references",
+        )
+    return unique_references
+
+
+def _decode_draft(
+    payload: Mapping[str, object],
+    *,
+    invocation: EngineeringAgentInvocation,
+) -> EngineeringAgentDraftProposal:
+    claims: list[EngineeringAgentClaimProposal] = []
+    for claim_index, raw_claim in enumerate(
+        _sequence(payload["claims"], "answer claims")
+    ):
+        claim = _mapping(raw_claim, "answer claim")
+        support_observation_ids = _stable_id_sequence(
+            claim["support_observation_ids"],
+            "claim support observation IDs",
+        )
+        claims.append(
+            EngineeringAgentClaimProposal.create(
+                statement=_string(
+                    claim["statement"],
+                    "claim statement",
+                ),
+                support_observation_ids=support_observation_ids,
+                support_citation_refs=_decode_claim_support_citation_refs(
+                    claim,
+                    support_observation_ids=support_observation_ids,
+                    invocation=invocation,
+                    claim_index=claim_index,
+                ),
+            )
+        )
     return EngineeringAgentDraftProposal.create(
         response_kind=EngineeringAgentResponseKind(
             _string(payload["response_kind"], "response kind")
         ),
         content=_string(payload["content"], "draft content"),
-        claims=claims,
+        claims=tuple(claims),
         boundary_observation_ids=_stable_id_sequence(
             payload["boundary_observation_ids"],
             "boundary observation IDs",
@@ -7287,9 +7479,9 @@ def _validate_primary_proposal(
             ):
                 raise DomainError(
                     ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                    f"$.draft.claims[{claim_index}].support_citation_refs must "
-                    f"select at least one exact Citation reference from selected "
-                    f"SUPPORT observation {observation_id.value}",
+                    f"$.draft.claims[{claim_index}].support_citation_selections "
+                    "must resolve at least one exact Citation reference from "
+                    f"selected SUPPORT observation {observation_id.value}",
                 )
         for citation_index, citation_ref in enumerate(
             claim.support_citation_refs
@@ -7297,9 +7489,9 @@ def _validate_primary_proposal(
             if citation_ref not in available_citation_refs:
                 raise DomainError(
                     ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                    f"$.draft.claims[{claim_index}].support_citation_refs"
-                    f"[{citation_index}] must copy an exact reference from the "
-                    "Claim's selected SUPPORT observations",
+                    f"$.draft.claims[{claim_index}].support_citation_selections "
+                    f"resolved reference {citation_index} outside the Claim's "
+                    "selected SUPPORT observations",
                 )
     reportable_boundary_ids = set(
         project_engineering_agent_draft_boundaries(

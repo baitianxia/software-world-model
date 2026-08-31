@@ -503,6 +503,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "USE_A_MATERIAL_ALLOWED_COGNITION_LITERAL_OR_A_DIFFERENT_"
             "WORLD_MODEL_QUERY",
         )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "$.draft.claims[3].support_citation_selections must use exact ordinals"
+            ),
+            "KEEP_THE_CLAIM_SEMANTICS_AND_SELECT_ONLY_ORDERED_ONE_BASED_"
+            "SUPPORT_OBSERVATION_AND_CITATION_ORDINALS_FROM_THE_CURRENT_"
+            "SEALED_DOMAINS_WITHOUT_EMITTING_OPAQUE_CITATION_REFERENCES",
+        )
 
     def test_focused_contract_repair_preserves_reviewer_semantic_choices(self) -> None:
         prior_review = {
@@ -988,7 +996,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1044,7 +1052,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "$.draft.claims[]": [
                     "statement",
                     "support_observation_ids",
-                    "support_citation_refs",
+                    "support_citation_selections",
+                ],
+                "$.draft.claims[].support_citation_selections[]": [
+                    "support_observation_ordinal",
+                    "citation_ordinals",
                 ],
             },
         )
@@ -1443,7 +1455,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2098,7 +2110,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         "support_observation_ids": [
                             boundary.observation_id.value
                         ],
-                        "support_citation_refs": [],
+                        "support_citation_selections": [],
                     }
                 ],
                 "boundary_observation_ids": [boundary.observation_id.value],
@@ -2293,7 +2305,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2909,7 +2921,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -3113,6 +3125,103 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         rendered_invocation = _primary_input_view(invocation)
         policy = rendered_invocation["tool_reference_policy"]
         work_state_policy = rendered_invocation["work_state_reference_policy"]
+
+        citation_invocation = replace(invocation, available_operations=())
+        citation_output = {
+            "goal": "登录失败时记录什么？",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "ANSWER",
+                "content": "当前证据支持这一条登录结论。",
+                "claims": [
+                    {
+                        "statement": "当前证据支持这一条登录结论。",
+                        "support_observation_ids": [
+                            observation.observation_id.value
+                        ],
+                        "support_citation_selections": [
+                            {
+                                "support_observation_ordinal": 1,
+                                "citation_ordinals": [1, 3],
+                            }
+                        ],
+                    }
+                ],
+                "boundary_observation_ids": [],
+            },
+        }
+        citation_proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(citation_output),
+            invocation=citation_invocation,
+            model_call_ref="ordinal-citation-selection",
+        )
+        self.assertEqual(
+            citation_proposal.draft.claims[0].support_citation_refs,
+            (locator_reference, other_resource_reference),
+        )
+        copied_opaque_reference = json.loads(json.dumps(citation_output))
+        copied_opaque_reference["draft"]["claims"][0].pop(
+            "support_citation_selections"
+        )
+        copied_opaque_reference["draft"]["claims"][0][
+            "support_citation_refs"
+        ] = [locator_reference]
+        with self.assertRaises(DomainError) as opaque_reference_output:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(copied_opaque_reference),
+                invocation=citation_invocation,
+                model_call_ref="opaque-citation-reference-output",
+            )
+        self.assertEqual(
+            opaque_reference_output.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        missing_citation_selection = json.loads(json.dumps(citation_output))
+        missing_citation_selection["draft"]["claims"][0][
+            "support_citation_selections"
+        ] = []
+        with self.assertRaises(DomainError) as missing_selection:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(missing_citation_selection),
+                invocation=citation_invocation,
+                model_call_ref="missing-citation-selection",
+            )
+        self.assertEqual(
+            missing_selection.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "exactly one ordered selection",
+            str(missing_selection.exception),
+        )
+        invalid_citation_ordinal = json.loads(json.dumps(citation_output))
+        invalid_citation_ordinal["draft"]["claims"][0][
+            "support_citation_selections"
+        ][0]["citation_ordinals"] = [4]
+        with self.assertRaises(DomainError) as ordinal_outside_domain:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(invalid_citation_ordinal),
+                invocation=citation_invocation,
+                model_call_ref="citation-ordinal-outside-domain",
+            )
+        self.assertEqual(
+            ordinal_outside_domain.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "1-based position",
+            str(ordinal_outside_domain.exception),
+        )
 
         self.assertEqual(
             rendered_invocation["tool_action_budget"],
@@ -4161,7 +4270,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         "support_observation_ids": [
                             observation.observation_id.value
                         ],
-                        "support_citation_refs": [locator_reference],
+                        "support_citation_selections": [
+                            {
+                                "support_observation_ordinal": 1,
+                                "citation_ordinals": [1],
+                            }
+                        ],
                     }
                 ],
                 "boundary_observation_ids": [],
@@ -6675,6 +6789,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             (
                 {
                     "observation_id": support_observation.observation_id.value,
+                    "citation_ordinal_base": 1,
                     "citation_refs": (),
                 },
             ),
@@ -6684,6 +6799,20 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "draft_boundary_observation_ids_allowed_exact"
             ],
             (boundary_observation.observation_id.value,),
+        )
+        self.assertTrue(
+            reference_preflight[
+                "model_output_opaque_citation_references_forbidden"
+            ]
+        )
+        self.assertEqual(
+            reference_preflight["model_output_citation_selector_schema"],
+            "ONE_BASED_SUPPORT_OBSERVATION_AND_CITATION_ORDINALS@1",
+        )
+        self.assertTrue(
+            reference_preflight[
+                "one_selection_per_selected_citation_bearing_observation_required"
+            ]
         )
         self.assertTrue(
             reference_preflight[
@@ -6701,6 +6830,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         "observation_id": (
                             support_observation.observation_id.value
                         ),
+                        "citation_ordinal_base": 1,
                         "citation_refs": (),
                     },
                 ),
