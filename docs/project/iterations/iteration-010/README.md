@@ -330,6 +330,9 @@ run-111 的前两次 Ark SSE call 已 completed；第二次精确用满 `8192` o
 `@12 / 1.12.0` candidate 固定 `reasoning_effort=low`、保留 empty/incomplete terminal 的 Usage 与 structured-output 分类；fresh
 qualification PASS 后执行 run-112。
 
+fresh `ccrun_74a415e279f24556a605f6213a26b41e` 已在 clean `2506dec… / f8a9d37…` 上令 `@12 / 1.12.0` 13/13 case PASS；
+下一步是 fresh pricing/exact run-112 Session 和同一长问题 differential，不把短 canary 当作产品质量证明。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

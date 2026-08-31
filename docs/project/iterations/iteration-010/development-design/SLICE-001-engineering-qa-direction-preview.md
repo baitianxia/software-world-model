@@ -296,6 +296,9 @@ run-111 differential 已将当前最早偏差定位到生成预算：前两次 A
 DeepSeek 0，故不满足网络 retry/fallback。`FINDING-010-244` 将 candidate 升为 `@12 / 1.12.0`，固定 `reasoning_effort=low` 并修正
 empty/incomplete terminal evidence 分类；目标门禁与 fresh qualification PASS 后执行 run-112。
 
+fresh `ccrun_74a415e279f24556a605f6213a26b41e` 已在 clean `2506dec… / f8a9d37…` 上 13/13 PASS，证明 exact Coding Plan endpoint
+接受 `reasoning_effort=low`。下一动作是 fresh pricing/exact run-112 Session 与原问题复验；短 qualification 不产生 Draft/Review/MVP verdict。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

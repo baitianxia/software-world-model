@@ -1647,14 +1647,14 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: mall-search-agent-model-call-rejected-after-length-structured-output-invalid-and-provider-response-invalid
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-glm-5-3-adapter-12-conformance-1-12-pending-old-adapter-11-result-stale-deepseek-current-qualified
-  current_ark_conformance_status: stale-for-adapter-12-fresh-required
-  current_ark_conformance_run_id: not-run-for-adapter-12
-  current_ark_conformance_result_digest: not-sealed-for-adapter-12
-  current_ark_conformance_file_sha256: not-sealed-for-adapter-12
-  current_ark_conformance_valid_until: "not-applicable-adapter-12-pending"
-  current_ark_conformance_actual_model: not-observed-adapter-12-pending
-  current_ark_conformance_request_count: 0
+  current_dual_provider_qualification_status: ark-glm-5-3-adapter-12-conformance-1-12-pass-valid-through-2026-09-30-deepseek-current-qualified-run-112-pending
+  current_ark_conformance_status: pass-current-for-adapter-12
+  current_ark_conformance_run_id: ccrun_74a415e279f24556a605f6213a26b41e
+  current_ark_conformance_result_digest: sha256:fe8121dd60a43a9853dffdfa2590136ece921df4f321e5f61f6a2c33ca890ad3
+  current_ark_conformance_file_sha256: 3075d99f0a61af871639774eae71e6354c89b5cf30f3bba80b15d4be99a8dc50
+  current_ark_conformance_valid_until: "2026-09-30T14:53:57.525485Z"
+  current_ark_conformance_actual_model: glm-5.3
+  current_ark_conformance_request_count: 2
   current_ark_conformance_request_retry_count: 0
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
@@ -1664,7 +1664,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-111-sealed-output-budget-divergence-adapter-12-reasoning-effort-and-incomplete-terminal-candidate-fresh-qualification-next
+  agent_execution_status: run-111-sealed-adapter-12-reasoning-effort-and-incomplete-terminal-qualified-run-112-fresh-pricing-session-and-long-product-differential-next
   status: qualified-candidate
 
 question_evidence_package_classes:

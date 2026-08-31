@@ -327,3 +327,7 @@ run-111 已在同一长问题上将 parser 分歧推进到生成预算层：前�
 finish `length`，正文 JSON 中途截断；第三次 format repair 被笼统归为 `PROVIDER_RESPONSE_INVALID`。transport `3/3/3`、unknown/retry 0，
 DeepSeek 0，因此不是网络重试或 fallback 条件。`FINDING-010-244` 的 `@12 / 1.12.0` candidate 固定 `reasoning_effort=low`，并让合法 terminal
 的 empty/截断 string content 形成带 Usage 的 structured-output rejection。它不扩大现有预算；fresh live Conformance PASS 前不得进入 run-112。
+
+clean `2506dec… / f8a9d37…` 的 fresh `ccrun_74a415e279f24556a605f6213a26b41e` 已令 `@12 / 1.12.0` 取得 13/13 case PASS：
+actual `glm-5.3`、input/output `323/71`、TLS/credential/HTTP `2/2/2`、retry/unknown 0。exact Coding Plan endpoint 已接受 low-effort field；
+下一动作是 fresh pricing/exact run-112 长产品 differential，仍不提前产生质量/MVP verdict。

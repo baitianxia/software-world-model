@@ -494,3 +494,8 @@ input/output `15406/8192`、finish `length`，可见 JSON 在 string 中途截�
 finish/schema 层，以保留 `STRUCTURED_OUTPUT_INVALID` 的 Usage/termination evidence；单 call `8192`、总预算、route、披露和非 Production 不变。
 下一连续动作是完整目标回归、文档/计划门禁、clean commit 与 fresh Ark Conformance；PASS 后执行 run-112，失败则继续一般性修复而不切
 DeepSeek 碰答案。
+
+该机器门禁已由 clean `2506dec… / f8a9d37…` 和 fresh `ccrun_74a415e279f24556a605f6213a26b41e` 闭合：`@12 / 1.12.0`
+13/13 case PASS、actual `glm-5.3`、input/output `323/71`、Usage 完整、TLS/credential/HTTP `2/2/2`、retry/unknown 0，result digest
+`sha256:fe8121dd60a43a9853dffdfa2590136ece921df4f321e5f61f6a2c33ca890ad3`。下一连续动作现为 fresh pricing/exact run-112 Session 与原长问题
+复验；短 canary 不替代产品质量证据。

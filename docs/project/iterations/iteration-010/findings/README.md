@@ -14,7 +14,8 @@ iteration: ITER-010
 
 - [FINDING-010-244](FINDING-010-244.md)：run-111 前两次 Ark SSE calls completed；第二次 output 精确触及 `8192`、finish `length`，
   JSON string 中途截断，第三次 repair 仍被笼统归为 response invalid。transport unknown/retry 0、DeepSeek 0，故不是网络不可用。
-  current `@12 / 1.12.0` candidate 固定 `reasoning_effort=low` 并保留 incomplete terminal 的 Usage/structured-output 分类，等待 fresh qualification。
+  current `@12 / 1.12.0` 固定 `reasoning_effort=low` 并保留 incomplete terminal 的 Usage/structured-output 分类；fresh Conformance 已
+  13/13 PASS，下一步执行 run-112 长产品复验。
 - [FINDING-010-243](FINDING-010-243.md)：run-110 首个 SSE call 在约 `80.333s` completed，第二个约 `102.925s` 后被本地 parser 以
   `PROVIDER_RESPONSE_INVALID` 拒绝；Ark transport `2/2/2`、unknown 0，故不是网络不可用。raw frame 未保存，所以 comment 仍是待验证
   假设；current `@11 / 1.11.0` 修复确定存在的 SSE comment-ignore 缺口，fresh Conformance 已 13/13 PASS，下一步执行 run-111。

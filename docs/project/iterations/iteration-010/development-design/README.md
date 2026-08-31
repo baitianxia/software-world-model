@@ -177,6 +177,9 @@ run-111 已证明 `@11` 可完成更长的第二段 SSE 重组，但该 call 的
 terminal 的 empty/incomplete string content 保留为带 Usage 的 structured-output failure。current candidate 为 `@12 / 1.12.0`，fresh
 qualification PASS 后才进入 run-112；不增加 budget、不切 fallback、不重发 outcome unknown。
 
+clean `2506dec… / f8a9d37…` 的 `ccrun_74a415e279f24556a605f6213a26b41e` 已令该 exact identity 13/13 PASS、actual `glm-5.3`、
+Usage 完整、retry/unknown 0；当前直接进入 fresh pricing/exact run-112 长产品 differential。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

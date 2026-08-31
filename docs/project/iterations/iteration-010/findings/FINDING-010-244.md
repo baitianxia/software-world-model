@@ -67,8 +67,19 @@ run-111 的第二个长 response 已在超过 run-110 旧失败时长后被 `@11
 本地新增确定性测试断言 exact wire 包含 `reasoning_effort=low`、配置拒绝其他未冻结值，并证明 empty-content `length` 被保留为带 Usage 的
 `ProviderOutputRejected / STRUCTURED_OUTPUT_INVALID`；旧离线 Harness 的 Ark fixture 也同步到 current SSE response contract。Adapter、
 Conformance、Gateway、双 Provider route、Session/runtime/launcher/Browser 与相邻 Agent/Conversation 目标回归 `205/205` PASS，文档检查为
-`650 current documents`，trusted-base plan snapshot/diff 与 whitespace check PASS。`@12 / 1.12.0` 的 clean commit 与 fresh live Conformance
-仍待执行；在这些证据完成前不得把该 candidate 标为 qualified，也不得启动 run-112。
+`650 current documents`，trusted-base plan snapshot/diff 与 whitespace check PASS。在下述 successor evidence 形成前，`@12 / 1.12.0`
+仍只是未资格化 candidate，不得启动 run-112。
+
+clean implementation commit/tree
+`2506decd6eef2b627fd88721ca1cad2cb128c00b / f8a9d372544d50f91ab2a372aa336c63639d6d46` 随后完成 fresh live Conformance
+`ccrun_74a415e279f24556a605f6213a26b41e`：13/13 case PASS，actual model `glm-5.3`，input/output tokens `323/71`，Usage 完整，
+TLS/credential/HTTP `2/2/2`、retry/post-dispatch unknown 0，duration `6803ms`。result digest 为
+`sha256:fe8121dd60a43a9853dffdfa2590136ece921df4f321e5f61f6a2c33ca890ad3`，artifact file SHA-256 为
+`3075d99f0a61af871639774eae71e6354c89b5cf30f3bba80b15d4be99a8dc50`，implementation/configuration digests 为
+`sha256:5d123d7a13cc48694285d9bcca97c52d3bd65f8613fff8a29fad587dc055c395 /
+sha256:4de6ea42c7ace590e715cb7e2e484c18c84c7432cd3e95a6b9bc159b141017c4`，valid until `2026-09-30T14:53:57.525485Z`。
+这直接证明 exact Coding Plan endpoint 接受 `reasoning_effort=low`，恢复 `@12` 机器资格；短 canary 的较低 output usage 不提前证明长产品
+Turn、答案质量或 MVP。下一动作是 fresh pricing/exact run-112 Session 与 run-111 长问题复验。
 
 规范依据：
 

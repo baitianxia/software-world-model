@@ -339,3 +339,7 @@ run-111 已执行并密封：Ark 前两次长 SSE response completed，第二次
 单 call bound；第三次 format repair 仍被 Adapter 笼统拒绝。TLS/credential/HTTP `3/3/3`、unknown/retry 0、DeepSeek 0，故 readiness
 不允许把它转译为网络 retry/fallback。`FINDING-010-244` 允许在相同 standing scope 内把 current wire 固定为 `reasoning_effort=low`、修正
 empty/incomplete terminal 的分类，并要求 `@12 / 1.12.0` fresh qualification；PASS 后才可运行 run-112，Production hold 不变。
+
+该 readiness 门禁已由 clean `2506dec… / f8a9d37…` 与 `ccrun_74a415e279f24556a605f6213a26b41e` 闭合：`@12 / 1.12.0` fresh
+Conformance 13/13 PASS、actual `glm-5.3`、Usage 完整、retry/unknown 0。run-112 现可在 fresh pricing 与 exact Session authority 验证后启动；
+该资格不替代长产品 response/quality 证据，Production hold 与全部 standing scope 不变。
