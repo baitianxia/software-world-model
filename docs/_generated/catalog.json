@@ -4840,7 +4840,7 @@
   {
     "id": "FINDING-010-236",
     "kind": "implementation-finding",
-    "status": "open",
+    "status": "dispositioned",
     "authority": "execution-evidence",
     "owners": [
       "ai",
@@ -4851,6 +4851,21 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-236.md"
+  },
+  {
+    "id": "FINDING-010-237",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "quality",
+      "project",
+      "security"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-237.md"
   },
   {
     "id": "ITER-001-DECISIONS",

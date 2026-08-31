@@ -1593,6 +1593,7 @@ conversational_engineering_agent:
     - FINDING-010-234
     - FINDING-010-235
     - FINDING-010-236
+    - FINDING-010-237
   latest_browser_product_commit: 0e66247159422d8da4f1a001bb14b11c5d8dff20
   latest_browser_product_tree: af167050807543b371d596cef2388ab5b521e5fc
   latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
@@ -1636,7 +1637,7 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: q2-agent-pre-dispatch-rejected-provider-unavailable-then-fallback-admission-denied,q3-agent-model-call-rejected-provider-http400,q4-correct-zero-dispatch-clarification,q5-agent-model-call-rejected-provider-http400,q1-not-executed
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-stale-after-diagnostic-adapter-implementation-change-awaiting-fresh-conformance-deepseek-current
+  current_dual_provider_qualification_status: ark-fresh-conformance-fail-full-envelope-thinking-invalid-minimal-response-actual-glm-5-3-does-not-match-frozen-glm-5-2-awaiting-provider-restore-or-exact-human-model-delta-deepseek-current-but-product-route-held
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
   successor_semantic_query_finding_ref: FINDING-010-138
@@ -1645,7 +1646,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-107-q2-pre-http-tls-unavailable-deepseek-peak-denied-q3-and-q5-ark-http400-invalidparameter-q4-zero-dispatch-clarification-no-retry-no-client-error-fallback-current-safe-evidence-missing-optional-error-parameter-system-contract-and-code-candidate-target-tests-pass-commit-then-fresh-ark-conformance-and-run-108-q5
+  agent_execution_status: post-run-107-fresh-no-source-conformance-differential-localized-http400-to-thinking-and-proved-frozen-alias-now-returns-actual-glm-5-3-not-authorized-or-qualified-temporary-variants-restored-run-108-not-created-await-provider-restore-or-exact-human-model-delta
   status: implemented-not-qualified
 
 question_evidence_package_classes:

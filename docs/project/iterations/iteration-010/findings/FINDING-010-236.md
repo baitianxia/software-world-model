@@ -1,7 +1,7 @@
 ---
 id: FINDING-010-236
 kind: implementation-finding
-status: open
+status: dispositioned
 authority: execution-evidence
 owners: [ai, architecture, operations, quality, project]
 depends_on: [FINDING-010-235, ITER-010-PDR-007, ITER-010-PDR-012, ITER-010-VERIFICATION, SYS-ADR-017, SYS-CONTRACT-AI-MODEL-GATEWAY]
@@ -71,3 +71,10 @@ fresh successor 证据确认。
    变化中，避免把 Ark 诊断修复扩张成未获 fresh DeepSeek qualification 的 Provider identity 变化。
 5. 代码、目标测试、System 文档与 fresh Ark Conformance 通过后，使用新的 clean run-108 先重放 Q5。若 Ark 返回安全 parameter name，则只对该
    通用 request field 做最小修复；若仍为空，则保留 evidence，继续用不披露正文的受控差分定位。run-107 不取得 Delivery/Review、质量或 MVP PASS。
+
+## Follow-up evidence
+
+fresh Ark Conformance 已验证 Provider response 没有 `error.param`；安全字段因此保持 `null`，错误正文仍未持久化。受控 canary differential
+随后由 `FINDING-010-237` 定位 `thinking` request-field incompatibility，并发现 frozen alias 的 actual fingerprint 已从 `glm-5.2` 漂移为
+`glm-5.3`。该后续状态不撤销本 Finding 已完成的通用 evidence/schema/legacy-replay 处置，但在取得 exact model delta 或 Provider 恢复前阻断
+新的产品 disclosure。
