@@ -1015,6 +1015,13 @@ class EngineeringProviderRouteReceipt:
                 "Provider attempts cannot share a model dispatch receipt",
             )
         dispatch_count = sum(item.provider_dispatch_count for item in receipts)
+        if dispatch_count > min(
+            item.maximum_dispatches_per_turn for item in plan.routes
+        ):
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "Provider route exceeded the logical Turn combined dispatch fuse",
+            )
         duplicate_risk = bool(
             preferred_availability_verdict is not None
             and preferred_availability_verdict.potential_duplicate_cost_risk

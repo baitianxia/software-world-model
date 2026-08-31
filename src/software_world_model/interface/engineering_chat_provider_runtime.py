@@ -25,6 +25,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     EngineeringAgentSessionDisclosureAuthority,
     ModelBackedConversationalEngineeringAgent,
     PolicyEnforcingEngineeringAgentModelGateway,
+    SealedEngineeringAgentLogicalTurnDispatchBudget,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     engineering_agent_output_schemas,
 )
@@ -79,7 +80,7 @@ from .engineering_chat_provider_launcher import (
 
 
 ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-PROVIDER-MODEL-RUNTIME@1"
+    "SWM-ENGINEERING-CHAT-PROVIDER-MODEL-RUNTIME@2"
 )
 ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS = (
     "QUALIFIED_PROVIDER_RUNTIME_BOUND_NOT_DISPATCHED"
@@ -231,6 +232,11 @@ class EngineeringChatProviderModelRuntime:
             "session_disclosure_authority_digest": (
                 self.session_authority.digest.value
             ),
+            "logical_turn_dispatch_budget_digest": (
+                self.authorizer.logical_turn_dispatch_budget.digest.value
+                if self.authorizer.logical_turn_dispatch_budget is not None
+                else None
+            ),
             "qualification_result_ref": self.qualification_result_ref,
             "qualification_result_digest": self.qualification_result_digest.value,
             "gateway_repository_ref": self.gateway_repository_ref,
@@ -361,6 +367,9 @@ def create_ark_engineering_chat_provider_model_runtime(
     qualification: ArkChatConformanceQualification,
     configuration: EngineeringAgentModelConfiguration,
     session_authority: EngineeringAgentSessionDisclosureAuthority,
+    logical_turn_dispatch_budget: (
+        SealedEngineeringAgentLogicalTurnDispatchBudget | None
+    ) = None,
     at: datetime,
     clock: Callable[[], datetime] | None = None,
 ) -> EngineeringChatProviderModelRuntime:
@@ -396,6 +405,7 @@ def create_ark_engineering_chat_provider_model_runtime(
         transport_ref=ENGINEERING_CHAT_ARK_TRANSPORT_REF,
         configuration=configuration,
         session_authority=session_authority,
+        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
         qualification_result_ref=qualification.result_ref,
         qualification_result_digest=qualification.result_digest,
         adapter=adapter,
@@ -415,6 +425,9 @@ def create_deepseek_engineering_chat_provider_model_runtime(
     qualification: DeepSeekChatConformanceQualification,
     configuration: EngineeringAgentModelConfiguration,
     session_authority: EngineeringAgentSessionDisclosureAuthority,
+    logical_turn_dispatch_budget: (
+        SealedEngineeringAgentLogicalTurnDispatchBudget | None
+    ) = None,
     dispatch_admission_controller: DeepSeekDispatchAdmissionController,
     at: datetime,
     clock: Callable[[], datetime] | None = None,
@@ -451,6 +464,7 @@ def create_deepseek_engineering_chat_provider_model_runtime(
         transport_ref=ENGINEERING_CHAT_DEEPSEEK_TRANSPORT_REF,
         configuration=configuration,
         session_authority=session_authority,
+        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
         qualification_result_ref=qualification.result_ref,
         qualification_result_digest=qualification.result_digest,
         adapter=adapter,
@@ -521,6 +535,9 @@ def _provider_runtime(
     transport_ref: str,
     configuration: EngineeringAgentModelConfiguration,
     session_authority: EngineeringAgentSessionDisclosureAuthority,
+    logical_turn_dispatch_budget: (
+        SealedEngineeringAgentLogicalTurnDispatchBudget | None
+    ),
     qualification_result_ref: str,
     qualification_result_digest: Digest,
     adapter,
@@ -642,6 +659,7 @@ def _provider_runtime(
     authorizer = SealedEngineeringAgentRoleDisclosureAuthorizer(
         session_authority=session_authority,
         configuration=configuration,
+        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
         clock=runtime_clock,
     )
     protected = PolicyEnforcingEngineeringAgentModelGateway(
@@ -662,6 +680,11 @@ def _provider_runtime(
         "chat_binding_digest": binding.digest.value,
         "provider_configuration_digest": configuration.digest.value,
         "session_disclosure_authority_digest": session_authority.digest.value,
+        "logical_turn_dispatch_budget_digest": (
+            logical_turn_dispatch_budget.digest.value
+            if logical_turn_dispatch_budget is not None
+            else None
+        ),
         "qualification_result_ref": qualification_result_ref,
         "qualification_result_digest": qualification_result_digest.value,
         "gateway_repository_ref": gateway_repository_ref,

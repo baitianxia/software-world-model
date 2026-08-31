@@ -55,7 +55,7 @@ from .engineering_chat_provider_runtime import (
 
 
 ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@2"
+    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@3"
 )
 ENGINEERING_CHAT_SESSION_RUNTIME_STATUS = (
     "SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE"
@@ -223,6 +223,7 @@ class EngineeringChatSessionRuntimeReceipt:
     evidence_tool_factory_digest: Digest
     primary_provider_runtime_digest: Digest
     fallback_provider_runtime_digest: Digest
+    logical_turn_dispatch_budget_digest: Digest | None
     launcher_receipt_digest: Digest
     blocking_gaps: tuple[str, ...]
     artifact_session_config_loaded: bool
@@ -252,6 +253,11 @@ class EngineeringChatSessionRuntimeReceipt:
             ),
             "fallback_provider_runtime_digest": (
                 self.fallback_provider_runtime_digest.value
+            ),
+            "logical_turn_dispatch_budget_digest": (
+                self.logical_turn_dispatch_budget_digest.value
+                if self.logical_turn_dispatch_budget_digest is not None
+                else None
             ),
             "launcher_receipt_digest": self.launcher_receipt_digest.value,
             "blocking_gaps": self.blocking_gaps,
@@ -342,6 +348,12 @@ def prepare_engineering_chat_session_runtime(
         status = ENGINEERING_CHAT_SESSION_RUNTIME_STATUS
         blocking_gaps = ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS
     primary_route, fallback_route = route_plan.routes
+    primary_logical_budget = (
+        primary_provider_runtime.authorizer.logical_turn_dispatch_budget
+    )
+    fallback_logical_budget = (
+        fallback_provider_runtime.authorizer.logical_turn_dispatch_budget
+    )
     if (
         primary_provider_runtime.status
         != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
@@ -371,6 +383,14 @@ def prepare_engineering_chat_session_runtime(
         is fallback_provider_runtime.transport
         or primary_provider_runtime.model_boundary
         is fallback_provider_runtime.model_boundary
+        or (primary_logical_budget is None)
+        != (fallback_logical_budget is None)
+        or (
+            primary_logical_budget is not None
+            and primary_logical_budget is not fallback_logical_budget
+        )
+        or fixed_command_wired
+        and primary_logical_budget is None
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -448,6 +468,11 @@ def prepare_engineering_chat_session_runtime(
         "fallback_provider_runtime_digest": (
             fallback_provider_runtime.digest.value
         ),
+        "logical_turn_dispatch_budget_digest": (
+            primary_logical_budget.digest.value
+            if primary_logical_budget is not None
+            else None
+        ),
         "launcher_receipt_digest": launcher.receipt.digest.value,
         "blocking_gaps": blocking_gaps,
         "artifact_session_config_loaded": artifact_loaded,
@@ -474,6 +499,11 @@ def prepare_engineering_chat_session_runtime(
         evidence_tool_factory_digest=evidence_factory.digest,
         primary_provider_runtime_digest=primary_provider_runtime.digest,
         fallback_provider_runtime_digest=fallback_provider_runtime.digest,
+        logical_turn_dispatch_budget_digest=(
+            primary_logical_budget.digest
+            if primary_logical_budget is not None
+            else None
+        ),
         launcher_receipt_digest=launcher.receipt.digest,
         blocking_gaps=blocking_gaps,
         artifact_session_config_loaded=artifact_loaded,

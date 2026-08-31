@@ -465,6 +465,32 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
             _FALLBACK_PROFILE_REF,
         )
 
+    def test_route_receipt_rejects_combined_dispatches_above_turn_fuse(
+        self,
+    ) -> None:
+        boundary = _SealingAvailabilityBoundary()
+        builders = _preferred_failure(
+            EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE,
+            "ACCOUNT_MODEL_TEMPORARILY_UNAVAILABLE",
+        )
+        builders[EngineeringProviderRouteRole.FALLBACK] = (
+            lambda request: _success(
+                request,
+                label="fallback",
+                dispatches=15,
+                receipt_ref="fallback-success",
+            )
+        )
+        factory = _Factory(builders)
+        service, _ = _service(factory, availability_boundary=boundary)
+
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.failure_code, "AGENT_EXECUTION_FAILED")
+        self.assertEqual(submission.turn.provider_dispatch_count, 0)
+        self.assertEqual(len(factory.authorities), 2)
+
     def test_real_owner_promotes_only_gateway_sealed_pre_dispatch_unavailability(self) -> None:
         boundary = SealedExecutionProfileAvailabilityBoundary(
             clock=lambda: datetime(2099, 1, 1, tzinfo=timezone.utc),

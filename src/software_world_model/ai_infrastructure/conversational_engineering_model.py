@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@27"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@28"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@27"
+    "conversational-engineering-agent-no-tools-prompt@28"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@27"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@17"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@28"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@18"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@3"
@@ -131,6 +131,9 @@ ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA = (
 )
 ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2 = (
     "SWM-ENGINEERING-AGENT-ROLE-DISCLOSURE-AUTHORIZATION@2"
+)
+ENGINEERING_AGENT_LOGICAL_TURN_DISPATCH_BUDGET_SCHEMA = (
+    "SWM-ENGINEERING-AGENT-LOGICAL-TURN-DISPATCH-BUDGET@1"
 )
 
 _CALLING_MODULE = "ai-infrastructure/conversational-engineering-model"
@@ -597,6 +600,25 @@ with null finding_code only when the Draft answers every material current
 requirement or, under the existing pure-LIMITATION rules, honestly binds the
 material evidence boundary that prevents the requested answer. Approval is
 forbidden unless this assessment is FULLY_ADDRESSED.
+Treat the User's wording as a request to investigate, not as evidence that every
+noun phrase or proposed category exists. When a requirement explicitly asks to
+distinguish supported behavior from a transaction boundary, external effect,
+refresh behavior, timing guarantee, or other fact that current evidence cannot
+confirm, a Draft fully addresses that part by stating the supported local facts
+and explicitly stating that the requested boundary or effect is not established.
+Never demand that the Draft positively classify a call as a database write,
+transactional change, cache effect, dynamic refresh, remote update, or successful
+side effect merely because the User used that category. An explicit honest
+"not established by current evidence" treatment answers an uncertainty request;
+it is not a missing affirmative conclusion. Conversely, a Draft remains
+misaligned when it silently omits the requested uncertainty treatment or answers
+only an older Conversation question.
+Every global requirement-coverage Finding must identify the exact requested
+delta that is absent, contradicted, or placed in the wrong category and describe
+one evidence-safe correction achievable from the sealed Package. Do not issue a
+Finding that contradicts its own message, merely repeats the User's nouns, or
+demands both a positive assertion and an explicit statement that the same fact is
+unconfirmed.
 Audit the complete Draft before returning and report every independently observed
 material defect in this one Review. Do not intentionally stop after the first
 Finding and defer another defect to a later fresh Review. Finding code is a local
@@ -622,7 +644,20 @@ or interface declaration does not by itself close an unread implementation,
 remote commit, refresh, consistency, or consumer-visible effect boundary.
 review_focus is a closed Application-owned discriminator. For COMPREHENSIVE,
 return empty evidence_boundary_assessments and boundary_relevance_assessments
-arrays. For EVIDENCE_BOUNDARY_CHALLENGE, perform a fresh focused comparison for
+arrays. COMPREHENSIVE owns exact current-requirement coverage, ordinary Claim
+support, and other complete-Draft semantic defects. It does not own caller-versus-
+callee scope challenges, Package Boundary materiality, resolved-acquisition
+classification, or whether an opaque Boundary reference should be added or
+removed; the Application projects those exact questions only to the focused
+Review. Therefore a COMPREHENSIVE Review must not create a Finding whose sole
+remedy is adding or removing draft.boundary_observation_ids, exposing a Package
+Boundary, or suppressing a resolved acquisition diagnostic. Do not guess that a
+Package Boundary is material merely because it exists, or that an unbound
+Boundary must be added. In COMPREHENSIVE, the Application intentionally projects
+evidence_package.boundary_observations and draft.boundary_observation_ids as
+empty; that stage-specific omission is not evidence that the complete Package or
+Draft lacks boundaries and must never produce an add/remove-reference Finding.
+For EVIDENCE_BOUNDARY_CHALLENGE, perform a fresh focused comparison for
 every exact item in both challenge arrays and return one assessment for every
 required challenge ID in each supplied order. For evidence_boundary_challenges,
 evidence_boundary must state the
@@ -1826,6 +1861,151 @@ class EngineeringAgentRoleDisclosureRequest:
         )
 
 
+class SealedEngineeringAgentLogicalTurnDispatchBudget:
+    """Share one logical Turn dispatch fuse across ordered Provider routes."""
+
+    def __init__(
+        self,
+        *,
+        chat_binding_digest: Digest,
+        authorization_message_digest: Digest,
+        provider_binding_digests: tuple[Digest, ...],
+        maximum_turns: int,
+        maximum_dispatches_per_turn: int,
+        maximum_total_dispatches: int,
+    ) -> None:
+        if (
+            not isinstance(chat_binding_digest, Digest)
+            or not isinstance(authorization_message_digest, Digest)
+            or not isinstance(provider_binding_digests, tuple)
+            or not provider_binding_digests
+            or any(
+                not isinstance(item, Digest)
+                for item in provider_binding_digests
+            )
+            or len(provider_binding_digests)
+            != len(set(provider_binding_digests))
+            or type(maximum_turns) is not int
+            or maximum_turns < 1
+            or type(maximum_dispatches_per_turn) is not int
+            or maximum_dispatches_per_turn < 1
+            or type(maximum_total_dispatches) is not int
+            or maximum_total_dispatches < maximum_dispatches_per_turn
+            or maximum_total_dispatches
+            > maximum_turns * maximum_dispatches_per_turn
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "logical Turn dispatch budget bounds are invalid",
+            )
+        self.chat_binding_digest = chat_binding_digest
+        self.authorization_message_digest = authorization_message_digest
+        self.provider_binding_digests = provider_binding_digests
+        self.maximum_turns = maximum_turns
+        self.maximum_dispatches_per_turn = maximum_dispatches_per_turn
+        self.maximum_total_dispatches = maximum_total_dispatches
+        self.digest = digest_of(
+            {
+                "schema": ENGINEERING_AGENT_LOGICAL_TURN_DISPATCH_BUDGET_SCHEMA,
+                "chat_binding_digest": chat_binding_digest.value,
+                "authorization_message_digest": (
+                    authorization_message_digest.value
+                ),
+                "provider_binding_digests": tuple(
+                    item.value for item in provider_binding_digests
+                ),
+                "maximum_turns": maximum_turns,
+                "maximum_dispatches_per_turn": (
+                    maximum_dispatches_per_turn
+                ),
+                "maximum_total_dispatches": maximum_total_dispatches,
+                "ordered_provider_routes_share_one_turn_fuse": True,
+                "request_retry_allowed": False,
+                "production_activation": _PRODUCTION_ACTIVATION,
+            }
+        )
+        self._turns: dict[Digest, StableId] = {}
+        self._reservations: list[
+            tuple[Digest, Digest, Digest]
+        ] = []
+        self._reserved_request_digests: set[Digest] = set()
+        self._lock = Lock()
+
+    @property
+    def reservations(self) -> tuple[tuple[Digest, Digest, Digest], ...]:
+        """Return logical Turn, disclosure request, and Provider binding digests."""
+
+        with self._lock:
+            return tuple(self._reservations)
+
+    def reserve(
+        self,
+        *,
+        request: EngineeringAgentRoleDisclosureRequest,
+        session_authority: EngineeringAgentSessionDisclosureAuthority,
+    ) -> None:
+        if (
+            request.chat_binding_digest != self.chat_binding_digest
+            or session_authority.chat_binding_digest
+            != self.chat_binding_digest
+            or session_authority.authorization_message_digest
+            != self.authorization_message_digest
+            or request.provider_binding_digest
+            != session_authority.provider_binding_digest
+            or request.provider_binding_digest
+            not in self.provider_binding_digests
+            or session_authority.maximum_turns != self.maximum_turns
+            or session_authority.maximum_dispatches_per_turn
+            != self.maximum_dispatches_per_turn
+            or session_authority.maximum_total_dispatches
+            != self.maximum_total_dispatches
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "logical Turn dispatch budget does not bind this Provider authority",
+            )
+        with self._lock:
+            if request.digest in self._reserved_request_digests:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "logical Turn dispatch request cannot be reserved twice",
+                )
+            known_turn = self._turns.get(request.turn_request_digest)
+            if known_turn is None:
+                if len(self._turns) >= self.maximum_turns:
+                    raise DomainError(
+                        ErrorCode.BUDGET_EXHAUSTED,
+                        "logical Turn session fuse is exhausted",
+                    )
+            elif known_turn != request.turn_id:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "logical Turn dispatch identity was rebound",
+                )
+            turn_count = sum(
+                turn_digest == request.turn_request_digest
+                for turn_digest, _, _ in self._reservations
+            )
+            if (
+                turn_count >= self.maximum_dispatches_per_turn
+                or len(self._reservations) >= self.maximum_total_dispatches
+            ):
+                raise DomainError(
+                    ErrorCode.BUDGET_EXHAUSTED,
+                    "logical Turn combined Provider dispatch fuse is exhausted",
+                )
+            if known_turn is None:
+                self._turns[request.turn_request_digest] = request.turn_id
+            self._reservations.append(
+                (
+                    request.turn_request_digest,
+                    request.digest,
+                    request.provider_binding_digest,
+                )
+            )
+            self._reserved_request_digests.add(request.digest)
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringAgentRoleDisclosureAuthorization:
     schema: str
@@ -1953,10 +2133,14 @@ class SealedEngineeringAgentRoleDisclosureAuthorizer:
         *,
         session_authority: EngineeringAgentSessionDisclosureAuthority,
         configuration: EngineeringAgentModelConfiguration,
+        logical_turn_dispatch_budget: (
+            SealedEngineeringAgentLogicalTurnDispatchBudget | None
+        ) = None,
         clock=None,
     ) -> None:
         self.session_authority = session_authority
         self._configuration = configuration
+        self.logical_turn_dispatch_budget = logical_turn_dispatch_budget
         self._clock = clock or (lambda: datetime.now(timezone.utc))
         self._requests: list[EngineeringAgentRoleDisclosureRequest] = []
         self._authorizations: list[EngineeringAgentRoleDisclosureAuthorization] = []
@@ -2035,6 +2219,11 @@ class SealedEngineeringAgentRoleDisclosureAuthorizer:
                 request=request,
                 session_authority=self.session_authority,
             )
+            if self.logical_turn_dispatch_budget is not None:
+                self.logical_turn_dispatch_budget.reserve(
+                    request=request,
+                    session_authority=self.session_authority,
+                )
             self._requests.append(request)
             self._authorizations.append(authorization)
             self._by_manifest[request.gateway_manifest_digest] = (
@@ -6051,6 +6240,10 @@ def _boundary_relevance_challenge_view(
 def _review_input_view(
     request: EngineeringAgentReviewRequest,
 ) -> dict[str, object]:
+    focused_boundary_review = (
+        request.focus
+        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+    )
     challenges = (
         project_engineering_agent_evidence_boundary_challenges(
             request.package,
@@ -6096,7 +6289,7 @@ def _review_input_view(
             "boundary_observations": tuple(
                 _observation_view(item)
                 for item in request.package.boundary_observations
-            ),
+            ) if focused_boundary_review else (),
         },
         "draft": {
             "answer_id": request.draft.answer_id.value,
@@ -6118,8 +6311,18 @@ def _review_input_view(
             ),
             "boundary_observation_ids": tuple(
                 item.value for item in request.draft.boundary_observation_ids
-            ),
+            ) if focused_boundary_review else (),
             "digest": request.draft.digest.value,
+        },
+        "boundary_challenge_projection": {
+            "owner_focus": (
+                EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE.value
+            ),
+            "deferred_to_focused_review": not focused_boundary_review,
+            "comprehensive_empty_boundary_fields_are_not_absence_evidence": True,
+            "add_or_remove_boundary_reference_finding_allowed": (
+                focused_boundary_review
+            ),
         },
         "current_requirement_coverage_challenge": {
             "current_user_requirement": (
@@ -6137,6 +6340,12 @@ def _review_input_view(
                 "supported_claims_do_not_establish_requirement_coverage": True,
                 "requested_categories_distinctions_order_and_uncertainty_are_material": True,
                 "older_question_answer_with_current_delta_missing_is_misaligned": True,
+                "user_request_noun_phrase_is_not_evidence_of_fact": True,
+                "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
+                "unknown_category_must_not_be_promoted_to_affirmative_fact": True,
+                "global_finding_must_name_exact_missing_or_misaligned_delta": True,
+                "global_finding_must_offer_one_package_safe_correction": True,
+                "contradictory_positive_and_unconfirmed_demand_forbidden": True,
                 "assessment_required_for_every_review_focus": True,
             },
         },
@@ -6212,6 +6421,16 @@ def _review_input_view(
             "self_introduced_adjacent_detail_allows_evidence_expansion": False,
             "generation_or_tool_provenance_requires_direct_support": True,
             "comprehensive_challenge_assessments_must_be_empty": True,
+            "comprehensive_caller_scope_findings_forbidden": (
+                request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            ),
+            "comprehensive_boundary_reference_or_materiality_findings_forbidden": (
+                request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            ),
+            "comprehensive_boundary_projection_is_intentionally_empty": (
+                request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            ),
+            "focused_review_owns_exact_boundary_challenges": True,
             "challenge_assessment_ids_required_exact_order": tuple(
                 item.challenge_id.value for item in challenges
             ),
@@ -7718,6 +7937,7 @@ __all__ = [
     "ENGINEERING_AGENT_DISCLOSURE_POLICY_REF",
     "ENGINEERING_AGENT_MODEL_PROMPT_REF",
     "ENGINEERING_AGENT_MODEL_STRATEGY_REF",
+    "ENGINEERING_AGENT_LOGICAL_TURN_DISPATCH_BUDGET_SCHEMA",
     "ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA",
     "ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF",
     "ENGINEERING_AGENT_REDACTION_REF",
@@ -7738,6 +7958,7 @@ __all__ = [
     "EngineeringAgentSessionDisclosureAuthority",
     "ModelBackedConversationalEngineeringAgent",
     "PolicyEnforcingEngineeringAgentModelGateway",
+    "SealedEngineeringAgentLogicalTurnDispatchBudget",
     "SealedEngineeringAgentRoleDisclosureAuthorizer",
     "decode_engineering_agent_primary_output",
     "decode_engineering_agent_review_output",

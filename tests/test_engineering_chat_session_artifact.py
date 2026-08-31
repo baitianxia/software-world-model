@@ -631,6 +631,21 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             prepared.runtime.primary_provider_runtime.session_authority.standing_authority_digest,
             session_config.standing_authority.digest,
         )
+        primary_budget = (
+            prepared.runtime.primary_provider_runtime.authorizer
+            .logical_turn_dispatch_budget
+        )
+        fallback_budget = (
+            prepared.runtime.fallback_provider_runtime.authorizer
+            .logical_turn_dispatch_budget
+        )
+        self.assertIsNotNone(primary_budget)
+        self.assertIs(primary_budget, fallback_budget)
+        self.assertEqual(
+            prepared.runtime.receipt.logical_turn_dispatch_budget_digest,
+            primary_budget.digest,
+        )
+        self.assertEqual(primary_budget.reservations, ())
         self.assertTrue(prepared.runtime.receipt.artifact_session_config_loaded)
         self.assertTrue(prepared.runtime.receipt.fixed_command_wired)
         self.assertEqual(

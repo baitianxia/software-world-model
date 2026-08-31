@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -240,7 +240,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—228 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-100 已证明 navigation-only opaque READ 让 Q2 取得目标完整源码，但 Q3 重复旧答案且 Reviewer 漏判 current requirement，Q5 又因 broad Search Observation 被引用而投影 70 个 Citation，整体仍为 Quality FAIL。current typed requirement-coverage assessment 与 Claim-level minimal Citation selection 分别闭合这两个最早偏差；route、预算、authority、fallback 与 Production 边界不变。fresh run-101 是下一真实质量证据。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—230 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-101 已证明 Ark 4 个 sealed unavailable verdict 后 DeepSeek 48/48 completed，故不存在 Provider 或授权等待；Q4 继续零 dispatch Clarification，其余四题均被正确阻断而没有错误交付。最早偏差是 comprehensive/focused 对同一 Boundary 没有独占 ownership，且 Reviewer 把题面中的 transaction/cache/refresh 名词误作必须存在的肯定事实；Q3 还暴露 Ark 1 + DeepSeek 15 = 16 的跨 route 预算实现缺口。current `@28/@18/@23` 分离两个 review focus、把诚实 unconfirmed treatment 计入 requirement coverage；两个 Provider runtime 共享一个 pre-dispatch logical Turn budget，route receipt 再验证合计不超过 15。定向测试 195 项 PASS；fresh run-102 是下一真实质量证据。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

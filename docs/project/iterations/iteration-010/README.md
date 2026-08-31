@@ -253,6 +253,12 @@ Clarification；Q3 却重复上一轮普通流程且 Reviewer 错误 APPROVED，
 current `@27/@17/@22` 为每个 Review 密封 exact current-requirement coverage，Primary output `@3` 为每个 Claim 选择最小 direct exact
 Citation refs；六模块相邻定向测试 `157/157` 与 documentation check `634` PASS，fresh run-101 待验证，不存在 Provider 或重复授权等待。
 
+`FINDING-010-229/230 / run-101` 密封 Ark 4、DeepSeek 48/48 completed；Q4 保持零 dispatch Clarification，其余四题均失败关闭而未错误
+交付。comprehensive Reviewer 把用户题面类别误作必须存在的事实，并与 focused focus 围绕同一 Boundary 产生相反修复；Q3 还实际发出
+Ark 1 + DeepSeek 15 = 16，超过 logical Turn 15-call 上限。current `@28/@18/@23` 将一般语义/uncertainty 与 exact Boundary challenge
+ownership 分离；两个 Provider authorizer 共享一个 pre-dispatch logical budget，route seal 再重算总和。定向测试 `195/195` PASS，fresh
+run-102 待验证，不存在 Provider 或重复授权等待。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

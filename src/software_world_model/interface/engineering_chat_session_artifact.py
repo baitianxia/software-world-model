@@ -25,6 +25,7 @@ from software_world_model.ai_infrastructure.ark_chat_conformance import (
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
     ENGINEERING_AGENT_DISCLOSURE_POLICY_REF,
     EngineeringAgentSessionDisclosureAuthority,
+    SealedEngineeringAgentLogicalTurnDispatchBudget,
 )
 from software_world_model.ai_infrastructure.deepseek_chat_adapter import (
     DeepSeekModelConfiguration,
@@ -1124,6 +1125,23 @@ def prepare_engineering_chat_artifact_session(
             provider_suffix="deepseek",
         )
         authorization_compatibility_digest = authorization_message_digest
+    logical_turn_dispatch_budget = (
+        SealedEngineeringAgentLogicalTurnDispatchBudget(
+            chat_binding_digest=binding.digest,
+            authorization_message_digest=authorization_compatibility_digest,
+            provider_binding_digests=(
+                ark_configuration.digest,
+                deepseek_configuration.digest,
+            ),
+            maximum_turns=session_config.required_conversation_turns,
+            maximum_dispatches_per_turn=(
+                session_config.maximum_dispatches_per_turn
+            ),
+            maximum_total_dispatches=(
+                session_config.maximum_total_dispatches_per_provider
+            ),
+        )
+    )
     admission_plan = DeepSeekDispatchAdmissionPlan.create(
         run_type=admission_config.run_type,
         run_ref=admission_config.run_ref,
@@ -1198,6 +1216,7 @@ def prepare_engineering_chat_artifact_session(
         qualification=ark_qualification,
         configuration=ark_configuration,
         session_authority=ark_authority,
+        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
         at=current,
         clock=runtime_clock,
     )
@@ -1209,6 +1228,7 @@ def prepare_engineering_chat_artifact_session(
         qualification=deepseek_qualification,
         configuration=deepseek_configuration,
         session_authority=deepseek_authority,
+        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
         dispatch_admission_controller=deepseek_dispatch_admission,
         at=current,
         clock=runtime_clock,

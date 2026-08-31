@@ -14,6 +14,7 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     EngineeringAgentSessionDisclosureAuthority,
     ModelBackedConversationalEngineeringAgent,
     PolicyEnforcingEngineeringAgentModelGateway,
+    SealedEngineeringAgentLogicalTurnDispatchBudget,
     SealedEngineeringAgentRoleDisclosureAuthorizer,
     _boundary_relevance_challenge_view,
     _boundary_relevance_allowed_dispositions,
@@ -336,6 +337,102 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.now = datetime(2026, 8, 25, 8, tzinfo=timezone.utc)
         self.database = SqliteDatabase()
         self.addCleanup(self.database.close)
+
+    def test_logical_turn_dispatch_budget_is_shared_across_provider_authorities(
+        self,
+    ) -> None:
+        binding = _binding()
+        message_digest = digest_of("shared logical Turn authority")
+
+        def configuration(label: str) -> EngineeringAgentModelConfiguration:
+            return EngineeringAgentModelConfiguration(
+                provider_type=f"PROVIDER_{label}",
+                adapter_version="1",
+                endpoint=f"https://{label.casefold()}.invalid/v1/chat",
+                model_ref=f"model-{label.casefold()}@1",
+                expected_actual_model_fingerprint=(
+                    f"model-{label.casefold()}@1"
+                ),
+                provider_configuration_fingerprint=digest_of(
+                    [label, "configuration"]
+                ),
+                secret_reference=f"env:{label}_API_KEY",
+                qualification_ref=f"CC-{label}-CURRENT",
+                qualification_valid_until=self.now + timedelta(hours=2),
+                maximum_calls=2,
+            )
+
+        def authority(
+            current: EngineeringAgentModelConfiguration,
+            label: str,
+        ) -> EngineeringAgentSessionDisclosureAuthority:
+            return EngineeringAgentSessionDisclosureAuthority.create(
+                session_ref=f"shared-turn-{label}",
+                product_candidate_digest=digest_of("product-candidate"),
+                chat_binding_digest=binding.digest,
+                configuration=current,
+                maximum_turns=1,
+                maximum_dispatches_per_turn=2,
+                maximum_total_dispatches=2,
+                authorized_at=self.now,
+                expires_at=self.now + timedelta(hours=1),
+                authorization_ref=(
+                    f"codex-user-message:{message_digest.value}"
+                ),
+                authorization_message_digest=message_digest,
+            )
+
+        preferred_configuration = configuration("PREFERRED")
+        fallback_configuration = configuration("FALLBACK")
+        preferred_authority = authority(
+            preferred_configuration, "preferred"
+        )
+        fallback_authority = authority(
+            fallback_configuration, "fallback"
+        )
+        budget = SealedEngineeringAgentLogicalTurnDispatchBudget(
+            chat_binding_digest=binding.digest,
+            authorization_message_digest=message_digest,
+            provider_binding_digests=(
+                preferred_configuration.digest,
+                fallback_configuration.digest,
+            ),
+            maximum_turns=1,
+            maximum_dispatches_per_turn=2,
+            maximum_total_dispatches=2,
+        )
+        turn_digest = digest_of("logical-turn")
+        turn_id = StableId(f"turn_{'1' * 32}")
+
+        def request(
+            label: str,
+            provider_binding_digest,
+        ) -> SimpleNamespace:
+            return SimpleNamespace(
+                chat_binding_digest=binding.digest,
+                provider_binding_digest=provider_binding_digest,
+                digest=digest_of(["request", label]),
+                turn_request_digest=turn_digest,
+                turn_id=turn_id,
+            )
+
+        budget.reserve(
+            request=request("preferred", preferred_configuration.digest),
+            session_authority=preferred_authority,
+        )
+        budget.reserve(
+            request=request("fallback-1", fallback_configuration.digest),
+            session_authority=fallback_authority,
+        )
+        with self.assertRaises(DomainError) as exhausted:
+            budget.reserve(
+                request=request(
+                    "fallback-2", fallback_configuration.digest
+                ),
+                session_authority=fallback_authority,
+            )
+        self.assertEqual(exhausted.exception.code, ErrorCode.BUDGET_EXHAUSTED)
+        self.assertEqual(len(budget.reservations), 2)
 
     def test_closed_contract_repair_directives_are_specific_to_convergence(self) -> None:
         self.assertEqual(
@@ -686,7 +783,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1129,7 +1226,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1979,7 +2076,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2005,6 +2102,33 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "current_requirement_coverage_challenge"
             ]["current_user_requirement"],
             "登录流程是怎样的？",
+        )
+        self.assertEqual(
+            reviewer_repair_payload["boundary_challenge_projection"],
+            {
+                "owner_focus": "EVIDENCE_BOUNDARY_CHALLENGE",
+                "deferred_to_focused_review": True,
+                "comprehensive_empty_boundary_fields_are_not_absence_evidence": True,
+                "add_or_remove_boundary_reference_finding_allowed": False,
+            },
+        )
+        comparison_contract = reviewer_repair_payload[
+            "current_requirement_coverage_challenge"
+        ]["comparison_contract"]
+        self.assertTrue(
+            comparison_contract[
+                "explicit_honest_unconfirmed_treatment_answers_uncertainty_request"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "unknown_category_must_not_be_promoted_to_affirmative_fact"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "contradictory_positive_and_unconfirmed_demand_forbidden"
+            ]
         )
         self.assertEqual(
             reviewer_preflight["closed_nested_object_fields"][
@@ -2110,6 +2234,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         reviewer_policy = reviewer_repair_payload[
             "review_reference_policy"
         ]
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_caller_scope_findings_forbidden"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_boundary_reference_or_materiality_findings_forbidden"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "comprehensive_boundary_projection_is_intentionally_empty"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "focused_review_owns_exact_boundary_challenges"
+            ]
+        )
         self.assertTrue(
             reviewer_policy[
                 "focused_defect_claims_equal_exceeded_challenge_claims"
@@ -2498,7 +2642,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
