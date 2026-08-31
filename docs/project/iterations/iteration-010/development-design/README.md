@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -137,6 +137,11 @@ availability/route evidence，不产生 `@30/@20/@24` 质量 verdict或代码修
 `FINDING-010-235 / run-106` 已完成该 successor：Ark 前 6 个 call completed，第 6 个 malformed JSON 被 closed-output validator 阻断；第 7 个
 fresh format-repair call 在 HTTP dispatch 后 outcome unknown，按 contract 无 retry、无 fallback。Q4 zero-dispatch Clarification 继续通过。
 没有可归因的本地实现偏差；证据 clean-commit 后以 run-107 先执行未重复的 Q2/Q3/Q4/Q5，若无重复 stop signature 再补 Q1。
+
+`FINDING-010-236 / run-107` 已确认 Q3/Q5 的 preferred request 在 HTTP 后重复返回 400 `InvalidParameter / BadRequest`；Q2 是独立 pre-HTTP
+TLS unavailable，Q4 是 zero-dispatch Clarification。route 正确不把 400 当 unavailable，但 current evidence 无可选 parameter-name。
+current design 只扩展 closed、可回放的安全 HTTP evidence，不改变 request/transport/fallback；目标测试完成后须 fresh Ark Conformance，再用
+clean run-108 Q5 定位具体 request field。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

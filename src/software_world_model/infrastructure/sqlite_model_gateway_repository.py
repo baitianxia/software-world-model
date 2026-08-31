@@ -78,6 +78,7 @@ CREATE TABLE IF NOT EXISTS ai_model_call_http_failure_evidence (
     http_status INTEGER NOT NULL CHECK (http_status BETWEEN 100 AND 599),
     provider_error_code TEXT,
     provider_error_type TEXT,
+    provider_error_parameter TEXT,
     provider_request_id TEXT,
     evidence_digest TEXT NOT NULL,
     FOREIGN KEY (model_call_id) REFERENCES ai_model_call_roots(model_call_id)
@@ -156,6 +157,18 @@ class SqliteModelGatewayRepository:
         self._database = database
         self._ids = id_generator or Uuid4IdGenerator()
         self._database.executescript(_SCHEMA)
+        with self._database.transaction() as connection:
+            http_evidence_columns = {
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(ai_model_call_http_failure_evidence)"
+                )
+            }
+            if "provider_error_parameter" not in http_evidence_columns:
+                connection.execute(
+                    "ALTER TABLE ai_model_call_http_failure_evidence "
+                    "ADD COLUMN provider_error_parameter TEXT"
+                )
 
     def recover(
         self,
@@ -444,8 +457,19 @@ class SqliteModelGatewayRepository:
                     )
                 return
             connection.execute(
-                """INSERT INTO ai_model_call_http_failure_evidence
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                """INSERT INTO ai_model_call_http_failure_evidence (
+                       model_call_id,
+                       schema_ref,
+                       provider_request_digest,
+                       isolation_receipt_digest,
+                       failure_code,
+                       http_status,
+                       provider_error_code,
+                       provider_error_type,
+                       provider_error_parameter,
+                       provider_request_id,
+                       evidence_digest
+                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     evidence.model_call_id.value,
                     evidence.schema,
@@ -455,6 +479,7 @@ class SqliteModelGatewayRepository:
                     evidence.http_status,
                     evidence.provider_error_code,
                     evidence.provider_error_type,
+                    evidence.provider_error_parameter,
                     evidence.provider_request_id,
                     evidence.digest.value,
                 ),
@@ -655,6 +680,7 @@ class SqliteModelGatewayRepository:
             http_status=row["http_status"],
             provider_error_code=row["provider_error_code"],
             provider_error_type=row["provider_error_type"],
+            provider_error_parameter=row["provider_error_parameter"],
             provider_request_id=row["provider_request_id"],
             digest=Digest(row["evidence_digest"]),
         )

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [architecture]
 depends_on: [SYS-PRODUCT-VISION, SYS-ADR-017, SYS-ADR-019]
-derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199]
+derived_from: [FINDING-010-029, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-236]
 code: [src/software_world_model]
 tests: [tests]
 ---
@@ -68,7 +68,8 @@ tests: [tests]
    没有 authorized answer，且该 preferred profile 登记的受信 availability owner 密封了 exact
    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才可启动最多一个 fallback-route attempt。Raw unavailable/HTTP/outcome 信号本身不授予 fallback；
    HTTP failure 的最小安全 evidence 必须由不改变 immutable Provider request 的 Gateway decorator 在 inner terminal 后绑定
-   call/request/isolation 密封，并经 auxiliary repository/egress/Application receipt 重验。
+   call/request/isolation 密封，并经 auxiliary repository/egress/Application receipt 重验；只允许 status、受限 provider code/type、optional
+   parameter-name 与 request-id，其中 parameter-name 仅用于 request-field 诊断，不得参与 availability、路由或 retry。
    当前 owner 只可从 typed pre-HTTP unavailable，或 exact dispatch/call receipt 下 Gateway-sealed 的
    `{402,408,425,429,500,502,503,504}` 形成 unavailable；`400/401/403/404/409/422`、缺 evidence digest 的 status 和字符串匹配均失败关闭。
    结构化输出无效、Reviewer 拒绝、Capability/qualification、Application、Source、authorization/admission 或 Security failure 全部 non-eligible。格式修复、

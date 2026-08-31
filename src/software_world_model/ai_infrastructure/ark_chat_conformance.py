@@ -46,7 +46,7 @@ from .volcengine_ark_chat_adapter import (
 
 
 ARK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-ARK-CHAT-NO-TOOLS-001"
-ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.7.0"
+ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.8.0"
 ARK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.ark-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "ark-conformance-live"
@@ -879,6 +879,70 @@ def _negative_oracles(configuration: VolcengineArkModelConfiguration) -> dict[st
         trailing_text_denied = False
     except DomainError as exc:
         trailing_text_denied = exc.code is ErrorCode.STRUCTURED_OUTPUT_INVALID
+
+    safe_http_error_adapter = VolcengineArkChatCompletionsNoToolsAdapter(
+        transport=_StaticTransport(
+            ProviderHTTPResponse(
+                400,
+                {"x-request-id": "fixture-http-error"},
+                json.dumps(
+                    {
+                        "error": {
+                            "code": "InvalidParameter",
+                            "type": "BadRequest",
+                            "param": "response_format",
+                            "message": "sensitive diagnostic must not cross",
+                        }
+                    }
+                ).encode(),
+            )
+        ),
+        configuration=configuration,
+        output_schemas={"negative@1": schema},
+    )
+    try:
+        safe_http_error_adapter.invoke(valid_request)
+        safe_http_error_parameter_projected = False
+    except DomainError as exc:
+        safe_http_error_parameter_projected = (
+            exc.code is ErrorCode.PROVIDER_HTTP_ERROR
+            and exc.details
+            == {
+                "provider_request_id": "fixture-http-error",
+                "provider_error_code": "InvalidParameter",
+                "provider_error_type": "BadRequest",
+                "provider_error_parameter": "response_format",
+                "http_status": 400,
+            }
+        )
+
+    unsafe_http_error_adapter = VolcengineArkChatCompletionsNoToolsAdapter(
+        transport=_StaticTransport(
+            ProviderHTTPResponse(
+                400,
+                {},
+                json.dumps(
+                    {
+                        "error": {
+                            "code": "InvalidParameter",
+                            "type": "BadRequest",
+                            "param": "response format\nunsafe",
+                        }
+                    }
+                ).encode(),
+            )
+        ),
+        configuration=configuration,
+        output_schemas={"negative@1": schema},
+    )
+    try:
+        unsafe_http_error_adapter.invoke(valid_request)
+        unsafe_http_error_parameter_rejected = False
+    except DomainError as exc:
+        unsafe_http_error_parameter_rejected = (
+            exc.code is ErrorCode.PROVIDER_HTTP_ERROR
+            and "provider_error_parameter" not in exc.details
+        )
     return {
         "tool_input_denied": tool_input_denied,
         "tool_output_denied": tool_output_denied,
@@ -886,6 +950,12 @@ def _negative_oracles(configuration: VolcengineArkModelConfiguration) -> dict[st
         "fenced_json_normalized": fenced_json_normalized,
         "leading_text_fenced_json_normalized": leading_text_fenced_json_normalized,
         "trailing_text_denied": trailing_text_denied,
+        "safe_http_error_parameter_projected": (
+            safe_http_error_parameter_projected
+        ),
+        "unsafe_http_error_parameter_rejected": (
+            unsafe_http_error_parameter_rejected
+        ),
     }
 
 
@@ -963,7 +1033,14 @@ def _safe_failure(failure: DomainError | None) -> dict[str, object] | None:
     details = {
         key: value
         for key, value in failure.details.items()
-        if key in {"http_status", "provider_error_code", "provider_error_type", "provider_request_id"}
+        if key
+        in {
+            "http_status",
+            "provider_error_code",
+            "provider_error_type",
+            "provider_error_parameter",
+            "provider_request_id",
+        }
     }
     return {"code": failure.code.value, "details": details}
 

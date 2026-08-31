@@ -673,6 +673,7 @@ class ModelEgressGatewayTests(unittest.TestCase):
             details={
                 "http_status": 503,
                 "provider_error_code": "service_unavailable",
+                "provider_error_parameter": "model",
                 "provider_request_id": "provider-request-safe-1",
             },
         )
@@ -719,6 +720,10 @@ class ModelEgressGatewayTests(unittest.TestCase):
         self.assertEqual(
             decoded.provider_http_failure_evidence,
             evidence,
+        )
+        self.assertEqual(
+            decoded.provider_http_failure_evidence.provider_error_parameter,
+            "model",
         )
         self.assertIsNone(decoded.response)
 

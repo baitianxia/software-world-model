@@ -73,7 +73,7 @@ BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_ROUTE = (
     f"AF_UNIX:{BOUNDED_JAVA_SOURCE_SEMANTICS_MODEL_EGRESS_GATEWAY_POLICY_REF}"
 )
 MODEL_EGRESS_REQUEST_SCHEMA = "swm.model-egress-request@1"
-MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@2"
+MODEL_EGRESS_RESPONSE_SCHEMA = "swm.model-egress-response@3"
 
 _HEADER = struct.Struct("!I")
 _MAX_FRAME_BYTES = 16 * 1024 * 1024
@@ -1491,6 +1491,9 @@ def _result_value(result: ModelGatewayResult) -> dict[str, object]:
                     "http_status": http_evidence.http_status,
                     "provider_error_code": http_evidence.provider_error_code,
                     "provider_error_type": http_evidence.provider_error_type,
+                    "provider_error_parameter": (
+                        http_evidence.provider_error_parameter
+                    ),
                     "provider_request_id": http_evidence.provider_request_id,
                     "digest": http_evidence.digest.value,
                 }
@@ -1711,6 +1714,7 @@ def _result_from_value(value: object) -> ModelGatewayResult:
                 "http_status",
                 "provider_error_code",
                 "provider_error_type",
+                "provider_error_parameter",
                 "provider_request_id",
                 "digest",
             },
@@ -1752,6 +1756,9 @@ def _result_from_value(value: object) -> ModelGatewayResult:
             ),
             provider_error_type=_optional_text(
                 evidence_mapping["provider_error_type"]
+            ),
+            provider_error_parameter=_optional_text(
+                evidence_mapping["provider_error_parameter"]
             ),
             provider_request_id=_optional_text(
                 evidence_mapping["provider_request_id"]

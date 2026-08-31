@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -61,9 +61,10 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
     attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。
     只有 preferred-route attempt 已密封 terminal、没有 authorized answer，且 preferred profile 登记的受信 availability owner 密封 exact
     `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway decoration boundary 对 HTTP failure 只密封
-    status 与字符集/长度受限的 provider code/type/request-id，证据必须绑定 call、provider request 与 isolation receipt，并在 repository
+    status 与字符集/长度受限的 provider code/type/optional parameter-name/request-id，证据必须绑定 call、provider request 与 isolation receipt，并在 repository
     replay 和 Model Egress round-trip 中重验；response body、header、credential、Secret Reference 与任意错误正文不得进入。Gateway 只保存
-    raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。
+    raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。optional parameter-name 只用于定位 Provider 明确指出的 request field，不能
+    参与 availability verdict、路由或 retry；不满足 closed ASCII token/path 字符集与长度限制时必须丢弃。
     Output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission 或 Security failure 均 non-eligible。Fallback attempt 必须从 immutable original
     interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取 preferred attempt 中间态；
     迟到的 preferred response 必须 quarantine 且永不覆盖。同一 Provider request retry 为 0，用户无需重提问题或新建 Session。availability owner 若基于 outcome unknown

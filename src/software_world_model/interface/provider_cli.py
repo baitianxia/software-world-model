@@ -149,6 +149,7 @@ def main(
                 "http_status",
                 "provider_error_code",
                 "provider_error_type",
+                "provider_error_parameter",
                 "provider_request_id",
             ):
                 if key in exc.details:

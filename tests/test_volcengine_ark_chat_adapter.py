@@ -607,6 +607,7 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
                     "error": {
                         "code": "model_not_found",
                         "type": "invalid_request_error",
+                        "param": "model",
                         "message": "sensitive provider diagnostic must not be projected",
                     }
                 }
@@ -623,9 +624,38 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(payload["http_status"], 404)
         self.assertEqual(payload["provider_error_code"], "model_not_found")
         self.assertEqual(payload["provider_error_type"], "invalid_request_error")
+        self.assertEqual(payload["provider_error_parameter"], "model")
         self.assertEqual(payload["provider_request_id"], "request-safe-1")
         self.assertNotIn("sensitive provider diagnostic", output.getvalue())
         self.assertNotIn("do-not-expose", output.getvalue())
+
+    def test_provider_cli_rejects_unsafe_provider_error_parameter(self) -> None:
+        output = StringIO()
+        response = ProviderHTTPResponse(
+            400,
+            {},
+            json.dumps(
+                {
+                    "error": {
+                        "code": "InvalidParameter",
+                        "type": "BadRequest",
+                        "param": "response format\nunsafe",
+                    }
+                }
+            ).encode(),
+        )
+
+        code = provider_main(
+            ["probe"],
+            stdout=output,
+            environment={"ARK_API_KEY": "do-not-expose"},
+            transport=StubTransport(response),
+        )
+        payload = json.loads(output.getvalue())
+
+        self.assertEqual(code, 2)
+        self.assertNotIn("provider_error_parameter", payload)
+        self.assertNotIn("unsafe", output.getvalue())
 
 
 if __name__ == "__main__":

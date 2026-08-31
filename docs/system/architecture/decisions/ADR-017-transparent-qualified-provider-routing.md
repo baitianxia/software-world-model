@@ -5,7 +5,7 @@ status: accepted
 authority: normative
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
-derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199]
+derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-236]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_browser.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -36,7 +36,8 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
 3. 只有 preferred execution profile 已密封 terminal、没有 authorized answer，且该 profile 登记的受信 availability owner
    对 exact profile ref/digest、当前时间与运行边界密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才可自动创建最多一个
    fallback-route attempt。Gateway 必须把 Provider HTTP failure 的最小安全字段密封为绑定 model call、provider request 与 isolation
-   receipt 的 digest evidence，并在 repository replay、Model Egress 与 Application receipt 投影中重验；不得持久化 response body、header、
+   receipt 的 digest evidence；该 evidence 只允许 status、受限 provider code/type、optional parameter-name 与 request-id，并在 repository
+   replay、Model Egress 与 Application receipt 投影中重验。parameter-name 只用于 request-field 诊断且不得参与 availability/routing；不得持久化 response body、header、
    credential、Secret Reference 或任意错误正文。Raw `PROVIDER_UNAVAILABLE`、HTTP error/status 或 `PROVIDER_OUTCOME_UNKNOWN` 只是
    availability owner 可验证的输入证据；它们不得被 Gateway、Adapter、Application 或字符串映射直接转成 fallback eligibility。
    当前通用 availability owner 只接受 typed pre-HTTP unavailable，或 dispatch/call receipt 成立且 Gateway-sealed HTTP status 属于

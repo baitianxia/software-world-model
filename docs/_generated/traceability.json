@@ -4120,6 +4120,21 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-236": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-236.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py",
+      "src/software_world_model/ai_infrastructure/model_egress_gateway.py",
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/infrastructure/sqlite_model_gateway_repository.py",
+      "src/software_world_model/interface/provider_cli.py"
+    ],
+    "tests": [
+      "tests/test_model_gateway.py",
+      "tests/test_model_egress_gateway.py",
+      "tests/test_volcengine_ark_chat_adapter.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

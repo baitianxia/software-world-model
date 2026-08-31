@@ -265,6 +265,7 @@ class ModelGatewayTests(unittest.TestCase):
                 "http_status": 503,
                 "provider_error_code": "service_unavailable",
                 "provider_error_type": "server_error",
+                "provider_error_parameter": "model",
                 "provider_request_id": "provider-request-safe-1",
                 "ignored": "must-not-cross-the-gateway",
             }
@@ -295,6 +296,7 @@ class ModelGatewayTests(unittest.TestCase):
         self.assertEqual(evidence.http_status, 503)
         self.assertEqual(evidence.provider_error_code, "service_unavailable")
         self.assertEqual(evidence.provider_error_type, "server_error")
+        self.assertEqual(evidence.provider_error_parameter, "model")
         self.assertEqual(evidence.provider_request_id, "provider-request-safe-1")
         self.assertEqual(
             adapter.requests[0].digest,
@@ -315,6 +317,101 @@ class ModelGatewayTests(unittest.TestCase):
             evidence,
         )
         self.assertEqual(len(adapter.requests), 1)
+
+    def test_legacy_http_failure_evidence_replays_after_schema_upgrade(self) -> None:
+        adapter = RecordingAdapter(
+            http_failure_details={
+                "http_status": 503,
+                "provider_error_code": "service_unavailable",
+                "provider_error_type": "server_error",
+                "provider_request_id": "provider-request-safe-legacy",
+            }
+        )
+        capturing_adapter = ProviderHTTPFailureCapturingAdapter(adapter)
+        gateway = ProviderHTTPFailureEvidenceGateway(
+            gateway=ModelGateway(
+                self.repository,
+                (capturing_adapter,),
+                id_generator=self.ids,
+                clock=self.clock,
+            ),
+            adapter=capturing_adapter,
+            repository=self.repository,
+        )
+
+        result = gateway.invoke(self.context(self.manifest()))
+        current = result.provider_http_failure_evidence
+        assert current is not None
+        legacy_schema = "MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1"
+        legacy_digest = digest_of(
+            {
+                "schema": legacy_schema,
+                "model_call_id": current.model_call_id.value,
+                "provider_request_digest": current.provider_request_digest.value,
+                "isolation_receipt_digest": (
+                    current.isolation_receipt_digest.value
+                ),
+                "failure_code": ErrorCode.PROVIDER_HTTP_ERROR.value,
+                "http_status": current.http_status,
+                "provider_error_code": current.provider_error_code,
+                "provider_error_type": current.provider_error_type,
+                "provider_request_id": current.provider_request_id,
+            }
+        )
+        with self.database.transaction() as connection:
+            connection.execute(
+                """UPDATE ai_model_call_http_failure_evidence
+                   SET schema_ref = ?,
+                       provider_error_parameter = NULL,
+                       evidence_digest = ?
+                   WHERE model_call_id = ?""",
+                (
+                    legacy_schema,
+                    legacy_digest.value,
+                    current.model_call_id.value,
+                ),
+            )
+
+        legacy = self.repository.get_provider_http_failure_evidence(
+            current.model_call_id
+        )
+
+        self.assertIsNotNone(legacy)
+        assert legacy is not None
+        self.assertEqual(legacy.schema, legacy_schema)
+        self.assertIsNone(legacy.provider_error_parameter)
+        self.assertEqual(legacy.digest, legacy_digest)
+
+    def test_http_failure_store_migrates_the_legacy_table_shape(self) -> None:
+        legacy_database = SqliteDatabase()
+        try:
+            legacy_database.executescript(
+                """
+                CREATE TABLE ai_model_call_http_failure_evidence (
+                    model_call_id TEXT PRIMARY KEY,
+                    schema_ref TEXT NOT NULL,
+                    provider_request_digest TEXT NOT NULL,
+                    isolation_receipt_digest TEXT NOT NULL,
+                    failure_code TEXT NOT NULL,
+                    http_status INTEGER NOT NULL,
+                    provider_error_code TEXT,
+                    provider_error_type TEXT,
+                    provider_request_id TEXT,
+                    evidence_digest TEXT NOT NULL
+                );
+                """
+            )
+            SqliteModelGatewayRepository(legacy_database)
+            with legacy_database.read() as connection:
+                columns = {
+                    row["name"]
+                    for row in connection.execute(
+                        "PRAGMA table_info(ai_model_call_http_failure_evidence)"
+                    )
+                }
+            self.assertIn("provider_error_parameter", columns)
+        finally:
+            legacy_database.close()
 
     def test_http_failure_without_valid_status_has_no_availability_evidence(self) -> None:
         adapter = RecordingAdapter(

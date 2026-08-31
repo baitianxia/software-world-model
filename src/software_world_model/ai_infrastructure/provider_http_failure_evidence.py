@@ -32,8 +32,17 @@ from .model_gateway import (
 )
 
 
-MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA = (
+_LEGACY_MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA = (
     "MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@1"
+)
+MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA = (
+    "MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE@2"
+)
+_SUPPORTED_MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMAS = frozenset(
+    {
+        _LEGACY_MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
+        MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
+    }
 )
 
 
@@ -49,6 +58,7 @@ class ModelProviderHTTPFailureEvidence:
     http_status: int
     provider_error_code: str | None
     provider_error_type: str | None
+    provider_error_parameter: str | None
     provider_request_id: str | None
     digest: Digest
 
@@ -61,11 +71,35 @@ class ModelProviderHTTPFailureEvidence:
         isolation_receipt_digest: Digest,
         details: Mapping[str, object],
     ) -> "ModelProviderHTTPFailureEvidence | None":
+        return cls._seal_for_schema(
+            schema=MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
+            model_call_id=model_call_id,
+            provider_request_digest=provider_request_digest,
+            isolation_receipt_digest=isolation_receipt_digest,
+            details=details,
+        )
+
+    @classmethod
+    def _seal_for_schema(
+        cls,
+        *,
+        schema: str,
+        model_call_id: StableId,
+        provider_request_digest: Digest,
+        isolation_receipt_digest: Digest,
+        details: Mapping[str, object],
+    ) -> "ModelProviderHTTPFailureEvidence | None":
+        if schema not in _SUPPORTED_MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMAS:
+            return None
         sanitized = _sanitized_http_failure_details(details)
         if sanitized is None:
             return None
+        if schema == _LEGACY_MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA:
+            if sanitized["provider_error_parameter"] is not None:
+                return None
+            sanitized.pop("provider_error_parameter")
         core = {
-            "schema": MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
+            "schema": schema,
             "model_call_id": model_call_id.value,
             "provider_request_digest": provider_request_digest.value,
             "isolation_receipt_digest": isolation_receipt_digest.value,
@@ -73,7 +107,7 @@ class ModelProviderHTTPFailureEvidence:
             **sanitized,
         }
         return cls(
-            schema=MODEL_PROVIDER_HTTP_FAILURE_EVIDENCE_SCHEMA,
+            schema=schema,
             model_call_id=model_call_id,
             provider_request_digest=provider_request_digest,
             isolation_receipt_digest=isolation_receipt_digest,
@@ -81,12 +115,16 @@ class ModelProviderHTTPFailureEvidence:
             http_status=sanitized["http_status"],
             provider_error_code=sanitized["provider_error_code"],
             provider_error_type=sanitized["provider_error_type"],
+            provider_error_parameter=(
+                sanitized.get("provider_error_parameter")
+            ),
             provider_request_id=sanitized["provider_request_id"],
             digest=digest_of(core),
         )
 
     def require_exact(self) -> None:
-        expected = self.seal(
+        expected = self._seal_for_schema(
+            schema=self.schema,
             model_call_id=self.model_call_id,
             provider_request_digest=self.provider_request_digest,
             isolation_receipt_digest=self.isolation_receipt_digest,
@@ -100,6 +138,11 @@ class ModelProviderHTTPFailureEvidence:
                 **(
                     {"provider_error_type": self.provider_error_type}
                     if self.provider_error_type is not None
+                    else {}
+                ),
+                **(
+                    {"provider_error_parameter": self.provider_error_parameter}
+                    if self.provider_error_parameter is not None
                     else {}
                 ),
                 **(
@@ -308,6 +351,9 @@ def _sanitized_http_failure_details(
         ),
         "provider_error_type": _safe_provider_error_token(
             details.get("provider_error_type")
+        ),
+        "provider_error_parameter": _safe_provider_error_token(
+            details.get("provider_error_parameter")
         ),
         "provider_request_id": _safe_provider_request_id(
             details.get("provider_request_id")

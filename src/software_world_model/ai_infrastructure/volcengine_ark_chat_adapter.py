@@ -836,7 +836,11 @@ def _provider_error_details(response: ProviderHTTPResponse) -> dict[str, str | i
     error = payload.get("error")
     if not isinstance(error, dict):
         return details
-    for source, target in (("code", "provider_error_code"), ("type", "provider_error_type")):
+    for source, target in (
+        ("code", "provider_error_code"),
+        ("type", "provider_error_type"),
+        ("param", "provider_error_parameter"),
+    ):
         value = error.get(source)
         if (
             isinstance(value, str)
