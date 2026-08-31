@@ -391,6 +391,8 @@ def _content_coverage_challenge_payload(
         "every_affirmative_semantic_requires_claim_coverage": True,
         "every_boundary_semantic_requires_boundary_coverage": True,
         "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+        "nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+        "all_inline_code_anchor_violations_reported_together": True,
         "uncertain_reference_cannot_cover_affirmative_semantic": True,
         "excluded_or_unread_scope_does_not_establish_implementation_location": True,
         "container_context_is_inherited_by_each_fragment": True,
@@ -602,6 +604,100 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "SUPPORT_OBSERVATION_AND_CITATION_ORDINALS_FROM_THE_CURRENT_"
             "SEALED_DOMAINS_WITHOUT_EMITTING_OPAQUE_CITATION_REFERENCES",
         )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "content coverage inline-code anchor violations: {}"
+            ),
+            "REPAIR_EVERY_LISTED_UNIT_AND_ANCHOR_TOGETHER_MAP_COVERED_ANCHORS_"
+            "VERBATIM_OR_MARK_DEFECT_AND_NEVER_LABEL_NONSTRUCTURAL_ANCHOR_"
+            "PROSE_NONASSERTIVE",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "content coverage disposition and reference shape are inconsistent"
+            ),
+            "FOR_DEFECT_OR_NONASSERTIVE_CLEAR_ALL_CLAIM_AND_BOUNDARY_REFERENCES_"
+            "AND_FOR_COVERED_CLEAR_FINDING_CODE_THEN_RECHECK_THE_EXACT_SHAPE",
+        )
+
+    def test_second_format_repair_allows_changed_same_category_diagnostic(self) -> None:
+        first_receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="run124-anchor-review",
+            gateway_call_ref="run124-anchor-review",
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_kind=EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+            failure_code=ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        first_failure = EngineeringAgentModelCallFailure(
+            receipt=first_receipt,
+            code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            message=(
+                "content coverage inline-code anchor violations: "
+                '{"diagnostics":[{"anchor":"EsProductService",'
+                '"content_unit_index":1}]}'
+            ),
+            invalid_output_text='{"decision":"APPROVED"}',
+        )
+        second_receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="run124-anchor-review-repair",
+            gateway_call_ref="run124-anchor-review-repair",
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_kind=EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+            failure_code=ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        second_failure = EngineeringAgentModelCallFailure(
+            receipt=second_receipt,
+            code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            message=(
+                "Engineering Agent Reviewer output violates the typed contract: "
+                "content coverage disposition and reference shape are inconsistent"
+            ),
+            invalid_output_text='{"decision":"FINDINGS"}',
+        )
+
+        payload = _format_repair_input_view(
+            {
+                "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
+                "format_repair_policy": _initial_format_repair_policy(),
+            },
+            failure=second_failure,
+            attempt=2,
+            previous_failure=first_failure,
+        )
+
+        policy = payload["format_repair_policy"]
+        self.assertEqual(policy["attempt"], 2)
+        self.assertEqual(
+            policy["validation_failure_category"],
+            "CLOSED_OUTPUT_CONTRACT",
+        )
+        self.assertEqual(
+            policy["closed_contract_repair_directive"],
+            "FOR_DEFECT_OR_NONASSERTIVE_CLEAR_ALL_CLAIM_AND_BOUNDARY_REFERENCES_"
+            "AND_FOR_COVERED_CLEAR_FINDING_CODE_THEN_RECHECK_THE_EXACT_SHAPE",
+        )
+        no_progress_failure = EngineeringAgentModelCallFailure(
+            receipt=second_receipt,
+            code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            message=first_failure.message,
+            invalid_output_text='{"decision":"FINDINGS"}',
+        )
+        with self.assertRaises(DomainError) as no_progress:
+            _format_repair_input_view(
+                {
+                    "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
+                    "format_repair_policy": _initial_format_repair_policy(),
+                },
+                failure=no_progress_failure,
+                attempt=2,
+                previous_failure=first_failure,
+            )
+        self.assertEqual(
+            no_progress.exception.code,
+            ErrorCode.CONTROL_STATE_DENIED,
+        )
 
     def test_focused_contract_repair_preserves_reviewer_semantic_choices(self) -> None:
         prior_review = {
@@ -746,6 +842,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
                     "content_coverage_inline_code_anchor_exact_reference_required": True,
+                    "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+                    "content_coverage_anchor_violations_aggregated": True,
                     "challenge_assessment_ids_required_exact_order": (
                         "challenge-1",
                     ),
@@ -1117,7 +1215,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1584,7 +1682,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2434,7 +2532,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2483,6 +2581,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             content_challenge[
                 "every_inline_code_anchor_requires_exact_mapped_reference_lexeme"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
+                "nonstructural_nonassertive_inline_code_anchors_forbidden"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
+                "all_inline_code_anchor_violations_reported_together"
             ]
         )
         self.assertTrue(
@@ -2612,6 +2720,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
                 "content_coverage_inline_code_anchor_exact_reference_required"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_anchor_violations_aggregated"
             ]
         )
         self.assertTrue(
@@ -3238,7 +3356,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -6322,9 +6440,76 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 model_call_ref="run123-unmatched-inline-code-anchor",
             )
         self.assertIn(
-            "unmatched exact inline-code anchors",
+            "content coverage inline-code anchor violations",
             str(caught.exception),
         )
+        self.assertIn("src/main/resources", str(caught.exception))
+
+    def test_content_coverage_rejects_nonassertive_technical_anchor_prose(self) -> None:
+        content = (
+            "## 证据边界（revision `0504e86b`）\n"
+            "**证据边界**：`Mapper` 位于 `src/main/resources`。"
+        )
+        request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=SimpleNamespace(
+                    content=content,
+                    claims=(
+                        SimpleNamespace(
+                            statement="Mapper 的实现位置未由当前证据建立。"
+                        ),
+                    ),
+                    boundary_observation_ids=(),
+                ),
+                package=SimpleNamespace(
+                    support_observations=(),
+                    boundary_observations=(),
+                ),
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+            )
+        )
+        output = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+                {
+                    "content_unit_index": 1,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+            ],
+            "requirement_coverage_assessment": (
+                _requirement_coverage_payload()
+            ),
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as caught:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(output, ensure_ascii=False),
+                request=request,
+                model_call_ref="run124-nonassertive-technical-anchor",
+            )
+        diagnostic = str(caught.exception)
+        self.assertIn(
+            "NONSTRUCTURAL_NONASSERTIVE_TECHNICAL_ANCHOR",
+            diagnostic,
+        )
+        self.assertIn("Mapper", diagnostic)
+        self.assertIn("src/main/resources", diagnostic)
+        self.assertNotIn("0504e86b", diagnostic)
 
     def test_structural_caller_challenge_requires_exact_focused_assessment(self) -> None:
         turn_id = StableId(f"turn_{'1' * 32}")
@@ -7524,6 +7709,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
                     "content_coverage_inline_code_anchor_exact_reference_required": True,
+                    "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+                    "content_coverage_anchor_violations_aggregated": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,

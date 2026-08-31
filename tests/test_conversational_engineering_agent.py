@@ -44,6 +44,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_nonassertive_inline_code_anchors,
     engineering_agent_content_coverage_unmatched_inline_code_anchors,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_draft_content_units,
@@ -691,6 +692,29 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             assessment,
         )
         self.assertEqual(covered, ())
+
+        nonassertive = EngineeringAgentContentCoverageAssessment.create(
+            content_unit_index=0,
+            disposition=EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE,
+            finding_code=None,
+        )
+        self.assertEqual(
+            engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                unit,
+                nonassertive,
+            ),
+            ("Dao.load", "config/sql"),
+        )
+        structural_heading = project_engineering_agent_draft_content_units(
+            "## exact revision `0123456789abcdef`"
+        )[0]
+        self.assertEqual(
+            engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                structural_heading,
+                nonassertive,
+            ),
+            (),
+        )
 
     def test_observation_driven_replan_closes_a_reviewed_turn(self) -> None:
         driver = ReplanningAnswerDriver()

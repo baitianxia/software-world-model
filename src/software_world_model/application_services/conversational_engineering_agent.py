@@ -1706,6 +1706,20 @@ def project_engineering_agent_draft_content_units(
     return tuple(units)
 
 
+def _draft_content_unit_inline_code_anchors(
+    content_unit: EngineeringAgentDraftContentUnit,
+) -> tuple[str, ...]:
+    return tuple(
+        dict.fromkeys(
+            match.group(1)
+            for match in _MARKDOWN_INLINE_CODE_SPAN_RE.finditer(
+                content_unit.fragment
+            )
+            if match.group(1).strip()
+        )
+    )
+
+
 def engineering_agent_content_coverage_unmatched_inline_code_anchors(
     package: EngineeringAgentEvidencePackage,
     draft: EngineeringAgentAnswerDraft,
@@ -1719,15 +1733,7 @@ def engineering_agent_content_coverage_unmatched_inline_code_anchors(
         is not EngineeringAgentContentCoverageDisposition.COVERED
     ):
         return ()
-    anchors = tuple(
-        dict.fromkeys(
-            match.group(1)
-            for match in _MARKDOWN_INLINE_CODE_SPAN_RE.finditer(
-                content_unit.fragment
-            )
-            if match.group(1).strip()
-        )
-    )
+    anchors = _draft_content_unit_inline_code_anchors(content_unit)
     if not anchors:
         return ()
     reference_texts = [
@@ -1748,6 +1754,26 @@ def engineering_agent_content_coverage_unmatched_inline_code_anchors(
         for anchor in anchors
         if not any(anchor in reference for reference in reference_texts)
     )
+
+
+def engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+    content_unit: EngineeringAgentDraftContentUnit,
+    assessment: EngineeringAgentContentCoverageAssessment,
+) -> tuple[str, ...]:
+    """Return anchors that make a non-structural unit ineligible as non-assertive."""
+
+    if (
+        assessment.disposition
+        is not EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE
+    ):
+        return ()
+    fragment = content_unit.fragment.strip()
+    if (
+        _MARKDOWN_HEADING_RE.fullmatch(fragment) is not None
+        or _MARKDOWN_STANDALONE_LABEL_RE.fullmatch(fragment) is not None
+    ):
+        return ()
+    return _draft_content_unit_inline_code_anchors(content_unit)
 
 
 @dataclass(frozen=True, slots=True)
@@ -4421,15 +4447,24 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "a defective Draft content unit must bind an existing Finding",
                 )
-            if engineering_agent_content_coverage_unmatched_inline_code_anchors(
-                package,
-                draft,
-                content_unit_by_index[assessment.content_unit_index],
-                assessment,
+            content_unit = content_unit_by_index[
+                assessment.content_unit_index
+            ]
+            if (
+                engineering_agent_content_coverage_unmatched_inline_code_anchors(
+                    package,
+                    draft,
+                    content_unit,
+                    assessment,
+                )
+                or engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                    content_unit,
+                    assessment,
+                )
             ):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Reviewer content coverage has unmatched exact inline-code anchors",
+                    "Reviewer content coverage has invalid exact inline-code anchor closure",
                 )
         requirement_coverage = proposal.requirement_coverage_assessment
         expected_requirement_coverage = (
@@ -4942,11 +4977,17 @@ def _engineering_agent_review_closes_boundary_challenges(
             for boundary_id in item.boundary_observation_ids
         )
         or any(
-            engineering_agent_content_coverage_unmatched_inline_code_anchors(
-                package,
-                draft,
-                content_unit,
-                assessment,
+            (
+                engineering_agent_content_coverage_unmatched_inline_code_anchors(
+                    package,
+                    draft,
+                    content_unit,
+                    assessment,
+                )
+                or engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                    content_unit,
+                    assessment,
+                )
             )
             for content_unit, assessment in zip(
                 content_units,
@@ -5463,6 +5504,7 @@ __all__ = [
     "SealedEngineeringAgentResponseControl",
     "engineering_agent_boundary_relevance_assessment_is_closed",
     "engineering_agent_boundary_relevance_assessment_matches_challenge",
+    "engineering_agent_content_coverage_nonassertive_inline_code_anchors",
     "engineering_agent_content_coverage_unmatched_inline_code_anchors",
     "engineering_agent_evidence_boundary_assessment_matches_challenge",
     "project_engineering_agent_draft_boundaries",

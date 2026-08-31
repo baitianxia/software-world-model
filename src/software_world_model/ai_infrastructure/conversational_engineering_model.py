@@ -4,9 +4,9 @@ The Application owns the Agent loop and all authority-bearing state.  This
 module only renders sealed primary-Agent or independent-Reviewer inputs,
 narrows a user-authorized loopback session to each exact disclosure, crosses
 the Model Gateway, and decodes the closed result.  A malformed structured
-output may produce at most two fresh same-profile repairs for distinct local
-validator categories.  It never executes an Agent tool and never retries a
-Provider request.
+output may produce at most two fresh same-profile repairs when the bounded
+validator diagnostic makes progress.  It never executes an Agent tool and
+never retries a Provider request.
 """
 
 from __future__ import annotations
@@ -31,11 +31,13 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentClaimProposal,
     EngineeringAgentContentCoverageAssessment,
     EngineeringAgentContentCoverageDisposition,
+    EngineeringAgentDraftContentUnit,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriver,
     EngineeringAgentDriverModelResult,
     EngineeringAgentEvidenceBoundaryAssessment,
     EngineeringAgentEvidenceBoundaryAssessmentDisposition,
+    EngineeringAgentEvidencePackage,
     EngineeringAgentInvocation,
     EngineeringAgentInvocationMode,
     EngineeringAgentModelCallFailure,
@@ -61,6 +63,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_nonassertive_inline_code_anchors,
     engineering_agent_content_coverage_unmatched_inline_code_anchors,
     engineering_agent_evidence_boundary_assessment_matches_challenge,
     project_engineering_agent_draft_boundaries,
@@ -100,14 +103,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@37"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@38"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@37"
+    "conversational-engineering-agent-no-tools-prompt@38"
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@34"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@26"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@27"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -172,6 +175,8 @@ _SOURCE_REPLAN_REQUIRED_REJECTION_REASONS = frozenset(
     {"SOURCE_SEARCH_QUERY_EQUALS_PATH_SEGMENT"}
 )
 _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS = 32
+_MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTICS = 32
+_MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTIC_CHARACTERS = 256
 _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
 _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS = (
     "decision",
@@ -690,7 +695,12 @@ boundary; it does not establish that an implementation exists in that path.
 Split mixed affirmative and uncertain prose or return DEFECT whenever the
 affirmative part lacks its own SUPPORT-bound Claim. Use
 NON_ASSERTIVE only for formatting, a question, or trusted provenance context
-that makes no software, evidence, scope, or uncertainty assertion. Use DEFECT
+that makes no software, evidence, scope, or uncertainty assertion. A
+NON_ASSERTIVE fragment may not contain inline-code anchors unless the whole
+fragment is a pure Markdown heading or standalone bold label; a prefixed label
+followed by factual prose is not structural. The Application reports every
+anchor violation in one bounded diagnostic, so repair every listed unit rather
+than stopping after the first example. Use DEFECT
 for any uncovered or misclassified material semantic and bind finding_code to
 one concrete Finding. In COMPREHENSIVE only, use BOUNDARY_REVIEW_DEFERRED when
 the unit contains a genuine boundary semantic whose exact binding is redacted;
@@ -4005,6 +4015,12 @@ def _output_preflight_view(
                 reference_policy.get(
                     "content_coverage_inline_code_anchor_exact_reference_required"
                 ),
+                reference_policy.get(
+                    "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden"
+                ),
+                reference_policy.get(
+                    "content_coverage_anchor_violations_aggregated"
+                ),
                 content_challenge.get(
                     "complete_ordered_assessment_required"
                 ),
@@ -4016,6 +4032,12 @@ def _output_preflight_view(
                 ),
                 content_challenge.get(
                     "every_inline_code_anchor_requires_exact_mapped_reference_lexeme"
+                ),
+                content_challenge.get(
+                    "nonstructural_nonassertive_inline_code_anchors_forbidden"
+                ),
+                content_challenge.get(
+                    "all_inline_code_anchor_violations_reported_together"
                 ),
                 content_challenge.get(
                     "uncertain_reference_cannot_cover_affirmative_semantic"
@@ -4263,6 +4285,8 @@ def _output_preflight_view(
             "content_coverage_complete_order_required": True,
             "content_coverage_defect_requires_bound_finding": True,
             "content_coverage_inline_code_anchor_exact_reference_required": True,
+            "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "content_coverage_anchor_violations_aggregated": True,
             "evidence_boundary_assessment_ids_required_exact_order": tuple(
                 caller_challenge_ids
             ),
@@ -4721,10 +4745,21 @@ def _initial_format_repair_policy() -> dict[str, object]:
 
 
 def _closed_contract_repair_directive(message: str) -> str:
+    if "content coverage inline-code anchor violations" in message:
+        return (
+            "REPAIR_EVERY_LISTED_UNIT_AND_ANCHOR_TOGETHER_MAP_COVERED_ANCHORS_"
+            "VERBATIM_OR_MARK_DEFECT_AND_NEVER_LABEL_NONSTRUCTURAL_ANCHOR_"
+            "PROSE_NONASSERTIVE"
+        )
     if "unmatched exact inline-code anchors" in message:
         return (
             "MAP_EVERY_INLINE_CODE_ANCHOR_TO_A_CLAIM_OR_BOUNDARY_THAT_CONTAINS_"
             "IT_VERBATIM_OR_MARK_THE_UNIT_DEFECT_WITH_ONE_BOUND_FINDING"
+        )
+    if "content coverage disposition and reference shape are inconsistent" in message:
+        return (
+            "FOR_DEFECT_OR_NONASSERTIVE_CLEAR_ALL_CLAIM_AND_BOUNDARY_REFERENCES_"
+            "AND_FOR_COVERED_CLEAR_FINDING_CODE_THEN_RECHECK_THE_EXACT_SHAPE"
         )
     if "exact ordered Draft content units" in message:
         return (
@@ -4878,12 +4913,21 @@ def _can_followup_format_repair(
         failure.invalid_output_text,
         failure.message,
     )
-    # A semantic repair can regress to an envelope or JSON error even after it
-    # corrected the named contract (run-090 demonstrated exactly that). The
-    # second and final repair may therefore address a distinct validator
-    # category in either direction. Repeating the same category still fails
-    # closed, so this cannot become an open-ended semantic retry loop.
-    return category != previous_category
+    # A semantic repair can regress to an envelope, shape, or a smaller exact
+    # semantic violation set after it corrected the first named contract.
+    # Permit the second and final repair only when either the validator category
+    # or its exact bounded diagnostic changed and the proposal bytes changed.
+    # The fixed two-attempt ceiling still prevents an open-ended semantic loop.
+    return (
+        failure.invalid_output_text != previous_failure.invalid_output_text
+        and (
+            category != previous_category
+            or (
+                category == "CLOSED_OUTPUT_CONTRACT"
+                and failure.message != previous_failure.message
+            )
+        )
+    )
 
 
 def _collect_closed_object_shape_mismatches(
@@ -7238,6 +7282,8 @@ def _review_input_view(
             "every_affirmative_semantic_requires_claim_coverage": True,
             "every_boundary_semantic_requires_boundary_coverage": True,
             "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+            "nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "all_inline_code_anchor_violations_reported_together": True,
             "uncertain_reference_cannot_cover_affirmative_semantic": True,
             "excluded_or_unread_scope_does_not_establish_implementation_location": True,
             "container_context_is_inherited_by_each_fragment": True,
@@ -7260,6 +7306,8 @@ def _review_input_view(
             "complete_content_coverage_assessments_required": True,
             "content_coverage_defect_requires_bound_finding": True,
             "content_coverage_inline_code_anchor_exact_reference_required": True,
+            "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "content_coverage_anchor_violations_aggregated": True,
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
@@ -8547,6 +8595,73 @@ def _review_output_with_unique_finding_codes(
     return normalized
 
 
+def _content_coverage_inline_code_anchor_violation_message(
+    *,
+    package: EngineeringAgentEvidencePackage,
+    draft: EngineeringAgentAnswerDraft,
+    content_units: Sequence[EngineeringAgentDraftContentUnit],
+    assessments: Sequence[EngineeringAgentContentCoverageAssessment],
+) -> str | None:
+    diagnostics: list[dict[str, object]] = []
+    truncated = False
+    for content_unit, assessment in zip(
+        content_units,
+        assessments,
+        strict=True,
+    ):
+        violation_groups = (
+            (
+                "COVERED_ANCHOR_ABSENT_FROM_MAPPED_REFERENCE",
+                engineering_agent_content_coverage_unmatched_inline_code_anchors(
+                    package,
+                    draft,
+                    content_unit,
+                    assessment,
+                ),
+            ),
+            (
+                "NONSTRUCTURAL_NONASSERTIVE_TECHNICAL_ANCHOR",
+                engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                    content_unit,
+                    assessment,
+                ),
+            ),
+        )
+        for violation_kind, anchors in violation_groups:
+            for anchor in anchors:
+                if (
+                    len(diagnostics)
+                    >= _MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTICS
+                ):
+                    truncated = True
+                    continue
+                bounded_anchor = anchor[
+                    :_MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTIC_CHARACTERS
+                ]
+                diagnostics.append(
+                    {
+                        "content_unit_index": content_unit.content_unit_index,
+                        "violation": violation_kind,
+                        "anchor": bounded_anchor,
+                        "anchor_truncated": bounded_anchor != anchor,
+                    }
+                )
+    if not diagnostics:
+        return None
+    return (
+        "content coverage inline-code anchor violations: "
+        + json.dumps(
+            {
+                "diagnostics": diagnostics,
+                "diagnostics_truncated": truncated,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+
+
 def _decode_review_output(
     output: Mapping[str, object],
     *,
@@ -8837,9 +8952,6 @@ def _decode_review_output(
             "Engineering Agent Reviewer did not assess the exact ordered Draft content units",
         )
     selected_boundary_ids = set(request.draft.boundary_observation_ids)
-    content_unit_by_index = {
-        item.content_unit_index: item for item in expected_content_units
-    }
     for assessment in content_coverage_assessments:
         if any(
             index >= len(request.draft.claims)
@@ -8874,16 +8986,19 @@ def _decode_review_output(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "focused content coverage cannot defer exact Boundary coverage",
             )
-        if engineering_agent_content_coverage_unmatched_inline_code_anchors(
-            request.package,
-            request.draft,
-            content_unit_by_index[assessment.content_unit_index],
-            assessment,
-        ):
-            raise DomainError(
-                ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                "content coverage has unmatched exact inline-code anchors",
-            )
+    anchor_violation_message = (
+        _content_coverage_inline_code_anchor_violation_message(
+            package=request.package,
+            draft=request.draft,
+            content_units=expected_content_units,
+            assessments=content_coverage_assessments,
+        )
+    )
+    if anchor_violation_message is not None:
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            anchor_violation_message,
+        )
     expected_challenges = (
         project_engineering_agent_evidence_boundary_challenges(
             request.package,

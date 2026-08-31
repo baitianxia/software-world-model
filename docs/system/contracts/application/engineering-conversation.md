@@ -360,7 +360,7 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@26` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
+   `ENGINEERING_AGENT_REVIEW_INPUT@27` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
    Citation options，使 Reviewer 能把 Draft 已解析的 exact refs 还原到 locator 后审核跨资源引用覆盖；`engineering-agent-independent-review-proposal@10`
    必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
@@ -399,6 +399,12 @@ no-progress failure 关闭。
    negation 或 order 相同；反过来，声称位置/效果/类别/确定性 unknown 的 reference 不得覆盖 affirmative assertion，excluded/unread scope 只
    建立未读边界，不建立实现存在于该路径。Primary 必须让 presentation 中的路径、symbol、method、declaration、route 或 literal 在对应 Claim/
    Boundary 中逐字可见，否则删除、收窄或取得合法 SUPPORT 后再写入。
+
+   `NON_ASSERTIVE` 不能成为 technical-anchor 逃逸口：除整个 fragment 是 pure Markdown heading 或 standalone bold label 外，任何含 inline-code
+   anchor 的 fragment 都必须使用 `COVERED`、合法 defer 或 bound `DEFECT`；`**标签**：事实正文` 不是 standalone label。Application 在 decode
+   必须一次聚合当前 Review 的全部 `COVERED` unmatched anchors 与 nonstructural `NON_ASSERTIVE` anchors，按 unit index/violation/anchor 形成最多
+   32 项的 bounded exact diagnostic，而不是遇到第一项即停止。该 diagnostic 只列出机械违规，不判断事实或授权；seal 与 Delivery 仍独立重算，
+   pure heading/label 的语义仍须作为 inherited context 参与其正文 unit 的 Reviewer 判断。
 
    model-authored tool proposal、action argument、query/search text、`evidence_need`、hypothesis、plan、open item 及任何后续工具或 Boundary 对这些
    字节的 echo 都只记录 acquisition intent，不是软件事实 Evidence。Primary/Reviewer 不得把只在该 intent 中出现的技术机制、位置、类型关系或
@@ -567,14 +573,16 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@37 / conversational-engineering-agent-no-tools-prompt@37 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@34 / ENGINEERING_AGENT_REVIEW_INPUT@26 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31` 协议族；每次
+   `conversational-engineering-agent@38 / conversational-engineering-agent-no-tools-prompt@38 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@34 / ENGINEERING_AGENT_REVIEW_INPUT@27 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生
-   fresh `PROVIDER_OUTPUT_INVALID`，且 local validator category 必须与前一失败不同。semantic contract repair 若已经纠正 named closure、但新输出
-   回退为 envelope/JSON/shape failure，可使用最后一个 slot 修复该不同 category；相同 category 不再调用，closed-shape existing-value
-   restoration 自身的守恒拒绝仍属于同一 category。每个 repair 都必须是
+   fresh `PROVIDER_OUTPUT_INVALID`，且 proposal bytes 已改变，并满足 local validator category 改变，或同属 `CLOSED_OUTPUT_CONTRACT` 但 bounded
+   exact diagnostic 已改变。semantic contract repair 若纠正一部分 named closure 后暴露不同 exact violation 或 shape contract，可使用最后一个
+   slot；同一 diagnostic、原样 output 与 `CLOSED_SCHEMA_SHAPE` existing-value restoration 守恒失败仍停止，不能形成开放式语义 retry。anchor
+   diagnostic 必须一次列出全部当前违规；若 repair 将 unit 改为 `DEFECT/NON_ASSERTIVE`，还必须清空 Claim/Boundary refs 并绑定合法 Finding，
+   不能以引用残留制造第二种通过路径。每个 repair 都必须是
    same execution profile 下的新 request/Manifest/one-use receipt，不是 Provider retry，不取得 fallback eligibility，也只能消耗 existing
    per-Turn 15 dispatch authority 的剩余 slot；preferred 与 availability-only fallback 属于同一个 logical Turn，必须共享一个在两个 Provider
    Authorizer 前生效的 sealed dispatch budget。preferred 的 trusted-unavailable dispatch 同样消耗该 logical Turn slot，fallback 只能使用剩余
@@ -584,7 +592,7 @@ no-progress failure 关闭。
    必须披露同一 shared-budget digest。Authorizer 在 authority 耗尽时必须在 Provider boundary 前拒绝。该分类不允许 Application 抽取后部
    JSON、提高 dispatch/Tool/Source/Session budget 或把格式失败改判为 Provider unavailable。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
-   Verification Investigation Agent 不是长期架构不变量。current `@37` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
+   Verification Investigation Agent 不是长期架构不变量。current `@38` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
    投影出 caller/callee challenge 或 Package 含任何 Boundary，再执行一个 fresh focused Review。focused Finding 的 successor Draft 可按
    仍存在的 challenge focus 直接复审。为容纳一次 comprehensive rewrite 和一次 focused rewrite，
    Reviewer call 上限现为 4，同时 Agent step 上限从 12 收紧为 11，最坏组合仍为原有 15 per-Turn dispatch authority。Response Control 必须重算
