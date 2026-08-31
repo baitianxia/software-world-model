@@ -363,3 +363,10 @@ run-120 在 fresh Ark qualification 后由 Ark 完成 7 calls，TLS/credential/H
 mappings 被误报为检索截断 Unknown，尽管同一次 Search 的 exact read 仍可用，两个 Reviewer 错误 APPROVED。readiness 允许在现有 scope
 内升级 `@35 / Primary @34 / Review @24 / preflight @29`、完成门禁并执行 fresh run-121，不需要新的人工授权。Production hold 与 standing
 authority 不变，run-120 不取得质量或 MVP PASS。
+
+该 gate 已由 clean `3326fdf… / d3c5385…` 和 fresh Ark actual `glm-5.3` qualification 闭合。run-121 的 Ark pre-HTTP TLS unavailable
+依法进入 DeepSeek，但 fallback 得到 definite HTTP 402；按用户允许的 bounded-delay fresh retry，run-122 随后由 Ark 12 个 completed calls
+交付 `SUCCEEDED / ACCEPTED`。`FINDING-010-251` 的 independent audit 仍发现正文事实/Unknown 可留在 Claim 与 Boundary inventory 之外，两个
+Reviewer 因只闭合已枚举对象而错误批准。readiness 允许在原 standing scope 内升级
+`@36 / Primary @34 / Review @25 / preflight @30 / Review output @10`、完成 content-unit coverage 门禁并执行 fresh run-123；不需要新的
+人工授权，不改变 route、budget、Source scope、no-replay 或 Production hold。

@@ -29,6 +29,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentClaimSemanticScope,
     EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
+    EngineeringAgentContentCoverageAssessment,
+    EngineeringAgentContentCoverageDisposition,
     EngineeringAgentDraftProposal,
     EngineeringAgentDriver,
     EngineeringAgentDriverModelResult,
@@ -61,6 +63,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     engineering_agent_boundary_relevance_assessment_matches_challenge,
     engineering_agent_evidence_boundary_assessment_matches_challenge,
     project_engineering_agent_draft_boundaries,
+    project_engineering_agent_draft_content_units,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_evidence_boundary_challenges,
 )
@@ -96,20 +99,20 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@35"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@36"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@35"
+    "conversational-engineering-agent-no-tools-prompt@36"
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@34"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@24"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@25"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@9"
+    "engineering-agent-independent-review-proposal@10"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -172,6 +175,7 @@ _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
 _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS = (
     "decision",
     "claim_assessments",
+    "content_coverage_assessments",
     "requirement_coverage_assessment",
     "findings",
 )
@@ -661,6 +665,27 @@ SUPPORT observations establish it; a SUPPORTED claim must not receive a Finding.
 Mark it DEFECT only when an actual claim defect exists, and bind at least one
 Finding to that claim index. Do not create a Finding that merely restates that a
 claim is supported or that no defect exists.
+Return one content_coverage_assessment for every exact ordered item in
+content_coverage_challenge.content_units. Reconstruct each fragment together
+with all inherited_context_fragments before classifying it; a heading, label,
+table context, or list lead-in cannot be dropped from the assertion it qualifies.
+Use COVERED only when claim_indices and, in focused Review, exact selected
+boundary_observation_ids collectively cover every material semantic in that
+whole unit. Each mapped Claim must explicitly preserve the unit's material
+category, scope, condition, certainty, negation, and local-order qualifiers;
+identifier overlap or a related narrower Claim is not coverage. Use
+NON_ASSERTIVE only for formatting, a question, or trusted provenance context
+that makes no software, evidence, scope, or uncertainty assertion. Use DEFECT
+for any uncovered or misclassified material semantic and bind finding_code to
+one concrete Finding. In COMPREHENSIVE only, use BOUNDARY_REVIEW_DEFERRED when
+the unit contains a genuine boundary semantic whose exact binding is redacted;
+retain any independently covering claim_indices and do not use deferral for an
+affirmative assertion. That disposition is allowed only when the sealed input
+explicitly says boundary_review_deferred_allowed=true. In focused Review,
+deferral is forbidden: every boundary semantic must map an exact ID from
+boundary_observation_ids_allowed_exact or become DEFECT. An opaque Boundary ID
+does not cover affirmative prose, and a Claim does not cover unresolved-boundary
+prose. Do not approve by classifying material prose as NON_ASSERTIVE.
 Return exactly one requirement_coverage_assessment for every Review, including
 focused Review. Copy current_user_requirement exactly from
 current_requirement_coverage_challenge.current_user_requirement, then compare
@@ -709,8 +734,8 @@ material defect in this one Review. Do not intentionally stop after the first
 Finding and defer another defect to a later fresh Review. Finding code is a local
 identifier, not review semantics: use a distinct code for each distinct Finding.
 The decision is the redundant summary of the typed body: use FINDINGS exactly
-when findings is non-empty; when every Claim assessment and focused challenge is
-closed and findings is empty, use APPROVED. Never invent a Finding about the
+when findings is non-empty; when every Claim assessment, content unit, and
+focused challenge is closed and findings is empty, use APPROVED. Never invent a Finding about the
 Review object needing a Finding, and never demand that the Draft itself contain a
 Review Finding.
 For a LIMITATION, the correct Claim inventory is always empty. Never issue a
@@ -846,14 +871,18 @@ NON_MATERIAL_AUDIT_ONLY for a non-material BOUNDARY_MATERIALITY. Bind either
 audit-only disposition's finding_code to a global Finding with claim_index null
 and requires_evidence false so the primary Agent removes the exact non-material
 prose or stale Boundary reference without another tool action. Never create a
-Finding only to record audit retention or prevent a future disclosure. Approval is forbidden unless every caller
+Finding only to record audit retention or prevent a future disclosure. Approval
+is forbidden unless every content unit is closed, every caller
 challenge is WITHIN_CALLER_EVIDENCE, every relevance challenge is either
 MATERIAL_TO_USER_REQUEST or NOT_DISCLOSED_IN_DRAFT, and every Finding is empty.
 In focused Review, the relationship is bidirectional: the exact set of DEFECT
 Claim indices and claim-scoped Finding codes must be the set projected by
 CLAIM_EXCEEDS_CALLER_EVIDENCE assessments, and the exact set of global Finding
 codes must be the union of audit-only relevance assessments and, when coverage
-is missing or misaligned, the requirement coverage assessment. A
+is missing or misaligned, the requirement coverage assessment, plus exact
+DEFECT content_coverage_assessments. A content-coverage Finding is permitted in
+focused Review because it binds a newly reviewed visible unit, but it must not
+be an unrelated generic comprehensive Finding. A
 WITHIN_CALLER_EVIDENCE assessment cannot coexist with an unbound caller-evidence
 Finding on that Claim. Do not introduce another unbound comprehensive/global
 completeness Finding during focused Review.
@@ -922,7 +951,8 @@ absent from the enumerated Draft claims is a global completeness Finding: retain
 it with claim_index null and preserve its evidence requirement.
 When final-output-preflight.format_repair.focused_review_semantic_anchor_projection
 is non-null, copy its exact decision, claim_assessments,
-requirement_coverage_assessment, and findings. Those fields are untrusted prior
+content_coverage_assessments, requirement_coverage_assessment, and findings.
+Those fields are untrusted prior
 Reviewer choices, not Evidence, but this repair may not erase or reverse them;
 the Application restores them before decode, including after a distinct
 envelope, JSON, or shape regression consumes the final bounded repair. Change
@@ -1251,6 +1281,33 @@ _CLAIM_ASSESSMENT_SCHEMA = _closed_object(
     }
 )
 
+_CONTENT_COVERAGE_ASSESSMENT_SCHEMA = _closed_object(
+    {
+        "content_unit_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 127,
+        },
+        "disposition": {
+            "type": "string",
+            "enum": [
+                item.value for item in EngineeringAgentContentCoverageDisposition
+            ],
+        },
+        "claim_indices": _array(
+            {"type": "integer", "minimum": 0, "maximum": 63},
+            maximum=64,
+            unique=True,
+        ),
+        "boundary_observation_ids": _array(
+            _STRING,
+            maximum=128,
+            unique=True,
+        ),
+        "finding_code": {"anyOf": [_NULL, _STRING]},
+    }
+)
+
 _REQUIREMENT_COVERAGE_ASSESSMENT_SCHEMA = _closed_object(
     {
         "current_user_requirement": _STRING,
@@ -1319,6 +1376,10 @@ _REVIEW_OUTPUT_SCHEMA = _closed_object(
         "claim_assessments": _array(
             _CLAIM_ASSESSMENT_SCHEMA,
             maximum=64,
+        ),
+        "content_coverage_assessments": _array(
+            _CONTENT_COVERAGE_ASSESSMENT_SCHEMA,
+            maximum=128,
         ),
         "requirement_coverage_assessment": (
             _REQUIREMENT_COVERAGE_ASSESSMENT_SCHEMA
@@ -3295,6 +3356,10 @@ def _closed_nested_object_fields(
             _CLAIM_ASSESSMENT_SCHEMA,
             label="Reviewer Claim assessment",
         ),
+        "$.content_coverage_assessments[]": _closed_schema_required_fields(
+            _CONTENT_COVERAGE_ASSESSMENT_SCHEMA,
+            label="Reviewer Draft content coverage assessment",
+        ),
         "$.evidence_boundary_assessments[]": _closed_schema_required_fields(
             _EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA,
             label="Reviewer evidence-boundary assessment",
@@ -3778,15 +3843,33 @@ def _output_preflight_view(
         requirement_challenge = role_input_payload.get(
             "current_requirement_coverage_challenge"
         )
+        content_challenge = role_input_payload.get(
+            "content_coverage_challenge"
+        )
+        draft_input = role_input_payload.get("draft")
         if (
             not isinstance(reference_policy, Mapping)
             or not isinstance(requirement_challenge, Mapping)
+            or not isinstance(content_challenge, Mapping)
+            or not isinstance(draft_input, Mapping)
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent output preflight Review input is invalid",
             )
         claim_indices = reference_policy.get("claim_indices")
+        content_unit_indices = reference_policy.get("content_unit_indices")
+        content_units = content_challenge.get("content_units")
+        content_claim_indices = content_challenge.get(
+            "claim_indices_allowed_exact"
+        )
+        content_boundary_ids = content_challenge.get(
+            "boundary_observation_ids_allowed_exact"
+        )
+        content_boundary_deferred_allowed = content_challenge.get(
+            "boundary_review_deferred_allowed"
+        )
+        draft_content = draft_input.get("content")
         caller_challenge_ids = reference_policy.get(
             "challenge_assessment_ids_required_exact_order"
         )
@@ -3869,6 +3952,10 @@ def _output_preflight_view(
             isinstance(value, (tuple, list))
             for value in (
                 claim_indices,
+                content_unit_indices,
+                content_units,
+                content_claim_indices,
+                content_boundary_ids,
                 caller_challenge_ids,
                 relevance_challenge_ids,
                 relevance_challenges,
@@ -3894,9 +3981,39 @@ def _output_preflight_view(
                 requirement_exact_copy_required,
                 requirement_approval_requires_full,
                 requirement_misalignment_requires_global_finding,
+                reference_policy.get(
+                    "complete_content_coverage_assessments_required"
+                ),
+                reference_policy.get(
+                    "content_coverage_defect_requires_bound_finding"
+                ),
+                content_challenge.get(
+                    "complete_ordered_assessment_required"
+                ),
+                content_challenge.get(
+                    "every_affirmative_semantic_requires_claim_coverage"
+                ),
+                content_challenge.get(
+                    "every_boundary_semantic_requires_boundary_coverage"
+                ),
+                content_challenge.get(
+                    "container_context_is_inherited_by_each_fragment"
+                ),
+                content_challenge.get(
+                    "focused_review_forbids_boundary_deferral"
+                ),
             )
         ) or (
             len(relevance_challenge_ids) != len(relevance_challenges)
+            or tuple(content_claim_indices) != tuple(claim_indices)
+            or type(content_boundary_deferred_allowed) is not bool
+            or len(content_boundary_ids) != len(set(content_boundary_ids))
+            or not all(isinstance(item, str) for item in content_boundary_ids)
+            or not isinstance(draft_content, str)
+            or content_challenge.get("draft_content_digest")
+            != digest_of(
+                ["ENGINEERING_AGENT_DRAFT_CONTENT@1", draft_content]
+            ).value
             or not isinstance(current_user_requirement, str)
             or not current_user_requirement
             or not isinstance(requirement_comparison_contract, Mapping)
@@ -3904,6 +4021,65 @@ def _output_preflight_view(
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent output preflight Review domains are invalid",
+            )
+        projected_content_indices: list[int] = []
+        for raw_unit in content_units:
+            if not isinstance(raw_unit, Mapping):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight content unit is invalid",
+                )
+            unit_index = raw_unit.get("content_unit_index")
+            fragment = raw_unit.get("fragment")
+            inherited = raw_unit.get("inherited_context_fragments")
+            unit_digest = raw_unit.get("digest")
+            if (
+                type(unit_index) is not int
+                or unit_index < 0
+                or not isinstance(fragment, str)
+                or not fragment.strip()
+                or not isinstance(inherited, (tuple, list))
+                or not all(
+                    isinstance(item, str) and bool(item.strip())
+                    for item in inherited
+                )
+                or unit_digest
+                != digest_of(
+                    {
+                        "schema": "ENGINEERING_AGENT_DRAFT_CONTENT_UNIT@1",
+                        "content_unit_index": unit_index,
+                        "fragment": fragment,
+                        "inherited_context_fragments": tuple(inherited),
+                    }
+                ).value
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Engineering Agent output preflight content unit identity is invalid",
+                )
+            projected_content_indices.append(unit_index)
+        expected_content_units = project_engineering_agent_draft_content_units(
+            draft_content
+        )
+        expected_content_unit_views = tuple(
+            {
+                "content_unit_index": item.content_unit_index,
+                "fragment": item.fragment,
+                "inherited_context_fragments": (
+                    item.inherited_context_fragments
+                ),
+                "digest": item.digest.value,
+            }
+            for item in expected_content_units
+        )
+        if (
+            tuple(projected_content_indices) != tuple(content_unit_indices)
+            or canonical_json_bytes(content_units)
+            != canonical_json_bytes(expected_content_unit_views)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Engineering Agent output preflight content unit order is inconsistent",
             )
         relevance_disposition_contracts: list[dict[str, object]] = []
         for expected_id, challenge in zip(
@@ -4041,6 +4217,24 @@ def _output_preflight_view(
             "claim_assessment_indices_required_exact_order": tuple(
                 claim_indices
             ),
+            "content_coverage_unit_indices_required_exact_order": tuple(
+                content_unit_indices
+            ),
+            "content_coverage_claim_indices_allowed_exact": tuple(
+                content_claim_indices
+            ),
+            "content_coverage_boundary_observation_ids_allowed_exact": tuple(
+                content_boundary_ids
+            ),
+            "content_coverage_boundary_review_deferred_allowed": (
+                content_boundary_deferred_allowed
+            ),
+            "content_coverage_dispositions_allowed_exact": tuple(
+                item.value
+                for item in EngineeringAgentContentCoverageDisposition
+            ),
+            "content_coverage_complete_order_required": True,
+            "content_coverage_defect_requires_bound_finding": True,
             "evidence_boundary_assessment_ids_required_exact_order": tuple(
                 caller_challenge_ids
             ),
@@ -4499,6 +4693,16 @@ def _initial_format_repair_policy() -> dict[str, object]:
 
 
 def _closed_contract_repair_directive(message: str) -> str:
+    if "exact ordered Draft content units" in message:
+        return (
+            "ASSESS_EVERY_SEALED_CONTENT_UNIT_EXACTLY_ONCE_IN_ORDER_WITH_"
+            "EXHAUSTIVE_CLAIM_BOUNDARY_NON_ASSERTIVE_OR_DEFECT_COVERAGE"
+        )
+    if "focused content coverage cannot defer" in message:
+        return (
+            "REPLACE_EACH_DEFERRED_CONTENT_UNIT_WITH_EXACT_SELECTED_BOUNDARY_"
+            "COVERAGE_OR_ONE_BOUND_FINDING"
+        )
     if "resolved Source Search acquisition boundary cannot finalize" in message:
         return (
             "CHOOSE_ONE_MATERIAL_UNUSED_SAME_SEARCH_SOURCE_READ_OR_REMOVE_"
@@ -6879,6 +7083,9 @@ def _review_input_view(
         for item in relevant_messages
         if isinstance(item, Mapping) and item.get("role") == "ASSISTANT"
     )
+    content_units = project_engineering_agent_draft_content_units(
+        request.draft.content
+    )
     return {
         "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
@@ -6969,6 +7176,37 @@ def _review_input_view(
                 "assessment_required_for_every_review_focus": True,
             },
         },
+        "content_coverage_challenge": {
+            "draft_content_digest": digest_of(
+                ["ENGINEERING_AGENT_DRAFT_CONTENT@1", request.draft.content]
+            ).value,
+            "content_units": tuple(
+                {
+                    "content_unit_index": item.content_unit_index,
+                    "fragment": item.fragment,
+                    "inherited_context_fragments": (
+                        item.inherited_context_fragments
+                    ),
+                    "digest": item.digest.value,
+                }
+                for item in content_units
+            ),
+            "claim_indices_allowed_exact": tuple(
+                range(len(request.draft.claims))
+            ),
+            "boundary_observation_ids_allowed_exact": tuple(
+                item.value for item in request.draft.boundary_observation_ids
+            ) if focused_boundary_review else (),
+            "boundary_review_deferred_allowed": (
+                not focused_boundary_review
+                and bool(request.package.boundary_observations)
+            ),
+            "complete_ordered_assessment_required": True,
+            "every_affirmative_semantic_requires_claim_coverage": True,
+            "every_boundary_semantic_requires_boundary_coverage": True,
+            "container_context_is_inherited_by_each_fragment": True,
+            "focused_review_forbids_boundary_deferral": True,
+        },
         "evidence_boundary_challenges": tuple(
             _evidence_boundary_challenge_view(request, item)
             for item in challenges
@@ -6979,7 +7217,12 @@ def _review_input_view(
         ),
         "review_reference_policy": {
             "claim_indices": tuple(range(len(request.draft.claims))),
+            "content_unit_indices": tuple(
+                item.content_unit_index for item in content_units
+            ),
             "complete_claim_assessments_required": True,
+            "complete_content_coverage_assessments_required": True,
+            "content_coverage_defect_requires_bound_finding": True,
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
@@ -8240,6 +8483,7 @@ def _review_output_with_unique_finding_codes(
         if isinstance(requirement_finding_code, str):
             referenced_codes.add(requirement_finding_code)
     for field in (
+        "content_coverage_assessments",
         "evidence_boundary_assessments",
         "boundary_relevance_assessments",
     ):
@@ -8292,6 +8536,57 @@ def _decode_review_output(
             )
             for item in _sequence(
                 output["claim_assessments"], "claim assessments"
+            )
+        )
+        content_coverage_assessments = tuple(
+            EngineeringAgentContentCoverageAssessment.create(
+                content_unit_index=_integer(
+                    _mapping(item, "content coverage assessment")[
+                        "content_unit_index"
+                    ],
+                    "content coverage unit index",
+                ),
+                disposition=EngineeringAgentContentCoverageDisposition(
+                    _string(
+                        _mapping(item, "content coverage assessment")[
+                            "disposition"
+                        ],
+                        "content coverage disposition",
+                    )
+                ),
+                claim_indices=tuple(
+                    _integer(index, "content coverage Claim index")
+                    for index in _sequence(
+                        _mapping(item, "content coverage assessment")[
+                            "claim_indices"
+                        ],
+                        "content coverage Claim indices",
+                    )
+                ),
+                boundary_observation_ids=tuple(
+                    StableId(
+                        _string(
+                            observation_id,
+                            "content coverage Boundary observation ID",
+                        )
+                    )
+                    for observation_id in _sequence(
+                        _mapping(item, "content coverage assessment")[
+                            "boundary_observation_ids"
+                        ],
+                        "content coverage Boundary observation IDs",
+                    )
+                ),
+                finding_code=_optional_string(
+                    _mapping(item, "content coverage assessment")[
+                        "finding_code"
+                    ],
+                    "content coverage Finding code",
+                ),
+            )
+            for item in _sequence(
+                output["content_coverage_assessments"],
+                "content coverage assessments",
             )
         )
         raw_requirement_coverage = _mapping(
@@ -8465,6 +8760,7 @@ def _decode_review_output(
             requirement_coverage_assessment=(
                 requirement_coverage_assessment
             ),
+            content_coverage_assessments=content_coverage_assessments,
             evidence_boundary_assessments=evidence_boundary_assessments,
             boundary_relevance_assessments=boundary_relevance_assessments,
         )
@@ -8493,6 +8789,51 @@ def _decode_review_output(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer did not assess the exact ordered Claim set",
         )
+    expected_content_units = project_engineering_agent_draft_content_units(
+        request.draft.content
+    )
+    if tuple(
+        item.content_unit_index for item in content_coverage_assessments
+    ) != tuple(item.content_unit_index for item in expected_content_units):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "Engineering Agent Reviewer did not assess the exact ordered Draft content units",
+        )
+    selected_boundary_ids = set(request.draft.boundary_observation_ids)
+    for assessment in content_coverage_assessments:
+        if any(
+            index >= len(request.draft.claims)
+            for index in assessment.claim_indices
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "content coverage assessment references an unknown Draft Claim",
+            )
+        if not set(assessment.boundary_observation_ids).issubset(
+            selected_boundary_ids
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "content coverage assessment references an unselected Draft Boundary",
+            )
+        if focus is EngineeringAgentReviewFocus.COMPREHENSIVE:
+            if assessment.boundary_observation_ids or (
+                assessment.disposition
+                is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+                and not request.package.boundary_observations
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    "comprehensive content coverage may defer only a present redacted Boundary",
+                )
+        elif (
+            assessment.disposition
+            is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "focused content coverage cannot defer exact Boundary coverage",
+            )
     expected_challenges = (
         project_engineering_agent_evidence_boundary_challenges(
             request.package,
@@ -8560,6 +8901,16 @@ def _decode_review_output(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer Finding codes must be unique",
         )
+    for assessment in content_coverage_assessments:
+        if (
+            assessment.disposition
+            is EngineeringAgentContentCoverageDisposition.DEFECT
+            and assessment.finding_code not in findings_by_code
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "a defective Draft content unit must bind an existing Finding",
+            )
     if (
         requirement_coverage_assessment.current_user_requirement
         != request.turn_request.user_message.content
@@ -8694,6 +9045,12 @@ def _decode_review_output(
                 EngineeringAgentBoundaryRelevanceAssessmentDisposition.NON_MATERIAL_AUDIT_ONLY,
             }
             and item.finding_code is not None
+        } | {
+            item.finding_code
+            for item in content_coverage_assessments
+            if item.disposition
+            is EngineeringAgentContentCoverageDisposition.DEFECT
+            and item.finding_code is not None
         }
         if (
             requirement_coverage_assessment.disposition
@@ -8717,8 +9074,8 @@ def _decode_review_output(
         if set(findings_by_code) != expected_finding_codes:
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
-                "focused Reviewer Findings must equal the exact challenge-bound "
-                "Finding set",
+                "focused Reviewer Findings must equal the exact challenge- or "
+                "content-unit-bound Finding set",
             )
     if (
         proposal.decision is EngineeringAgentReviewDecision.APPROVED

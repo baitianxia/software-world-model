@@ -11,6 +11,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentClaimProposal,
+    EngineeringAgentContentCoverageAssessment,
+    EngineeringAgentContentCoverageDisposition,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentDraftProposal,
     EngineeringAgentEvidenceDisposition,
@@ -25,6 +27,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
     project_engineering_agent_boundary_relevance_challenges,
+    project_engineering_agent_draft_content_units,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolAdapter,
@@ -307,6 +310,32 @@ class RecordingReviewer:
             model_call_ref=f"tool-review-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
             focus=request.focus,
+            content_coverage_assessments=tuple(
+                EngineeringAgentContentCoverageAssessment.create(
+                    content_unit_index=item.content_unit_index,
+                    disposition=(
+                        EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+                        if request.focus
+                        is EngineeringAgentReviewFocus.COMPREHENSIVE
+                        and request.draft.boundary_observation_ids
+                        else EngineeringAgentContentCoverageDisposition.COVERED
+                        if request.draft.claims
+                        or request.draft.boundary_observation_ids
+                        else EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE
+                    ),
+                    claim_indices=tuple(range(len(request.draft.claims))),
+                    boundary_observation_ids=(
+                        request.draft.boundary_observation_ids
+                        if request.focus
+                        is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                        else ()
+                    ),
+                    finding_code=None,
+                )
+                for item in project_engineering_agent_draft_content_units(
+                    request.draft.content
+                )
+            ),
             requirement_coverage_assessment=(
                 EngineeringAgentRequirementCoverageAssessment.create(
                     current_user_requirement=(

@@ -1218,8 +1218,8 @@ conversational_engineering_agent:
   v7_unaccepted_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@7
   v7_unaccepted_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@3
   v7_status: stopped-unaccepted-symptom-experiment-not-current-system-truth
-  current_agent_model_strategy_ref: conversational-engineering-agent@35
-  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@35
+  current_agent_model_strategy_ref: conversational-engineering-agent@36
+  current_agent_model_prompt_ref: conversational-engineering-agent-no-tools-prompt@36
   current_agent_primary_input_schema: ENGINEERING_AGENT_PRIMARY_INPUT@34
   current_agent_primary_output_schema: engineering-agent-work-state-proposal@4
   current_primary_claim_citation_selector_schema: ONE_BASED_SUPPORT_OBSERVATION_AND_CITATION_ORDINALS@1
@@ -1253,9 +1253,18 @@ conversational_engineering_agent:
   current_resolved_acquisition_reviewer_material_classification: current-user-explicit-source-acquisition-diagnostic-request-only
   current_resolved_acquisition_default_review_disposition: RESOLVED_AUDIT_ONLY-with-global-no-evidence-reference-removal-finding
   current_resolved_acquisition_exact_read_evidence_ref: FINDING-010-250
-  current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@24
-  current_agent_review_output_schema: engineering-agent-independent-review-proposal@9
-  current_agent_output_preflight_schema: ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29
+  current_draft_content_unit_projection: exact-nonblank-visible-line-with-inherited-markdown-heading-and-standalone-label-context
+  current_draft_content_unit_maximum: 128
+  current_draft_content_unit_review_dispositions: COVERED,BOUNDARY_REVIEW_DEFERRED,NON_ASSERTIVE,DEFECT
+  current_draft_content_unit_complete_order_required: true
+  current_draft_content_unit_focused_boundary_deferral_allowed: false
+  current_draft_content_unit_defect_requires_finding: true
+  current_draft_content_unit_delivery_allows_deferred_or_defect: false
+  current_draft_content_unit_coverage_evidence_ref: FINDING-010-251
+  current_agent_review_input_schema: ENGINEERING_AGENT_REVIEW_INPUT@25
+  current_agent_review_output_schema: engineering-agent-independent-review-proposal@10
+  current_agent_review_record_schema: ENGINEERING_AGENT_REVIEW@5
+  current_agent_output_preflight_schema: ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30
   current_agent_output_preflight_nested_closed_fields: exact-required-fields-and-additional-fields-forbidden-for-every-object-and-array-item
   current_primary_action_argument_item_schema: exact-name-value-object
   current_reviewer_boundary_assessment_challenge_id_field: challenge_id
@@ -1656,61 +1665,62 @@ conversational_engineering_agent:
     - FINDING-010-248
     - FINDING-010-249
     - FINDING-010-250
-  latest_browser_product_commit: a2e707390ed080ead9399bb6104919e4fe4c8d80
-  latest_browser_product_tree: b252e08a3f47c88cc697f6dfc36331113eaffce2
+    - FINDING-010-251
+  latest_browser_product_commit: 3326fdfcc1a5704d02cf461d07d221ec7b03b2ab
+  latest_browser_product_tree: d3c5385305ecf2e974ccb7d3a8db542928e45ace
   latest_browser_source_commit: 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7
   latest_browser_source_tree: 047d79d8588b76013c260f3f1a9565707301a60a
-  latest_browser_turn_scope_file_sha256: 8ed8c60288a6bff13e007503c88cf4897869260dac55796e7a22c62f84474404
-  latest_browser_session_config_file_digest: sha256:584b9bda860ab66f2885567d6db903e0c904474abd950a64fd127cc070876cc1
-  latest_browser_launch_config_file_digest: sha256:388308731126d9493c77136c1b282480d2c4ba22633cd6d4bbe0a48f564acf4d
-  latest_browser_public_source_session_authority_digest: sha256:2f95b1fdfb0b09dbe3037636a78d5e42eed10aa07ccacda28ee55da3f175dd2a
-  latest_browser_session_runtime_receipt_digest: sha256:3a9a29617d7ded47cff163ab4de538ff5b529809501dabacb5c3cfcc6c1465b6
-  latest_browser_preparation_receipt_digest: sha256:cfd0261cf8003fe784afc08ed495c50a9fa537abcb20b4fcf4d4b65c83540d3b
-  latest_browser_terminal_receipt_digest: sha256:049e72843bc4fd0266aef0aa0a9eca9d8986c78aa4eac800243a1fcfc2128fde
-  latest_browser_terminal_file_sha256: e265c6bd6334248d54ce851ec4753edf8e46ece6ef69ca84fd331244554b0d04
-  latest_browser_ark_gateway_file_sha256: c404d1721f4f56e5c00410125d68494c590fd15d6215637ddaa5135af2887a43
+  latest_browser_turn_scope_file_sha256: ec02bf8b45d52b6995936c8cfb4611218a6257009e0cd2600f333420164c0cda
+  latest_browser_session_config_file_digest: sha256:4674244108b36f4e7d4e5be8eaf892fa14015a2d888302d404a37ee21380096f
+  latest_browser_launch_config_file_digest: sha256:5ac0ff6f455c6eac2e7891b9c5ac956be0d8e5f0d932901a0c655915722da796
+  latest_browser_public_source_session_authority_digest: sha256:145597c288c06688280d0ad0b34d6d8b3aefd1a8385015948bebda8df4197c6a
+  latest_browser_session_runtime_receipt_digest: sha256:b26fdec17d88f0082ff01db6e6aa7829381251a5223bc8860bb90a62aea1cdc4
+  latest_browser_preparation_receipt_digest: sha256:127311969cbaf2f21802c857c259de6860d88ab1637d09fef2ebabfe4787c99a
+  latest_browser_terminal_receipt_digest: sha256:788b16677e4ad48699dc74be5eb2a11a51e0eb980e36081f5f955a72e1f409d1
+  latest_browser_terminal_file_sha256: b27c86b8c0b91a4cdd334abaa6f19c10b4aec831aa6bb178f858b61a0db7d9c3
+  latest_browser_ark_gateway_file_sha256: 8f90826260652fa003a45d100bdd2e113ec945b1cdafbce301c1d4c068c091c8
   latest_browser_deepseek_gateway_file_sha256: e951c232a7d6ed051340cc5c530fac95e52102bd12a024363fad1e8a340af239
-  latest_browser_ark_runtime_receipt_digest: sha256:c9af4cd5ff4116c8ac95f8bd57a2aa58bf6d1883db956fe88f4be687ca1503aa
-  latest_browser_deepseek_runtime_receipt_digest: sha256:45cf85df883c3cd5a4e66911dc9b78b364757a9ee5c0789bc15c559ebbe23d21
-  latest_browser_logical_turn_dispatch_budget_digest: sha256:c3f4bfd1675cbf6f016f284b77c83c84253af284a047a3d2b61137f0868bed9c
-  latest_browser_turn_result: mall-search-ark-seven-calls-succeeded-accepted-five-citations-independent-audit-quality-fail-false-http-entry-unknown
-  latest_browser_conversation_id: conversation_ccb0a8685a514dda8c0c212bce8b409e
-  latest_browser_evidence_package_id: agent_evidence_package_1020f7202bf54216b7ed70fb23124a79
-  latest_browser_answer_id: agent_answer_9c90071e9fac4d37a3b46dcdf4e62e32
-  latest_browser_review_id: agent_review_b7ba065bcaea4886bfa794daa0dbebed
-  latest_browser_delivery_authorization_digest: engineering-agent-delivery:sha256:e994a957fc92636168768170cd6f2f927b0a88c55dd73d06203736c72135e1f4
-  latest_browser_selected_citation_count: 5
-  latest_browser_dispatches_by_turn: mall-search-turn=7
-  latest_browser_dispatches_by_turn_and_provider: mall-search-turn-ark7-deepseek0
-  latest_browser_ark_model_calls_completed_failed_unknown: 7,0,0
+  latest_browser_ark_runtime_receipt_digest: sha256:4b9c23d03cec1a289f89b8dd8332f3ed310dac97d325852fa37b838388130962
+  latest_browser_deepseek_runtime_receipt_digest: sha256:709efd479af998a775c394c1ac272014abddea6fc0f7e280bf915a86ea5f1bf1
+  latest_browser_logical_turn_dispatch_budget_digest: sha256:ed7a24e869b6df4594b60e303394bd23e11cf3d134a25bf143db297c28f4ea60
+  latest_browser_turn_result: mall-search-ark-twelve-calls-succeeded-accepted-three-citations-independent-audit-quality-fail-visible-prose-outside-claim-boundary-review
+  latest_browser_conversation_id: conversation_554a08a0294a42d7b9ede140d7af2d73
+  latest_browser_evidence_package_id: agent_evidence_package_82fcfb35cc8c4002a068b45ca14e3db0
+  latest_browser_answer_id: agent_answer_8b1340c6b3d1401689f85231042f1424
+  latest_browser_review_id: agent_review_431201789aa0431aac23587828b112fe
+  latest_browser_delivery_authorization_digest: engineering-agent-delivery:sha256:3e4276e1de2d13c4d1ecfe289f7483579cce7fb26f2fd22c127d744a72f569c1
+  latest_browser_selected_citation_count: 3
+  latest_browser_dispatches_by_turn: mall-search-turn=12
+  latest_browser_dispatches_by_turn_and_provider: mall-search-turn-ark12-deepseek0
+  latest_browser_ark_model_calls_completed_failed_unknown: 12,0,0
   latest_browser_ark_structured_output_invalid_terminal_turn_count: 0
-  latest_browser_ark_structured_output_invalid_revision_count: 1
+  latest_browser_ark_structured_output_invalid_revision_count: 0
   latest_browser_deepseek_structured_output_invalid_terminal_turn_count: 0
   latest_browser_deepseek_structured_output_invalid_revision_count: 0
   latest_browser_ark_raw_failure_codes: none
   latest_browser_ark_post_dispatch_transport_failure_code: none
   latest_browser_trusted_unavailable_verdict_count: 0
-  latest_browser_ark_dispatch_tls_credential_http: 7,7,7,7
+  latest_browser_ark_dispatch_tls_credential_http: 12,12,12,12
   latest_browser_deepseek_model_calls_completed_failed_unknown: 0,0,0
   latest_browser_deepseek_post_dispatch_transport_failure_code: none
   latest_browser_deepseek_dispatch_tls_credential_http: 0,0,0,0
   latest_browser_deepseek_admission_status: allowed-off-peak-at-preparation-not-activated-zero-authorized-invoked-credential-tls-http
-  latest_browser_deepseek_pricing_admission_receipt_digest: sha256:e08335d35de750e095a24448bae5175a1f20906f09361d5daad5308d8cc4b945
-  latest_browser_deepseek_pricing_checked_at: "2026-08-31T19:26:16Z"
-  latest_browser_deepseek_pricing_capture_file_sha256: 9683ce812ca39fe6d444c423abce0576f5c16c05da078f0e450aee6bb9642182
+  latest_browser_deepseek_pricing_admission_receipt_digest: sha256:653da2423adbc6decd1017dc79badbbf625027c7c05cd84dd7f2bda17a1e2401
+  latest_browser_deepseek_pricing_checked_at: "2026-08-31T20:27:34Z"
+  latest_browser_deepseek_pricing_capture_file_sha256: fba2b0db6405a29d77b2eb984317d6183ac772d1881e7cd3d4fdae319775ca6a
   latest_browser_deepseek_pricing_visible_text_digest: sha256:9c9dd4d22764599ade403c0ba6cd95abcb947810d5230ee95cb96a56a62d7668
-  latest_browser_same_signature_external_stop_applied: false-run120-completed-new-general-stale-acquisition-boundary-divergence-entered-repair
-  latest_browser_plural_referent_probe: not-executed-in-run116-prior-run108-pass-preserved
-  latest_browser_initial_owner-private_config_denial: none-run120-owner-private-at-first-preparation
-  latest_browser_failure_layer_display: none-turn-succeeded-independent-source-audit-found-false-http-entry-unknown-with-exact-read-still-available
+  latest_browser_same_signature_external_stop_applied: false-run122-completed-new-general-draft-review-coverage-divergence-entered-repair
+  latest_browser_plural_referent_probe: not-executed-in-run122-prior-run108-pass-preserved
+  latest_browser_initial_owner-private_config_denial: none-run122-owner-private-at-first-preparation
+  latest_browser_failure_layer_display: none-turn-succeeded-independent-audit-found-visible-prose-outside-claim-boundary-review
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: stale-after-agent-protocol-35-awaiting-fresh-ark-qualification-before-run121
-  current_ark_conformance_status: prior-agent-protocol-34-pass-stale-after-agent-protocol-35
-  current_ark_conformance_run_id: ccrun_39c9ec884fd44498839091acd9ec578d
-  current_ark_conformance_result_digest: sha256:e63bcf8fe36ae5cb0be512f657b10d2f5cad0bec6b35d2da34f1634533934ca1
-  current_ark_conformance_file_sha256: 6613aee207aeed6225a7b7a9eb21758e491490e0d5edc2e5dc532a8e14fb6539
-  current_ark_conformance_valid_until: "2026-09-30T19:23:20.876192Z"
+  current_dual_provider_qualification_status: stale-after-agent-protocol-36-awaiting-fresh-ark-qualification-before-run123
+  current_ark_conformance_status: prior-agent-protocol-35-pass-stale-after-agent-protocol-36
+  current_ark_conformance_run_id: ccrun_5f40765e553f4bcd8567da4b85edea49
+  current_ark_conformance_result_digest: sha256:ab3ca920b1b971c172c57add59f1c6c400749fc22e2bdfdb7f587028a83d34ac
+  current_ark_conformance_file_sha256: 7c4a0e8d65cea12f18bbae762f4717e3a9c053030fe4a9e9647be13662ea936f
+  current_ark_conformance_valid_until: "2026-09-30T20:26:04.170614Z"
   current_ark_conformance_actual_model: glm-5.3
   current_ark_conformance_request_count: 2
   current_ark_conformance_request_retry_count: 0
@@ -1722,7 +1732,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-120-succeeded-independent-quality-audit-fail-unused-same-search-exact-read-repair-in-progress-run-121-next
+  agent_execution_status: run-122-succeeded-independent-quality-audit-fail-draft-content-outside-claim-boundary-review-repair-in-progress-run-123-next
   status: qualified-candidate
 
 question_evidence_package_classes:
@@ -2072,7 +2082,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:f91a9889c736fb10944933c9abd6df79c62219d200a4862515db95cb630d0ff7
+  system_contract_set_digest: sha256:b89c35cd313ab9ba57d6b22507fb795f6d65870fa6996394ef24221c9d842f49
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

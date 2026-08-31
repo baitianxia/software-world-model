@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, FINDING-010-250]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, FINDING-010-250, FINDING-010-251]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -81,6 +81,11 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   sealed provenance context，不能制造 redundant Claim。纯 material evidence boundary 不属于 affirmative Claim；Limitation 保持零 Claim，
   同包 global-completeness rewrite 通过删除/收窄无 SUPPORT 的相邻 diagnostic 收敛，只有既有 assertion 有 current SUPPORT 时才可转 Answer。
   structured Boundary ID 是非正文 binding，不要求显示 opaque ID 或 raw Observation。
+- Claim/Boundary inventory 之外的用户可见正文也必须进入 Review closure。Application 从 exact Draft 按非空可见行投影最多 128 个 ordered
+  content units，并为 fragment 继承 heading/standalone-label context；comprehensive/focused Reviewer 必须逐项标为 exact Claim/Boundary
+  `COVERED`、comprehensive-only `BOUNDARY_REVIEW_DEFERRED`、真正 `NON_ASSERTIVE` 或绑定 Finding 的 `DEFECT`。focused Review 不得 defer；
+  Delivery 不得保留 deferred/defect。Application 在 preflight、decode、Review seal 与 Response Control 重算完整顺序和 reference domain；该结构
+  使每个正文单元的审核选择可见、可绑定，但自然语言语义是否真实覆盖仍由 fresh independent Reviewer 判断，不能由字符串 overlap 冒充。
 - 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并为每个
   Package Boundary 投影 ordered relevance challenge；`SOURCE_SEARCH / LITERAL_TEXT_SEARCH_HIT` item 被后续
   `SOURCE_READ / EXACT_STATIC_SOURCE_TEXT / coverage_complete=true` 闭合时使用 `RESOLVED_ACQUISITION`，其余使用
@@ -318,6 +323,14 @@ Search 的 exact Controller read 仍可用；两个 Reviewer 错误 APPROVED。S
 resolved-acquisition candidate 代替可执行的 same-Search exact read，并在 Review decode 仅允许显式检索诊断请求把该 candidate 判为
 material。协议族为 `@35 / Primary @34 / Review @24 / preflight @29`。完成 clean gate 后执行 fresh run-121 同题及异质冻结题；route、budget、
 Source authority 和 Production hold 不变。
+
+clean `3326fdf… / d3c5385…` 与 fresh Ark actual `glm-5.3` qualification 先闭合上述 gate。run-121 随后在 Ark HTTP 前 typed TLS unavailable，
+DeepSeek off-peak fallback 得到 definite HTTP 402；按用户允许的 bounded-delay fresh retry，run-122 由 Ark 12 个 completed calls 形成
+`SUCCEEDED / ACCEPTED`，DeepSeek/retry/unknown 0。独立审核仍发现最终正文在 3 个 Claim 和零 Boundary ID 之外断言 DAO return shape、
+Repository/Template classification 及 conversion/remote-effect Unknown，comprehensive/focused Reviewer 均未逐项看到这些 prose 而错误批准。
+`FINDING-010-251` 因而把协议族升为 `@36 / Primary @34 / Review @25 / preflight @30 / Review output @10`，以 exact ordered Draft content-unit
+coverage 闭合正文、Claim、Boundary、Finding 与 Delivery。下一动作是完成目标/相邻测试、文档/计划门禁、clean commit、fresh Ark
+qualification 与 run-123 同题复验；周期性网络重试仍只创建 fresh logical run，不重放 outcome-unknown request。
 
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。

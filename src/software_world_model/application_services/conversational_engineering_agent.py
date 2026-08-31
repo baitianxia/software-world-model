@@ -40,6 +40,9 @@ from .engineering_conversation import (
 
 
 _DEFAULT_MAXIMUM_TOOL_ACTIONS = 8
+_MAXIMUM_DRAFT_CONTENT_UNITS = 128
+_MARKDOWN_HEADING_RE = re.compile(r"^(?P<marks>#{1,6})\s+(?P<title>.+)$")
+_MARKDOWN_STANDALONE_LABEL_RE = re.compile(r"^\*\*[^\n]+\*\*$")
 
 
 class EngineeringAgentToolOperation(str, Enum):
@@ -86,6 +89,13 @@ class EngineeringAgentRequirementCoverageDisposition(str, Enum):
     MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED = (
         "MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED"
     )
+
+
+class EngineeringAgentContentCoverageDisposition(str, Enum):
+    COVERED = "COVERED"
+    BOUNDARY_REVIEW_DEFERRED = "BOUNDARY_REVIEW_DEFERRED"
+    NON_ASSERTIVE = "NON_ASSERTIVE"
+    DEFECT = "DEFECT"
 
 
 class EngineeringAgentEvidenceBoundaryAssessmentDisposition(str, Enum):
@@ -1510,6 +1520,192 @@ class EngineeringAgentAnswerDraft:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringAgentDraftContentUnit:
+    content_unit_index: int
+    fragment: str
+    inherited_context_fragments: tuple[str, ...]
+    digest: Digest
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentContentCoverageAssessment:
+    content_unit_index: int
+    disposition: EngineeringAgentContentCoverageDisposition
+    claim_indices: tuple[int, ...]
+    boundary_observation_ids: tuple[StableId, ...]
+    finding_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        content_unit_index: int,
+        disposition: EngineeringAgentContentCoverageDisposition,
+        claim_indices: Sequence[int] = (),
+        boundary_observation_ids: Sequence[StableId] = (),
+        finding_code: str | None,
+    ) -> "EngineeringAgentContentCoverageAssessment":
+        if type(content_unit_index) is not int or content_unit_index < 0:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "content coverage unit index must be a non-negative integer",
+            )
+        if not isinstance(
+            disposition,
+            EngineeringAgentContentCoverageDisposition,
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "content coverage disposition is invalid",
+            )
+        claims = tuple(claim_indices)
+        boundaries = tuple(boundary_observation_ids)
+        if (
+            any(type(item) is not int or item < 0 for item in claims)
+            or claims != tuple(sorted(set(claims)))
+            or any(not isinstance(item, StableId) for item in boundaries)
+            or len(boundaries) != len(set(boundaries))
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "content coverage references must be unique and ordered",
+            )
+        finding_code = _optional_text(
+            finding_code,
+            "content coverage Finding code",
+        )
+        if disposition is EngineeringAgentContentCoverageDisposition.COVERED:
+            valid_shape = bool(claims or boundaries) and finding_code is None
+        elif (
+            disposition
+            is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+        ):
+            valid_shape = not boundaries and finding_code is None
+        elif (
+            disposition
+            is EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE
+        ):
+            valid_shape = not claims and not boundaries and finding_code is None
+        else:
+            valid_shape = not claims and not boundaries and finding_code is not None
+        if not valid_shape:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "content coverage disposition and reference shape are inconsistent",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_CONTENT_COVERAGE_ASSESSMENT@1",
+            "content_unit_index": content_unit_index,
+            "disposition": disposition.value,
+            "claim_indices": claims,
+            "boundary_observation_ids": tuple(item.value for item in boundaries),
+            "finding_code": finding_code,
+        }
+        return cls(
+            content_unit_index=content_unit_index,
+            disposition=disposition,
+            claim_indices=claims,
+            boundary_observation_ids=boundaries,
+            finding_code=finding_code,
+            digest=digest_of(core),
+        )
+
+
+def project_engineering_agent_draft_content_units(
+    content: str,
+) -> tuple[EngineeringAgentDraftContentUnit, ...]:
+    """Project every non-blank visible line with its Markdown container context."""
+
+    content = _response_text(content)
+    headings: dict[int, str] = {}
+    standalone_label: str | None = None
+    raw_units: list[tuple[str, tuple[str, ...]]] = []
+    for raw_line in content.splitlines():
+        normalized_fragment = raw_line.strip()
+        if not normalized_fragment:
+            continue
+        fragment = _draft_content_unit_text(
+            raw_line,
+            "Draft content unit fragment",
+            maximum_bytes=48_000,
+        )
+        heading_match = _MARKDOWN_HEADING_RE.fullmatch(normalized_fragment)
+        if heading_match is not None:
+            level = len(heading_match.group("marks"))
+            inherited = tuple(
+                headings[item]
+                for item in sorted(headings)
+                if item < level
+            )
+            raw_units.append((fragment, inherited))
+            headings = {
+                item: value for item, value in headings.items() if item < level
+            }
+            headings[level] = fragment
+            standalone_label = None
+            continue
+        inherited = tuple(headings[item] for item in sorted(headings))
+        if (
+            _MARKDOWN_STANDALONE_LABEL_RE.fullmatch(normalized_fragment)
+            is not None
+        ):
+            raw_units.append((fragment, inherited))
+            standalone_label = fragment
+            continue
+        if standalone_label is not None:
+            inherited = (*inherited, standalone_label)
+        raw_units.append((fragment, inherited))
+
+    if len(raw_units) > _MAXIMUM_DRAFT_CONTENT_UNITS:
+        group_size = (
+            len(raw_units) + _MAXIMUM_DRAFT_CONTENT_UNITS - 1
+        ) // _MAXIMUM_DRAFT_CONTENT_UNITS
+        grouped: list[tuple[str, tuple[str, ...]]] = []
+        for start in range(0, len(raw_units), group_size):
+            group = raw_units[start : start + group_size]
+            inherited: list[str] = []
+            for _, contexts in group:
+                for context in contexts:
+                    if context not in inherited:
+                        inherited.append(context)
+            grouped.append(
+                ("\n".join(fragment for fragment, _ in group), tuple(inherited))
+            )
+        raw_units = grouped
+
+    units: list[EngineeringAgentDraftContentUnit] = []
+    for index, (fragment, inherited) in enumerate(raw_units):
+        core = {
+            "schema": "ENGINEERING_AGENT_DRAFT_CONTENT_UNIT@1",
+            "content_unit_index": index,
+            "fragment": _draft_content_unit_text(
+                fragment,
+                "Draft content unit fragment",
+                maximum_bytes=48_000,
+            ),
+            "inherited_context_fragments": tuple(
+                _draft_content_unit_text(
+                    item,
+                    "Draft content inherited context",
+                )
+                for item in inherited
+            ),
+        }
+        units.append(
+            EngineeringAgentDraftContentUnit(
+                content_unit_index=index,
+                fragment=core["fragment"],
+                inherited_context_fragments=core[
+                    "inherited_context_fragments"
+                ],
+                digest=digest_of(core),
+            )
+        )
+    return tuple(units)
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringAgentEvidenceBoundaryChallenge:
     challenge_id: StableId
     claim_index: int
@@ -1860,6 +2056,9 @@ class EngineeringAgentReviewProposal:
     requirement_coverage_assessment: (
         EngineeringAgentRequirementCoverageAssessment
     )
+    content_coverage_assessments: tuple[
+        EngineeringAgentContentCoverageAssessment, ...
+    ]
     evidence_boundary_assessments: tuple[
         EngineeringAgentEvidenceBoundaryAssessment, ...
     ]
@@ -1876,6 +2075,9 @@ class EngineeringAgentReviewProposal:
         findings: Sequence[EngineeringAgentReviewFinding] = (),
         focus: EngineeringAgentReviewFocus = EngineeringAgentReviewFocus.COMPREHENSIVE,
         requirement_coverage_assessment: EngineeringAgentRequirementCoverageAssessment,
+        content_coverage_assessments: Sequence[
+            EngineeringAgentContentCoverageAssessment
+        ] = (),
         evidence_boundary_assessments: Sequence[
             EngineeringAgentEvidenceBoundaryAssessment
         ] = (),
@@ -1889,6 +2091,7 @@ class EngineeringAgentReviewProposal:
                 "Reviewer decision is invalid",
             )
         normalized = tuple(findings)
+        content_assessments = tuple(content_coverage_assessments)
         assessments = tuple(evidence_boundary_assessments)
         relevance_assessments = tuple(boundary_relevance_assessments)
         if any(not isinstance(item, EngineeringAgentReviewFinding) for item in normalized):
@@ -1901,6 +2104,13 @@ class EngineeringAgentReviewProposal:
             or not isinstance(
                 requirement_coverage_assessment,
                 EngineeringAgentRequirementCoverageAssessment,
+            )
+            or any(
+                not isinstance(
+                    item,
+                    EngineeringAgentContentCoverageAssessment,
+                )
+                for item in content_assessments
             )
             or any(
                 not isinstance(
@@ -1929,9 +2139,34 @@ class EngineeringAgentReviewProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "comprehensive Review cannot pre-disposition evidence-boundary challenges",
             )
+        if (
+            focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            and any(item.boundary_observation_ids for item in content_assessments)
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "comprehensive content coverage cannot expose redacted Boundary IDs",
+            )
+        if (
+            focus is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+            and any(
+                item.disposition
+                is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+                for item in content_assessments
+            )
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "focused content coverage cannot defer exact Boundary coverage",
+            )
         if decision is EngineeringAgentReviewDecision.APPROVED and (
             requirement_coverage_assessment.disposition
             is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+            or any(
+                item.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+                for item in content_assessments
+            )
             or any(
                 item.disposition
                 is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
@@ -1990,6 +2225,16 @@ class EngineeringAgentReviewProposal:
                     ErrorCode.INVALID_ARGUMENT,
                     "missing or misaligned requirement coverage requires a global Finding",
                 )
+        for assessment in content_assessments:
+            if (
+                assessment.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+                and assessment.finding_code not in finding_by_code
+            ):
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "a defective content unit requires a bound Finding",
+                )
         return cls(
             model_call_ref=_text(model_call_ref, "Reviewer model call reference"),
             decision=decision,
@@ -1998,6 +2243,7 @@ class EngineeringAgentReviewProposal:
             requirement_coverage_assessment=(
                 requirement_coverage_assessment
             ),
+            content_coverage_assessments=content_assessments,
             evidence_boundary_assessments=assessments,
             boundary_relevance_assessments=relevance_assessments,
         )
@@ -2056,6 +2302,9 @@ class EngineeringAgentReview:
     requirement_coverage_assessment: (
         EngineeringAgentRequirementCoverageAssessment
     )
+    content_coverage_assessments: tuple[
+        EngineeringAgentContentCoverageAssessment, ...
+    ]
     evidence_boundary_assessments: tuple[
         EngineeringAgentEvidenceBoundaryAssessment, ...
     ]
@@ -3967,6 +4216,13 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             or any(
                 not isinstance(
                     item,
+                    EngineeringAgentContentCoverageAssessment,
+                )
+                for item in proposal.content_coverage_assessments
+            )
+            or any(
+                not isinstance(
+                    item,
                     EngineeringAgentEvidenceBoundaryAssessment,
                 )
                 for item in proposal.evidence_boundary_assessments
@@ -4016,6 +4272,17 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
             else ()
         )
+        expected_content_units = project_engineering_agent_draft_content_units(
+            draft.content
+        )
+        if tuple(
+            item.content_unit_index
+            for item in proposal.content_coverage_assessments
+        ) != tuple(item.content_unit_index for item in expected_content_units):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer did not disposition the exact ordered Draft content units",
+            )
         expected_challenge_ids = tuple(
             item.challenge_id for item in expected_challenges
         )
@@ -4050,6 +4317,62 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Reviewer Finding codes must be unique within one Review",
             )
+        selected_boundary_ids = set(draft.boundary_observation_ids)
+        for assessment in proposal.content_coverage_assessments:
+            expected_assessment = EngineeringAgentContentCoverageAssessment.create(
+                content_unit_index=assessment.content_unit_index,
+                disposition=assessment.disposition,
+                claim_indices=assessment.claim_indices,
+                boundary_observation_ids=assessment.boundary_observation_ids,
+                finding_code=assessment.finding_code,
+            )
+            if assessment != expected_assessment:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer content coverage assessment identity is invalid",
+                )
+            if any(
+                index >= len(draft.claims)
+                for index in assessment.claim_indices
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer content coverage references an unknown Claim",
+                )
+            if not set(assessment.boundary_observation_ids).issubset(
+                selected_boundary_ids
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Reviewer content coverage references an unselected Boundary",
+                )
+            if focus is EngineeringAgentReviewFocus.COMPREHENSIVE:
+                if assessment.boundary_observation_ids or (
+                    assessment.disposition
+                    is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+                    and not package.boundary_observations
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "comprehensive content coverage must defer only a present redacted Boundary",
+                    )
+            elif (
+                assessment.disposition
+                is EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "focused content coverage cannot defer an exact Boundary decision",
+                )
+            if (
+                assessment.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+                and assessment.finding_code not in finding_by_code
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "a defective Draft content unit must bind an existing Finding",
+                )
         requirement_coverage = proposal.requirement_coverage_assessment
         expected_requirement_coverage = (
             EngineeringAgentRequirementCoverageAssessment.create(
@@ -4149,6 +4472,13 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
                 and assessment.finding_code is not None
             }
+            expected_finding_codes.update(
+                assessment.finding_code
+                for assessment in proposal.content_coverage_assessments
+                if assessment.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+                and assessment.finding_code is not None
+            )
             if (
                 requirement_coverage.disposition
                 is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
@@ -4163,6 +4493,11 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         if proposal.decision is EngineeringAgentReviewDecision.APPROVED and (
             requirement_coverage.disposition
             is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+            or any(
+                item.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+                for item in proposal.content_coverage_assessments
+            )
             or any(
                 item.disposition
                 is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
@@ -4188,7 +4523,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
         review_id = self._new_id("agent_review")
         core = {
-            "schema": "ENGINEERING_AGENT_REVIEW@4",
+            "schema": "ENGINEERING_AGENT_REVIEW@5",
             "review_id": review_id.value,
             "turn_id": request.turn_id.value,
             "work_state_digest": work_state.digest.value,
@@ -4213,6 +4548,20 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     "claim_index": item.claim_index,
                 }
                 for item in proposal.findings
+            ),
+            "content_coverage_assessments": tuple(
+                {
+                    "content_unit_index": item.content_unit_index,
+                    "disposition": item.disposition.value,
+                    "claim_indices": item.claim_indices,
+                    "boundary_observation_ids": tuple(
+                        boundary_id.value
+                        for boundary_id in item.boundary_observation_ids
+                    ),
+                    "finding_code": item.finding_code,
+                    "digest": item.digest.value,
+                }
+                for item in proposal.content_coverage_assessments
             ),
             "evidence_boundary_assessments": tuple(
                 {
@@ -4254,6 +4603,9 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             findings=proposal.findings,
             focus=focus,
             requirement_coverage_assessment=requirement_coverage,
+            content_coverage_assessments=(
+                proposal.content_coverage_assessments
+            ),
             evidence_boundary_assessments=(
                 proposal.evidence_boundary_assessments
             ),
@@ -4508,6 +4860,31 @@ def _engineering_agent_review_closes_boundary_challenges(
     draft: EngineeringAgentAnswerDraft,
     review: EngineeringAgentReview,
 ) -> bool:
+    content_units = project_engineering_agent_draft_content_units(draft.content)
+    content_assessments = review.content_coverage_assessments
+    if (
+        tuple(item.content_unit_index for item in content_assessments)
+        != tuple(item.content_unit_index for item in content_units)
+        or any(
+            item.disposition
+            in {
+                EngineeringAgentContentCoverageDisposition.BOUNDARY_REVIEW_DEFERRED,
+                EngineeringAgentContentCoverageDisposition.DEFECT,
+            }
+            for item in content_assessments
+        )
+        or any(
+            index >= len(draft.claims)
+            for item in content_assessments
+            for index in item.claim_indices
+        )
+        or any(
+            boundary_id not in draft.boundary_observation_ids
+            for item in content_assessments
+            for boundary_id in item.boundary_observation_ids
+        )
+    ):
+        return False
     expected = project_engineering_agent_evidence_boundary_challenges(
         package,
         draft,
@@ -4927,6 +5304,25 @@ def _bounded_text(value: str, label: str, *, maximum_bytes: int = 8_192) -> str:
             f"{label} must be non-empty without surrounding whitespace",
         )
     if len(value.encode("utf-8")) > maximum_bytes:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"{label} exceeds its boundary",
+        )
+    return value
+
+
+def _draft_content_unit_text(
+    value: str,
+    label: str,
+    *,
+    maximum_bytes: int = 8_192,
+) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            f"{label} must contain visible non-whitespace text",
+        )
+    if len(value.encode("utf-8")) > maximum_bytes:
         raise DomainError(ErrorCode.INVALID_ARGUMENT, f"{label} exceeds its boundary")
     return value
 
@@ -4941,9 +5337,12 @@ __all__ = [
     "EngineeringAgentClaimProposal",
     "EngineeringAgentClaimSemanticScope",
     "EngineeringAgentCitation",
+    "EngineeringAgentContentCoverageAssessment",
+    "EngineeringAgentContentCoverageDisposition",
     "EngineeringAgentDeliveryAuthorization",
     "EngineeringAgentDeliveryRequest",
     "EngineeringAgentDraftProposal",
+    "EngineeringAgentDraftContentUnit",
     "EngineeringAgentDriver",
     "EngineeringAgentDriverModelResult",
     "EngineeringAgentDraftBoundaryProjection",
@@ -4996,6 +5395,7 @@ __all__ = [
     "engineering_agent_boundary_relevance_assessment_matches_challenge",
     "engineering_agent_evidence_boundary_assessment_matches_challenge",
     "project_engineering_agent_draft_boundaries",
+    "project_engineering_agent_draft_content_units",
     "project_engineering_agent_boundary_relevance_challenges",
     "project_engineering_agent_evidence_boundary_challenges",
 ]

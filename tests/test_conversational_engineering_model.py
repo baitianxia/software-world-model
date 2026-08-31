@@ -50,6 +50,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentCitation,
     EngineeringAgentClaimProposal,
+    EngineeringAgentContentCoverageAssessment,
+    EngineeringAgentContentCoverageDisposition,
     EngineeringAgentDeliveryAuthorization,
     EngineeringAgentEvidenceBoundaryAssessmentDisposition,
     EngineeringAgentEvidenceDisposition,
@@ -73,6 +75,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentToolOperation,
     EngineeringAgentToolObservation,
     project_engineering_agent_draft_boundaries,
+    project_engineering_agent_draft_content_units,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_evidence_boundary_challenges,
 )
@@ -224,7 +227,7 @@ class SequencedLiveAgentAdapter:
                 },
                 ensure_ascii=False,
             ),
-            '{"decision":"APPROVED","claim_assessments":[],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
+            '{"decision":"APPROVED","claim_assessments":[],"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
         )
         self.outputs = tuple(outputs) if outputs is not None else default_outputs
 
@@ -304,7 +307,92 @@ def _with_review_turn_request(
     request.turn_request = SimpleNamespace(
         user_message=SimpleNamespace(content=current_user_requirement)
     )
+    if not hasattr(request.draft, "content"):
+        request.draft.content = "Fixture Draft content."
+    if not hasattr(request.draft, "boundary_observation_ids"):
+        request.draft.boundary_observation_ids = ()
+    if not hasattr(request, "focus"):
+        request.focus = EngineeringAgentReviewFocus.COMPREHENSIVE
+    if not hasattr(request, "package"):
+        request.package = SimpleNamespace(boundary_observations=())
     return request
+
+
+def _content_coverage_payload(
+    request,
+    *,
+    disposition: str | None = None,
+    finding_code: str | None = None,
+):
+    claim_indices = list(range(len(request.draft.claims)))
+    boundary_ids = [
+        item.value for item in request.draft.boundary_observation_ids
+    ]
+    if disposition is None:
+        if (
+            request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
+            and boundary_ids
+        ):
+            disposition = "BOUNDARY_REVIEW_DEFERRED"
+            boundary_ids = []
+        elif claim_indices or boundary_ids:
+            disposition = "COVERED"
+        else:
+            disposition = "NON_ASSERTIVE"
+    if disposition == "DEFECT":
+        claim_indices = []
+        boundary_ids = []
+    elif disposition == "NON_ASSERTIVE":
+        claim_indices = []
+        boundary_ids = []
+    elif disposition == "BOUNDARY_REVIEW_DEFERRED":
+        boundary_ids = []
+    return [
+        {
+            "content_unit_index": item.content_unit_index,
+            "disposition": disposition,
+            "claim_indices": claim_indices,
+            "boundary_observation_ids": boundary_ids,
+            "finding_code": finding_code,
+        }
+        for item in project_engineering_agent_draft_content_units(
+            request.draft.content
+        )
+    ]
+
+
+def _content_coverage_challenge_payload(
+    content: str,
+    *,
+    claim_indices=(),
+    boundary_observation_ids=(),
+    boundary_review_deferred_allowed=False,
+):
+    units = project_engineering_agent_draft_content_units(content)
+    return {
+        "draft_content_digest": digest_of(
+            ["ENGINEERING_AGENT_DRAFT_CONTENT@1", content]
+        ).value,
+        "content_units": tuple(
+            {
+                "content_unit_index": item.content_unit_index,
+                "fragment": item.fragment,
+                "inherited_context_fragments": item.inherited_context_fragments,
+                "digest": item.digest.value,
+            }
+            for item in units
+        ),
+        "claim_indices_allowed_exact": tuple(claim_indices),
+        "boundary_observation_ids_allowed_exact": tuple(
+            boundary_observation_ids
+        ),
+        "boundary_review_deferred_allowed": boundary_review_deferred_allowed,
+        "complete_ordered_assessment_required": True,
+        "every_affirmative_semantic_requires_claim_coverage": True,
+        "every_boundary_semantic_requires_boundary_coverage": True,
+        "container_context_is_inherited_by_each_fragment": True,
+        "focused_review_forbids_boundary_deferral": True,
+    }
 
 
 def _binding() -> EngineeringChatBinding:
@@ -518,6 +606,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "DEFECT"}
             ],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "DEFECT",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": "CALLER_EFFECT",
+                }
+            ],
             "requirement_coverage_assessment": {
                 "current_user_requirement": "说明调用边界。",
                 "coverage_summary": "The current requirement is addressed.",
@@ -577,6 +674,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 for field in (
                     "decision",
                     "claim_assessments",
+                    "content_coverage_assessments",
                     "requirement_coverage_assessment",
                     "findings",
                 )
@@ -631,9 +729,19 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "current_user_requirement": "说明调用边界。",
                     "comparison_contract": {},
                 },
+                "content_coverage_challenge": (
+                    _content_coverage_challenge_payload(
+                        "说明调用边界。",
+                        claim_indices=(0,),
+                    )
+                ),
+                "draft": {"content": "说明调用边界。"},
                 "boundary_relevance_challenges": (),
                 "review_reference_policy": {
                     "claim_indices": (0,),
+                    "content_unit_indices": (0,),
+                    "complete_content_coverage_assessments_required": True,
+                    "content_coverage_defect_requires_bound_finding": True,
                     "challenge_assessment_ids_required_exact_order": (
                         "challenge-1",
                     ),
@@ -704,6 +812,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         for field in (
             "decision",
             "claim_assessments",
+            "content_coverage_assessments",
             "requirement_coverage_assessment",
             "findings",
         ):
@@ -1004,7 +1113,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1432,7 +1541,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 invalid_primary,
                 valid_primary,
-                '{"decision":"APPROVED","claim_assessments":[],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -1471,7 +1580,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -1513,7 +1622,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 malformed_output,
                 repaired_output,
-                '{"decision":"APPROVED","claim_assessments":[],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -2278,7 +2387,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             outputs=(
                 primary_output,
                 "Reviewer natural-language analysis",
-                '{"decision":"APPROVED","claim_assessments":[],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
+                '{"decision":"APPROVED","claim_assessments":[],"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}',
             )
         )
         service, model, _, _, tool, response = self._service(adapter=adapter)
@@ -2321,7 +2430,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2347,6 +2456,25 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "current_requirement_coverage_challenge"
             ]["current_user_requirement"],
             "登录流程是怎样的？",
+        )
+        content_challenge = reviewer_repair_payload[
+            "content_coverage_challenge"
+        ]
+        self.assertEqual(
+            content_challenge["content_units"],
+            [
+                {
+                    "content_unit_index": 0,
+                    "fragment": "请明确登录入口。",
+                    "inherited_context_fragments": [],
+                    "digest": project_engineering_agent_draft_content_units(
+                        "请明确登录入口。"
+                    )[0].digest.value,
+                }
+            ],
+        )
+        self.assertTrue(
+            content_challenge["complete_ordered_assessment_required"]
         )
         self.assertEqual(
             reviewer_repair_payload["boundary_challenge_projection"],
@@ -2434,6 +2562,33 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "disposition",
                 "finding_code",
             ],
+        )
+        self.assertEqual(
+            reviewer_preflight["closed_nested_object_fields"][
+                "$.content_coverage_assessments[]"
+            ],
+            [
+                "content_unit_index",
+                "disposition",
+                "claim_indices",
+                "boundary_observation_ids",
+                "finding_code",
+            ],
+        )
+        self.assertIn(
+            "content_coverage_assessments",
+            reviewer_preflight["required_top_level_fields"],
+        )
+        self.assertEqual(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_unit_indices_required_exact_order"
+            ],
+            [0],
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_complete_order_required"
+            ]
         )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
@@ -2988,6 +3143,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         primary_output = SequencedLiveAgentAdapter().outputs[1]
         valid_review = (
             '{"decision":"APPROVED","claim_assessments":[],'
+            '"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],'
             '"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？",'
             '"coverage_summary":"The Draft addresses the complete current requirement.",'
             '"disposition":"FULLY_ADDRESSED","finding_code":null},'
@@ -2996,6 +3152,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         invalid_review = (
             '{"decision":"FINDINGS","claim_assessments":[],'
+            '"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],'
             '"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？",'
             '"coverage_summary":"The Draft addresses the complete current requirement.",'
             '"disposition":"FULLY_ADDRESSED","finding_code":null},'
@@ -3057,7 +3214,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -5703,6 +5860,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         {"claim_index": 0, "verdict": "SUPPORTED"},
                         {"claim_index": 1, "verdict": "SUPPORTED"},
                     ],
+                    "content_coverage_assessments": (
+                        _content_coverage_payload(request)
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -5722,6 +5882,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {"claim_index": 0, "verdict": "SUPPORTED"},
                 {"claim_index": 1, "verdict": "SUPPORTED"},
             ],
+            "content_coverage_assessments": _content_coverage_payload(request),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -5760,6 +5921,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         {"claim_index": 0, "verdict": "SUPPORTED"},
                         {"claim_index": 1, "verdict": "SUPPORTED"},
                     ],
+                    "content_coverage_assessments": (
+                        _content_coverage_payload(request)
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -5831,6 +5995,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {"claim_index": 0, "verdict": "SUPPORTED"},
                 {"claim_index": 1, "verdict": "SUPPORTED"},
             ],
+            "content_coverage_assessments": _content_coverage_payload(request),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -5859,6 +6024,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         finding_output = {
             "decision": "FINDINGS",
             "claim_assessments": [],
+            "content_coverage_assessments": _content_coverage_payload(request),
             "requirement_coverage_assessment": {
                 "current_user_requirement": current_requirement,
                 "coverage_summary": (
@@ -5921,6 +6087,144 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertEqual(
             wrong_exact_requirement.exception.code,
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+
+    def test_focused_review_requires_exact_coverage_for_run122_like_content(self) -> None:
+        content = (
+            "## 数据库读取与文档转换\n"
+            "  - EsProductDao 返回类型直接是 Elasticsearch 文档实体 EsProduct。\n"
+            "## 证据边界\n"
+            "- 转换实现与远程刷新语义未确认。"
+        )
+        units = project_engineering_agent_draft_content_units(content)
+        self.assertEqual(
+            tuple(item.fragment for item in units),
+            (
+                "## 数据库读取与文档转换",
+                "  - EsProductDao 返回类型直接是 Elasticsearch 文档实体 EsProduct。",
+                "## 证据边界",
+                "- 转换实现与远程刷新语义未确认。",
+            ),
+        )
+        self.assertEqual(
+            units[1].inherited_context_fragments,
+            ("## 数据库读取与文档转换",),
+        )
+        self.assertEqual(
+            units[3].inherited_context_fragments,
+            ("## 证据边界",),
+        )
+        request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=SimpleNamespace(
+                    content=content,
+                    claims=(),
+                    boundary_observation_ids=(),
+                ),
+                package=SimpleNamespace(
+                    support_observations=(),
+                    boundary_observations=(),
+                ),
+                focus=(
+                    EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
+            )
+        )
+        deferred_boundary = {
+            "decision": "FINDINGS",
+            "claim_assessments": [],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+                {
+                    "content_unit_index": 1,
+                    "disposition": "DEFECT",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": "UNCLAIMED_CLASSIFICATION",
+                },
+                {
+                    "content_unit_index": 2,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+                {
+                    "content_unit_index": 3,
+                    "disposition": "BOUNDARY_REVIEW_DEFERRED",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+            ],
+            "requirement_coverage_assessment": (
+                _requirement_coverage_payload()
+            ),
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [
+                {
+                    "code": "UNCLAIMED_CLASSIFICATION",
+                    "message": (
+                        "The Elasticsearch-document classification is absent "
+                        "from the Claim inventory."
+                    ),
+                    "requires_evidence": False,
+                    "claim_index": None,
+                }
+            ],
+        }
+        with self.assertRaises(DomainError) as deferred:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(deferred_boundary, ensure_ascii=False),
+                request=request,
+                model_call_ref="run122-focused-deferred-boundary",
+            )
+        self.assertIn(
+            "focused content coverage cannot defer",
+            str(deferred.exception),
+        )
+
+        closed_findings = json.loads(
+            json.dumps(deferred_boundary, ensure_ascii=False)
+        )
+        closed_findings["content_coverage_assessments"][3] = {
+            "content_unit_index": 3,
+            "disposition": "DEFECT",
+            "claim_indices": [],
+            "boundary_observation_ids": [],
+            "finding_code": "UNBOUND_UNCERTAINTY",
+        }
+        closed_findings["findings"].append(
+            {
+                "code": "UNBOUND_UNCERTAINTY",
+                "message": (
+                    "Bind the uncertainty to exact Boundary evidence or remove it."
+                ),
+                "requires_evidence": True,
+                "claim_index": None,
+            }
+        )
+        proposal = decode_engineering_agent_review_output(
+            output_text=json.dumps(closed_findings, ensure_ascii=False),
+            request=request,
+            model_call_ref="run122-focused-content-findings",
+        )
+        self.assertEqual(proposal.decision.value, "FINDINGS")
+        self.assertEqual(
+            tuple(
+                item.finding_code
+                for item in proposal.content_coverage_assessments
+                if item.disposition
+                is EngineeringAgentContentCoverageDisposition.DEFECT
+            ),
+            ("UNCLAIMED_CLASSIFICATION", "UNBOUND_UNCERTAINTY"),
         )
 
     def test_structural_caller_challenge_requires_exact_focused_assessment(self) -> None:
@@ -6007,6 +6311,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "SUPPORTED"}
             ],
+            "content_coverage_assessments": _content_coverage_payload(request),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -6026,6 +6331,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "DEFECT"}
             ],
+            "content_coverage_assessments": _content_coverage_payload(
+                request,
+                disposition="DEFECT",
+                finding_code="UNMOUNTED_CALLEE_EFFECT",
+            ),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -6074,6 +6384,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "SUPPORTED"}
             ],
+            "content_coverage_assessments": _content_coverage_payload(request),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -6112,6 +6423,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "DEFECT"}
             ],
+            "content_coverage_assessments": _content_coverage_payload(
+                request,
+                disposition="DEFECT",
+                finding_code="CONTRADICTORY_CALLER_FINDING",
+            ),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -6186,11 +6502,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "are_not_claim_scope"
             ]
         )
+        narrow_request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=narrow_draft,
+                package=package,
+                focus=(
+                    EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
+            )
+        )
         redundant_findings_decision = {
             "decision": "FINDINGS",
             "claim_assessments": [
                 {"claim_index": 0, "verdict": "SUPPORTED"}
             ],
+            "content_coverage_assessments": _content_coverage_payload(
+                narrow_request
+            ),
             "requirement_coverage_assessment": (
                 _requirement_coverage_payload()
             ),
@@ -6210,15 +6538,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         with self.assertRaises(DomainError) as redundant_decision:
             decode_engineering_agent_review_output(
                 output_text=json.dumps(redundant_findings_decision),
-                request=_with_review_turn_request(
-                    SimpleNamespace(
-                        draft=narrow_draft,
-                        package=package,
-                        focus=(
-                            EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
-                        ),
-                    )
-                ),
+                request=narrow_request,
                 model_call_ref="focused-review-redundant-decision",
             )
         self.assertEqual(
@@ -6230,6 +6550,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             str(redundant_decision.exception),
         )
 
+        comprehensive_narrow_request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=narrow_draft,
+                package=package,
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+            )
+        )
         duplicate_codes = decode_engineering_agent_review_output(
             output_text=json.dumps(
                 {
@@ -6237,6 +6564,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "claim_assessments": [
                         {"claim_index": 0, "verdict": "DEFECT"}
                     ],
+                    "content_coverage_assessments": _content_coverage_payload(
+                        comprehensive_narrow_request
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -6258,13 +6588,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ],
                 }
             ),
-            request=_with_review_turn_request(
-                SimpleNamespace(
-                    draft=narrow_draft,
-                    package=package,
-                    focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
-                )
-            ),
+            request=comprehensive_narrow_request,
             model_call_ref="comprehensive-review-duplicate-codes",
         )
         self.assertEqual(
@@ -6279,6 +6603,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             {
                 "decision": "FINDINGS",
                 "claim_assessments": [],
+                "content_coverage_assessments": [],
                 "evidence_boundary_assessments": [],
                 "boundary_relevance_assessments": [
                     {"finding_code": "AUDIT_ONLY"},
@@ -6584,6 +6909,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {
                     "decision": "FINDINGS",
                     "claim_assessments": [],
+                    "content_coverage_assessments": _content_coverage_payload(
+                        focused_request,
+                        disposition="DEFECT",
+                        finding_code="RESOLVED_DIAGNOSTIC_LEAK",
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -6624,6 +6954,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     {
                         "decision": "APPROVED",
                         "claim_assessments": [],
+                        "content_coverage_assessments": (
+                            _content_coverage_payload(focused_request)
+                        ),
                         "requirement_coverage_assessment": (
                             _requirement_coverage_payload()
                         ),
@@ -6667,6 +7000,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         material_payload = {
                     "decision": "APPROVED",
                     "claim_assessments": [],
+                    "content_coverage_assessments": (
+                        _content_coverage_payload(focused_request)
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -6777,6 +7113,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     {
                         "decision": "APPROVED",
                         "claim_assessments": [],
+                        "content_coverage_assessments": (
+                            _content_coverage_payload(unbound_request)
+                        ),
                         "requirement_coverage_assessment": (
                             _requirement_coverage_payload()
                         ),
@@ -6822,6 +7161,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {
                     "decision": "APPROVED",
                     "claim_assessments": [],
+                    "content_coverage_assessments": (
+                        _content_coverage_payload(unbound_request)
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -6852,6 +7194,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     {
                         "decision": "FINDINGS",
                         "claim_assessments": [],
+                        "content_coverage_assessments": (
+                            _content_coverage_payload(unbound_request)
+                        ),
                         "requirement_coverage_assessment": (
                             _requirement_coverage_payload()
                         ),
@@ -6896,6 +7241,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     {
                         "decision": "FINDINGS",
                         "claim_assessments": [],
+                        "content_coverage_assessments": (
+                            _content_coverage_payload(unbound_request)
+                        ),
                         "requirement_coverage_assessment": (
                             _requirement_coverage_payload()
                         ),
@@ -7019,6 +7367,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         materiality_challenge_view = _boundary_relevance_challenge_view(
             materiality_challenges[0]
         )
+        materiality_request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=materiality_draft,
+                package=materiality_package,
+                focus=(
+                    EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
+            )
+        )
         self.assertEqual(
             materiality_challenge_view[
                 "closed_dispositions_by_fragment_state"
@@ -7050,11 +7407,23 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ),
                     "comparison_contract": {},
                 },
+                "content_coverage_challenge": (
+                    _content_coverage_challenge_payload(
+                        materiality_draft.content,
+                        boundary_observation_ids=(
+                            materiality_boundary.observation_id.value,
+                        ),
+                    )
+                ),
+                "draft": {"content": materiality_draft.content},
                 "boundary_relevance_challenges": (
                     materiality_challenge_view,
                 ),
                 "review_reference_policy": {
                     "claim_indices": (),
+                    "content_unit_indices": (0,),
+                    "complete_content_coverage_assessments_required": True,
+                    "content_coverage_defect_requires_bound_finding": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,
@@ -7116,6 +7485,9 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     {
                         "decision": "APPROVED",
                         "claim_assessments": [],
+                        "content_coverage_assessments": (
+                            _content_coverage_payload(materiality_request)
+                        ),
                         "requirement_coverage_assessment": (
                             _requirement_coverage_payload()
                         ),
@@ -7139,16 +7511,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         "findings": [],
                     }
                 ),
-                request=_with_review_turn_request(
-                    SimpleNamespace(
-                        draft=materiality_draft,
-                        package=materiality_package,
-                        focus=(
-                            EngineeringAgentReviewFocus
-                            .EVIDENCE_BOUNDARY_CHALLENGE
-                        ),
-                    ),
-                ),
+                request=materiality_request,
                 model_call_ref="bound-empty-not-disclosed",
             )
         self.assertIn(
@@ -7168,6 +7531,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 {
                     "decision": "FINDINGS",
                     "claim_assessments": [],
+                    "content_coverage_assessments": _content_coverage_payload(
+                        materiality_request,
+                        disposition="DEFECT",
+                        finding_code="REMOVE_NON_MATERIAL_METRICS",
+                    ),
                     "requirement_coverage_assessment": (
                         _requirement_coverage_payload()
                     ),
@@ -7196,13 +7564,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ],
                 }
             ),
-            request=_with_review_turn_request(
-                SimpleNamespace(
-                    draft=materiality_draft,
-                    package=materiality_package,
-                    focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
-                )
-            ),
+            request=materiality_request,
             model_call_ref="focused-boundary-materiality-finding",
         )
         self.assertEqual(materiality_finding.decision.value, "FINDINGS")
@@ -7488,10 +7850,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         review = decode_engineering_agent_review_output(
             output_text=(
-                '{"decision":"APPROVED","claim_assessments":[],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}'
+                '{"decision":"APPROVED","claim_assessments":[],"content_coverage_assessments":[{"content_unit_index":0,"disposition":"NON_ASSERTIVE","claim_indices":[],"boundary_observation_ids":[],"finding_code":null}],"requirement_coverage_assessment":{"current_user_requirement":"登录流程是怎样的？","coverage_summary":"The Draft addresses the complete current requirement.","disposition":"FULLY_ADDRESSED","finding_code":null},"evidence_boundary_assessments":[],"boundary_relevance_assessments":[],"findings":[]}'
             ),
             request=SimpleNamespace(
-                draft=SimpleNamespace(claims=()),
+                draft=SimpleNamespace(
+                    claims=(),
+                    content="请明确登录入口。",
+                    boundary_observation_ids=(),
+                ),
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+                package=SimpleNamespace(boundary_observations=()),
                 turn_request=SimpleNamespace(
                     user_message=SimpleNamespace(content="登录流程是怎样的？")
                 ),
