@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -111,6 +111,10 @@ exact Citation refs，Answer/Review/Delivery 重算。六模块相邻定向测�
 Finding 自相矛盾，Q2 在同一 Boundary 上交替增加/删除 reference，Q3 又以 Ark 1 + DeepSeek 15 超过 logical Turn 15-call 上限。
 current `@28/@18/@23` 将一般语义与 exact Boundary focus 分离；Provider runtime 共享 pre-dispatch logical budget，route seal 复核总和。
 定向测试 `195/195` PASS，下一项是文档/可信父门禁、提交与 fresh run-102。
+
+`FINDING-010-231 / run-102` 在 weekday peak 验证两个 runtime 共享 budget digest；Q1 Ark sealed 429 后 DeepSeek
+`DENIED_PEAK_WINDOW` 且 credential/TLS/HTTP 0，Q4 zero-dispatch Clarification。Q2/Q3/Q5 未作同签名无新证据外调，Review candidate 未
+取得质量 verdict；下一项是 fresh off-peak 完整 run，或用户对 peak pricing/dispatch scope delta 给出 exact override。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

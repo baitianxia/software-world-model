@@ -259,6 +259,10 @@ Ark 1 + DeepSeek 15 = 16，超过 logical Turn 15-call 上限。current `@28/@18
 ownership 分离；两个 Provider authorizer 共享一个 pre-dispatch logical budget，route seal 再重算总和。定向测试 `195/195` PASS，fresh
 run-102 待验证，不存在 Provider 或重复授权等待。
 
+`FINDING-010-231 / run-102` 发生在周一 weekday peak：Q1 Ark sealed 429 后 DeepSeek 在 credential/TLS/HTTP 前
+`DENIED_PEAK_WINDOW`，Q4 new Conversation 零调用澄清通过；同一 shared-budget digest 已绑定两个 runtime。Q2/Q3/Q5 因同签名无新证据
+未发送，所以本次不产生 `@28/@18/@23` 质量 verdict；下一完整执行使用 fresh off-peak evidence，peak override 属真实 scope delta。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization
