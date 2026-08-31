@@ -5,7 +5,7 @@ status: current
 authority: operational
 owners: [operations, ai]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
-derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-179, FINDING-010-219, FINDING-010-242, FINDING-010-243]
+derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-179, FINDING-010-219, FINDING-010-242, FINDING-010-243, FINDING-010-244]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -21,7 +21,7 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 | Endpoint | `/chat/completions` | `/chat/completions` |
 | Request model reference | `glm-5-2-260617` | `deepseek-v4-pro` |
 | Expected actual model fingerprint | `glm-5.3` | `deepseek-v4-pro` |
-| Adapter | `openai-chat-completions-no-tools@11` | `deepseek-chat-completions-no-tools@7` |
+| Adapter | `openai-chat-completions-no-tools@12` | `deepseek-chat-completions-no-tools@7` |
 | Secret reference | `env:ARK_API_KEY` | `env:DEEPSEEK_API_KEY` |
 | Connection policy | `DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1` | `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2` |
 | Credential resolution | verified TLS 后、每次 HTTP dispatch 前 | verified TLS 后、每次 HTTP dispatch 前 |
@@ -30,7 +30,7 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 | Request retry | `false` | `false` |
 | Tools / Provider session | 禁用 | 禁用 |
 | Gateway result / Provider response transfer | 单一 terminal result / SSE (`stream:true`、`include_usage:true`)；丢弃 comment keep-alive 后在 Adapter 内严格重组 | 单一 terminal result / non-streaming |
-| Thinking | request field omitted | 按 exact qualification 冻结 |
+| Thinking / reasoning effort | `thinking` omitted；`reasoning_effort=low` | 按 exact qualification 冻结 |
 
 请求别名与 Provider 实际返回身份是不同字段，只有符合性和能力结果可以证明其当前匹配。Adapter/Configuration/endpoint/model/transport/
 rendering identity 或有效期变化会使旧 Conformance 失效；领域 Prompt、答案 Schema 或不改变上述 identity 的产品变化不得强制重复取得

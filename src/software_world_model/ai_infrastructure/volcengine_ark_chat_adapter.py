@@ -44,6 +44,7 @@ DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT = (
 )
 DEFAULT_VOLCENGINE_ARK_MODEL = "glm-5-2-260617"
 DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT = "glm-5.3"
+DEFAULT_VOLCENGINE_ARK_REASONING_EFFORT = "low"
 DEFAULT_VOLCENGINE_ARK_API_KEY_ENV = "ARK_API_KEY"
 DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY = (
     "DIRECT_VERIFIED_TLS_HTTP11_ONE_REQUEST_PER_SESSION@1"
@@ -71,6 +72,7 @@ class VolcengineArkModelConfiguration:
     endpoint: str = DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT
     model_ref: str = DEFAULT_VOLCENGINE_ARK_MODEL
     actual_model_fingerprint: str = DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT
+    reasoning_effort: str = DEFAULT_VOLCENGINE_ARK_REASONING_EFFORT
     api_key_environment_variable: str = DEFAULT_VOLCENGINE_ARK_API_KEY_ENV
 
     def __post_init__(self) -> None:
@@ -84,6 +86,11 @@ class VolcengineArkModelConfiguration:
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
                 "Ark actual model fingerprint is required",
+            )
+        if self.reasoning_effort != DEFAULT_VOLCENGINE_ARK_REASONING_EFFORT:
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "Ark reasoning effort must match the frozen low-effort profile",
             )
         if not _ENVIRONMENT_NAME.fullmatch(self.api_key_environment_variable):
             raise DomainError(
@@ -122,6 +129,7 @@ class VolcengineArkModelConfiguration:
                 "endpoint": self.endpoint,
                 "model_ref": self.model_ref,
                 "actual_model_fingerprint": self.actual_model_fingerprint,
+                "reasoning_effort": self.reasoning_effort,
                 "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
                 "maximum_pre_dispatch_tls_handshakes_per_request": (
                     DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
@@ -160,6 +168,7 @@ class VolcengineArkModelConfiguration:
             "endpoint": self.endpoint,
             "model_ref": self.model_ref,
             "actual_model_fingerprint": self.actual_model_fingerprint,
+            "reasoning_effort": self.reasoning_effort,
             "connection_policy": DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
             "maximum_pre_dispatch_tls_handshakes_per_request": (
                 DEFAULT_VOLCENGINE_ARK_MAXIMUM_PRE_DISPATCH_TLS_HANDSHAKES_PER_REQUEST
@@ -600,7 +609,7 @@ UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
     provider_type = "VOLCENGINE_ARK"
-    adapter_version = "openai-chat-completions-no-tools@11"
+    adapter_version = "openai-chat-completions-no-tools@12"
 
     def __init__(
         self,
@@ -685,6 +694,7 @@ class VolcengineArkChatCompletionsNoToolsAdapter:
             "stream_options": {"include_usage": True},
             "n": 1,
             "max_tokens": request.max_output_tokens,
+            "reasoning_effort": self._configuration.reasoning_effort,
             "response_format": {"type": "json_object"},
         }
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
@@ -1122,8 +1132,8 @@ def _extract_choice(payload: Mapping[str, object]) -> tuple[str, str]:
     if isinstance(refusal, str) and refusal:
         raise DomainError(ErrorCode.PROVIDER_REFUSAL, "provider refused the request")
     content = message.get("content")
-    if not isinstance(content, str) or not content:
-        raise DomainError(ErrorCode.PROVIDER_RESPONSE_INVALID, "assistant content is empty")
+    if not isinstance(content, str):
+        raise DomainError(ErrorCode.PROVIDER_RESPONSE_INVALID, "assistant content is invalid")
     return content, finish_reason
 
 

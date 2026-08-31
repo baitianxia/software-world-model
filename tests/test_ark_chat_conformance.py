@@ -172,7 +172,7 @@ class ArkChatConformanceTests(unittest.TestCase):
         result = self.run_result()
 
         self.assertEqual(result["outcome"], "PASS")
-        self.assertEqual(ARK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.11.0")
+        self.assertEqual(ARK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.12.0")
         self.assertEqual(
             ARK_CHAT_CONFORMANCE_RESULT_SCHEMA,
             "swm.ark-chat-conformance-result@2",

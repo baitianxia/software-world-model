@@ -252,28 +252,59 @@ class EchoingConformanceTransport:
                 "status": "ok",
             }
         )
+        response_id = f"chatcmpl-capability-test-{self.calls}"
+        chunks = (
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"role": "assistant", "content": content},
+                        "finish_reason": None,
+                    }
+                ],
+                "usage": None,
+            },
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": None,
+            },
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
+                "choices": [],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 5,
+                    "total_tokens": 15,
+                },
+            },
+        )
+        response_body = b"".join(
+            b"data: "
+            + json.dumps(chunk, separators=(",", ":")).encode()
+            + b"\n\n"
+            for chunk in chunks
+        ) + b"data: [DONE]\n\n"
         return ProviderHTTPResponse(
             status_code=200,
-            headers={"x-tt-logid": f"ark-capability-test-{self.calls}"},
-            body=json.dumps(
-                {
-                    "id": f"chatcmpl-capability-test-{self.calls}",
-                    "object": "chat.completion",
-                    "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {"role": "assistant", "content": content},
-                            "finish_reason": "stop",
-                        }
-                    ],
-                    "usage": {
-                        "prompt_tokens": 10,
-                        "completion_tokens": 5,
-                        "total_tokens": 15,
-                    },
-                }
-            ).encode(),
+            headers={
+                "x-tt-logid": f"ark-capability-test-{self.calls}",
+                "content-type": "text/event-stream",
+            },
+            body=response_body,
         )
 
     def session_audit(self):

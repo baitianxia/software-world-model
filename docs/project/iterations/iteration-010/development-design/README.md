@@ -172,6 +172,11 @@ Conformance 后以 run-111 验证原失败与异质题。
 fresh `ccrun_e837a716a9e243c29c4affc4fcd113a0` 已在 clean `8d7927f… / fffe078…` 上 13/13 case PASS；当前直接进入 fresh
 pricing/exact run-111 Session 和长产品 differential，不把短 qualification 当作 comment 或质量证明。
 
+run-111 已证明 `@11` 可完成更长的第二段 SSE 重组，但该 call 的 hidden reasoning + content 精确触及 `8192`、finish `length` 并截断 JSON；
+第三段 format repair 又被笼统分类为 provider response invalid。`FINDING-010-244` 的通用 repair 固定 `reasoning_effort=low`，并把合法
+terminal 的 empty/incomplete string content 保留为带 Usage 的 structured-output failure。current candidate 为 `@12 / 1.12.0`，fresh
+qualification PASS 后才进入 run-112；不增加 budget、不切 fallback、不重发 outcome unknown。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

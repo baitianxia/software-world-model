@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236, FINDING-010-242, FINDING-010-243]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236, FINDING-010-242, FINDING-010-243, FINDING-010-244]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -134,10 +134,13 @@ admission plugin 的 current inputs/verdict 或 exact override，以及逐 dispa
 当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile。当前 DeepSeek Adapter
 contract 把 schema authority 与 leading semantic authority 合并为恰好一个 leading system message；当前 Ark Engineering Chat profile 固定
 每 request 一个 verified TLS session、每 session 一个 HTTP dispatch、`Connection: close`、TLS 后逐 dispatch 解析 credential 与 retry 0。
-Ark Gateway request/result 对调用方仍为非流式单终态；Provider wire 使用 `stream:true`、`stream_options.include_usage:true` 与 SSE。Adapter
+Ark Gateway request/result 对调用方仍为非流式单终态；Provider wire 使用 `stream:true`、`stream_options.include_usage:true`、
+`reasoning_effort:low` 与 SSE，`thinking` field 保持缺席。Adapter
 在 framing 层忽略 SSE comment keep-alive 和重复空分隔，但 application event 仍要求恰好一个 `data:` field，其他控制字段失败关闭；随后只在
 内存中按稳定 response/model identity、单 choice、finish reason、Usage 和 `[DONE]` 严格重组一个 terminal response。comment、partial content
-和 Provider reasoning channel 均不投影或持久化。中途断连仍为 outcome unknown，不能 retry 或直接授权 fallback。这些差异由各自
+和 Provider reasoning channel 均不投影或持久化。已重组 choice 的 string content（包括 empty）进入 finish/schema 层：non-`stop`
+termination 与 closed-schema failure 都保留 terminal AdapterResponse/Usage 并分类为 `STRUCTURED_OUTPUT_INVALID`；missing/non-string content
+仍是 `PROVIDER_RESPONSE_INVALID`。中途断连仍为 outcome unknown，不能 retry 或直接授权 fallback。这些差异由各自
 Conformance 和 execution profile 拥有，不定义通用 route 分支。
 
 当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、transport lifetime 最多

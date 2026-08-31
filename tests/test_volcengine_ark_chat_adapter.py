@@ -15,6 +15,7 @@ from software_world_model.ai_infrastructure import (
     DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY,
     DEFAULT_VOLCENGINE_ARK_MODEL,
     DEFAULT_VOLCENGINE_ARK_OPENAI_BASE_URL,
+    DEFAULT_VOLCENGINE_ARK_REASONING_EFFORT,
     DirectVerifiedVolcengineArkChatTransport,
     OutputSchemaDefinition,
     ProviderHTTPResponse,
@@ -258,6 +259,10 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(payload["stream_options"], {"include_usage": True})
         self.assertEqual(payload["n"], 1)
         self.assertNotIn("thinking", payload)
+        self.assertEqual(
+            payload["reasoning_effort"],
+            DEFAULT_VOLCENGINE_ARK_REASONING_EFFORT,
+        )
         self.assertEqual(payload["response_format"], {"type": "json_object"})
         self.assertNotIn("store", payload)
         self.assertNotIn("metadata", payload)
@@ -415,6 +420,24 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
                 self.assertIsInstance(raised.exception, ProviderOutputRejected)
                 self.assertEqual(raised.exception.response.termination_reason, "length")
                 self.assertTrue(raised.exception.response.usage_complete)
+
+    def test_empty_length_termination_preserves_completed_response_evidence(self) -> None:
+        adapter, _, _ = self.adapter(
+            success_response(content="", finish_reason="length")
+        )
+
+        with self.assertRaises(ProviderOutputRejected) as raised:
+            adapter.invoke(self.request())
+
+        self.assertEqual(raised.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID)
+        self.assertEqual(raised.exception.response.output_text, "")
+        self.assertEqual(raised.exception.response.termination_reason, "length")
+        self.assertTrue(raised.exception.response.usage_complete)
+
+    def test_configuration_rejects_non_frozen_reasoning_effort(self) -> None:
+        with self.assertRaises(DomainError) as raised:
+            VolcengineArkModelConfiguration(reasoning_effort="high")
+        self.assertEqual(raised.exception.code, ErrorCode.INVALID_ARGUMENT)
 
     def test_application_revalidates_closed_schema(self) -> None:
         adapter, _, _ = self.adapter(success_response(content='{"answer":"ok","extra":true}'))

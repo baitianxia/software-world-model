@@ -325,6 +325,11 @@ run-110 首个 Ark SSE call 已在约 `80.333s` completed，证明旧网络边�
 该 fresh qualification 已由 `ccrun_e837a716a9e243c29c4affc4fcd113a0` 在 clean `8d7927f… / fffe078…` 上取得 13/13 case PASS；
 下一步是 fresh pricing/exact run-111 Session 与长产品复验，仍不把短 canary 当作 comment 或质量证明。
 
+run-111 的前两次 Ark SSE call 已 completed；第二次精确用满 `8192` output token、finish `length`，可见 JSON 中途截断，第三次 repair
+仍被 Adapter 归为 `PROVIDER_RESPONSE_INVALID`。transport unknown/retry 0、DeepSeek 0，故当前不是网络等待。`FINDING-010-244` 的
+`@12 / 1.12.0` candidate 固定 `reasoning_effort=low`、保留 empty/incomplete terminal 的 Usage 与 structured-output 分类；fresh
+qualification PASS 后执行 run-112。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization
