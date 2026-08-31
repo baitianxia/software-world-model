@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@33"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@34"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@33"
+    "conversational-engineering-agent-no-tools-prompt@34"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@32"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@22"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@33"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@23"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -145,6 +145,17 @@ _LOOPBACK_ORIGIN = "http://127.0.0.1:8765/"
 _SECRET_REFERENCE = re.compile(r"^env:[A-Z_][A-Z0-9_]*$")
 _SOURCE_LINE_LOCATOR = re.compile(
     r"^(?P<resource>.+):L[1-9][0-9]*(?:-L?[1-9][0-9]*)?$"
+)
+_EXPLICIT_JAVA_DECLARATION_ASSERTION = re.compile(
+    r"(?<![A-Za-z0-9_$])"
+    r"(?P<subject>[A-Z_$][A-Za-z0-9_$]*)"
+    r"(?:\s*(?:声明为|declared\s+as|is))?\s*"
+    r"(?P<relation>extends|implements|继承(?:自)?|实现(?:了)?)\s*"
+    r"(?P<target>[A-Z_$][A-Za-z0-9_$.]*)",
+)
+_JAVA_COMMENT_OR_LITERAL = re.compile(
+    r"//[^\n]*|/\*.*?\*/|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'",
+    re.DOTALL,
 )
 _TERMINAL_SOURCE_DENIAL_REASONS = frozenset(
     {
@@ -249,7 +260,13 @@ declarations or behaviors from different resources, select the exact Citation
 for every named resource or split the Claim. An import, injected field, or
 typed use in one resource does not establish the imported type's declaration,
 inheritance, or implementation. The trusted Application resolves those
-ordinals to the exact opaque Citation references after decode. An
+ordinals to the exact opaque Citation references after decode. An explicit
+Java declaration assertion such as `Type extends Base`, `Type implements
+Contract`, or its Chinese equivalent must select direct Citation content that
+contains that exact declaring-type relationship. An import, field declaration,
+receiver call, or other typed use cannot satisfy that check. If the direct
+declaration is not in selected current SUPPORT, remove the declaration
+assertion or acquire and cite its exact source. An
 ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
@@ -710,6 +727,11 @@ When a Claim names independently material declarations or behavior from
 multiple resources, every named resource needs its own exact Citation or the
 Claim must be split or narrowed. An import, injected field, or typed use does
 not prove the referenced type's declaration, inheritance, or implementation.
+Treat explicit Java declaration syntax (`Type extends Base`, `Type implements
+Contract`, and Chinese equivalents) as its own material assertion. It is
+SUPPORTED only when the Claim selects direct Citation content containing that
+exact declaring-type relationship; a caller import, injected field, receiver
+call, or typed use is not declaration evidence.
 Tool proposals, action arguments, query/search text, evidence_need,
 hypotheses, plans, open items, and fields that merely echo them are acquisition
 intent, never factual Evidence. Reject a Draft or Boundary that promotes a
@@ -3534,6 +3556,16 @@ def _output_preflight_view(
         resolved_acquisition_candidate_ids = draft_reference_policy.get(
             "resolved_acquisition_candidate_observation_ids"
         )
+        explicit_java_declaration_requires_direct_citation = (
+            draft_reference_policy.get(
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            )
+        )
+        typed_use_cannot_satisfy_explicit_declaration = (
+            draft_reference_policy.get(
+                "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration"
+            )
+        )
         review_rewrite_contract = review_feedback.get(
             "review_rewrite_contract"
         )
@@ -3589,6 +3621,8 @@ def _output_preflight_view(
                 isinstance(item, str)
                 for item in resolved_acquisition_candidate_ids
             )
+            or explicit_java_declaration_requires_direct_citation is not True
+            or typed_use_cannot_satisfy_explicit_declaration is not True
             or not isinstance(review_rewrite_contract, Mapping)
         ):
             raise DomainError(
@@ -3699,6 +3733,8 @@ def _output_preflight_view(
             "source_search_citation_support_is_exact_locator_only": True,
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+            "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration": True,
             "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "draft_boundary_observation_ids_allowed_exact": tuple(
                 boundary_observation_ids
@@ -3767,6 +3803,14 @@ def _output_preflight_view(
         multi_resource_claim_requires_exact_citations = reference_policy.get(
             "multi_resource_claim_requires_each_exact_resource_citation_or_split"
         )
+        explicit_java_declaration_requires_direct_citation = (
+            reference_policy.get(
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            )
+        )
+        typed_use_is_not_declaration_evidence = reference_policy.get(
+            "import_field_receiver_call_or_typed_use_is_not_declaration_evidence"
+        )
         declared_shape_does_not_locate_transformation = reference_policy.get(
             "declared_type_or_return_shape_does_not_locate_transformation_implementation"
         )
@@ -3815,6 +3859,8 @@ def _output_preflight_view(
                 unbound_empty_fragments_require_not_disclosed,
                 source_search_citation_is_exact_locator_only,
                 multi_resource_claim_requires_exact_citations,
+                explicit_java_declaration_requires_direct_citation,
+                typed_use_is_not_declaration_evidence,
                 declared_shape_does_not_locate_transformation,
                 acquisition_intent_is_not_evidence,
                 echoed_query_is_not_boundary_fact,
@@ -4003,6 +4049,8 @@ def _output_preflight_view(
             "search_or_interface_evidence_is_not_implementation_evidence": True,
             "source_search_citation_support_is_exact_locator_only": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+            "import_field_receiver_call_or_typed_use_is_not_declaration_evidence": True,
             "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
             "echoed_query_or_evidence_need_is_not_boundary_fact": True,
@@ -5694,6 +5742,8 @@ def _primary_input_view(
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
             "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+            "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration": True,
             "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
@@ -6865,6 +6915,8 @@ def _review_input_view(
                 "user_request_noun_phrase_is_not_evidence_of_fact": True,
                 "model_authored_acquisition_intent_is_not_evidence_of_fact": True,
                 "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+                "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+                "import_field_receiver_call_or_typed_use_is_not_declaration_evidence": True,
                 "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                 "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
                 "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
@@ -6950,6 +7002,8 @@ def _review_input_view(
             "same_observation_sibling_citation_does_not_support_named_resource": True,
             "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
             "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+            "import_field_receiver_call_or_typed_use_is_not_declaration_evidence": True,
             "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
@@ -7531,6 +7585,146 @@ def _draft_proposal_matches_reviewed_draft(
     )
 
 
+def _explicit_java_declaration_assertions(
+    statement: str,
+) -> tuple[tuple[str, str, str], ...]:
+    """Extract only source-shaped Java declaration assertions from prose."""
+
+    normalized = (
+        statement.replace("`", "")
+        .replace("（", " ")
+        .replace("）", " ")
+        .replace("(", " ")
+        .replace(")", " ")
+    )
+    assertions: list[tuple[str, str, str]] = []
+    for match in _EXPLICIT_JAVA_DECLARATION_ASSERTION.finditer(normalized):
+        raw_relation = match.group("relation")
+        relation = (
+            "extends"
+            if raw_relation == "extends" or raw_relation.startswith("继承")
+            else "implements"
+        )
+        assertion = (
+            match.group("subject"),
+            relation,
+            match.group("target").rsplit(".", 1)[-1],
+        )
+        if assertion not in assertions:
+            assertions.append(assertion)
+    return tuple(assertions)
+
+
+def _selected_source_citation_content_by_resource(
+    *,
+    claim: EngineeringAgentClaimProposal,
+    observations_by_id: Mapping[StableId, EngineeringAgentToolObservation],
+) -> tuple[str, ...]:
+    """Return selected exact Source fragments grouped by canonical resource."""
+
+    selected_refs = set(claim.support_citation_refs)
+    content_by_resource: dict[str, list[str]] = {}
+    for observation_id in claim.support_observation_ids:
+        observation = observations_by_id.get(observation_id)
+        if observation is None or not selected_refs.intersection(
+            observation.citation_refs
+        ):
+            continue
+        try:
+            payload = json.loads(observation.content)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        retrieval = payload.get("retrieval_result")
+        raw_items = retrieval.get("items") if isinstance(retrieval, dict) else None
+        if not isinstance(raw_items, list):
+            continue
+        authorized_refs = set(observation.citation_refs)
+        for raw_item in raw_items:
+            if not isinstance(raw_item, dict):
+                continue
+            reference = raw_item.get("locator_reference")
+            locator = raw_item.get("locator")
+            content = raw_item.get("content")
+            if (
+                not isinstance(reference, str)
+                or reference not in selected_refs
+                or reference not in authorized_refs
+                or raw_item.get("evidence_class") != "SOURCE"
+                or raw_item.get("coverage_complete") is not True
+                or not isinstance(locator, str)
+                or not isinstance(content, str)
+            ):
+                continue
+            locator_match = _SOURCE_LINE_LOCATOR.fullmatch(locator)
+            resource = (
+                locator_match.group("resource")
+                if locator_match is not None
+                else locator
+            )
+            if not resource.endswith(".java"):
+                continue
+            content_by_resource.setdefault(resource, []).append(content)
+    return tuple("\n".join(items) for items in content_by_resource.values())
+
+
+def _java_source_contains_declaration(
+    source: str,
+    *,
+    subject: str,
+    relation: str,
+    target: str,
+) -> bool:
+    code = _JAVA_COMMENT_OR_LITERAL.sub(" ", source)
+    subject_token = rf"(?<![A-Za-z0-9_$]){re.escape(subject)}(?![A-Za-z0-9_$])"
+    target_token = rf"(?<![A-Za-z0-9_$]){re.escape(target)}(?![A-Za-z0-9_$])"
+    declaration = re.compile(
+        rf"\b(?:class|interface|record|enum)\s+{subject_token}"
+        rf"(?P<header>[^{{;]*)",
+        re.DOTALL,
+    )
+    for match in declaration.finditer(code):
+        if re.search(
+            rf"\b{relation}\b[^{{;]*{target_token}",
+            match.group("header"),
+            re.DOTALL,
+        ) is not None:
+            return True
+    return False
+
+
+def _validate_explicit_java_declaration_citations(
+    *,
+    claim: EngineeringAgentClaimProposal,
+    claim_index: int,
+    observations_by_id: Mapping[StableId, EngineeringAgentToolObservation],
+) -> None:
+    assertions = _explicit_java_declaration_assertions(claim.statement)
+    if not assertions:
+        return
+    selected_source_contents = _selected_source_citation_content_by_resource(
+        claim=claim,
+        observations_by_id=observations_by_id,
+    )
+    for subject, relation, target in assertions:
+        if any(
+            _java_source_contains_declaration(
+                source,
+                subject=subject,
+                relation=relation,
+                target=target,
+            )
+            for source in selected_source_contents
+        ):
+            continue
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            f"$.draft.claims[{claim_index}].support_citation_selections must "
+            "select direct Source Citation content for explicit Java "
+            f"declaration {subject} {relation} {target}; an import, field, "
+            "receiver call, or typed use is not declaration evidence",
+        )
+
+
 def _validate_primary_proposal(
     proposal: EngineeringAgentWorkStateProposal,
     invocation: EngineeringAgentInvocation,
@@ -7676,6 +7870,11 @@ def _validate_primary_proposal(
                     f"resolved reference {citation_index} outside the Claim's "
                     "selected SUPPORT observations",
                 )
+        _validate_explicit_java_declaration_citations(
+            claim=claim,
+            claim_index=claim_index,
+            observations_by_id=by_id,
+        )
     reportable_boundary_ids = set(
         project_engineering_agent_draft_boundaries(
             observations

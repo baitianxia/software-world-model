@@ -646,6 +646,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "unbound_empty_boundary_fragments_require_not_disclosed": True,
                     "source_search_citation_support_is_exact_locator_only": True,
                     "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+                    "import_field_receiver_call_or_typed_use_is_not_declaration_evidence": True,
                     "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
@@ -1001,7 +1003,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1468,7 +1470,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2318,7 +2320,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2384,6 +2386,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             comparison_contract[
                 "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "import_field_receiver_call_or_typed_use_is_not_declaration_evidence"
             ]
         )
         self.assertTrue(
@@ -2529,6 +2541,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "import_field_receiver_call_or_typed_use_is_not_declaration_evidence"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
                 "model_authored_acquisition_intent_is_not_evidence"
             ]
         )
@@ -2629,6 +2651,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "declared_type_or_return_shape_does_not_locate_transformation_implementation"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "import_field_receiver_call_or_typed_use_is_not_declaration_evidence"
             ]
         )
         self.assertTrue(
@@ -3024,7 +3056,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@27",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -4532,6 +4564,171 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             next_turn_view["completion_policy"][
                 "prior_answer_restatement_requires_current_turn_evidence"
             ]
+        )
+
+    def test_explicit_java_declaration_requires_direct_selected_citation(
+        self,
+    ) -> None:
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="商品索引写入在哪里？",
+        )
+        service_ref = f"source_locator_{'1' * 32}"
+        repository_ref = f"source_locator_{'2' * 32}"
+
+        def source_observation(
+            *,
+            suffix: str,
+            locator_reference: str,
+            locator: str,
+            source: str,
+        ) -> EngineeringAgentToolObservation:
+            return EngineeringAgentToolObservation(
+                observation_id=StableId(f"observation_{suffix * 32}"),
+                tool_request_id=StableId(f"tool_request_{suffix * 32}"),
+                operation=EngineeringAgentToolOperation.SOURCE_READ,
+                result_ref=f"source-read-{suffix}",
+                content=json.dumps(
+                    {
+                        "schema": "ENGINEERING_AGENT_SOURCE_SUPPORT@1",
+                        "retrieval_result": {
+                            "items": [
+                                {
+                                    "locator_reference": locator_reference,
+                                    "locator": locator,
+                                    "modality": "EXACT_STATIC_SOURCE_TEXT",
+                                    "evidence_class": "SOURCE",
+                                    "coverage_complete": True,
+                                    "content": source,
+                                }
+                            ]
+                        },
+                    }
+                ),
+                disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+                progress=True,
+                citation_refs=(locator_reference,),
+                authority_receipt=None,
+                tool_evidence_digest=digest_of(f"source-evidence-{suffix}"),
+                digest=digest_of(f"source-observation-{suffix}"),
+            )
+
+        service_observation = source_observation(
+            suffix="3",
+            locator_reference=service_ref,
+            locator=(
+                "mall-search/src/main/java/example/EsProductServiceImpl.java"
+            ),
+            source=(
+                "package example;\n"
+                "import example.EsProductRepository;\n"
+                "class EsProductServiceImpl {\n"
+                "  private EsProductRepository productRepository;\n"
+                "  void save() { productRepository.saveAll(items); }\n"
+                "}\n"
+            ),
+        )
+        repository_observation = source_observation(
+            suffix="4",
+            locator_reference=repository_ref,
+            locator=(
+                "mall-search/src/main/java/example/EsProductRepository.java"
+            ),
+            source=(
+                "package example;\n"
+                "public interface EsProductRepository\n"
+                "    extends ElasticsearchRepository<EsProduct, Long> { }\n"
+            ),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(service_observation, repository_observation),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(),
+        )
+        declaration_statement = (
+            "EsProductRepository 声明为 extends "
+            "ElasticsearchRepository<EsProduct, Long>。"
+        )
+        output = {
+            "goal": "确认商品索引 Repository 声明",
+            "response_language": "zh-CN",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "open_items": [],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "ANSWER",
+                "content": declaration_statement,
+                "claims": [
+                    {
+                        "statement": declaration_statement,
+                        "support_observation_ids": [
+                            service_observation.observation_id.value
+                        ],
+                        "support_citation_selections": [
+                            {
+                                "support_observation_ordinal": 1,
+                                "citation_ordinals": [1],
+                            }
+                        ],
+                    }
+                ],
+                "boundary_observation_ids": [],
+            },
+        }
+        with self.assertRaises(DomainError) as typed_use_only:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(output, ensure_ascii=False),
+                invocation=invocation,
+                model_call_ref="typed-use-is-not-declaration-evidence",
+            )
+        self.assertEqual(
+            typed_use_only.exception.code,
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        )
+        self.assertIn(
+            "direct Source Citation content",
+            str(typed_use_only.exception),
+        )
+
+        directly_cited = json.loads(json.dumps(output, ensure_ascii=False))
+        directly_cited["draft"]["claims"][0][
+            "support_observation_ids"
+        ].append(repository_observation.observation_id.value)
+        directly_cited["draft"]["claims"][0][
+            "support_citation_selections"
+        ].append(
+            {
+                "support_observation_ordinal": 2,
+                "citation_ordinals": [1],
+            }
+        )
+        proposal = decode_engineering_agent_primary_output(
+            output_text=json.dumps(directly_cited, ensure_ascii=False),
+            invocation=invocation,
+            model_call_ref="direct-declaration-citation",
+        )
+        self.assertEqual(
+            proposal.draft.claims[0].support_citation_refs,
+            (service_ref, repository_ref),
         )
 
     def test_fresh_investigation_requires_world_model_before_source(self) -> None:
@@ -6733,6 +6930,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ): True,
                     "source_search_citation_support_is_exact_locator_only": True,
                     "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+                    "import_field_receiver_call_or_typed_use_is_not_declaration_evidence": True,
                     "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
@@ -6919,6 +7118,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             policy_view[
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            ]
+        )
+        self.assertTrue(
+            policy_view[
+                "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration"
+            ]
+        )
+        self.assertTrue(
+            policy_view[
                 "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location"
             ]
         )
@@ -6979,6 +7188,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reference_preflight[
                 "model_output_opaque_citation_references_forbidden"
+            ]
+        )
+        self.assertTrue(
+            reference_preflight[
+                "explicit_java_declaration_requires_selected_direct_declaration_citation"
+            ]
+        )
+        self.assertTrue(
+            reference_preflight[
+                "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration"
             ]
         )
         self.assertEqual(
@@ -7072,6 +7291,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "same_observation_sibling_citation_does_not_support_named_resource": True,
                 "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
                 "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+                "explicit_java_declaration_requires_selected_direct_declaration_citation": True,
+                "import_field_receiver_call_or_typed_use_cannot_satisfy_explicit_java_declaration": True,
                 "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                 "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
                 "model_authored_acquisition_intent_is_not_evidence": True,

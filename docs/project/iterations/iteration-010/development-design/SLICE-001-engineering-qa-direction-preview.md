@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -312,11 +312,11 @@ clean `912712c… / e40ba2f…` 的 fresh Ark qualification 13/13 PASS 后，run
 unavailable → DeepSeek definite HTTP 402 与 fresh run-116 的 Ark 9-call success 已按顺序封存。run-116 页面形成
 `SUCCEEDED / ACCEPTED`、3 Citation、fresh Review 与 Delivery，说明 ordinal protocol 已 live 贯通且当前不等待 Ark 网络。
 
-`FINDING-010-247` 的 independent audit 证明 run-116 质量 FAIL；run-117 随后由 Ark 8-call/DeepSeek 0 证明 trusted Citation options 已令
-Repository exact Citation 闭合，但 `FINDING-010-248` 仍发现正文把 `List&lt;EsProduct&gt;` return shape 与 Service 无显式转换提升为 DAO
-result-mapping location，窄 Claim 又被两个 Reviewer 错当成覆盖该更宽断言。Slice current candidate 规定 declared shape 只证明 API shape，
-caller absence 不定位 callee/mapper/framework transformation，位置断言必须有独立 direct-support Claim；协议族为
-`@33 / Primary @32 / Review @22 / preflight @27`。完成 clean gate 后执行 fresh run-118 同题；route、budget、Source authority 和
+run-118 的第 10 个 Ark logical dispatch 在 HTTP 前 TLS failure 后合法 fallback 到 DeepSeek definite HTTP 402；bounded-delay run-119 随后由
+Ark 9-call/DeepSeek 0 交付同题并证明 transformation boundary 修复生效。`FINDING-010-249` 仍发现显式 Repository `extends` declaration
+只绑定 Service typed-use Citation，两个 Reviewer 错误 APPROVED。Slice current candidate 在 Primary decode 机械验证该 Claim selected Citation
+content 必须包含 exact declaring type/relation/target；import、field、receiver call 或 typed use 不足。协议族为
+`@34 / Primary @33 / Review @23 / preflight @28`。完成 clean gate 后执行 fresh run-120 同题及异质冻结题；route、budget、Source authority 和
 Production hold 不变。
 
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的

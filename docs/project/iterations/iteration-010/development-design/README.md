@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -192,11 +192,11 @@ run-113 已令 Ark 7 个 attempts 全部完成并把网络从 first divergence �
 pre-dispatch unavailable 后 DeepSeek definite HTTP 402，以及 run-116 Ark 9-call `SUCCEEDED / ACCEPTED` 已连续封存；周期重试使用 fresh logical
 request，未发生 request replay 或 post-dispatch retry。
 
-run-116 的 independent audit 形成 `FINDING-010-247`：Primary/Reviewer 看不到 exact Citation locator 对照，导致跨资源 Claim 漏引
-Repository declaration；模型 acquisition intent 中的 `SpEL/DTO` 又经 query echo 被写成 Boundary 事实。run-117 已以 Ark 8-call、DeepSeek 0
-证明 locator 修复生效，但 `FINDING-010-248` 又发现返回类型与 caller absence 被错误提升为 DAO result-mapping location，两个 Reviewer 漏判。
-current `@33 / Primary @32 / Review @22 / preflight @27` 规定 declared shape 不定位 transformation implementation，窄 Claim 不能覆盖正文的
-更宽位置断言。下一动作是 clean gate 与 fresh run-118 同题复验；run-116/117 均不取得质量或 MVP PASS。
+run-118 在 Ark 9 个 HTTP dispatch 后因第 10 个 pre-dispatch TLS failure 合法 fallback 到 DeepSeek definite HTTP 402；bounded-delay run-119
+随后由 Ark 9-call/DeepSeek 0 交付同题，并证明 `FINDING-010-248` 的 transformation boundary 修复生效。`FINDING-010-249` 仍发现显式
+Repository inheritance 只绑定 Service typed-use Citation，两个 Reviewer 漏判。current `@34 / Primary @33 / Review @23 / preflight @28`
+在 Primary decode 机械要求显式 Java declaration 由该 Claim selected direct declaration Source 支撑。下一动作是 clean gate 与 fresh run-120
+同题及异质冻结题复验；run-118/119 均不取得质量或 MVP PASS。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
