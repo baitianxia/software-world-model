@@ -14,7 +14,7 @@ iteration: ITER-010
 
 - [FINDING-010-242](FINDING-010-242.md)：fresh Ark 短 canary 2/2 成功后，run-109 的异质长问题仍在约 `55.996s` 后
   `REMOTE_DISCONNECTED`；与 run-108 的 `56.075s` 高度一致，证明短网络探针会假阳性。current `@10 / Conformance 1.10.0` 保持 Gateway
-  单终态语义，把 Provider wire 改为官方 SSE 并在 Adapter 内严格重组；旧资格失效，fresh live Conformance 后才执行 run-110。
+  单终态语义，把 Provider wire 改为官方 SSE 并在 Adapter 内严格重组；clean live Conformance 已 2/2 PASS，run-110 是下一产品验证。
 - [FINDING-010-241](FINDING-010-241.md)：run-108 Q5 已越过旧 Ark HTTP 400，但在 HTTP dispatch 后
   `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`；按 no-retry 与“仅可信 unavailable 才 fallback”边界保持 DeepSeek 0。Q4 fresh
   Conversation 继续 zero-dispatch Clarification，通过隔离但不构成五问质量 verdict。

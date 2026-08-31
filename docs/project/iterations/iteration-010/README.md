@@ -315,7 +315,8 @@ network evidence，本地 Slice 工作继续。
 用户允许周期性 Ark 网络重试后，fresh `@9` 短 Conformance 2/2 PASS，但 run-109 的新冻结 Q1 在 dispatch 后约 `55.996s` 再次
 `REMOTE_DISCONNECTED`，与 run-108 Q5 的 `56.075s` 边界一致。`FINDING-010-242` 因而把 current repair 定为 Ark Provider SSE
 response transfer：Adapter `@10 / Conformance 1.10.0` 在内部严格重组一个 terminal result，Gateway stream、no-retry、fallback、预算、披露和
-非 Production 均不变。旧资格不可复用；fresh PASS 后执行 run-110，不重发两条 outcome-unknown request。
+非 Production 均不变。fresh `ccrun_b222fc9abdf641469baae1cec7080f5d` 已在 clean `e95fa929… / 95431f1c…` 上 2/2 PASS；下一步
+是 run-110 长产品验证，不重发两条 outcome-unknown request。
 
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 

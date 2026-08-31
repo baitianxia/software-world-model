@@ -309,4 +309,6 @@ unknown 不满足 trusted unavailable，故没有 retry，也没有激活已准�
 `REMOTE_DISCONNECTED`；run-108 的异质 Q5 是 `56.075s`。`FINDING-010-242` 因而把短探针成功识别为长响应可用性的假阳性，并在相同
 Provider/model/endpoint/account、数据、预算和非 Production scope 内采用官方 SSE wire。current Adapter `@10` 只在内部消费
 `stream:true + include_usage:true` 后严格重组一个 terminal response，Gateway/Turn 仍为 non-streaming，no-retry/fallback 边界不变。旧 `@9`
-资格失效；目标测试、门禁、clean commit 和 fresh Conformance `1.10.0` PASS 后才执行 run-110。
+资格失效。clean `e95fa929… / 95431f1c…` 已通过目标/文档/计划门禁；fresh `ccrun_b222fc9abdf641469baae1cec7080f5d`
+Conformance `1.10.0` 又以 actual `glm-5.3`、Usage 完整、retry/unknown 0 取得 2/2 PASS。下一动作是 fresh pricing/exact Session 和
+run-110 长产品验证。

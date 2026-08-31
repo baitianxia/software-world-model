@@ -278,6 +278,10 @@ network evidence；本 Slice 的本地开发、证据和计划门禁继续。
 单 terminal response、no partial delivery、same-request retry 0、trusted-unavailable-only fallback 和全部 standing scope。下一动作是目标
 验证、文档/计划门禁、clean commit、fresh Conformance，PASS 后执行未重复历史 unknown request 的 run-110。
 
+该门禁已完成：clean `e95fa929… / 95431f1c…` 的 `ccrun_b222fc9abdf641469baae1cec7080f5d` 以 actual `glm-5.3`、Usage 完整、
+retry/unknown 0 取得 2/2 PASS。run-110 现进入 fresh pricing/exact Session preparation；Conformance 只证明 SSE adapter compatibility，不提前
+证明长产品答案、Review、质量或 MVP。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

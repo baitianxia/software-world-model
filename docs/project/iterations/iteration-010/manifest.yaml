@@ -1645,14 +1645,15 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: q1-agent-model-call-outcome-unknown-after-http-remote-disconnected,q2-q5-not-executed
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-glm-5-3-adapter-10-conformance-1-10-required-old-adapter-9-result-not-reusable-deepseek-current-qualified
-  current_ark_conformance_status: required-for-adapter-10-before-run-110
-  last_passed_ark_conformance_run_id: ccrun_59669547ea8c4e7598ef91bf020c44c6
-  last_passed_ark_conformance_result_digest: sha256:7821d7525cb82d8aefe1512310f1d762b7ea74f277c0c5b80a153f41b15910e0
-  last_passed_ark_conformance_actual_model: glm-5.3
-  last_passed_ark_conformance_request_count: 2
-  last_passed_ark_conformance_request_retry_count: 0
-  last_passed_ark_conformance_reusable_for_current_candidate: false-adapter-and-wire-identity-changed
+  current_dual_provider_qualification_status: ark-glm-5-3-adapter-10-conformance-1-10-pass-valid-through-2026-09-30-deepseek-current-qualified-run-110-pending
+  current_ark_conformance_status: pass-current-for-adapter-10
+  current_ark_conformance_run_id: ccrun_b222fc9abdf641469baae1cec7080f5d
+  current_ark_conformance_result_digest: sha256:d49d3fbfe61e72f9b5b7c3f35d46316bfac9ceb9845e2652fbd0d1d64949ac27
+  current_ark_conformance_file_sha256: 6fc2b1f99781f83d3812e224bf95521a24794b9c7bf9b22eea923d292e714b57
+  current_ark_conformance_valid_until: "2026-09-30T12:57:14.025703Z"
+  current_ark_conformance_actual_model: glm-5.3
+  current_ark_conformance_request_count: 2
+  current_ark_conformance_request_retry_count: 0
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
   successor_semantic_query_finding_ref: FINDING-010-138
@@ -1661,7 +1662,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: run-109-sealed-q1-post-dispatch-outcome-unknown-current-adapter-10-sse-candidate-awaiting-target-gates-clean-commit-and-fresh-conformance-before-run-110
+  agent_execution_status: run-109-sealed-q1-post-dispatch-outcome-unknown-adapter-10-sse-qualified-run-110-fresh-pricing-session-and-long-product-verification-next
   status: implemented-not-qualified
 
 question_evidence_package_classes:

@@ -66,3 +66,17 @@ Provider/model/endpoint/account、同一次 request 和同预算的通用 wire r
 
 这是 Provider wire/response parsing 的 current system contract repair，不是问题、工程或输出特判。Model Gateway current configuration 和
 Operations configuration 在同一变更中更新；目标测试通过只能证明 local candidate，不能替代 fresh live Conformance 或产品质量 verdict。
+
+## Verification
+
+Adapter、Ark/DeepSeek Conformance、Engineering Chat provider/session/launcher 等相邻定向测试共 `142/142` PASS；文档检查为
+`648 current documents`，trusted-base plan snapshot/diff 均 PASS。clean implementation commit/tree 为
+`e95fa929576f18818ded5fa63869ebe210f332e3 / 95431f1c929ca4fe550c291a6f9f54459b64a8cb`。
+
+该 exact `@10 / 1.10.0` identity 随后完成 fresh live Conformance
+`ccrun_b222fc9abdf641469baae1cec7080f5d`：2/2 case PASS，actual model `glm-5.3`，input/output tokens `329/185`，Usage 完整，TLS/
+credential/HTTP `2/2/2`，retry 与 post-dispatch unknown 均为 0。result digest 为
+`sha256:d49d3fbfe61e72f9b5b7c3f35d46316bfac9ceb9845e2652fbd0d1d64949ac27`，artifact file SHA-256 为
+`6fc2b1f99781f83d3812e224bf95521a24794b9c7bf9b22eea923d292e714b57`，valid until
+`2026-09-30T12:57:14.025703Z`。该 PASS 证明 current Provider 接受 exact SSE request 并能由 Adapter 重组 closed response；它不替代 run-110
+长产品请求、答案质量或 MVP 验证。

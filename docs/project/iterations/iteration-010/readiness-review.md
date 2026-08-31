@@ -319,3 +319,9 @@ readiness 继续允许本地开发；新的同风险外调等待 materially new 
 `@10 / 1.10.0` candidate 保持 Gateway 单终态、same-request retry 0 和 trusted-unavailable-only fallback，只把 Ark Provider response
 transfer 改为 SSE 并在 Adapter 内失败关闭地重组。该 wire/parser identity 必须先通过 targeted tests、计划门禁、clean trusted-parent commit
 和 fresh live Conformance；PASS 前不得启动 run-110，Production hold 不变。
+
+机器 readiness 现已由 clean `e95fa929… / 95431f1c…` 和 fresh
+`ccrun_b222fc9abdf641469baae1cec7080f5d` 闭合：`@10 / 1.10.0` 两个 SSE canary 2/2 PASS、actual `glm-5.3`、Usage 完整、
+TLS/credential/HTTP `2/2/2`、retry/unknown 0，result digest
+`sha256:d49d3fbfe61e72f9b5b7c3f35d46316bfac9ceb9845e2652fbd0d1d64949ac27`。run-110 现可在 fresh pricing 和 exact Session authority
+验证后启动；Production hold 与全部 scope 边界不变。
