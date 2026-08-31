@@ -651,6 +651,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+                    "resolved_acquisition_material_requires_explicit_current_user_diagnostic_request": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,
@@ -1003,7 +1004,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1470,7 +1471,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2320,7 +2321,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -3056,7 +3057,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -6303,8 +6304,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
 
     def test_downstream_full_read_projects_search_boundary_relevance_challenge(self) -> None:
         locator_ref = f"source_locator_{'7' * 32}"
+        controller_locator_ref = f"source_locator_{'5' * 32}"
         full_read_locator_ref = f"source_locator_{'6' * 32}"
         resource_locator = "module/src/main/java/example/LoginService.java"
+        controller_resource_locator = (
+            "module/src/main/java/example/LoginController.java"
+        )
         search_request_id = StableId(f"tool_request_{'8' * 32}")
         search_support = EngineeringAgentToolObservation(
             observation_id=StableId(f"observation_{'9' * 32}"),
@@ -6320,6 +6325,12 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                                 "locator": f"{resource_locator}:L45-52",
                                 "modality": "LITERAL_TEXT_SEARCH_HIT",
                                 "coverage_complete": False,
+                            },
+                            {
+                                "locator_reference": controller_locator_ref,
+                                "locator": f"{controller_resource_locator}:L12",
+                                "modality": "LITERAL_TEXT_SEARCH_HIT",
+                                "coverage_complete": True,
                             }
                         ]
                     }
@@ -6327,7 +6338,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
             progress=True,
-            citation_refs=(locator_ref,),
+            citation_refs=(locator_ref, controller_locator_ref),
             authority_receipt=None,
             tool_evidence_digest=digest_of("search-support-evidence"),
             digest=digest_of("search-support-observation"),
@@ -6403,6 +6414,124 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             prior_read_projection.resolved_acquisition_candidate_observation_ids,
             (),
         )
+
+        capture = CapturingTurnExecutor()
+        service = InMemoryEngineeringConversationService(
+            _binding(),
+            turn_executor=capture,
+            id_generator=SequenceIds(),
+            clock=lambda: self.now,
+        )
+        conversation = service.create_conversation()
+        service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=Revision(1),
+            message="Where are the HTTP entry points?",
+        )
+        plain_support = EngineeringAgentToolObservation(
+            observation_id=StableId(f"observation_{'4' * 32}"),
+            tool_request_id=StableId(f"tool_request_{'3' * 32}"),
+            operation=EngineeringAgentToolOperation.WORLD_MODEL_QUERY,
+            result_ref="plain-support",
+            content="The service resource belongs to the requested module.",
+            disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
+            progress=True,
+            citation_refs=(),
+            authority_receipt=None,
+            tool_evidence_digest=digest_of("plain-support-evidence"),
+            digest=digest_of("plain-support-observation"),
+        )
+        invocation = EngineeringAgentInvocation(
+            request=capture.request,
+            previous_work_state=None,
+            observations=(
+                plain_support,
+                search_support,
+                search_boundary,
+                read_support,
+            ),
+            review_findings=(),
+            review_digest=None,
+            available_operations=(EngineeringAgentToolOperation.SOURCE_READ,),
+            action_history=(
+                EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_SEARCH,
+                    arguments=(
+                        ("evidence_class", "SOURCE"),
+                        ("query", "Login"),
+                    ),
+                    evidence_need="Locate the login entry and service.",
+                ),
+                EngineeringAgentToolActionProposal.create(
+                    operation=EngineeringAgentToolOperation.SOURCE_READ,
+                    arguments=(("locator_reference", locator_ref),),
+                    evidence_need="Read the login service.",
+                ),
+            ),
+            preissued_source_read_options=(
+                EngineeringAgentSourceReadOption.create(
+                    locator_reference=StableId(controller_locator_ref),
+                    locator=controller_resource_locator,
+                    evidence_class="SOURCE",
+                    source_revision=capture.request.binding.repository_revision,
+                    modality="EXACT_STATIC_SOURCE_TEXT",
+                    content_digest=digest_of("controller-source"),
+                    origin_turn_id=StableId(f"turn_{'2' * 32}"),
+                    origin_citation_digest=digest_of("controller-citation"),
+                ),
+            ),
+        )
+        premature_answer = {
+            "goal": "Locate the HTTP entry points.",
+            "response_language": "en",
+            "audience": "software engineer",
+            "constraints": [],
+            "resolved_referents": [],
+            "accepted_correction_message_ids": [],
+            "superseded_conclusion_refs": [],
+            "hypotheses": [],
+            "plan": [],
+            "open_items": ["HTTP entry points remain unread."],
+            "phase": "RESPONSE_READY",
+            "action": None,
+            "draft": {
+                "response_kind": "ANSWER",
+                "content": (
+                    "The module is confirmed, but the HTTP entry points are "
+                    "unconfirmed because Source Search was truncated."
+                ),
+                "claims": [
+                    {
+                        "statement": "The requested service is in this module.",
+                        "support_observation_ids": [
+                            plain_support.observation_id.value
+                        ],
+                        "support_citation_selections": [],
+                    }
+                ],
+                "boundary_observation_ids": [
+                    search_boundary.observation_id.value
+                ],
+            },
+        }
+        with self.assertRaises(DomainError) as premature_boundary:
+            decode_engineering_agent_primary_output(
+                output_text=json.dumps(premature_answer),
+                invocation=invocation,
+                model_call_ref="premature-resolved-acquisition-boundary",
+            )
+        self.assertIn(
+            "unused same-Search SOURCE_READ option remains",
+            str(premature_boundary.exception),
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                premature_boundary.exception.message
+            ),
+            "CHOOSE_ONE_MATERIAL_UNUSED_SAME_SEARCH_SOURCE_READ_OR_REMOVE_"
+            "THE_STALE_RESOLVED_ACQUISITION_DIAGNOSTIC",
+        )
+
         package_digest = digest_of("boundary-relevance-package")
         turn_id = StableId(f"turn_{'d' * 32}")
         package = EngineeringAgentEvidencePackage(
@@ -6535,9 +6664,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             str(missing_audit_finding_code.exception),
         )
 
-        material = decode_engineering_agent_review_output(
-            output_text=json.dumps(
-                {
+        material_payload = {
                     "decision": "APPROVED",
                     "claim_assessments": [],
                     "requirement_coverage_assessment": (
@@ -6561,8 +6688,39 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     ],
                     "findings": [],
                 }
+        with self.assertRaises(DomainError) as unrequested_material:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(material_payload),
+                request=focused_request,
+                model_call_ref="focused-boundary-relevance-unrequested",
+            )
+        self.assertIn(
+            "exact current User Message explicitly requests that diagnostic",
+            str(unrequested_material.exception),
+        )
+
+        explicit_diagnostic_requirement = (
+            "Explain the Source Search diagnostic result."
+        )
+        material_payload["requirement_coverage_assessment"] = (
+            _requirement_coverage_payload(explicit_diagnostic_requirement)
+        )
+        material_payload["boundary_relevance_assessments"][0][
+            "user_requirement"
+        ] = explicit_diagnostic_requirement
+        explicit_diagnostic_request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=draft,
+                package=package,
+                focus=(
+                    EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
             ),
-            request=focused_request,
+            current_user_requirement=explicit_diagnostic_requirement,
+        )
+        material = decode_engineering_agent_review_output(
+            output_text=json.dumps(material_payload),
+            request=explicit_diagnostic_request,
             model_call_ref="focused-boundary-relevance-approved",
         )
         self.assertEqual(material.decision.value, "APPROVED")
@@ -6935,6 +7093,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
                     "model_authored_acquisition_intent_is_not_evidence": True,
                     "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+                    "resolved_acquisition_material_requires_explicit_current_user_diagnostic_request": True,
                 },
             },
             output_schema_ref=ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
@@ -7282,6 +7441,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 ): True,
                 "resolved_acquisition_candidate_requires_relevance_review": True,
                 "resolved_acquisition_candidate_is_automatic_exclusion": False,
+                "resolved_acquisition_candidate_with_unused_same_search_read_forbidden_without_explicit_diagnostic_request": True,
                 "global_inventory_metrics_require_material_user_relevance": True,
                 "answer_detail_requires_material_user_relevance": True,
                 "counterfactual_omission_preserving_requested_conclusions_means_omit": True,

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -313,7 +313,10 @@ no-progress failure 关闭。
    reference 仍可由 audit-only Finding 删除。audit-only assessment 缺少 `finding_code` 与 non-audit-only assessment 非法携带
    `finding_code` 必须形成单义 typed diagnostic；bounded diagnostic 必须并置 trusted reference flag 与 submitted exact fragment count。
    repair 必须先重算 exact fragments/reference：unbound + empty 才能使用 `NOT_DISCLOSED_IN_DRAFT` 并清除 no-op Finding；bound + empty 必须
-   使用 kind-specific audit-only、绑定 unique global no-evidence reference-removal Finding 并返回 FINDINGS；其他组合按逐 challenge closed 表选择。一个 material
+   使用 kind-specific audit-only、绑定 unique global no-evidence reference-removal Finding 并返回 FINDINGS；其他组合按逐 challenge closed 表选择。
+   `RESOLVED_ACQUISITION` 默认是检索过程审计信息，不是用户所问工程事实。只有 exact current User Message 明确询问 Source
+   acquisition/search 的截断、覆盖、预算、失败、结果或状态时，focused Reviewer 才可把它判为 `MATERIAL_TO_USER_REQUEST`；Application
+   必须从 current User Message 重算该条件并拒绝 Reviewer 自报的越权 material classification。一个 material
    gap 不得让同 Observation 内的 unrelated global inventory/coverage metric 自动
    material。`LIMITATION` 必须始终绑定至少一个与用户请求相关的 reportable Boundary，并且 current SUPPORT 必须为零；其正文只能表达
    material unresolved boundary，不能附带源码调用、结构、顺序或其他 affirmative diagnostic。删除 audit-only prose 时必须保留或替换该
@@ -322,7 +325,7 @@ no-progress failure 关闭。
    自动重写 Provider Draft。
 
    成功 Turn 的不可变 Result 还必须只投影 Draft 实际选择的 ordered unique Citation；每个 ANSWER Claim 除 exact SUPPORT Observation IDs 外，
-   还须选择直接支撑该 Claim 的最小 exact Citation set。`ENGINEERING_AGENT_PRIMARY_INPUT@33` 必须由 Application 从每个 SUPPORT Observation
+   还须选择直接支撑该 Claim 的最小 exact Citation set。`ENGINEERING_AGENT_PRIMARY_INPUT@34` 必须由 Application 从每个 SUPPORT Observation
    的 authority receipt 重算 ordered Citation options；每项按 `citation_ordinal_base=1` 投影 ordinal、exact opaque ref、evidence class、exact source
    revision、locator、modality 与 content digest。无 receipt、ref 缺失、revision/identity 不一致或重复必须在模型调用前失败关闭。Provider-facing
    `engineering-agent-work-state-proposal@4` 不再回传长 opaque Citation
@@ -340,7 +343,11 @@ no-progress failure 关闭。
    Citation content，按 canonical Java resource 组合片段，并验证 exact declaring type、`extends/implements` relation 与 target type；只有 import、
    field、receiver call 或 typed use 时必须以 `STRUCTURED_OUTPUT_INVALID` 失败关闭。该检查只验证显式 declaration，不从自然语言补造事实、不自动
    扩 Evidence；Provider 可在既有 bounded fresh format-repair request 中删除/收窄断言或选择已存在的 direct declaration Citation。Source Search
-   的完整结果清单不得因其中一个结果 material 而整批进入答案。Application 从
+   的完整结果清单不得因其中一个结果 material 而整批进入答案。若 Draft 选择一个 `RESOLVED_ACQUISITION` candidate，Application 必须把
+   Boundary 配对回同一 `SOURCE_SEARCH` 的 SUPPORT，并从 trusted literal results、preissued read options、current tool-reference policy 与
+   effective available operations 重算仍未使用的 exact `SOURCE_READ`。只要同次 Search 的 exact read 仍可执行且 current User Message 未明确
+   询问该 acquisition/search diagnostic，Primary 就不能 finalize：必须选择一个 material read，或移除 stale diagnostic 并仅根据 current
+   SUPPORT 作答。Search 截断不能把已知、可读取的 sibling resource 变成 Unknown；该门禁不自动执行读取、不扩大授权或预算。Application 从
    authority receipt 重算 selected reference identity，并只投影 Claim 解析出的 refs；Draft 绑定的 material
    Boundary 仍投影其绑定 Observation 的 Citation。每项保留 evidence class、exact source revision、locator、modality、content digest、Citation
    ref 与 authority digest。未被 Claim/boundary 实际选择的 Package Citation 不得顺带暴露，同一 ref 在不同 receipt 上 identity 不一致必须在浏览器
@@ -353,7 +360,7 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@23` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
+   `ENGINEERING_AGENT_REVIEW_INPUT@24` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
    Citation options，使 Reviewer 能把 Draft 已解析的 exact refs 还原到 locator 后审核跨资源引用覆盖；`engineering-agent-independent-review-proposal@9`
    必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
@@ -539,8 +546,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@34 / conversational-engineering-agent-no-tools-prompt@34 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@33 / ENGINEERING_AGENT_REVIEW_INPUT@23 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28` 协议族；每次
+   `conversational-engineering-agent@35 / conversational-engineering-agent-no-tools-prompt@35 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@34 / ENGINEERING_AGENT_REVIEW_INPUT@24 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生

@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@34"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@35"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@34"
+    "conversational-engineering-agent-no-tools-prompt@35"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@33"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@23"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@34"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@24"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@28"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@29"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -355,6 +355,13 @@ preflight repeats those exact candidate IDs next to the allowed boundary domain.
 Do not copy them into boundary_observation_ids as a complete-package inventory or
 as a precaution; retain one only when the current User Message explicitly asks
 for that acquisition diagnostic and draft.content actually answers that request.
+When a resolved-acquisition candidate is not itself requested and an unused
+SOURCE_READ option from that same Search remains legal, do not bind the stale
+Search diagnostic and finalize. Read the one resource that directly matches the
+still-unresolved material target, or remove the resolved diagnostic when the
+current SUPPORT already answers the target. A truncated literal Search does not
+make neighboring annotations, methods, or branches in a known but unread Source
+resource unconfirmable.
 Do not surface a BOUNDARY merely because it remains in the sealed audit record.
 Report it in draft.content only when it still leaves a material requirement of
 the current User Message unresolved, or when the User explicitly asks for that
@@ -819,6 +826,12 @@ Never return a Finding merely because draft.content does not name an opaque
 Boundary ID or reproduce the raw Observation. When the Draft states the material
 unresolved requirement and binds the corresponding Boundary, the hidden ID is
 working as intended.
+RESOLVED_ACQUISITION is audit-only by default. Classify it as
+MATERIAL_TO_USER_REQUEST only when the exact current User Message explicitly
+asks about the Source acquisition or Search diagnostic itself; a software
+behavior, location, sequence, or uncertainty question does not make a stale
+Search diagnostic material. Otherwise use RESOLVED_AUDIT_ONLY and require
+removal of the stale reference or disclosed fragment.
 For a LIMITATION, do not demand removal of its last material Boundary binding
 merely because the underlying audit Observation also retains metadata that the
 Draft does not quote. If the Draft actually mixes a material limitation with
@@ -3556,6 +3569,10 @@ def _output_preflight_view(
         resolved_acquisition_candidate_ids = draft_reference_policy.get(
             "resolved_acquisition_candidate_observation_ids"
         )
+        resolved_candidate_unused_read_forbidden = draft_reference_policy.get(
+            "resolved_acquisition_candidate_with_unused_same_search_read_"
+            "forbidden_without_explicit_diagnostic_request"
+        )
         explicit_java_declaration_requires_direct_citation = (
             draft_reference_policy.get(
                 "explicit_java_declaration_requires_selected_direct_declaration_citation"
@@ -3623,6 +3640,7 @@ def _output_preflight_view(
             )
             or explicit_java_declaration_requires_direct_citation is not True
             or typed_use_cannot_satisfy_explicit_declaration is not True
+            or resolved_candidate_unused_read_forbidden is not True
             or not isinstance(review_rewrite_contract, Mapping)
         ):
             raise DomainError(
@@ -3749,6 +3767,7 @@ def _output_preflight_view(
                 resolved_acquisition_candidate_ids
             ),
             "resolved_candidate_binding_requires_explicit_current_user_diagnostic_request": True,
+            "resolved_candidate_with_unused_same_search_read_cannot_finalize": True,
             "resolved_candidates_are_not_complete_package_inventory": True,
         }
         preflight["review_rewrite_contract"] = deepcopy(
@@ -3820,6 +3839,12 @@ def _output_preflight_view(
         echoed_query_is_not_boundary_fact = reference_policy.get(
             "echoed_query_or_evidence_need_is_not_boundary_fact"
         )
+        resolved_acquisition_material_requires_explicit_request = (
+            reference_policy.get(
+                "resolved_acquisition_material_requires_explicit_current_user_"
+                "diagnostic_request"
+            )
+        )
         current_user_requirement = requirement_challenge.get(
             "current_user_requirement"
         )
@@ -3864,6 +3889,7 @@ def _output_preflight_view(
                 declared_shape_does_not_locate_transformation,
                 acquisition_intent_is_not_evidence,
                 echoed_query_is_not_boundary_fact,
+                resolved_acquisition_material_requires_explicit_request,
                 requirement_coverage_required,
                 requirement_exact_copy_required,
                 requirement_approval_requires_full,
@@ -4054,6 +4080,7 @@ def _output_preflight_view(
             "declared_type_or_return_shape_does_not_locate_transformation_implementation": True,
             "model_authored_acquisition_intent_is_not_evidence": True,
             "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+            "resolved_acquisition_material_requires_explicit_current_user_diagnostic_request": True,
             "existing_shape_repair_values_may_not_be_changed_for_consistency": True,
         }
     return preflight
@@ -4472,6 +4499,16 @@ def _initial_format_repair_policy() -> dict[str, object]:
 
 
 def _closed_contract_repair_directive(message: str) -> str:
+    if "resolved Source Search acquisition boundary cannot finalize" in message:
+        return (
+            "CHOOSE_ONE_MATERIAL_UNUSED_SAME_SEARCH_SOURCE_READ_OR_REMOVE_"
+            "THE_STALE_RESOLVED_ACQUISITION_DIAGNOSTIC"
+        )
+    if "resolved Source acquisition diagnostic may be material only" in message:
+        return (
+            "USE_RESOLVED_AUDIT_ONLY_AND_BIND_ONE_GLOBAL_NO_EVIDENCE_"
+            "FINDING_UNLESS_THE_EXACT_CURRENT_USER_REQUESTS_THE_DIAGNOSTIC"
+        )
     if "repeated a forbidden current-Turn Source query" in message:
         return "CHOOSE_DIFFERENT_LEGAL_ACTION_OR_ALLOWED_PURE_BOUNDARY_DRAFT"
     if "non-approved Review requires Findings" in message:
@@ -5733,6 +5770,10 @@ def _primary_input_view(
             ): True,
             "resolved_acquisition_candidate_requires_relevance_review": True,
             "resolved_acquisition_candidate_is_automatic_exclusion": False,
+            (
+                "resolved_acquisition_candidate_with_unused_same_search_read_"
+                "forbidden_without_explicit_diagnostic_request"
+            ): True,
             "global_inventory_metrics_require_material_user_relevance": True,
             "answer_detail_requires_material_user_relevance": True,
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
@@ -6921,6 +6962,7 @@ def _review_input_view(
                 "narrow_shape_or_caller_absence_claim_does_not_cover_transformation_location": True,
                 "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
                 "unknown_category_must_not_be_promoted_to_affirmative_fact": True,
+                "resolved_acquisition_material_requires_explicit_current_user_diagnostic_request": True,
                 "global_finding_must_name_exact_missing_or_misaligned_delta": True,
                 "global_finding_must_offer_one_package_safe_correction": True,
                 "contradictory_positive_and_unconfirmed_demand_forbidden": True,
@@ -6993,6 +7035,7 @@ def _review_input_view(
                 "or_explicit_diagnostic_request"
             ): True,
             "resolved_acquisition_candidate_is_automatic_exclusion": False,
+            "resolved_acquisition_material_requires_explicit_current_user_diagnostic_request": True,
             "global_inventory_metrics_require_material_user_relevance": True,
             "answer_detail_requires_material_user_relevance": True,
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
@@ -7725,6 +7768,131 @@ def _validate_explicit_java_declaration_citations(
         )
 
 
+def _current_user_explicitly_requests_source_acquisition_diagnostic(
+    invocation_or_request: EngineeringAgentInvocation | EngineeringAgentReviewRequest,
+) -> bool:
+    """Recognize only an explicit request about the Source acquisition process."""
+
+    if isinstance(invocation_or_request, EngineeringAgentInvocation):
+        message = invocation_or_request.request.user_message.content
+    else:
+        message = invocation_or_request.turn_request.user_message.content
+    normalized = re.sub(r"\s+", " ", message).casefold()
+    acquisition_terms = (
+        "source_search",
+        "source search",
+        "source-search",
+        "source acquisition",
+        "source retrieval",
+        "retrieval tool",
+        "源码检索",
+        "代码检索",
+        "检索工具",
+        "搜索工具",
+        "证据获取",
+    )
+    diagnostic_terms = (
+        "truncat",
+        "partial",
+        "coverage",
+        "complete",
+        "budget",
+        "failure",
+        "diagnostic",
+        "result",
+        "status",
+        "截断",
+        "部分",
+        "覆盖",
+        "完整",
+        "预算",
+        "失败",
+        "诊断",
+        "结果",
+        "状态",
+    )
+    return any(term in normalized for term in acquisition_terms) and any(
+        term in normalized for term in diagnostic_terms
+    )
+
+
+def _selected_resolved_acquisition_source_read_options(
+    *,
+    proposal: EngineeringAgentWorkStateProposal,
+    invocation: EngineeringAgentInvocation,
+) -> tuple[Mapping[str, object], ...]:
+    """Return unused reads issued by a selected resolved Search boundary."""
+
+    if proposal.draft is None:
+        return ()
+    projection = project_engineering_agent_draft_boundaries(
+        invocation.observations
+    )
+    selected_candidates = set(
+        proposal.draft.boundary_observation_ids
+    ).intersection(projection.resolved_acquisition_candidate_observation_ids)
+    if not selected_candidates:
+        return ()
+    selected_search_requests = {
+        observation.tool_request_id
+        for observation in invocation.observations
+        if observation.observation_id in selected_candidates
+        and observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        and observation.disposition.value == "BOUNDARY"
+    }
+    paired_supports = tuple(
+        observation
+        for observation in invocation.observations
+        if observation.tool_request_id in selected_search_requests
+        and observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        and observation.disposition.value == "SUPPORT"
+    )
+    paired_support_ids = {
+        observation.observation_id.value for observation in paired_supports
+    }
+    if not paired_support_ids:
+        return ()
+    paired_resources: set[str] = set()
+    for observation in paired_supports:
+        try:
+            payload = json.loads(observation.content)
+        except (TypeError, json.JSONDecodeError):
+            continue
+        retrieval = payload.get("retrieval_result")
+        raw_items = retrieval.get("items") if isinstance(retrieval, dict) else None
+        if not isinstance(raw_items, list):
+            continue
+        authorized_refs = set(observation.citation_refs)
+        for item in raw_items:
+            if not isinstance(item, dict):
+                continue
+            reference = item.get("locator_reference")
+            locator = item.get("locator")
+            if (
+                item.get("modality") != "LITERAL_TEXT_SEARCH_HIT"
+                or not isinstance(reference, str)
+                or reference not in authorized_refs
+                or not isinstance(locator, str)
+            ):
+                continue
+            paired_resources.add(_source_resource_locator(locator))
+    reference_policy = _tool_reference_policy(invocation)
+    if EngineeringAgentToolOperation.SOURCE_READ not in _effective_available_operations(
+        invocation,
+        tool_reference_policy=reference_policy,
+    ):
+        return ()
+    return tuple(
+        option
+        for option in reference_policy["source_read_options"]
+        if isinstance(option, Mapping)
+        and (
+            option.get("source_observation_id") in paired_support_ids
+            or option.get("resource_locator") in paired_resources
+        )
+    )
+
+
 def _validate_primary_proposal(
     proposal: EngineeringAgentWorkStateProposal,
     invocation: EngineeringAgentInvocation,
@@ -7832,6 +8000,23 @@ def _validate_primary_proposal(
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "evidence-only synthesis requires an Answer or Limitation draft",
+        )
+    if (
+        not _current_user_explicitly_requests_source_acquisition_diagnostic(
+            invocation
+        )
+        and _selected_resolved_acquisition_source_read_options(
+            proposal=proposal,
+            invocation=invocation,
+        )
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "a resolved Source Search acquisition boundary cannot finalize "
+            "while an unused same-Search SOURCE_READ option remains and the "
+            "current User Message did not request the acquisition diagnostic; "
+            "choose one material unused SOURCE_READ or remove the stale "
+            "diagnostic when current SUPPORT already resolves the target",
         )
     for claim_index, claim in enumerate(proposal.draft.claims):
         available_citation_refs: set[str] = set()
@@ -8446,6 +8631,22 @@ def _decode_review_output(
                 + ", submitted_exact_fragment_count="
                 + str(len(assessment.draft_disclosed_fragments))
                 + ")",
+            )
+        if (
+            challenge.kind
+            is EngineeringAgentBoundaryRelevanceChallengeKind.RESOLVED_ACQUISITION
+            and assessment.disposition
+            is EngineeringAgentBoundaryRelevanceAssessmentDisposition.MATERIAL_TO_USER_REQUEST
+            and not _current_user_explicitly_requests_source_acquisition_diagnostic(
+                request
+            )
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "a resolved Source acquisition diagnostic may be material only "
+                "when the exact current User Message explicitly requests that "
+                "diagnostic; use RESOLVED_AUDIT_ONLY with its required global "
+                "no-evidence Finding",
             )
         if (
             assessment.disposition
