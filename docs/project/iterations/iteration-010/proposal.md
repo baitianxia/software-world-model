@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -263,3 +263,11 @@ comprehensive redaction 丢失可信 Boundary presence 并诱发 add/delete Revi
 Boundary counts 作为 presence-only metadata，exact binding/materiality 与 reference add/remove 仍由 focused Review 独占。402 不改变产品
 契约或 standing authority；模型协议 `37/37`、相邻定向测试 `137/137` PASS。本地开发继续，下一 live run 只等待 materially new Provider
 availability evidence，不重复请求人工授权。
+
+run-105 按用户明确要求执行 Ark-first recheck：Q1 的唯一 Ark dispatch 仍返回 sealed 429，DeepSeek 在周一 16:02 CST peak window 于
+credential/TLS/HTTP 前 `DENIED_PEAK_WINDOW`；Q4 为 zero-dispatch Clarification，Q2/Q3/Q5 按同签名停止边界未发送。该 run 只验证当前
+Provider availability 与 route/admission 行为，不产生 `@30/@20/@24` 质量 verdict或代码变化。新的同签名 Ark 外调等待 materially new
+availability evidence；standing authority 继续有效且不重复请求人工授权。
+
+用户随后明确报告 Ark 流量问题已经处理，因而 run-106 具备新的 availability trigger；完成 run-105 证据提交并恢复 clean product identity 后
+直接执行原五问，无需新授权且不改变任何 scope/budget/route contract。

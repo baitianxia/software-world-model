@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -127,6 +127,12 @@ zero-dispatch Clarification；Q3/Q5 按同签名停止边界未发送，故无�
 丢失 trusted Boundary presence。current `@30/@20/@24` 投影 presence-only Package/Draft counts，同时继续隐藏 exact values 并保留 focused
 ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。下一项是文档/可信父门禁和提交；live run 等 materially new Provider
 availability evidence。
+
+`FINDING-010-234 / run-105` 按用户明确要求完成 Ark-first recheck：Q1 唯一 Ark dispatch 仍为 sealed 429，DeepSeek 在周一
+16:02 CST peak window 于 credential/TLS/HTTP 前拒绝；Q4 zero-dispatch Clarification 通过，Q2/Q3/Q5 按同签名停止边界未发送。它只更新
+availability/route evidence，不产生 `@30/@20/@24` 质量 verdict或代码修复；下一同签名 live run 等 materially new Ark availability evidence。
+
+用户随后明确报告 Ark 流量问题已处理；run-105 证据 clean-commit 后立即以 fresh run-106 复验原五问，不改变当前 Slice、scope、预算或 route。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|
