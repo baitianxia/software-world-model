@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -65,6 +65,12 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
 - Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
 - fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
   具体 Finding，不替主 Agent 规划或执行工具。
+- 每个 comprehensive/focused Review 都必须逐字绑定 current User Message，并以 typed requirement-coverage assessment 独立判断 Draft 是否
+  回答本轮完整目标；prior Answer/Work State、主题相同或 Claim supported 均不能替代。回答旧问题或遗漏本轮 material distinction/order/Unknown
+  时必须形成 global Finding，未 fully addressed 的 Review 不得批准或交付。
+- ANSWER Claim 除 SUPPORT Observation IDs 外，还必须从每个 citation-bearing selected Observation 选择至少一个直接 supporting ref，且只
+  投影最小 exact Citation set。broad Search inventory 不因一个结果 material 而整批进入 Browser；Application 从 authority receipt 重算
+  selected-ref identity，ref 漂移失败关闭。
 - Reviewer Findings 的 Primary successor 必须同时取得 exact rejected Draft、ordered Findings 和 Review digest；三者缺失或 Turn/Work
   State/digest/reference domain 错配时在 Provider 前失败关闭。无需新 Evidence 的同包 rewrite 以 rejected Draft 为 exact edit base，只按
   Finding 删除、收窄、限定、重排或重述，不增加新的用户可见物质断言；global completeness 只能枚举原正文已有断言。final preflight
@@ -234,7 +240,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—226 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-099 已证明 Ark 4 个 trusted-unavailable sealed 429 后 DeepSeek 39/39 completed且 Q4 零调用隔离不变；Q2 的错误答案已被 Reviewer 拒绝，但 Q2/Q3 仍未取得目标源码答案。最早偏差已推进到 identifier path 已被 bounded scan 检查、完整 method literal 却不存在时缺少 navigation-only opaque READ option；current 修复不把 path/component 提升为 SUPPORT，也不提高 authority 或预算。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—228 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-100 已证明 navigation-only opaque READ 让 Q2 取得目标完整源码，但 Q3 重复旧答案且 Reviewer 漏判 current requirement，Q5 又因 broad Search Observation 被引用而投影 70 个 Citation，整体仍为 Quality FAIL。current typed requirement-coverage assessment 与 Claim-level minimal Citation selection 分别闭合这两个最早偏差；route、预算、authority、fallback 与 Production 边界不变。fresh run-101 是下一真实质量证据。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

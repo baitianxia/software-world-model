@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -99,6 +99,13 @@ snapshot/diff 与 current hook 均 PASS，下一项是提交与 run-099。
 zero-dispatch，Q2/Q3 仍未达质量。真实 `createOrder` lexical mismatch 证明 path ranking 不能签发 literal hit；current
 `IDENTIFIER_PATH_NAVIGATION_CANDIDATE` 只形成 `BOUNDARY@2` 与 opaque full-READ option，Search SUPPORT 为空。current
 `@26/@16/@21`、六模块 `157/157` PASS，下一项是完成文档/可信父门禁、提交与 run-100。
+
+`FINDING-010-227/228 / run-100` 已证明 navigation-only opaque READ 生效：Q2 取得完整 `OmsPortalOrderServiceImpl.java` 并交付
+ACCEPTED；Ark 4 个 sealed 429 后 DeepSeek 35/35 completed，Q4 继续零 dispatch Clarification。Q3 full READ 后仍重复 Q2 普通流程且
+fresh Reviewer APPROVED，Q5 则因一个 broad Search SUPPORT 被 Claim 引用而把 70 个 Citation 全部投影，故整体继续 Quality FAIL。
+current `@27/@17/@22` 要求每个 Review 返回 exact current requirement coverage assessment；Primary output `@3` 为每个 Claim 密封最小
+exact Citation refs，Answer/Review/Delivery 重算。六模块相邻定向测试 `157/157` 与 documentation check `634` PASS；下一项是可信父
+门禁、提交与 fresh run-101，不等待 Provider 或重复人工授权。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

@@ -81,6 +81,13 @@ class EngineeringAgentReviewFocus(str, Enum):
     EVIDENCE_BOUNDARY_CHALLENGE = "EVIDENCE_BOUNDARY_CHALLENGE"
 
 
+class EngineeringAgentRequirementCoverageDisposition(str, Enum):
+    FULLY_ADDRESSED = "FULLY_ADDRESSED"
+    MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED = (
+        "MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED"
+    )
+
+
 class EngineeringAgentEvidenceBoundaryAssessmentDisposition(str, Enum):
     WITHIN_CALLER_EVIDENCE = "WITHIN_CALLER_EVIDENCE"
     CLAIM_EXCEEDS_CALLER_EVIDENCE = "CLAIM_EXCEEDS_CALLER_EVIDENCE"
@@ -401,6 +408,7 @@ class EngineeringAgentToolActionProposal:
 class EngineeringAgentClaimProposal:
     statement: str
     support_observation_ids: tuple[StableId, ...]
+    support_citation_refs: tuple[str, ...]
 
     @classmethod
     def create(
@@ -408,6 +416,7 @@ class EngineeringAgentClaimProposal:
         *,
         statement: str,
         support_observation_ids: Sequence[StableId],
+        support_citation_refs: Sequence[str] = (),
     ) -> "EngineeringAgentClaimProposal":
         support = tuple(support_observation_ids)
         if not support or len(support) != len(set(support)):
@@ -415,9 +424,19 @@ class EngineeringAgentClaimProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "an answer claim requires unique supporting observations",
             )
+        citations = tuple(
+            _text(item, "answer claim Citation reference")
+            for item in support_citation_refs
+        )
+        if len(citations) != len(set(citations)):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "answer claim Citation references must be unique",
+            )
         return cls(
             statement=_bounded_text(statement, "answer claim"),
             support_observation_ids=support,
+            support_citation_refs=citations,
         )
 
 
@@ -479,7 +498,7 @@ class EngineeringAgentDraftProposal:
                 "a clarification cannot claim an evidence boundary",
             )
         core = {
-            "schema": "ENGINEERING_AGENT_DRAFT_PROPOSAL@1",
+            "schema": "ENGINEERING_AGENT_DRAFT_PROPOSAL@2",
             "response_kind": response_kind.value,
             "content": content,
             "claims": tuple(
@@ -488,6 +507,7 @@ class EngineeringAgentDraftProposal:
                     "support_observation_ids": tuple(
                         item.value for item in claim.support_observation_ids
                     ),
+                    "support_citation_refs": claim.support_citation_refs,
                 }
                 for claim in normalized_claims
             ),
@@ -734,6 +754,67 @@ class EngineeringAgentReviewFinding:
             message=_bounded_text(message, "review Finding"),
             requires_evidence=requires_evidence,
             claim_index=claim_index,
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EngineeringAgentRequirementCoverageAssessment:
+    current_user_requirement: str
+    coverage_summary: str
+    disposition: EngineeringAgentRequirementCoverageDisposition
+    finding_code: str | None
+    digest: Digest
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        current_user_requirement: str,
+        coverage_summary: str,
+        disposition: EngineeringAgentRequirementCoverageDisposition,
+        finding_code: str | None,
+    ) -> "EngineeringAgentRequirementCoverageAssessment":
+        if not isinstance(
+            disposition,
+            EngineeringAgentRequirementCoverageDisposition,
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "requirement coverage disposition is invalid",
+            )
+        finding_code = _optional_text(
+            finding_code,
+            "requirement coverage Finding code",
+        )
+        fully_addressed = (
+            disposition
+            is EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+        )
+        if fully_addressed != (finding_code is None):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "only missing or misaligned requirement coverage may bind a Finding code",
+            )
+        core = {
+            "schema": "ENGINEERING_AGENT_REQUIREMENT_COVERAGE_ASSESSMENT@1",
+            "current_user_requirement": _bounded_text(
+                current_user_requirement,
+                "current User requirement",
+                maximum_bytes=48_000,
+            ),
+            "coverage_summary": _bounded_text(
+                coverage_summary,
+                "requirement coverage summary",
+            ),
+            "disposition": disposition.value,
+            "finding_code": finding_code,
+        }
+        return cls(
+            current_user_requirement=core["current_user_requirement"],
+            coverage_summary=core["coverage_summary"],
+            disposition=disposition,
+            finding_code=finding_code,
+            digest=digest_of(core),
         )
 
 
@@ -1776,6 +1857,9 @@ class EngineeringAgentReviewProposal:
     decision: EngineeringAgentReviewDecision
     findings: tuple[EngineeringAgentReviewFinding, ...]
     focus: EngineeringAgentReviewFocus
+    requirement_coverage_assessment: (
+        EngineeringAgentRequirementCoverageAssessment
+    )
     evidence_boundary_assessments: tuple[
         EngineeringAgentEvidenceBoundaryAssessment, ...
     ]
@@ -1791,6 +1875,7 @@ class EngineeringAgentReviewProposal:
         decision: EngineeringAgentReviewDecision,
         findings: Sequence[EngineeringAgentReviewFinding] = (),
         focus: EngineeringAgentReviewFocus = EngineeringAgentReviewFocus.COMPREHENSIVE,
+        requirement_coverage_assessment: EngineeringAgentRequirementCoverageAssessment,
         evidence_boundary_assessments: Sequence[
             EngineeringAgentEvidenceBoundaryAssessment
         ] = (),
@@ -1811,12 +1896,26 @@ class EngineeringAgentReviewProposal:
                 ErrorCode.INVALID_ARGUMENT,
                 "Reviewer Findings must use the typed contract",
             )
-        if not isinstance(focus, EngineeringAgentReviewFocus) or any(
-            not isinstance(item, EngineeringAgentEvidenceBoundaryAssessment)
-            for item in assessments
-        ) or any(
-            not isinstance(item, EngineeringAgentBoundaryRelevanceAssessment)
-            for item in relevance_assessments
+        if (
+            not isinstance(focus, EngineeringAgentReviewFocus)
+            or not isinstance(
+                requirement_coverage_assessment,
+                EngineeringAgentRequirementCoverageAssessment,
+            )
+            or any(
+                not isinstance(
+                    item,
+                    EngineeringAgentEvidenceBoundaryAssessment,
+                )
+                for item in assessments
+            )
+            or any(
+                not isinstance(
+                    item,
+                    EngineeringAgentBoundaryRelevanceAssessment,
+                )
+                for item in relevance_assessments
+            )
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
@@ -1831,7 +1930,9 @@ class EngineeringAgentReviewProposal:
                 "comprehensive Review cannot pre-disposition evidence-boundary challenges",
             )
         if decision is EngineeringAgentReviewDecision.APPROVED and (
-            any(
+            requirement_coverage_assessment.disposition
+            is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+            or any(
                 item.disposition
                 is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
                 for item in assessments
@@ -1877,11 +1978,26 @@ class EngineeringAgentReviewProposal:
                     ErrorCode.INVALID_ARGUMENT,
                     "an audit-only boundary assessment requires a global no-evidence Finding",
                 )
+        if (
+            requirement_coverage_assessment.disposition
+            is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
+        ):
+            finding = finding_by_code.get(
+                requirement_coverage_assessment.finding_code or ""
+            )
+            if finding is None or finding.claim_index is not None:
+                raise DomainError(
+                    ErrorCode.INVALID_ARGUMENT,
+                    "missing or misaligned requirement coverage requires a global Finding",
+                )
         return cls(
             model_call_ref=_text(model_call_ref, "Reviewer model call reference"),
             decision=decision,
             findings=normalized,
             focus=focus,
+            requirement_coverage_assessment=(
+                requirement_coverage_assessment
+            ),
             evidence_boundary_assessments=assessments,
             boundary_relevance_assessments=relevance_assessments,
         )
@@ -1937,6 +2053,9 @@ class EngineeringAgentReview:
     decision: EngineeringAgentReviewDecision
     findings: tuple[EngineeringAgentReviewFinding, ...]
     focus: EngineeringAgentReviewFocus
+    requirement_coverage_assessment: (
+        EngineeringAgentRequirementCoverageAssessment
+    )
     evidence_boundary_assessments: tuple[
         EngineeringAgentEvidenceBoundaryAssessment, ...
     ]
@@ -3704,6 +3823,16 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Agent draft Claims must use the typed contract",
             )
+        for claim in proposal.claims:
+            if claim != EngineeringAgentClaimProposal.create(
+                statement=claim.statement,
+                support_observation_ids=claim.support_observation_ids,
+                support_citation_refs=claim.support_citation_refs,
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Agent draft Claim identity is invalid",
+                )
         if (
             proposal.response_kind is EngineeringAgentResponseKind.ANSWER
             and not proposal.claims
@@ -3743,6 +3872,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
         by_id = {item.observation_id: item for item in packaged_observations}
         if proposal.response_kind is EngineeringAgentResponseKind.ANSWER:
             for claim in proposal.claims:
+                claim_citation_refs = set(claim.support_citation_refs)
                 for observation_id in claim.support_observation_ids:
                     observation = by_id.get(observation_id)
                     if (
@@ -3754,6 +3884,23 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                             ErrorCode.CONTROL_STATE_DENIED,
                             "answer Claim references unavailable or non-support evidence",
                         )
+                    if observation.citation_refs and not claim_citation_refs.intersection(
+                        observation.citation_refs
+                    ):
+                        raise DomainError(
+                            ErrorCode.CONTROL_STATE_DENIED,
+                            "answer Claim must select a Citation from every cited Source observation",
+                        )
+                available_citation_refs = {
+                    citation_ref
+                    for observation_id in claim.support_observation_ids
+                    for citation_ref in by_id[observation_id].citation_refs
+                }
+                if not claim_citation_refs.issubset(available_citation_refs):
+                    raise DomainError(
+                        ErrorCode.CONTROL_STATE_DENIED,
+                        "answer Claim selects a Citation outside its supporting observations",
+                    )
         for observation_id in proposal.boundary_observation_ids:
             observation = by_id.get(observation_id)
             if (
@@ -3767,7 +3914,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
         answer_id = self._new_id("agent_answer")
         core = {
-            "schema": "ENGINEERING_AGENT_ANSWER@1",
+            "schema": "ENGINEERING_AGENT_ANSWER@2",
             "answer_id": answer_id.value,
             "turn_id": request.turn_id.value,
             "work_state_digest": work_state.digest.value,
@@ -3780,6 +3927,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     "support_observation_ids": tuple(
                         item.value for item in claim.support_observation_ids
                     ),
+                    "support_citation_refs": claim.support_citation_refs,
                 }
                 for claim in proposal.claims
             ),
@@ -3829,6 +3977,10 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     EngineeringAgentBoundaryRelevanceAssessment,
                 )
                 for item in proposal.boundary_relevance_assessments
+            )
+            or not isinstance(
+                proposal.requirement_coverage_assessment,
+                EngineeringAgentRequirementCoverageAssessment,
             )
         ):
             raise DomainError(
@@ -3898,6 +4050,42 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Reviewer Finding codes must be unique within one Review",
             )
+        requirement_coverage = proposal.requirement_coverage_assessment
+        expected_requirement_coverage = (
+            EngineeringAgentRequirementCoverageAssessment.create(
+                current_user_requirement=(
+                    requirement_coverage.current_user_requirement
+                ),
+                coverage_summary=requirement_coverage.coverage_summary,
+                disposition=requirement_coverage.disposition,
+                finding_code=requirement_coverage.finding_code,
+            )
+        )
+        if requirement_coverage != expected_requirement_coverage:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer requirement coverage identity is invalid",
+            )
+        if (
+            requirement_coverage.current_user_requirement
+            != request.user_message.content
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Reviewer requirement coverage did not bind the exact current User Message",
+            )
+        if (
+            requirement_coverage.disposition
+            is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
+        ):
+            finding = finding_by_code.get(
+                requirement_coverage.finding_code or ""
+            )
+            if finding is None or finding.claim_index is not None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "missing or misaligned requirement coverage must bind a global Finding",
+                )
         for assessment in proposal.evidence_boundary_assessments:
             if not engineering_agent_evidence_boundary_assessment_matches_challenge(
                 challenge_by_id[assessment.challenge_id],
@@ -3961,13 +4149,21 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 in _BOUNDARY_RELEVANCE_AUDIT_ONLY_DISPOSITIONS
                 and assessment.finding_code is not None
             }
+            if (
+                requirement_coverage.disposition
+                is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
+                and requirement_coverage.finding_code is not None
+            ):
+                expected_finding_codes.add(requirement_coverage.finding_code)
             if set(finding_by_code) != expected_finding_codes:
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "focused Reviewer Findings must equal the exact challenge-bound Finding set",
                 )
         if proposal.decision is EngineeringAgentReviewDecision.APPROVED and (
-            any(
+            requirement_coverage.disposition
+            is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+            or any(
                 item.disposition
                 is not EngineeringAgentEvidenceBoundaryAssessmentDisposition.WITHIN_CALLER_EVIDENCE
                 for item in proposal.evidence_boundary_assessments
@@ -3992,7 +4188,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 )
         review_id = self._new_id("agent_review")
         core = {
-            "schema": "ENGINEERING_AGENT_REVIEW@3",
+            "schema": "ENGINEERING_AGENT_REVIEW@4",
             "review_id": review_id.value,
             "turn_id": request.turn_id.value,
             "work_state_digest": work_state.digest.value,
@@ -4000,6 +4196,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             "answer_digest": draft.digest.value,
             "decision": proposal.decision.value,
             "focus": focus.value,
+            "requirement_coverage_assessment": {
+                "current_user_requirement": (
+                    requirement_coverage.current_user_requirement
+                ),
+                "coverage_summary": requirement_coverage.coverage_summary,
+                "disposition": requirement_coverage.disposition.value,
+                "finding_code": requirement_coverage.finding_code,
+                "digest": requirement_coverage.digest.value,
+            },
             "findings": tuple(
                 {
                     "code": item.code,
@@ -4048,6 +4253,7 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
             decision=proposal.decision,
             findings=proposal.findings,
             focus=focus,
+            requirement_coverage_assessment=requirement_coverage,
             evidence_boundary_assessments=(
                 proposal.evidence_boundary_assessments
             ),
@@ -4280,6 +4486,10 @@ def _validate_delivery_authorization(
         or authorization.package_digest != package.digest
         or authorization.answer_digest != draft.digest
         or authorization.review_digest != review.digest
+        or review.requirement_coverage_assessment.current_user_requirement
+        != request.user_message.content
+        or review.requirement_coverage_assessment.disposition
+        is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
         or not _engineering_agent_review_closes_boundary_challenges(
             package=package,
             draft=draft,
@@ -4308,6 +4518,11 @@ def _engineering_agent_review_closes_boundary_challenges(
     )
     assessments = review.evidence_boundary_assessments
     relevance_assessments = review.boundary_relevance_assessments
+    if (
+        review.requirement_coverage_assessment.disposition
+        is not EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+    ):
+        return False
     challenge_by_id = {item.challenge_id: item for item in expected}
     relevance_challenge_by_id = {
         item.challenge_id: item for item in expected_relevance
@@ -4441,15 +4656,6 @@ def _draft_citations(
 ) -> tuple[EngineeringTurnCitation, ...]:
     """Project only authority Citations reached by the delivered Draft."""
 
-    referenced_observation_ids: list[StableId] = []
-    for claim in draft.claims:
-        for observation_id in claim.support_observation_ids:
-            if observation_id not in referenced_observation_ids:
-                referenced_observation_ids.append(observation_id)
-    for observation_id in draft.boundary_observation_ids:
-        if observation_id not in referenced_observation_ids:
-            referenced_observation_ids.append(observation_id)
-
     observations = {
         item.observation_id: item
         for item in (
@@ -4459,15 +4665,11 @@ def _draft_citations(
     }
     projected_by_ref: dict[str, EngineeringTurnCitation] = {}
     projected: list[EngineeringTurnCitation] = []
-    for observation_id in referenced_observation_ids:
-        observation = observations.get(observation_id)
-        if observation is None:
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Draft Citation projection references an unknown Observation",
-            )
-        if not observation.citation_refs:
-            continue
+
+    def project_reference(
+        observation: EngineeringAgentToolObservation,
+        citation_ref: str,
+    ) -> None:
         receipt = observation.authority_receipt
         if receipt is None:
             raise DomainError(
@@ -4482,36 +4684,69 @@ def _draft_citations(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Citation authority receipt contains duplicate references",
             )
-        for citation_ref in observation.citation_refs:
-            citation = authority_citations.get(citation_ref)
-            if citation is None:
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Observation Citation is absent from its authority receipt",
-                )
-            turn_citation = EngineeringTurnCitation.create(
-                citation_ref=citation.citation_ref,
-                evidence_class=citation.evidence_class,
-                source_revision=citation.source_revision,
-                locator=citation.locator,
-                modality=citation.modality,
-                content_digest=citation.content_digest,
+        citation = authority_citations.get(citation_ref)
+        if citation is None or citation_ref not in observation.citation_refs:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "selected Draft Citation is absent from its supporting Observation",
             )
-            if turn_citation.digest != citation.digest:
+        turn_citation = EngineeringTurnCitation.create(
+            citation_ref=citation.citation_ref,
+            evidence_class=citation.evidence_class,
+            source_revision=citation.source_revision,
+            locator=citation.locator,
+            modality=citation.modality,
+            content_digest=citation.content_digest,
+        )
+        if turn_citation.digest != citation.digest:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Turn Citation projection changed the authority identity",
+            )
+        previous = projected_by_ref.get(citation_ref)
+        if previous is not None:
+            if previous != turn_citation:
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Turn Citation projection changed the authority identity",
+                    "Turn Citation reference resolves to inconsistent identities",
                 )
-            previous = projected_by_ref.get(citation_ref)
-            if previous is not None:
-                if previous != turn_citation:
-                    raise DomainError(
-                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                        "Turn Citation reference resolves to inconsistent identities",
-                    )
-                continue
-            projected_by_ref[citation_ref] = turn_citation
-            projected.append(turn_citation)
+            return
+        projected_by_ref[citation_ref] = turn_citation
+        projected.append(turn_citation)
+
+    for claim in draft.claims:
+        claim_observations: list[EngineeringAgentToolObservation] = []
+        for observation_id in claim.support_observation_ids:
+            observation = observations.get(observation_id)
+            if observation is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Draft Citation projection references an unknown Observation",
+                )
+            claim_observations.append(observation)
+        for citation_ref in claim.support_citation_refs:
+            matching = tuple(
+                observation
+                for observation in claim_observations
+                if citation_ref in observation.citation_refs
+            )
+            if not matching:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Draft Citation selection is outside its Claim evidence",
+                )
+            for observation in matching:
+                project_reference(observation, citation_ref)
+
+    for observation_id in draft.boundary_observation_ids:
+        observation = observations.get(observation_id)
+        if observation is None:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Draft Citation projection references an unknown Observation",
+            )
+        for citation_ref in observation.citation_refs:
+            project_reference(observation, citation_ref)
     return tuple(projected)
 
 
@@ -4732,6 +4967,8 @@ __all__ = [
     "EngineeringAgentModelRole",
     "EngineeringAgentResponseControl",
     "EngineeringAgentResponseKind",
+    "EngineeringAgentRequirementCoverageAssessment",
+    "EngineeringAgentRequirementCoverageDisposition",
     "EngineeringAgentReview",
     "EngineeringAgentReviewDecision",
     "EngineeringAgentReviewFinding",

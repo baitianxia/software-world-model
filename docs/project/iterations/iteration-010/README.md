@@ -247,6 +247,12 @@ FAIL。run-099 纠正了 run-098 fixture 假设：真实 target 含 `generateOrd
 identifier-related path 签发为 navigation-only Boundary opaque READ option，Search 绝不产生 SUPPORT，full READ 后才允许 Claim；current
 `@26/@16/@21`、六模块 `157/157` PASS，fresh run-100 待验证；run-099 不取得质量或 MVP PASS。
 
+`FINDING-010-227/228 / run-100` 密封 Ark 4、DeepSeek 35；Ark 只有 sealed 429 trusted-unavailable 才激活 fallback，DeepSeek 35/35
+completed，retry/人工审批/Production 0。Q2 通过 navigation-only opaque READ 取得目标完整源码，Q1/Q2/Q5 ACCEPTED、Q4 零调用
+Clarification；Q3 却重复上一轮普通流程且 Reviewer 错误 APPROVED，Q5 broad Search SUPPORT 又投影 70 个 Citation，整体继续 FAIL。
+current `@27/@17/@22` 为每个 Review 密封 exact current-requirement coverage，Primary output `@3` 为每个 Claim 选择最小 direct exact
+Citation refs；六模块相邻定向测试 `157/157` 与 documentation check `634` PASS，fresh run-101 待验证，不存在 Provider 或重复授权等待。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

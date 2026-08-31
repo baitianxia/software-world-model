@@ -200,6 +200,12 @@ ACCEPTED、Q4 零调用 Clarification，但 Q2 Reviewer reject 与 Q3 zero-Citat
 literal hit 或 SUPPORT，只有 fresh full READ 才可进入 Claim。current `@26/@16/@21`、六模块 `157/157` PASS；文档/可信父门禁、提交与
 fresh run-100 是下一连续执行证据。
 
+`FINDING-010-227/228 / run-100` 的 Ark 4 个 sealed 429 继续自动激活 DeepSeek，35/35 fallback completed；Q2 首次通过 navigation-only
+opaque READ 取得目标完整源码，Q1/Q2/Q5 为 ACCEPTED、Q4 零调用 Clarification。Q3 却在 full READ 后重复上一轮普通流程且 Reviewer
+APPROVED，Q5 又投影 70 个 Citation，故质量 Gate 仍未通过。current `@27/@17/@22` 为每个 Review 增加 exact current-requirement coverage
+assessment，Primary output `@3` 为每个 Claim 选择最小 exact Citation refs；六模块相邻定向测试 `157/157` 与 documentation check `634`
+PASS。可信父门禁、提交与 fresh run-101 是下一连续执行证据，不存在 Provider 或授权等待。
+
 当前只交付 loopback、公开工程、只读源码的非生产体验；Production、外部写入、私有源码、完整回归、hidden 与跨工程夯实不属于首次体验。
 
 ## Product-goal alignment gate

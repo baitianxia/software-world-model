@@ -15,6 +15,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentDraftProposal,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentResponseKind,
+    EngineeringAgentRequirementCoverageAssessment,
+    EngineeringAgentRequirementCoverageDisposition,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFocus,
     EngineeringAgentReviewProposal,
@@ -305,6 +307,20 @@ class RecordingReviewer:
             model_call_ref=f"tool-review-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
             focus=request.focus,
+            requirement_coverage_assessment=(
+                EngineeringAgentRequirementCoverageAssessment.create(
+                    current_user_requirement=(
+                        request.turn_request.user_message.content
+                    ),
+                    coverage_summary=(
+                        "The Draft addresses the complete fixture requirement."
+                    ),
+                    disposition=(
+                        EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+                    ),
+                    finding_code=None,
+                )
+            ),
             boundary_relevance_assessments=relevance_assessments,
         )
 
@@ -331,6 +347,28 @@ def proposal(
     accepted_correction_message_ids=(),
 ):
     previous = invocation.previous_work_state
+    if draft is not None and draft.claims:
+        observations = {
+            item.observation_id: item for item in invocation.observations
+        }
+        draft = EngineeringAgentDraftProposal.create(
+            response_kind=draft.response_kind,
+            content=draft.content,
+            claims=tuple(
+                EngineeringAgentClaimProposal.create(
+                    statement=claim.statement,
+                    support_observation_ids=claim.support_observation_ids,
+                    support_citation_refs=tuple(
+                        observation.citation_refs[0]
+                        for observation_id in claim.support_observation_ids
+                        for observation in (observations[observation_id],)
+                        if observation.citation_refs
+                    ),
+                )
+                for claim in draft.claims
+            ),
+            boundary_observation_ids=draft.boundary_observation_ids,
+        )
     return EngineeringAgentWorkStateProposal.create(
         model_call_ref=call_ref,
         expected_context_digest=invocation.request.snapshot_before.context.digest,
@@ -1363,7 +1401,10 @@ class ConversationalEngineeringToolAdapterTests(unittest.TestCase):
         self.assertIn("Unique cognition for semantic need 2.", support[1].content)
         self.assertEqual(len(support[0].citation_refs), 2)
         self.assertEqual(len(support[1].citation_refs), 1)
-        self.assertEqual(len(submission.turn.citations), 3)
+        self.assertEqual(
+            tuple(item.citation_ref for item in submission.turn.citations),
+            (support[0].citation_refs[0], support[1].citation_refs[0]),
+        )
 
     def test_world_model_tool_marks_fully_repeated_context_as_no_progress(self) -> None:
         reviewer = RecordingReviewer()

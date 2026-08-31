@@ -4054,6 +4054,30 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-227": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-227.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_tools.py"
+    ]
+  },
+  "FINDING-010-228": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-228.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_agent.py",
+      "tests/test_conversational_engineering_model.py",
+      "tests/test_conversational_engineering_tools.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

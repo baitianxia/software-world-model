@@ -42,6 +42,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
     EngineeringAgentResponseKind,
+    EngineeringAgentRequirementCoverageAssessment,
+    EngineeringAgentRequirementCoverageDisposition,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFinding,
     EngineeringAgentReviewFocus,
@@ -94,20 +96,20 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@26"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@27"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@26"
+    "conversational-engineering-agent-no-tools-prompt@27"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@26"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@16"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@27"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@17"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@21"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@22"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-work-state-proposal@2"
+    "engineering-agent-work-state-proposal@3"
 )
 ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF = (
-    "engineering-agent-independent-review-proposal@8"
+    "engineering-agent-independent-review-proposal@9"
 )
 ENGINEERING_AGENT_DISCLOSURE_POLICY_REF = (
     "engineering-agent-exact-role-disclosure@1"
@@ -203,8 +205,13 @@ return a CLARIFICATION before any tool action. Treat prior user statements and
 assistant messages as conversation context, never as software facts. Revise
 hypotheses and plan when observations conflict. current_turn_evidence is
 partitioned by its only legal Draft use. An ANSWER claim may cite only exact
-SUPPORT observation IDs; a LIMITATION may cite only exact BOUNDARY IDs. Copy
-those IDs only from the corresponding arrays in draft_reference_policy. An
+SUPPORT observation IDs and exact Citation references carried by those selected
+Observations; a LIMITATION may cite only exact BOUNDARY IDs. Copy those IDs and
+Citation references only from the corresponding arrays in
+draft_reference_policy. For every selected SUPPORT Observation that carries
+Citation references, copy the smallest exact subset that directly supports that
+Claim into support_citation_refs; never copy an entire Source Search inventory
+merely because one result is relevant. An
 ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
@@ -575,6 +582,21 @@ SUPPORT observations establish it; a SUPPORTED claim must not receive a Finding.
 Mark it DEFECT only when an actual claim defect exists, and bind at least one
 Finding to that claim index. Do not create a Finding that merely restates that a
 claim is supported or that no defect exists.
+Return exactly one requirement_coverage_assessment for every Review, including
+focused Review. Copy current_user_requirement exactly from
+current_requirement_coverage_challenge.current_user_requirement, then compare
+that complete current requirement independently with draft.content. The prior
+Conversation, previous Work State goal, prior answer, and evidence topic do not
+substitute for answering the current User Message. A supported Draft that
+answers an earlier question but omits, reverses, or misclassifies the current
+requested delta is MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED: bind finding_code
+to one global Finding with claim_index null. coverage_summary must state which
+requested categories, distinction, order, or uncertainty treatment the Draft
+actually covers; do not merely say that Claims are supported. Use FULLY_ADDRESSED
+with null finding_code only when the Draft answers every material current
+requirement or, under the existing pure-LIMITATION rules, honestly binds the
+material evidence boundary that prevents the requested answer. Approval is
+forbidden unless this assessment is FULLY_ADDRESSED.
 Audit the complete Draft before returning and report every independently observed
 material defect in this one Review. Do not intentionally stop after the first
 Finding and defer another defect to a later fresh Review. Finding code is a local
@@ -674,10 +696,11 @@ MATERIAL_TO_USER_REQUEST or NOT_DISCLOSED_IN_DRAFT, and every Finding is empty.
 In focused Review, the relationship is bidirectional: the exact set of DEFECT
 Claim indices and claim-scoped Finding codes must be the set projected by
 CLAIM_EXCEEDS_CALLER_EVIDENCE assessments, and the exact set of global Finding
-codes must be the set projected by audit-only relevance assessments. A
+codes must be the union of audit-only relevance assessments and, when coverage
+is missing or misaligned, the requirement coverage assessment. A
 WITHIN_CALLER_EVIDENCE assessment cannot coexist with an unbound caller-evidence
-Finding on that Claim. Do not introduce a comprehensive/global completeness
-Finding during focused Review.
+Finding on that Claim. Do not introduce another unbound comprehensive/global
+completeness Finding during focused Review.
 For every boundary_relevance_challenge, copy disposition only from that
 challenge's allowed_exact_dispositions. Do not infer a resolved-acquisition
 disposition from boundary prose when the trusted kind is BOUNDARY_MATERIALITY.
@@ -952,6 +975,18 @@ _CLAIM_SCHEMA = _closed_object(
             maximum=128,
             unique=True,
         ),
+        "support_citation_refs": _array(
+            {
+                "type": "string",
+                "description": (
+                    "Copy only exact Citation references disclosed for the "
+                    "Claim's selected SUPPORT observations. Select the smallest "
+                    "directly supporting set; do not copy a search inventory."
+                ),
+            },
+            maximum=128,
+            unique=True,
+        ),
     }
 )
 
@@ -1023,6 +1058,21 @@ _CLAIM_ASSESSMENT_SCHEMA = _closed_object(
     }
 )
 
+_REQUIREMENT_COVERAGE_ASSESSMENT_SCHEMA = _closed_object(
+    {
+        "current_user_requirement": _STRING,
+        "coverage_summary": _STRING,
+        "disposition": {
+            "type": "string",
+            "enum": [
+                item.value
+                for item in EngineeringAgentRequirementCoverageDisposition
+            ],
+        },
+        "finding_code": {"anyOf": [_NULL, _STRING]},
+    }
+)
+
 _EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA = _closed_object(
     {
         "challenge_id": _STRING,
@@ -1076,6 +1126,9 @@ _REVIEW_OUTPUT_SCHEMA = _closed_object(
         "claim_assessments": _array(
             _CLAIM_ASSESSMENT_SCHEMA,
             maximum=64,
+        ),
+        "requirement_coverage_assessment": (
+            _REQUIREMENT_COVERAGE_ASSESSMENT_SCHEMA
         ),
         "evidence_boundary_assessments": _array(
             _EVIDENCE_BOUNDARY_ASSESSMENT_SCHEMA,
@@ -2865,6 +2918,10 @@ def _closed_nested_object_fields(
             ),
         }
     return {
+        "$.requirement_coverage_assessment": _closed_schema_required_fields(
+            _REQUIREMENT_COVERAGE_ASSESSMENT_SCHEMA,
+            label="Reviewer requirement coverage assessment",
+        ),
         "$.claim_assessments[]": _closed_schema_required_fields(
             _CLAIM_ASSESSMENT_SCHEMA,
             label="Reviewer Claim assessment",
@@ -3044,6 +3101,9 @@ def _output_preflight_view(
         support_observation_ids = draft_reference_policy.get(
             "answer_claim_support_observation_ids"
         )
+        support_citation_refs_by_observation = draft_reference_policy.get(
+            "answer_claim_support_citation_refs_by_observation"
+        )
         boundary_observation_ids = draft_reference_policy.get(
             "limitation_boundary_observation_ids"
         )
@@ -3064,6 +3124,19 @@ def _output_preflight_view(
             or not isinstance(support_observation_ids, (tuple, list))
             or not all(
                 isinstance(item, str) for item in support_observation_ids
+            )
+            or not isinstance(
+                support_citation_refs_by_observation, (tuple, list)
+            )
+            or not all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("observation_id"), str)
+                and isinstance(item.get("citation_refs"), (tuple, list))
+                and all(
+                    isinstance(reference, str)
+                    for reference in item.get("citation_refs", ())
+                )
+                for item in support_citation_refs_by_observation
             )
             or not isinstance(boundary_observation_ids, (tuple, list))
             or not all(
@@ -3160,6 +3233,16 @@ def _output_preflight_view(
             "answer_claim_support_observation_ids_allowed_exact": tuple(
                 support_observation_ids
             ),
+            "answer_claim_support_citation_refs_by_observation_allowed_exact": tuple(
+                {
+                    "observation_id": item["observation_id"],
+                    "citation_refs": tuple(item["citation_refs"]),
+                }
+                for item in support_citation_refs_by_observation
+            ),
+            "each_citation_bearing_support_observation_requires_selected_reference": True,
+            "claim_citation_selection_must_be_minimal_and_direct": True,
+            "whole_search_inventory_copy_forbidden": True,
             "draft_boundary_observation_ids_allowed_exact": tuple(
                 boundary_observation_ids
             ),
@@ -3180,7 +3263,13 @@ def _output_preflight_view(
         )
     else:
         reference_policy = role_input_payload.get("review_reference_policy")
-        if not isinstance(reference_policy, Mapping):
+        requirement_challenge = role_input_payload.get(
+            "current_requirement_coverage_challenge"
+        )
+        if (
+            not isinstance(reference_policy, Mapping)
+            or not isinstance(requirement_challenge, Mapping)
+        ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent output preflight Review input is invalid",
@@ -3215,6 +3304,26 @@ def _output_preflight_view(
         unbound_empty_fragments_require_not_disclosed = reference_policy.get(
             "unbound_empty_boundary_fragments_require_not_disclosed"
         )
+        current_user_requirement = requirement_challenge.get(
+            "current_user_requirement"
+        )
+        requirement_comparison_contract = requirement_challenge.get(
+            "comparison_contract"
+        )
+        requirement_coverage_required = reference_policy.get(
+            "requirement_coverage_assessment_required"
+        )
+        requirement_exact_copy_required = reference_policy.get(
+            "requirement_coverage_current_user_requirement_exact_copy_required"
+        )
+        requirement_approval_requires_full = reference_policy.get(
+            "requirement_coverage_approval_requires_fully_addressed"
+        )
+        requirement_misalignment_requires_global_finding = (
+            reference_policy.get(
+                "requirement_coverage_misalignment_requires_global_finding"
+            )
+        )
         if not all(
             isinstance(value, (tuple, list))
             for value in (
@@ -3232,8 +3341,17 @@ def _output_preflight_view(
                 relevance_dispositions_are_exhaustive,
                 bound_empty_fragments_require_audit_only,
                 unbound_empty_fragments_require_not_disclosed,
+                requirement_coverage_required,
+                requirement_exact_copy_required,
+                requirement_approval_requires_full,
+                requirement_misalignment_requires_global_finding,
             )
-        ) or len(relevance_challenge_ids) != len(relevance_challenges):
+        ) or (
+            len(relevance_challenge_ids) != len(relevance_challenges)
+            or not isinstance(current_user_requirement, str)
+            or not current_user_requirement
+            or not isinstance(requirement_comparison_contract, Mapping)
+        ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "Engineering Agent output preflight Review domains are invalid",
@@ -3358,6 +3476,19 @@ def _output_preflight_view(
                 }
             )
         preflight["review_output_contract"] = {
+            "requirement_coverage_current_user_requirement_exact": (
+                current_user_requirement
+            ),
+            "requirement_coverage_dispositions_allowed_exact": tuple(
+                item.value
+                for item in EngineeringAgentRequirementCoverageDisposition
+            ),
+            "requirement_coverage_assessment_required": True,
+            "requirement_coverage_approval_requires_fully_addressed": True,
+            "requirement_coverage_misalignment_requires_global_finding": True,
+            "requirement_comparison_contract": deepcopy(
+                dict(requirement_comparison_contract)
+            ),
             "claim_assessment_indices_required_exact_order": tuple(
                 claim_indices
             ),
@@ -4471,7 +4602,7 @@ def _reviewed_draft_view(
     value: EngineeringAgentAnswerDraft,
 ) -> dict[str, object]:
     return {
-        "schema": "ENGINEERING_AGENT_REVIEWED_DRAFT@1",
+        "schema": "ENGINEERING_AGENT_REVIEWED_DRAFT@2",
         "response_kind": value.response_kind.value,
         "content": value.content,
         "claims": tuple(
@@ -4481,6 +4612,7 @@ def _reviewed_draft_view(
                 "support_observation_ids": tuple(
                     item.value for item in claim.support_observation_ids
                 ),
+                "support_citation_refs": claim.support_citation_refs,
             }
             for index, claim in enumerate(value.claims)
         ),
@@ -4561,6 +4693,11 @@ def _review_feedback_view(
                 isinstance(item, StableId)
                 for item in claim.support_observation_ids
             )
+            and isinstance(claim.support_citation_refs, tuple)
+            and all(
+                isinstance(item, str)
+                for item in claim.support_citation_refs
+            )
             for claim in reviewed_draft.claims
         )
         or not isinstance(reviewed_draft.boundary_observation_ids, tuple)
@@ -4576,7 +4713,7 @@ def _review_feedback_view(
         )
     expected_draft_digest = digest_of(
         {
-            "schema": "ENGINEERING_AGENT_ANSWER@1",
+            "schema": "ENGINEERING_AGENT_ANSWER@2",
             "answer_id": reviewed_draft.answer_id.value,
             "turn_id": reviewed_draft.turn_id.value,
             "work_state_digest": reviewed_draft.work_state_digest.value,
@@ -4589,6 +4726,7 @@ def _review_feedback_view(
                     "support_observation_ids": tuple(
                         item.value for item in claim.support_observation_ids
                     ),
+                    "support_citation_refs": claim.support_citation_refs,
                 }
                 for claim in reviewed_draft.claims
             ),
@@ -4599,6 +4737,11 @@ def _review_feedback_view(
     )
     support_ids = {
         item.observation_id
+        for item in invocation.observations
+        if item.disposition.value == "SUPPORT"
+    }
+    support_observations_by_id = {
+        item.observation_id: item
         for item in invocation.observations
         if item.disposition.value == "SUPPORT"
     }
@@ -4635,6 +4778,8 @@ def _review_feedback_view(
             not claim.support_observation_ids
             or len(claim.support_observation_ids)
             != len(set(claim.support_observation_ids))
+            or len(claim.support_citation_refs)
+            != len(set(claim.support_citation_refs))
             or not claim.statement
             or claim.statement != claim.statement.strip()
             for claim in reviewed_draft.claims
@@ -4654,6 +4799,25 @@ def _review_feedback_view(
         )
         or any(
             not set(claim.support_observation_ids).issubset(support_ids)
+            for claim in reviewed_draft.claims
+        )
+        or any(
+            any(
+                support_observations_by_id[observation_id].citation_refs
+                and not set(claim.support_citation_refs).intersection(
+                    support_observations_by_id[observation_id].citation_refs
+                )
+                for observation_id in claim.support_observation_ids
+            )
+            or not set(claim.support_citation_refs).issubset(
+                {
+                    citation_ref
+                    for observation_id in claim.support_observation_ids
+                    for citation_ref in support_observations_by_id[
+                        observation_id
+                    ].citation_refs
+                }
+            )
             for claim in reviewed_draft.claims
         )
         or not set(reviewed_draft.boundary_observation_ids).issubset(
@@ -4791,6 +4955,14 @@ def _primary_input_view(
         "draft_reference_policy": {
             "answer_claim_support_observation_ids": tuple(
                 item.observation_id.value
+                for item in invocation.observations
+                if item.disposition.value == "SUPPORT"
+            ),
+            "answer_claim_support_citation_refs_by_observation": tuple(
+                {
+                    "observation_id": item.observation_id.value,
+                    "citation_refs": item.citation_refs,
+                }
                 for item in invocation.observations
                 if item.disposition.value == "SUPPORT"
             ),
@@ -5897,13 +6069,20 @@ def _review_input_view(
         is EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
         else ()
     )
+    conversation_context = _conversation_context_view(request.turn_request)
+    relevant_messages = conversation_context["relevant_messages"]
+    prior_assistant_contents = tuple(
+        item["content"]
+        for item in relevant_messages
+        if isinstance(item, Mapping) and item.get("role") == "ASSISTANT"
+    )
     return {
         "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
         "format_repair_policy": _initial_format_repair_policy(),
         "review_focus": request.focus.value,
         "turn": _turn_input_view(request.turn_request),
-        "conversation_context": _conversation_context_view(request.turn_request),
+        "conversation_context": conversation_context,
         "work_state": _work_state_view(request.work_state),
         "evidence_package": {
             "package_id": request.package.package_id.value,
@@ -5933,6 +6112,7 @@ def _review_input_view(
                     "support_observation_ids": tuple(
                         item.value for item in claim.support_observation_ids
                     ),
+                    "support_citation_refs": claim.support_citation_refs,
                 }
                 for index, claim in enumerate(request.draft.claims)
             ),
@@ -5940,6 +6120,25 @@ def _review_input_view(
                 item.value for item in request.draft.boundary_observation_ids
             ),
             "digest": request.draft.digest.value,
+        },
+        "current_requirement_coverage_challenge": {
+            "current_user_requirement": (
+                request.turn_request.user_message.content
+            ),
+            "draft_content": request.draft.content,
+            "draft_exactly_matches_prior_assistant_content": (
+                request.draft.content in prior_assistant_contents
+            ),
+            "prior_assistant_message_count": len(prior_assistant_contents),
+            "comparison_contract": {
+                "current_user_requirement_is_exact_authority": True,
+                "complete_current_requirement_must_be_assessed": True,
+                "prior_answer_or_work_state_cannot_substitute": True,
+                "supported_claims_do_not_establish_requirement_coverage": True,
+                "requested_categories_distinctions_order_and_uncertainty_are_material": True,
+                "older_question_answer_with_current_delta_missing_is_misaligned": True,
+                "assessment_required_for_every_review_focus": True,
+            },
         },
         "evidence_boundary_challenges": tuple(
             _evidence_boundary_challenge_view(request, item)
@@ -5955,6 +6154,12 @@ def _review_input_view(
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
+            "requirement_coverage_assessment_required": True,
+            "requirement_coverage_current_user_requirement_exact_copy_required": True,
+            "requirement_coverage_approval_requires_fully_addressed": True,
+            "requirement_coverage_misalignment_requires_global_finding": True,
+            "prior_answer_or_work_state_cannot_substitute_for_current_requirement": True,
+            "supported_claims_do_not_establish_requirement_coverage": True,
             "container_context_is_part_of_contained_assertion": True,
             "inherited_material_qualifier_omission_is_global_completeness_finding": True,
             "global_completeness_finding_claim_index": None,
@@ -6385,6 +6590,10 @@ def _decode_draft(payload: Mapping[str, object]) -> EngineeringAgentDraftProposa
                 _mapping(item, "answer claim")["support_observation_ids"],
                 "claim support observation IDs",
             ),
+            support_citation_refs=_string_sequence(
+                _mapping(item, "answer claim")["support_citation_refs"],
+                "claim support Citation references",
+            ),
         )
         for item in _sequence(payload["claims"], "answer claims")
     )
@@ -6409,11 +6618,19 @@ def _draft_proposal_matches_reviewed_draft(
         proposal.response_kind is reviewed.response_kind
         and proposal.content == reviewed.content
         and tuple(
-            (item.statement, item.support_observation_ids)
+            (
+                item.statement,
+                item.support_observation_ids,
+                item.support_citation_refs,
+            )
             for item in proposal.claims
         )
         == tuple(
-            (item.statement, item.support_observation_ids)
+            (
+                item.statement,
+                item.support_observation_ids,
+                item.support_citation_refs,
+            )
             for item in reviewed.claims
         )
         and proposal.boundary_observation_ids
@@ -6530,6 +6747,7 @@ def _validate_primary_proposal(
             "evidence-only synthesis requires an Answer or Limitation draft",
         )
     for claim_index, claim in enumerate(proposal.draft.claims):
+        available_citation_refs: set[str] = set()
         for support_index, observation_id in enumerate(
             claim.support_observation_ids
         ):
@@ -6543,6 +6761,27 @@ def _validate_primary_proposal(
                     f"[{support_index}] must copy an ID from draft_reference_policy."
                     "answer_claim_support_observation_ids; BOUNDARY IDs belong only "
                     "in draft.boundary_observation_ids",
+                )
+            observation_citation_refs = set(by_id[observation_id].citation_refs)
+            available_citation_refs.update(observation_citation_refs)
+            if observation_citation_refs and not observation_citation_refs.intersection(
+                claim.support_citation_refs
+            ):
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    f"$.draft.claims[{claim_index}].support_citation_refs must "
+                    f"select at least one exact Citation reference from selected "
+                    f"SUPPORT observation {observation_id.value}",
+                )
+        for citation_index, citation_ref in enumerate(
+            claim.support_citation_refs
+        ):
+            if citation_ref not in available_citation_refs:
+                raise DomainError(
+                    ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                    f"$.draft.claims[{claim_index}].support_citation_refs"
+                    f"[{citation_index}] must copy an exact reference from the "
+                    "Claim's selected SUPPORT observations",
                 )
     reportable_boundary_ids = set(
         project_engineering_agent_draft_boundaries(
@@ -6714,6 +6953,15 @@ def _review_output_with_unique_finding_codes(
         return normalized
 
     referenced_codes: set[str] = set()
+    raw_requirement_assessment = normalized.get(
+        "requirement_coverage_assessment"
+    )
+    if isinstance(raw_requirement_assessment, dict):
+        requirement_finding_code = raw_requirement_assessment.get(
+            "finding_code"
+        )
+        if isinstance(requirement_finding_code, str):
+            referenced_codes.add(requirement_finding_code)
     for field in (
         "evidence_boundary_assessments",
         "boundary_relevance_assessments",
@@ -6767,6 +7015,32 @@ def _decode_review_output(
             )
             for item in _sequence(
                 output["claim_assessments"], "claim assessments"
+            )
+        )
+        raw_requirement_coverage = _mapping(
+            output["requirement_coverage_assessment"],
+            "requirement coverage assessment",
+        )
+        requirement_coverage_assessment = (
+            EngineeringAgentRequirementCoverageAssessment.create(
+                current_user_requirement=_string(
+                    raw_requirement_coverage["current_user_requirement"],
+                    "requirement coverage current User requirement",
+                ),
+                coverage_summary=_string(
+                    raw_requirement_coverage["coverage_summary"],
+                    "requirement coverage summary",
+                ),
+                disposition=EngineeringAgentRequirementCoverageDisposition(
+                    _string(
+                        raw_requirement_coverage["disposition"],
+                        "requirement coverage disposition",
+                    )
+                ),
+                finding_code=_optional_string(
+                    raw_requirement_coverage["finding_code"],
+                    "requirement coverage Finding code",
+                ),
             )
         )
         evidence_boundary_assessments = tuple(
@@ -6911,6 +7185,9 @@ def _decode_review_output(
             ),
             findings=findings,
             focus=focus,
+            requirement_coverage_assessment=(
+                requirement_coverage_assessment
+            ),
             evidence_boundary_assessments=evidence_boundary_assessments,
             boundary_relevance_assessments=boundary_relevance_assessments,
         )
@@ -7006,6 +7283,27 @@ def _decode_review_output(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
             "Engineering Agent Reviewer Finding codes must be unique",
         )
+    if (
+        requirement_coverage_assessment.current_user_requirement
+        != request.turn_request.user_message.content
+    ):
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "requirement_coverage_assessment.current_user_requirement must "
+            "copy the exact current User Message",
+        )
+    if (
+        requirement_coverage_assessment.disposition
+        is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
+    ):
+        finding = findings_by_code.get(
+            requirement_coverage_assessment.finding_code or ""
+        )
+        if finding is None or finding.claim_index is not None:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "missing or misaligned requirement coverage must bind one global Finding",
+            )
     challenge_by_id = {
         item.challenge_id: item for item in expected_challenges
     }
@@ -7104,6 +7402,14 @@ def _decode_review_output(
             }
             and item.finding_code is not None
         }
+        if (
+            requirement_coverage_assessment.disposition
+            is EngineeringAgentRequirementCoverageDisposition.MATERIAL_REQUIREMENT_MISSING_OR_MISALIGNED
+            and requirement_coverage_assessment.finding_code is not None
+        ):
+            expected_finding_codes.add(
+                requirement_coverage_assessment.finding_code
+            )
         if defect_claim_indices != exceeded_claim_indices:
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,

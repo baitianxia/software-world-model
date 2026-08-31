@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -137,6 +137,12 @@ Q2 Reviewer reject、Q3 reviewed limitation 使整体仍 FAIL。真实 exact sou
 identifier ranking 已把目标带入 56-file observation，却不能合法生成 literal hit。current successor 把最多 16 个零-hit identifier-path item
 标为 navigation-only Boundary opaque READ options，禁止 Search SUPPORT，fresh full READ 后才允许 Claim；current protocol
 `@26/@16/@21`、六模块 `157/157` PASS。authority、route、fallback、budget、retry 与 Production 边界不变，fresh run-100 是下一真实证据。
+
+`FINDING-010-227/228 / run-100` 密封 Ark 4 个 sealed 429 与 DeepSeek 35/35 completed；Q2 首次通过 navigation-only opaque
+READ 取得目标 full source，Q1/Q2/Q5 ACCEPTED、Q4 zero-dispatch Clarification。Q3 却重复上一轮普通流程且 Reviewer 错误
+APPROVED，Q5 又投影 70 个 Citation，整体仍 FAIL。current `@27/@17/@22` 为每个 Review 强制 exact current-requirement coverage
+assessment，Primary output `@3` 为每个 Claim 选择最小 exact Citation refs。authority、route、fallback、budget、retry 与 Production
+边界不变；六模块相邻定向测试 `157/157` 与 documentation check `634` PASS，fresh run-101 是下一真实证据。
 
 PDR-009 的四路前置 Gate 和多动作状态机已被 [PDR-010](decisions/PDR-010-complete-mvp-vertical-slice.md) 取代。其历史原因与结果仍由
 [decisions](decisions/README.md)、[findings](findings/README.md) 和 [results](results/README.md) 保存，不是当前开发输入。

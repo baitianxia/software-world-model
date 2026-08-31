@@ -26,6 +26,8 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
     EngineeringAgentResponseKind,
+    EngineeringAgentRequirementCoverageAssessment,
+    EngineeringAgentRequirementCoverageDisposition,
     EngineeringAgentReviewDecision,
     EngineeringAgentReviewFinding,
     EngineeringAgentReviewFocus,
@@ -95,6 +97,17 @@ def _action(
     )
 
 
+def _full_requirement_coverage(request):
+    return EngineeringAgentRequirementCoverageAssessment.create(
+        current_user_requirement=request.turn_request.user_message.content,
+        coverage_summary="The Draft addresses the complete fixture requirement.",
+        disposition=(
+            EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+        ),
+        finding_code=None,
+    )
+
+
 def _proposal(
     invocation,
     *,
@@ -109,6 +122,28 @@ def _proposal(
 ):
     previous = invocation.previous_work_state
     context = invocation.request.snapshot_before.context
+    if draft is not None and draft.claims:
+        observations = {
+            item.observation_id: item for item in invocation.observations
+        }
+        draft = EngineeringAgentDraftProposal.create(
+            response_kind=draft.response_kind,
+            content=draft.content,
+            claims=tuple(
+                EngineeringAgentClaimProposal.create(
+                    statement=claim.statement,
+                    support_observation_ids=claim.support_observation_ids,
+                    support_citation_refs=tuple(
+                        observation.citation_refs[0]
+                        for observation_id in claim.support_observation_ids
+                        for observation in (observations[observation_id],)
+                        if observation.citation_refs
+                    ),
+                )
+                for claim in draft.claims
+            ),
+            boundary_observation_ids=draft.boundary_observation_ids,
+        )
     return EngineeringAgentWorkStateProposal.create(
         model_call_ref=call_ref,
         expected_context_digest=context.digest,
@@ -180,6 +215,9 @@ class ApprovingReviewer:
         return EngineeringAgentReviewProposal.create(
             model_call_ref=f"review-call-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
+            requirement_coverage_assessment=(
+                _full_requirement_coverage(request)
+            ),
         )
 
 
@@ -311,6 +349,9 @@ class FocusAwareApprovingReviewer:
             model_call_ref=f"focused-review-call-{len(self.requests)}",
             decision=EngineeringAgentReviewDecision.APPROVED,
             focus=request.focus,
+            requirement_coverage_assessment=(
+                _full_requirement_coverage(request)
+            ),
             evidence_boundary_assessments=assessments,
             boundary_relevance_assessments=relevance_assessments,
         )
@@ -501,6 +542,16 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             EngineeringAgentReviewProposal.create(
                 model_call_ref="focused-review-invalid-audit-finding",
                 decision=EngineeringAgentReviewDecision.FINDINGS,
+                requirement_coverage_assessment=(
+                    EngineeringAgentRequirementCoverageAssessment.create(
+                        current_user_requirement="Explain the business flow.",
+                        coverage_summary="Fixture coverage is otherwise complete.",
+                        disposition=(
+                            EngineeringAgentRequirementCoverageDisposition.FULLY_ADDRESSED
+                        ),
+                        finding_code=None,
+                    )
+                ),
                 findings=(finding,),
                 focus=EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE,
                 boundary_relevance_assessments=(assessment,),
@@ -626,6 +677,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="extra-finding-comprehensive",
                         decision=EngineeringAgentReviewDecision.APPROVED,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         focus=request.focus,
                     )
                 challenge = project_engineering_agent_evidence_boundary_challenges(
@@ -635,6 +689,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref="extra-finding-focused",
                     decision=EngineeringAgentReviewDecision.FINDINGS,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                     findings=(
                         EngineeringAgentReviewFinding.create(
                             code="UNBOUND_FOCUSED_FINDING",
@@ -735,6 +792,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="four-review-comprehensive-finding",
                         decision=EngineeringAgentReviewDecision.FINDINGS,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         findings=(
                             EngineeringAgentReviewFinding.create(
                                 code="COMPREHENSIVE_REWRITE",
@@ -749,6 +809,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="four-review-comprehensive-approved",
                         decision=EngineeringAgentReviewDecision.APPROVED,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         focus=request.focus,
                     )
                 challenges = (
@@ -762,6 +825,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="four-review-focused-finding",
                         decision=EngineeringAgentReviewDecision.FINDINGS,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         findings=(
                             EngineeringAgentReviewFinding.create(
                                 code="CALLEE_EFFECT_REWRITE",
@@ -789,6 +855,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref="four-review-focused-approved",
                     decision=EngineeringAgentReviewDecision.APPROVED,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                     focus=request.focus,
                     evidence_boundary_assessments=(
                         EngineeringAgentEvidenceBoundaryAssessment.create(
@@ -885,6 +954,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="review-rewrite-1",
                         decision=EngineeringAgentReviewDecision.FINDINGS,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         findings=(
                             EngineeringAgentReviewFinding.create(
                                 code="DIRECTNESS",
@@ -897,6 +969,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref="review-rewrite-2",
                     decision=EngineeringAgentReviewDecision.APPROVED,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                 )
 
         class RecordingSealedResponseControl:
@@ -1013,6 +1088,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                     return EngineeringAgentReviewProposal.create(
                         model_call_ref="review-gap-1",
                         decision=EngineeringAgentReviewDecision.FINDINGS,
+                        requirement_coverage_assessment=(
+                            _full_requirement_coverage(request)
+                        ),
                         findings=(
                             EngineeringAgentReviewFinding.create(
                                 code="MISSING_EFFECT",
@@ -1025,6 +1103,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref="review-gap-2",
                     decision=EngineeringAgentReviewDecision.APPROVED,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                 )
 
         driver = GapDriver()
@@ -1093,6 +1174,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref=f"review-ignore-gap-{len(self.requests)}",
                     decision=EngineeringAgentReviewDecision.FINDINGS,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                     findings=(
                         EngineeringAgentReviewFinding.create(
                             code="MISSING_EVIDENCE",
@@ -1329,6 +1413,9 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
                 return EngineeringAgentReviewProposal.create(
                     model_call_ref="review-terminal-evidence-required",
                     decision=EngineeringAgentReviewDecision.FINDINGS,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                     findings=(
                         EngineeringAgentReviewFinding.create(
                             code="MORE_EVIDENCE_REQUIRED",
@@ -1466,10 +1553,12 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
 
         class ReceiptedReviewer:
             def review(self, request):
-                del request
                 review = EngineeringAgentReviewProposal.create(
                     model_call_ref="receipted-review-call",
                     decision=EngineeringAgentReviewDecision.APPROVED,
+                    requirement_coverage_assessment=(
+                        _full_requirement_coverage(request)
+                    ),
                 )
                 return EngineeringAgentReviewerModelResult.create(
                     proposal=review,
