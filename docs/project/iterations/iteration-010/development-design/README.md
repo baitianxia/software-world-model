@@ -158,6 +158,11 @@ Conformance `1.9.0` 和 exact Session preparation 通过后继续 run-108。
 `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`；因此无 retry、无 DeepSeek fallback。Q4 fresh Conversation 仍 zero-dispatch
 Clarification。旧 400 已不再复现，但没有 completed answer 或质量 verdict；同风险外调等待 materially new Ark network evidence，本地工作继续。
 
+周期性网络重试随后取得 fresh `@9` 短 Conformance 2/2 PASS，但 run-109 的异质 Q1 仍在约 `55.996s` 后断开；与 run-108 Q5 的
+`56.075s` 对照后，`FINDING-010-242` 将最早偏差定位为长 non-streaming response transfer。current `@10 / 1.10.0` candidate 使用 Ark
+官方 SSE 保持连接流量，只在 Adapter 内重组一个 terminal response；不改变 Gateway stream=false、one-request/no-retry、route、budget、
+disclosure 或 Production。fresh qualification 前旧资格失效，run-110 尚不启动。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

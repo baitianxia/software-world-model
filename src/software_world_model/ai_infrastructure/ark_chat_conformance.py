@@ -46,7 +46,7 @@ from .volcengine_ark_chat_adapter import (
 
 
 ARK_CHAT_CONFORMANCE_FIXTURE_ID = "CC-ARK-CHAT-NO-TOOLS-001"
-ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.9.0"
+ARK_CHAT_CONFORMANCE_FIXTURE_VERSION = "1.10.0"
 ARK_CHAT_CONFORMANCE_RESULT_SCHEMA = "swm.ark-chat-conformance-result@2"
 _RESULT_VALIDITY_DAYS = 30
 _SCHEMA_PREFIX = "ark-conformance-live"
@@ -58,6 +58,7 @@ _WIRE_ALLOWLIST = frozenset(
         "tool_choice",
         "parallel_tool_calls",
         "stream",
+        "stream_options",
         "n",
         "max_tokens",
         "response_format",
@@ -686,7 +687,8 @@ def _evaluate_cases(
     )
     stateless = two_live and all(
         not ({"conversation", "previous_response_id", "prompt", "context_management", "store"} & set(body))
-        and body.get("stream") is False
+        and body.get("stream") is True
+        and body.get("stream_options") == {"include_usage": True}
         and body.get("n") == 1
         for body in bodies
     )
@@ -806,13 +808,14 @@ def _negative_oracles(configuration: VolcengineArkModelConfiguration) -> dict[st
     except DomainError as exc:
         tool_input_denied = exc.code is ErrorCode.PROVIDER_OUTPUT_FORBIDDEN and tool_input_transport.calls == 0
 
-    tool_output_payload = json.loads(
-        _fake_response(configuration.actual_model_fingerprint, '{"status":"ok"}').body
-    )
-    tool_output_payload["choices"][0]["message"]["tool_calls"] = [{"id": "fixture-tool"}]
     output_adapter = VolcengineArkChatCompletionsNoToolsAdapter(
         transport=_StaticTransport(
-            ProviderHTTPResponse(200, {"x-request-id": "fixture-tool-output"}, json.dumps(tool_output_payload).encode())
+            _fake_response(
+                configuration.actual_model_fingerprint,
+                '{"status":"ok"}',
+                delta_extra={"tool_calls": [{"id": "fixture-tool"}]},
+                request_id="fixture-tool-output",
+            )
         ),
         configuration=configuration,
         output_schemas={"negative@1": schema},
@@ -989,25 +992,76 @@ def adapter_capabilities_offline(configuration: VolcengineArkModelConfiguration)
     return adapter.capabilities.conformance_level.value == "OFFLINE_FIXTURE"
 
 
-def _fake_response(model: str, content: str) -> ProviderHTTPResponse:
+def _fake_response(
+    model: str,
+    content: str,
+    *,
+    delta_extra: Mapping[str, object] | None = None,
+    request_id: str = "fixture-request",
+) -> ProviderHTTPResponse:
+    content_delta: dict[str, object] = {"content": content}
+    content_delta.update(delta_extra or {})
+    chunks = (
+        {
+            "id": "chatcmpl_fixture",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"role": "assistant", "content": ""},
+                    "finish_reason": None,
+                }
+            ],
+            "usage": None,
+        },
+        {
+            "id": "chatcmpl_fixture",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": content_delta,
+                    "finish_reason": None,
+                }
+            ],
+            "usage": None,
+        },
+        {
+            "id": "chatcmpl_fixture",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+            "usage": None,
+        },
+        {
+            "id": "chatcmpl_fixture",
+            "object": "chat.completion.chunk",
+            "model": model,
+            "choices": [],
+            "usage": {
+                "prompt_tokens": 1,
+                "completion_tokens": 1,
+                "total_tokens": 2,
+            },
+        },
+    )
+    body = b"".join(
+        b"data: "
+        + json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(
+            "utf-8"
+        )
+        + b"\n\n"
+        for chunk in chunks
+    ) + b"data: [DONE]\n\n"
     return ProviderHTTPResponse(
         200,
-        {"x-request-id": "fixture-request"},
-        json.dumps(
-            {
-                "id": "chatcmpl_fixture",
-                "object": "chat.completion",
-                "model": model,
-                "choices": [
-                    {
-                        "index": 0,
-                        "message": {"role": "assistant", "content": content},
-                        "finish_reason": "stop",
-                    }
-                ],
-                "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
-            }
-        ).encode("utf-8"),
+        {
+            "x-request-id": request_id,
+            "content-type": "text/event-stream; charset=utf-8",
+        },
+        body,
     )
 
 

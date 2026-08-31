@@ -312,6 +312,11 @@ Conformance `1.9.0` 与 clean exact Session preparation 通过后继续 run-108�
 继续 zero-dispatch Clarification。run-108 因而是如实密封的 partial execution，不是五问质量/MVP verdict；剩余外部题等待 materially new Ark
 network evidence，本地 Slice 工作继续。
 
+用户允许周期性 Ark 网络重试后，fresh `@9` 短 Conformance 2/2 PASS，但 run-109 的新冻结 Q1 在 dispatch 后约 `55.996s` 再次
+`REMOTE_DISCONNECTED`，与 run-108 Q5 的 `56.075s` 边界一致。`FINDING-010-242` 因而把 current repair 定为 Ark Provider SSE
+response transfer：Adapter `@10 / Conformance 1.10.0` 在内部严格重组一个 terminal result，Gateway stream、no-retry、fallback、预算、披露和
+非 Production 均不变。旧资格不可复用；fresh PASS 后执行 run-110，不重发两条 outcome-unknown request。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

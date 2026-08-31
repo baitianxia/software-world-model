@@ -4164,6 +4164,17 @@
       "tests/test_ark_chat_conformance.py"
     ]
   },
+  "FINDING-010-242": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-242.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

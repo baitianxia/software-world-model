@@ -272,6 +272,12 @@ fresh pricing + exact run-108 Session preparation，并先在 Browser 执行 Q5�
 Clarification 通过。该 partial run 没有 Draft/Review/Delivery，不形成五问质量 verdict。Q1—Q3 与 fresh Q5 successor 等待 materially new Ark
 network evidence；本 Slice 的本地开发、证据和计划门禁继续。
 
+用户允许周期性重试后，fresh `@9` 短 Conformance 2/2 PASS 触发 run-109，但此前未执行的 Q1 仍在 Ark dispatch 后约 `55.996s`
+`REMOTE_DISCONNECTED`；run-108 Q5 是 `56.075s`。这排除了“整体网络仍不可达”，并证明短 canary 对长产品生成是假阳性。
+`FINDING-010-242` 的通用 repair 将 Provider wire 升为 SSE、Adapter identity 升为 `@10`、fixture 升为 `1.10.0`，同时保持 Gateway
+单 terminal response、no partial delivery、same-request retry 0、trusted-unavailable-only fallback 和全部 standing scope。下一动作是目标
+验证、文档/计划门禁、clean commit、fresh Conformance，PASS 后执行未重复历史 unknown request 的 run-110。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

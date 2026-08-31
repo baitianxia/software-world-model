@@ -84,33 +84,92 @@ class UnknownOutcomeTransport:
         raise ProviderOutcomeUnknown("fixture unknown", reason_code="CONNECTION_REFUSED")
 
 
+_DEFAULT_USAGE = object()
+
+
 def success_response(
     *,
     content='{"answer":"ok"}',
     model=DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
-    usage=None,
+    usage=_DEFAULT_USAGE,
+    finish_reason="stop",
+    delta_extra=None,
+    response_id="chatcmpl_1",
 ):
-    if usage is None:
+    if usage is _DEFAULT_USAGE:
         usage = {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 16}
-    return ProviderHTTPResponse(
-        status_code=200,
-        headers={"X-Tt-Logid": "ark-request-1"},
-        body=json.dumps(
+    content_delta = {"content": content}
+    content_delta.update(delta_extra or {})
+    chunks = [
+        {
+            "id": response_id,
+            "object": "chat.completion.chunk",
+            "created": 1785974400,
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {"role": "assistant", "content": ""},
+                    "finish_reason": None,
+                }
+            ],
+            "usage": None,
+        },
+        {
+            "id": response_id,
+            "object": "chat.completion.chunk",
+            "created": 1785974400,
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": content_delta,
+                    "finish_reason": None,
+                }
+            ],
+            "usage": None,
+        },
+        {
+            "id": response_id,
+            "object": "chat.completion.chunk",
+            "created": 1785974400,
+            "model": model,
+            "choices": [
+                {
+                    "index": 0,
+                    "delta": {},
+                    "finish_reason": finish_reason,
+                }
+            ],
+            "usage": None,
+        },
+    ]
+    if usage is not None:
+        chunks.append(
             {
-                "id": "chatcmpl_1",
-                "object": "chat.completion",
+                "id": response_id,
+                "object": "chat.completion.chunk",
                 "created": 1785974400,
                 "model": model,
-                "choices": [
-                    {
-                        "index": 0,
-                        "message": {"role": "assistant", "content": content},
-                        "finish_reason": "stop",
-                    }
-                ],
+                "choices": [],
                 "usage": usage,
             }
-        ).encode(),
+        )
+    body = b"".join(
+        b"data: "
+        + json.dumps(chunk, ensure_ascii=False, separators=(",", ":")).encode(
+            "utf-8"
+        )
+        + b"\n\n"
+        for chunk in chunks
+    ) + b"data: [DONE]\n\n"
+    return ProviderHTTPResponse(
+        status_code=200,
+        headers={
+            "X-Tt-Logid": "ark-request-1",
+            "Content-Type": "text/event-stream; charset=utf-8",
+        },
+        body=body,
     )
 
 
@@ -195,7 +254,8 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(payload["tools"], [])
         self.assertEqual(payload["tool_choice"], "none")
         self.assertFalse(payload["parallel_tool_calls"])
-        self.assertFalse(payload["stream"])
+        self.assertTrue(payload["stream"])
+        self.assertEqual(payload["stream_options"], {"include_usage": True})
         self.assertEqual(payload["n"], 1)
         self.assertNotIn("thinking", payload)
         self.assertEqual(payload["response_format"], {"type": "json_object"})
@@ -206,6 +266,34 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(result.replay_classification, ReplayClassification.PINNED)
         self.assertTrue(result.usage_complete)
         self.assertEqual(result.output_normalization, "IDENTITY")
+
+    def test_stream_reassembles_content_and_discards_reasoning_channel(self) -> None:
+        adapter, _, _ = self.adapter(
+            success_response(
+                delta_extra={"reasoning_content": "private reasoning"}
+            )
+        )
+
+        result = adapter.invoke(self.request())
+
+        self.assertEqual(result.output_text, '{"answer":"ok"}')
+        self.assertNotIn("private reasoning", result.output_text)
+
+    def test_stream_requires_consistent_identity_terminal_marker_and_content_type(self) -> None:
+        valid = success_response()
+        inconsistent_body = valid.body.replace(
+            b'"id":"chatcmpl_1"', b'"id":"chatcmpl_2"', 1
+        )
+        cases = (
+            ProviderHTTPResponse(200, valid.headers, valid.body.removesuffix(b"data: [DONE]\n\n")),
+            ProviderHTTPResponse(200, valid.headers, inconsistent_body),
+            ProviderHTTPResponse(200, {"Content-Type": "application/json"}, valid.body),
+        )
+        for response in cases:
+            adapter, _, _ = self.adapter(response)
+            with self.subTest(response=response), self.assertRaises(DomainError) as raised:
+                adapter.invoke(self.request())
+            self.assertEqual(raised.exception.code, ErrorCode.PROVIDER_RESPONSE_INVALID)
 
     def test_exact_json_markdown_fence_is_normalized_before_schema_validation(self) -> None:
         adapter, _, _ = self.adapter(
@@ -272,33 +360,23 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
     def test_tool_output_refusal_and_incomplete_choice_fail_closed(self) -> None:
         cases = (
             (
-                {
-                    "role": "assistant",
-                    "content": '{"answer":"ok"}',
-                    "tool_calls": [{"id": "call_1"}],
-                },
+                success_response(delta_extra={"tool_calls": [{"id": "call_1"}]}),
                 "stop",
                 ErrorCode.PROVIDER_OUTPUT_FORBIDDEN,
             ),
             (
-                {"role": "assistant", "content": "", "refusal": "no"},
+                success_response(content="", delta_extra={"refusal": "no"}),
                 "stop",
                 ErrorCode.PROVIDER_REFUSAL,
             ),
             (
-                {"role": "assistant", "content": '{"answer":"partial"}'},
+                success_response(content='{"answer":"partial"}', finish_reason="length"),
                 "length",
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
             ),
         )
-        for message, finish_reason, expected in cases:
-            response = success_response()
-            payload = json.loads(response.body)
-            payload["choices"][0]["message"] = message
-            payload["choices"][0]["finish_reason"] = finish_reason
-            adapter, _, _ = self.adapter(
-                ProviderHTTPResponse(response.status_code, response.headers, json.dumps(payload).encode())
-            )
+        for response, finish_reason, expected in cases:
+            adapter, _, _ = self.adapter(response)
             with self.subTest(expected=expected), self.assertRaises(DomainError) as raised:
                 adapter.invoke(self.request())
             self.assertEqual(raised.exception.code, expected)
@@ -316,10 +394,6 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
     def test_inconsistent_or_missing_usage_is_not_reported_as_zero(self) -> None:
         for usage in (None, {"prompt_tokens": 12, "completion_tokens": 4, "total_tokens": 99}):
             response = success_response(usage=usage)
-            if usage is None:
-                payload = json.loads(response.body)
-                payload.pop("usage")
-                response = ProviderHTTPResponse(200, response.headers, json.dumps(payload).encode())
             adapter, _, _ = self.adapter(response)
             result = adapter.invoke(self.request())
             self.assertFalse(result.usage_complete)
@@ -409,6 +483,7 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(events, ["verified-tls", "credential"])
         self.assertTrue(connection.closed)
         self.assertIn(b"Authorization: Bearer fixture-key\r\n", connection.sent)
+        self.assertIn(b"Accept: text/event-stream\r\n", connection.sent)
         self.assertIn(b"Connection: close\r\n", connection.sent)
         self.assertEqual(audit["connection_policy"], DEFAULT_VOLCENGINE_ARK_CONNECTION_POLICY)
         self.assertEqual(audit["tls_handshake_success_count"], 1)

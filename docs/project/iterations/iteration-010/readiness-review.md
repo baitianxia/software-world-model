@@ -313,3 +313,9 @@ run-108 已在上述 readiness 内启动并密封。Q5 的 Ark `@9` request 越�
 `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN` 关闭；retry 0，DeepSeek 0，因为 outcome unknown 不是 trusted unavailable。Q4 fresh
 Conversation 仍以 zero-dispatch Clarification 通过。该事实不恢复或削弱模型资格，但没有 completed answer 可评估，故不取得质量/MVP verdict。
 readiness 继续允许本地开发；新的同风险外调等待 materially new Ark network evidence，standing authority 与 Production hold 不变。
+
+用户授权周期性重试后，fresh 短 Conformance 2/2 PASS 提供了新网络证据；run-109 随即使用未执行过的 Q1，却再次在 dispatch 后约
+`55.996s` 断开，与 run-108 的 `56.075s` 边界一致。readiness 因而不再以短 canary 成功推断长产品响应可用。`FINDING-010-242` 的
+`@10 / 1.10.0` candidate 保持 Gateway 单终态、same-request retry 0 和 trusted-unavailable-only fallback，只把 Ark Provider response
+transfer 改为 SSE 并在 Adapter 内失败关闭地重组。该 wire/parser identity 必须先通过 targeted tests、计划门禁、clean trusted-parent commit
+和 fresh live Conformance；PASS 前不得启动 run-110，Production hold 不变。

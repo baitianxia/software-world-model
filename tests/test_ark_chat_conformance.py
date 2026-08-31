@@ -55,28 +55,69 @@ class EchoingArkTransport:
         if self.calls == self.invalid_json_on_call:
             content = "not-json"
         request_number = 1 if self.duplicate_request_id else self.calls
+        response_id = f"chatcmpl_{self.calls}"
+        model = DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT
+        chunks = (
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"role": "assistant", "content": ""},
+                        "finish_reason": None,
+                    }
+                ],
+                "usage": None,
+            },
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": content},
+                        "finish_reason": None,
+                    }
+                ],
+                "usage": None,
+            },
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": model,
+                "choices": [
+                    {"index": 0, "delta": {}, "finish_reason": "stop"}
+                ],
+                "usage": None,
+            },
+            {
+                "id": response_id,
+                "object": "chat.completion.chunk",
+                "model": model,
+                "choices": [],
+                "usage": {
+                    "prompt_tokens": 10,
+                    "completion_tokens": 5,
+                    "total_tokens": 15,
+                },
+            },
+        )
+        response_body = b"".join(
+            b"data: "
+            + json.dumps(chunk, separators=(",", ":")).encode("utf-8")
+            + b"\n\n"
+            for chunk in chunks
+        ) + b"data: [DONE]\n\n"
         return ProviderHTTPResponse(
             status_code=200,
-            headers={"x-tt-logid": f"ark-live-{request_number}"},
-            body=json.dumps(
-                {
-                    "id": f"chatcmpl_{self.calls}",
-                    "object": "chat.completion",
-                    "model": DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT,
-                    "choices": [
-                        {
-                            "index": 0,
-                            "message": {"role": "assistant", "content": content},
-                            "finish_reason": "stop",
-                        }
-                    ],
-                    "usage": {
-                        "prompt_tokens": 10,
-                        "completion_tokens": 5,
-                        "total_tokens": 15,
-                    },
-                }
-            ).encode(),
+            headers={
+                "x-tt-logid": f"ark-live-{request_number}",
+                "content-type": "text/event-stream; charset=utf-8",
+            },
+            body=response_body,
         )
 
     def session_audit(self):
@@ -131,7 +172,7 @@ class ArkChatConformanceTests(unittest.TestCase):
         result = self.run_result()
 
         self.assertEqual(result["outcome"], "PASS")
-        self.assertEqual(ARK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.9.0")
+        self.assertEqual(ARK_CHAT_CONFORMANCE_FIXTURE_VERSION, "1.10.0")
         self.assertEqual(
             ARK_CHAT_CONFORMANCE_RESULT_SCHEMA,
             "swm.ark-chat-conformance-result@2",

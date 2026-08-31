@@ -304,3 +304,9 @@ fingerprint 是 `glm-5.3`，不是冻结的 `glm-5.2`。临时 variant 全部恢
 unknown 不满足 trusted unavailable，故没有 retry，也没有激活已准备为 off-peak allowed 的 DeepSeek。Q4 fresh Conversation 的省略指代
 以零 dispatch Clarification 正确关闭。该 partial run 不替代五问质量 verdict；剩余外部题等待 materially new Ark network evidence，Slice
 本地开发与证据闭合继续。
+
+用户允许周期性重试后，fresh `@9` Conformance canary 2/2 成功，但 run-109 的新冻结 Q1 仍在 Ark dispatch 后约 `55.996s`
+`REMOTE_DISCONNECTED`；run-108 的异质 Q5 是 `56.075s`。`FINDING-010-242` 因而把短探针成功识别为长响应可用性的假阳性，并在相同
+Provider/model/endpoint/account、数据、预算和非 Production scope 内采用官方 SSE wire。current Adapter `@10` 只在内部消费
+`stream:true + include_usage:true` 后严格重组一个 terminal response，Gateway/Turn 仍为 non-streaming，no-retry/fallback 边界不变。旧 `@9`
+资格失效；目标测试、门禁、clean commit 和 fresh Conformance `1.10.0` PASS 后才执行 run-110。

@@ -402,6 +402,7 @@ class DirectVerifiedVolcengineArkChatTransport:
                 + b"Authorization: Bearer "
                 + api_key_bytes
                 + b"\r\nContent-Type: application/json\r\n"
+                + b"Accept: text/event-stream\r\n"
                 + b"X-Client-Request-Id: "
                 + client_request_id_bytes
                 + b"\r\n"
@@ -599,7 +600,7 @@ UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
     provider_type = "VOLCENGINE_ARK"
-    adapter_version = "openai-chat-completions-no-tools@9"
+    adapter_version = "openai-chat-completions-no-tools@10"
 
     def __init__(
         self,
@@ -680,7 +681,8 @@ class VolcengineArkChatCompletionsNoToolsAdapter:
             "tools": [],
             "tool_choice": "none",
             "parallel_tool_calls": False,
-            "stream": False,
+            "stream": True,
+            "stream_options": {"include_usage": True},
             "n": 1,
             "max_tokens": request.max_output_tokens,
             "response_format": {"type": "json_object"},
@@ -701,12 +703,7 @@ class VolcengineArkChatCompletionsNoToolsAdapter:
                 "Ark Chat Completions request returned a non-success status",
                 details,
             )
-        payload = _json_object(response.body)
-        if payload.get("object") != "chat.completion":
-            raise DomainError(
-                ErrorCode.PROVIDER_RESPONSE_INVALID,
-                "Ark response is not a non-streaming chat completion",
-            )
+        payload = _streaming_chat_completion(response)
         raw_output_text, finish_reason = _extract_choice(payload)
         output_text, output_normalization = _normalize_structured_output_text(raw_output_text)
         actual_model = payload.get("model")
@@ -810,14 +807,251 @@ def _validate_json_object_text(output_text: str) -> None:
         )
 
 
-def _json_object(body: bytes) -> Mapping[str, object]:
+def _streaming_chat_completion(
+    response: ProviderHTTPResponse,
+) -> Mapping[str, object]:
+    """Reconstruct one terminal completion from the qualified Ark SSE wire.
+
+    The Gateway contract remains terminal and non-streaming.  SSE is confined
+    to this Provider adapter so that long generations produce network traffic
+    while no partial output crosses the adapter boundary.
+    """
+
+    headers = {key.lower(): value for key, value in response.headers.items()}
+    content_type = headers.get("content-type")
+    if (
+        not isinstance(content_type, str)
+        or content_type.split(";", 1)[0].strip().lower() != "text/event-stream"
+    ):
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark streaming response content type is invalid",
+        )
+
+    chunks = _sse_json_chunks(response.body)
+    response_id: str | None = None
+    actual_model: str | None = None
+    content_parts: list[str] = []
+    finish_reason: str | None = None
+    usage: object = None
+    usage_received = False
+    choice_received = False
+
+    for chunk in chunks:
+        if chunk.get("object") != "chat.completion.chunk":
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE event is not a chat completion chunk",
+            )
+        chunk_id = chunk.get("id")
+        chunk_model = chunk.get("model")
+        if not isinstance(chunk_id, str) or not chunk_id:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "provider response identity is missing",
+            )
+        if not isinstance(chunk_model, str) or not chunk_model:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "provider model identity is missing",
+            )
+        if response_id is None:
+            response_id = chunk_id
+            actual_model = chunk_model
+        elif chunk_id != response_id or chunk_model != actual_model:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE response identity changed between chunks",
+            )
+
+        choices = chunk.get("choices")
+        chunk_usage = chunk.get("usage")
+        if not isinstance(choices, list):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE choices are invalid",
+            )
+        if not choices:
+            if chunk_usage is None or finish_reason is None or usage_received:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "Ark SSE usage chunk is invalid or out of order",
+                )
+            usage = chunk_usage
+            usage_received = True
+            continue
+        if usage_received or finish_reason is not None:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE choice arrived after terminal output",
+            )
+        if len(choices) != 1 or not isinstance(choices[0], dict):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "provider must return exactly one streaming choice",
+            )
+        choice = choices[0]
+        if choice.get("index") != 0:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "provider choice index is invalid",
+            )
+        delta = choice.get("delta")
+        if not isinstance(delta, dict):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE assistant delta is missing",
+            )
+        role = delta.get("role")
+        if role not in (None, "assistant"):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE assistant role is invalid",
+            )
+        for field in ("tool_calls", "function_call", "audio"):
+            if delta.get(field) not in (None, []):
+                raise DomainError(
+                    ErrorCode.PROVIDER_OUTPUT_FORBIDDEN,
+                    f"provider returned {field}",
+                )
+        refusal = delta.get("refusal")
+        if isinstance(refusal, str) and refusal:
+            raise DomainError(
+                ErrorCode.PROVIDER_REFUSAL,
+                "provider refused the request",
+            )
+        if refusal is not None and not isinstance(refusal, str):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE refusal field is invalid",
+            )
+        reasoning_content = delta.get("reasoning_content")
+        if reasoning_content is not None and not isinstance(reasoning_content, str):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE reasoning field is invalid",
+            )
+        content = delta.get("content")
+        if content is not None and not isinstance(content, str):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE assistant content is invalid",
+            )
+        if isinstance(content, str):
+            content_parts.append(content)
+        choice_received = True
+
+        terminal = choice.get("finish_reason")
+        if terminal is not None:
+            if not isinstance(terminal, str) or not terminal:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "provider finish reason is invalid",
+                )
+            finish_reason = terminal
+            if chunk_usage is not None:
+                usage = chunk_usage
+                usage_received = True
+        elif chunk_usage is not None:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE usage preceded terminal output",
+            )
+
+    if (
+        not choice_received
+        or finish_reason is None
+        or response_id is None
+        or actual_model is None
+    ):
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE response did not contain one terminal completion",
+        )
+    return {
+        "id": response_id,
+        "object": "chat.completion",
+        "model": actual_model,
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "".join(content_parts),
+                },
+                "finish_reason": finish_reason,
+            }
+        ],
+        "usage": usage,
+    }
+
+
+def _sse_json_chunks(body: bytes) -> tuple[Mapping[str, object], ...]:
     try:
-        value = json.loads(body)
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise DomainError(ErrorCode.PROVIDER_RESPONSE_INVALID, "provider response is not JSON") from exc
-    if not isinstance(value, dict):
-        raise DomainError(ErrorCode.PROVIDER_RESPONSE_INVALID, "provider response is not an object")
-    return value
+        text = body.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE response is not UTF-8",
+        ) from exc
+    if not text or text.startswith("\ufeff") or "\r" in text.replace("\r\n", ""):
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE framing is invalid",
+        )
+    records = text.replace("\r\n", "\n").split("\n\n")
+    while records and records[-1] == "":
+        records.pop()
+    if not records:
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE response is empty",
+        )
+
+    chunks: list[Mapping[str, object]] = []
+    done = False
+    for index, record in enumerate(records):
+        lines = record.split("\n")
+        if len(lines) != 1 or not lines[0].startswith("data:"):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE event framing is invalid",
+            )
+        data = lines[0][5:]
+        if data.startswith(" "):
+            data = data[1:]
+        if data == "[DONE]":
+            if done or index != len(records) - 1:
+                raise DomainError(
+                    ErrorCode.PROVIDER_RESPONSE_INVALID,
+                    "Ark SSE terminal marker is invalid",
+                )
+            done = True
+            continue
+        if done or not data:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE event payload is invalid",
+            )
+        try:
+            value = json.loads(data)
+        except json.JSONDecodeError as exc:
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE event payload is not JSON",
+            ) from exc
+        if not isinstance(value, dict):
+            raise DomainError(
+                ErrorCode.PROVIDER_RESPONSE_INVALID,
+                "Ark SSE event payload is not an object",
+            )
+        chunks.append(value)
+    if not done or not chunks:
+        raise DomainError(
+            ErrorCode.PROVIDER_RESPONSE_INVALID,
+            "Ark SSE response is missing its terminal marker",
+        )
+    return tuple(chunks)
 
 
 def _provider_error_details(response: ProviderHTTPResponse) -> dict[str, str | int]:

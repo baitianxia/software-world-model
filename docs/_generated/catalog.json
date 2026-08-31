@@ -4922,6 +4922,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-241.md"
   },
   {
+    "id": "FINDING-010-242",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "development-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-242.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -8036,7 +8049,8 @@
       "FINDING-010-198",
       "FINDING-010-199",
       "FINDING-010-219",
-      "FINDING-010-236"
+      "FINDING-010-236",
+      "FINDING-010-242"
     ],
     "path": "docs/system/contracts/ai/model-gateway.md"
   },
@@ -8596,7 +8610,8 @@
       "FINDING-010-140",
       "FINDING-010-156",
       "FINDING-010-179",
-      "FINDING-010-219"
+      "FINDING-010-219",
+      "FINDING-010-242"
     ],
     "path": "docs/system/operations/configuration.md"
   },
