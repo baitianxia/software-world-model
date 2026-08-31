@@ -267,6 +267,11 @@ Conformance；PASS 后立即创建并执行 run-108，旧 `glm-5.2/@8` 结果不
 `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，有效至 `2026-09-30T11:10:37.983023Z`。下一连续动作现为
 fresh pricing + exact run-108 Session preparation，并先在 Browser 执行 Q5。
 
+`FINDING-010-241 / run-108` 已执行该 Q5：`@9` request 越过旧 HTTP 400 后在 HTTP dispatch 后 `REMOTE_DISCONNECTED`，安全终态为
+`PROVIDER_OUTCOME_UNKNOWN`。按 no-retry 与 trusted-unavailable-only fallback，Ark 1、DeepSeek 0；Q4 fresh Conversation 继续以零 dispatch
+Clarification 通过。该 partial run 没有 Draft/Review/Delivery，不形成五问质量 verdict。Q1—Q3 与 fresh Q5 successor 等待 materially new Ark
+network evidence；本 Slice 的本地开发、证据和计划门禁继续。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

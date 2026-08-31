@@ -308,3 +308,8 @@ current Provider 不接受的 `thinking` field；人工授权 readiness 已恢�
 该机器门禁现由 `ccrun_03f5856fbefc4fa5a19a14082228c2e1` 闭合：`glm-5.3/@9` 两个 canary 2/2 PASS、usage 完整、retry 0，
 result digest `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`。readiness 现允许在 fresh pricing receipt 与 exact
 standing/session authority 验证通过后启动 run-108；这不改变 DeepSeek fallback gate 或 Production hold。
+
+run-108 已在上述 readiness 内启动并密封。Q5 的 Ark `@9` request 越过旧 400 parameter validation 后，在 HTTP dispatch 后以
+`REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN` 关闭；retry 0，DeepSeek 0，因为 outcome unknown 不是 trusted unavailable。Q4 fresh
+Conversation 仍以 zero-dispatch Clarification 通过。该事实不恢复或削弱模型资格，但没有 completed answer 可评估，故不取得质量/MVP verdict。
+readiness 继续允许本地开发；新的同风险外调等待 materially new Ark network evidence，standing authority 与 Production hold 不变。

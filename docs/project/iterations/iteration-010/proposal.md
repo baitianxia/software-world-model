@@ -298,3 +298,9 @@ fingerprint 是 `glm-5.3`，不是冻结的 `glm-5.2`。临时 variant 全部恢
 `FINDING-010-240` 的 clean successor 已用默认 512-token canary 取得 Ark `glm-5.3/@9` Conformance 2/2 PASS，result digest
 `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，valid until
 `2026-09-30T11:10:37.983023Z`。run-108 的 Provider qualification 前置条件现已满足；下一步是 fresh pricing/session preparation 与 Browser Q5。
+
+`FINDING-010-241 / run-108` 随后以 exact product/session 执行 Q5。Ark `@9` request 已完成 TLS、credential 和 HTTP dispatch，证明旧
+`thinking` HTTP 400 不再是最早偏差；远端在 response 完成前断开，model call 密封为 `OUTCOME_UNKNOWN / PROVIDER_OUTCOME_UNKNOWN`。
+unknown 不满足 trusted unavailable，故没有 retry，也没有激活已准备为 off-peak allowed 的 DeepSeek。Q4 fresh Conversation 的省略指代
+以零 dispatch Clarification 正确关闭。该 partial run 不替代五问质量 verdict；剩余外部题等待 materially new Ark network evidence，Slice
+本地开发与证据闭合继续。

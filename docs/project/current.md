@@ -455,3 +455,9 @@ output、wire bytes、route 与 eligibility 不变；目标验证和 clean commi
 `2/2/2`、usage 完整、retry 0，result digest `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，
 有效至 `2026-09-30T11:10:37.983023Z`。人工 model delta 与机器资格门均已闭合；下一连续动作是把该资格绑定到 clean product commit、fresh
 pricing receipt 与 exact run-108 Session，先执行 Q5，再按重复 stop signature 决定其余冻结问题。
+
+`FINDING-010-241 / run-108` 已完成该绑定与 Browser recheck。Q5 Ark request 使用 `glm-5-2-260617/@9`，已越过旧 HTTP 400
+parameter rejection，但在 TLS/credential/HTTP 各 1 次成功后收到 `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`。该状态不是 trusted
+unavailable，故 retry 0，DeepSeek preparation 虽为 `ALLOWED_OFF_PEAK` 也没有激活，DeepSeek credential/TLS/HTTP/dispatch 均为 0。fresh
+Q4 Conversation 继续以 zero-dispatch Clarification 通过隔离。run-108 没有完成外部答案，也不产生质量/MVP verdict；Q1—Q3 与 fresh Q5
+successor 等待 materially new Ark network evidence，当前继续完成本地证据与计划闭合。

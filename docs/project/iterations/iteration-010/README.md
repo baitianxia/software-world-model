@@ -307,6 +307,11 @@ Conformance `1.9.0` 与 clean exact Session preparation 通过后继续 run-108�
 `FINDING-010-240` 的 clean successor 已取得 `glm-5.3/@9` fresh Conformance 2/2 PASS，result digest
 `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`；下一步是 fresh pricing、exact Session 和 Browser run-108。
 
+`FINDING-010-241 / run-108` 已完成 exact preparation，并在 Browser 发送 Q5。Ark request 越过旧 HTTP 400 后于 HTTP dispatch 后
+`REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`；按 no-retry 与 trusted-unavailable-only fallback 保持 DeepSeek 0。Q4 fresh Conversation
+继续 zero-dispatch Clarification。run-108 因而是如实密封的 partial execution，不是五问质量/MVP verdict；剩余外部题等待 materially new Ark
+network evidence，本地 Slice 工作继续。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization
