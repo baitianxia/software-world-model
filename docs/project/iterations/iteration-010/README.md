@@ -304,6 +304,9 @@ Conformance 中。所有临时 request variant 已恢复；下一产品 dispatch
 限制。current Ark preferred candidate 为 alias `glm-5-2-260617` → actual `glm-5.3`、Adapter `@9`，wire contract 删除 `thinking`；fresh
 Conformance `1.9.0` 与 clean exact Session preparation 通过后继续 run-108。
 
+`FINDING-010-240` 的 clean successor 已取得 `glm-5.3/@9` fresh Conformance 2/2 PASS，result digest
+`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`；下一步是 fresh pricing、exact Session 和 Browser run-108。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

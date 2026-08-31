@@ -34,3 +34,10 @@ bound，但证明 transport failure 与上述 completed-response truncation 是�
    默认资源参数改变。
 3. CLI 单元测试直接断言未显式传参时两个 canary request 都使用 `max_tokens=512`。由于 `provider_cli.py` 属于 Ark Conformance
    implementation aggregate，旧结果自动失效；clean successor 必须重新取得 2/2 PASS。
+
+clean successor `6b3a0039a3407bf5aeda0ecc89db4886006b8731 / 1c46586f7d1247af5fa522a7fe0ceedc5979560b` 随后以 CLI 默认值执行
+`ccrun_03f5856fbefc4fa5a19a14082228c2e1`，两个 canary 均 completed、closed output 有效、actual `glm-5.3`、usage 完整，TLS/credential/HTTP
+均为 `2/2/2` 且 retry 0；input/output tokens 为 `334/216`。Conformance PASS result digest 为
+`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，文件 SHA-256 为
+`b3f04cd45d27a1ee8523f4934cc0c5d3128bf58c91768c8da576bcf435b48367`，有效至 `2026-09-30T11:10:37.983023Z`。该证据完成
+`glm-5.3/@9` request contract 的 fresh qualification；Production eligibility 仍为 false。

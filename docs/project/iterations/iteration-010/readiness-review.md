@@ -304,3 +304,7 @@ actual fingerprint 已变为 `glm-5.3`。这不是 readiness 可自动吸收的�
 非 Production scope。current preferred candidate 因而更新为 requested alias `glm-5-2-260617`、actual `glm-5.3`、Adapter `@9`，并移除
 current Provider 不接受的 `thinking` field；人工授权 readiness 已恢复。旧 Conformance 失效，fresh `1.9.0` PASS 与 exact Session preparation
 仍是 run-108 产品 dispatch 前的机器门禁。
+
+该机器门禁现由 `ccrun_03f5856fbefc4fa5a19a14082228c2e1` 闭合：`glm-5.3/@9` 两个 canary 2/2 PASS、usage 完整、retry 0，
+result digest `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`。readiness 现允许在 fresh pricing receipt 与 exact
+standing/session authority 验证通过后启动 run-108；这不改变 DeepSeek fallback gate 或 Production hold。

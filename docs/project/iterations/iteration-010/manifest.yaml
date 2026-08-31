@@ -1643,7 +1643,14 @@ conversational_engineering_agent:
   latest_browser_failure_layer_display: q2-agent-pre-dispatch-rejected-provider-unavailable-then-fallback-admission-denied,q3-agent-model-call-rejected-provider-http400,q4-correct-zero-dispatch-clarification,q5-agent-model-call-rejected-provider-http400,q1-not-executed
   latest_browser_request_retry_count: 0
   latest_browser_production_activation: NOT_EXECUTED
-  current_dual_provider_qualification_status: ark-glm-5-3-adapter-9-incomplete-at-old-96-token-conformance-cap-default-512-successor-under-validation-deepseek-current-product-route-held
+  current_dual_provider_qualification_status: ark-glm-5-3-adapter-9-conformance-1-9-pass-valid-through-2026-09-30-deepseek-current-route-ready-for-exact-run-108-preparation
+  current_ark_conformance_run_id: ccrun_03f5856fbefc4fa5a19a14082228c2e1
+  current_ark_conformance_result_digest: sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363
+  current_ark_conformance_file_sha256: b3f04cd45d27a1ee8523f4934cc0c5d3128bf58c91768c8da576bcf435b48367
+  current_ark_conformance_valid_until: "2026-09-30T11:10:37.983023Z"
+  current_ark_conformance_actual_model: glm-5.3
+  current_ark_conformance_request_count: 2
+  current_ark_conformance_request_retry_count: 0
   successor_product_commit: 3a6089fa0ff1d5df88f43199ae77ae4c4ecc6f19
   successor_product_tree: b1fd51bb533c8ff393dc42b6864a08e5c94929c0
   successor_semantic_query_finding_ref: FINDING-010-138
@@ -1652,7 +1659,7 @@ conversational_engineering_agent:
   deterministic_successor_canary_status_is_legacy_validator_compatibility_only: true
   pdr008_current_successor_status: clean-successor-frozen-standing-human-authority-active-awaiting-machine-receipt-runtime-gate-and-compliant-window
   deterministic_successor_canary_source_file_budget: five-turn-search-56-plus-read-1-equals-57-of-64-and-adjacent-search-56-plus-read-3-equals-59-of-64
-  agent_execution_status: post-run-107-glm-5-3-authorized-safe-conformance-proved-incomplete-termination-at-old-96-token-cap-default-512-successor-under-validation-run-108-not-created
+  agent_execution_status: post-run-107-glm-5-3-authorized-and-fresh-conformance-pass-run-108-exact-pricing-session-preparation-in-progress
   status: implemented-not-qualified
 
 question_evidence_package_classes:

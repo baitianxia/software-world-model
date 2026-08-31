@@ -263,6 +263,10 @@ loopback evaluation 和非 Production scope。`FINDING-010-238` 将 current pref
 one-field differential 证明不兼容的 `thinking`，Conformance fixture 升为 `1.9.0`。下一连续动作是目标验证、可信父提交、fresh Ark
 Conformance；PASS 后立即创建并执行 run-108，旧 `glm-5.2/@8` 结果不得复用。
 
+`FINDING-010-240` 的 clean successor 已以 default 512-token canary 完成 `glm-5.3/@9` fresh Conformance 2/2 PASS；result digest 为
+`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，有效至 `2026-09-30T11:10:37.983023Z`。下一连续动作现为
+fresh pricing + exact run-108 Session preparation，并先在 Browser 执行 Q5。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

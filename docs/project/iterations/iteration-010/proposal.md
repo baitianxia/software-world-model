@@ -294,3 +294,7 @@ fingerprint 是 `glm-5.3`，不是冻结的 `glm-5.2`。临时 variant 全部恢
 `FINDING-010-238`，requested alias 保持 `glm-5-2-260617`，Adapter `@9` 只删除不兼容的 `thinking` field，并把 Conformance fixture
 升级到 `1.9.0`。该 delta 已解除人工授权阻塞；run-108 仍须等待新 exact implementation 的目标测试、门禁和 fresh Ark Conformance PASS，
 不能复用 `glm-5.2/@8` 资格。
+
+`FINDING-010-240` 的 clean successor 已用默认 512-token canary 取得 Ark `glm-5.3/@9` Conformance 2/2 PASS，result digest
+`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，valid until
+`2026-09-30T11:10:37.983023Z`。run-108 的 Provider qualification 前置条件现已满足；下一步是 fresh pricing/session preparation 与 Browser Q5。

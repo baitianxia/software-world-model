@@ -450,3 +450,8 @@ output、wire bytes、route 与 eligibility 不变；目标验证和 clean commi
 默认 `96`。`FINDING-010-240` 因而只把固定无源码 canary 默认上限升到现有授权预算内的 `512`；Adapter/product runtime、wire contract、route
 与 no-retry 均不变。一次显式 512 attempt 在 HTTP 前独立 `TLS_FAILURE`，不构成资格结果。下一连续动作是在该默认值的 clean implementation
 上 fresh 2/2 Conformance，PASS 后创建 run-108。
+
+该 clean successor 的 `ccrun_03f5856fbefc4fa5a19a14082228c2e1` 已取得 2/2 PASS：actual `glm-5.3`、TLS/credential/HTTP
+`2/2/2`、usage 完整、retry 0，result digest `sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，
+有效至 `2026-09-30T11:10:37.983023Z`。人工 model delta 与机器资格门均已闭合；下一连续动作是把该资格绑定到 clean product commit、fresh
+pricing receipt 与 exact run-108 Session，先执行 Q5，再按重复 stop signature 决定其余冻结问题。

@@ -151,6 +151,9 @@ clean run-108 Q5 定位具体 request field。
 request contract 以 Adapter `@9` 删除不兼容的 `thinking`，保持 alias、endpoint、no-tools、structured output、no-retry 与 route 不变；fresh
 Conformance `1.9.0` 和 exact Session preparation 通过后继续 run-108。
 
+`FINDING-010-240` 已用 clean `glm-5.3/@9` implementation 取得 Conformance 2/2 PASS（result
+`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`）；当前进入 run-108 pricing/session/Browser 执行。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |
