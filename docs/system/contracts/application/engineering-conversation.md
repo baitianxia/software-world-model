@@ -360,7 +360,7 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@25` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
+   `ENGINEERING_AGENT_REVIEW_INPUT@26` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
    Citation options，使 Reviewer 能把 Draft 已解析的 exact refs 还原到 locator 后审核跨资源引用覆盖；`engineering-agent-independent-review-proposal@10`
    必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
@@ -391,6 +391,14 @@ no-progress failure 关闭。
    Boundary、focused defer、unbound defect 或不精确的 focused Finding set 均失败关闭；Delivery 必须拒绝残留的 `DEFECT` 或
    `BOUNDARY_REVIEW_DEFERRED`。该闭合只机械保证每个正文单元被显式分类并绑定 current Draft；自然语言 coverage 是否真实仍由 fresh independent
    Reviewer 判断，Application 不以字符串算法伪造事实正确性。
+
+   每个 `COVERED` unit 的 Markdown inline-code span 还是 exact technical anchor。Application 必须按出现顺序去重，并要求每个 anchor 逐字
+   存在于至少一个 mapped Claim statement 或 mapped exact Boundary observation content；comprehensive 看不到 Boundary ID 时只能使用 Claim、
+   合法 defer 或 Finding。decode、sealed Review 与 Delivery 分别重算，不命中即失败关闭并要求 fresh Reviewer 选择真正包含该 anchor 的
+   reference，或返回 bound `DEFECT`。该词法规则只是 semantic coverage 的必要条件：命中 identifier 仍不证明 scope、condition、certainty、
+   negation 或 order 相同；反过来，声称位置/效果/类别/确定性 unknown 的 reference 不得覆盖 affirmative assertion，excluded/unread scope 只
+   建立未读边界，不建立实现存在于该路径。Primary 必须让 presentation 中的路径、symbol、method、declaration、route 或 literal 在对应 Claim/
+   Boundary 中逐字可见，否则删除、收窄或取得合法 SUPPORT 后再写入。
 
    model-authored tool proposal、action argument、query/search text、`evidence_need`、hypothesis、plan、open item 及任何后续工具或 Boundary 对这些
    字节的 echo 都只记录 acquisition intent，不是软件事实 Evidence。Primary/Reviewer 不得把只在该 intent 中出现的技术机制、位置、类型关系或
@@ -559,8 +567,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@36 / conversational-engineering-agent-no-tools-prompt@36 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@34 / ENGINEERING_AGENT_REVIEW_INPUT@25 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30` 协议族；每次
+   `conversational-engineering-agent@37 / conversational-engineering-agent-no-tools-prompt@37 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@34 / ENGINEERING_AGENT_REVIEW_INPUT@26 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生
@@ -576,7 +584,7 @@ no-progress failure 关闭。
    必须披露同一 shared-budget digest。Authorizer 在 authority 耗尽时必须在 Provider boundary 前拒绝。该分类不允许 Application 抽取后部
    JSON、提高 dispatch/Tool/Source/Session budget 或把格式失败改判为 Provider unavailable。
 6. Reviewer Strategy 可以在资格中采用多个隔离视角或 challenge，但固定角色数量、固定 focus 顺序、固定检查清单 JSON 和一次单独
-   Verification Investigation Agent 不是长期架构不变量。current `@36` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
+   Verification Investigation Agent 不是长期架构不变量。current `@37` Strategy 对每个 Draft 先执行 comprehensive Review；若 Application
    投影出 caller/callee challenge 或 Package 含任何 Boundary，再执行一个 fresh focused Review。focused Finding 的 successor Draft 可按
    仍存在的 challenge focus 直接复审。为容纳一次 comprehensive rewrite 和一次 focused rewrite，
    Reviewer call 上限现为 4，同时 Agent step 上限从 12 收紧为 11，最坏组合仍为原有 15 per-Turn dispatch authority。Response Control 必须重算

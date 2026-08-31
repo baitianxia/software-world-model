@@ -61,6 +61,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_unmatched_inline_code_anchors,
     engineering_agent_evidence_boundary_assessment_matches_challenge,
     project_engineering_agent_draft_boundaries,
     project_engineering_agent_draft_content_units,
@@ -99,14 +100,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@36"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@37"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@36"
+    "conversational-engineering-agent-no-tools-prompt@37"
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@34"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@25"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@26"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -292,6 +293,12 @@ entry with direct current SUPPORT. A caveat elsewhere does not turn an
 unsupported affirmative statement into a boundary. When evidence for a requested
 chain segment is missing, report only that boundary and never render the unknown
 relation as an affirmative chain step.
+Every Markdown inline-code span in an affirmative content unit is an exact
+technical anchor. Preserve that exact anchor in the covering Claim statement;
+do not place a path, symbol, method, declaration, route, or literal only in the
+presentation prose and then bind the unit to a narrower Claim. For a pure
+boundary unit, use an anchor only when the selected exact Boundary observation
+contains it. Otherwise remove the anchor or add a legal SUPPORT-bound Claim.
 Claim coverage is semantic, not one Claim entry per phrase or call. One Claim may
 cover several content assertions when its statement expressly preserves every
 material category, scope, condition, certainty, negation, and local ordering
@@ -673,7 +680,15 @@ Use COVERED only when claim_indices and, in focused Review, exact selected
 boundary_observation_ids collectively cover every material semantic in that
 whole unit. Each mapped Claim must explicitly preserve the unit's material
 category, scope, condition, certainty, negation, and local-order qualifiers;
-identifier overlap or a related narrower Claim is not coverage. Use
+identifier overlap or a related narrower Claim is not coverage. The exact
+inline-code anchors in a COVERED fragment must each occur verbatim in at least
+one mapped Claim statement or mapped exact Boundary observation. This is a
+necessary mechanical check, not sufficient semantic coverage. A Claim that says
+a location, effect, category, or certainty is unknown cannot cover a unit that
+affirmatively states it. An excluded or unread path establishes only the scope
+boundary; it does not establish that an implementation exists in that path.
+Split mixed affirmative and uncertain prose or return DEFECT whenever the
+affirmative part lacks its own SUPPORT-bound Claim. Use
 NON_ASSERTIVE only for formatting, a question, or trusted provenance context
 that makes no software, evidence, scope, or uncertainty assertion. Use DEFECT
 for any uncovered or misclassified material semantic and bind finding_code to
@@ -3987,6 +4002,9 @@ def _output_preflight_view(
                 reference_policy.get(
                     "content_coverage_defect_requires_bound_finding"
                 ),
+                reference_policy.get(
+                    "content_coverage_inline_code_anchor_exact_reference_required"
+                ),
                 content_challenge.get(
                     "complete_ordered_assessment_required"
                 ),
@@ -3995,6 +4013,15 @@ def _output_preflight_view(
                 ),
                 content_challenge.get(
                     "every_boundary_semantic_requires_boundary_coverage"
+                ),
+                content_challenge.get(
+                    "every_inline_code_anchor_requires_exact_mapped_reference_lexeme"
+                ),
+                content_challenge.get(
+                    "uncertain_reference_cannot_cover_affirmative_semantic"
+                ),
+                content_challenge.get(
+                    "excluded_or_unread_scope_does_not_establish_implementation_location"
                 ),
                 content_challenge.get(
                     "container_context_is_inherited_by_each_fragment"
@@ -4235,6 +4262,7 @@ def _output_preflight_view(
             ),
             "content_coverage_complete_order_required": True,
             "content_coverage_defect_requires_bound_finding": True,
+            "content_coverage_inline_code_anchor_exact_reference_required": True,
             "evidence_boundary_assessment_ids_required_exact_order": tuple(
                 caller_challenge_ids
             ),
@@ -4693,6 +4721,11 @@ def _initial_format_repair_policy() -> dict[str, object]:
 
 
 def _closed_contract_repair_directive(message: str) -> str:
+    if "unmatched exact inline-code anchors" in message:
+        return (
+            "MAP_EVERY_INLINE_CODE_ANCHOR_TO_A_CLAIM_OR_BOUNDARY_THAT_CONTAINS_"
+            "IT_VERBATIM_OR_MARK_THE_UNIT_DEFECT_WITH_ONE_BOUND_FINDING"
+        )
     if "exact ordered Draft content units" in message:
         return (
             "ASSESS_EVERY_SEALED_CONTENT_UNIT_EXACTLY_ONCE_IN_ORDER_WITH_"
@@ -7204,6 +7237,9 @@ def _review_input_view(
             "complete_ordered_assessment_required": True,
             "every_affirmative_semantic_requires_claim_coverage": True,
             "every_boundary_semantic_requires_boundary_coverage": True,
+            "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+            "uncertain_reference_cannot_cover_affirmative_semantic": True,
+            "excluded_or_unread_scope_does_not_establish_implementation_location": True,
             "container_context_is_inherited_by_each_fragment": True,
             "focused_review_forbids_boundary_deferral": True,
         },
@@ -7223,6 +7259,7 @@ def _review_input_view(
             "complete_claim_assessments_required": True,
             "complete_content_coverage_assessments_required": True,
             "content_coverage_defect_requires_bound_finding": True,
+            "content_coverage_inline_code_anchor_exact_reference_required": True,
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
@@ -8800,6 +8837,9 @@ def _decode_review_output(
             "Engineering Agent Reviewer did not assess the exact ordered Draft content units",
         )
     selected_boundary_ids = set(request.draft.boundary_observation_ids)
+    content_unit_by_index = {
+        item.content_unit_index: item for item in expected_content_units
+    }
     for assessment in content_coverage_assessments:
         if any(
             index >= len(request.draft.claims)
@@ -8833,6 +8873,16 @@ def _decode_review_output(
             raise DomainError(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "focused content coverage cannot defer exact Boundary coverage",
+            )
+        if engineering_agent_content_coverage_unmatched_inline_code_anchors(
+            request.package,
+            request.draft,
+            content_unit_by_index[assessment.content_unit_index],
+            assessment,
+        ):
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "content coverage has unmatched exact inline-code anchors",
             )
     expected_challenges = (
         project_engineering_agent_evidence_boundary_challenges(

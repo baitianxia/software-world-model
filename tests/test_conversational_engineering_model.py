@@ -390,6 +390,9 @@ def _content_coverage_challenge_payload(
         "complete_ordered_assessment_required": True,
         "every_affirmative_semantic_requires_claim_coverage": True,
         "every_boundary_semantic_requires_boundary_coverage": True,
+        "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+        "uncertain_reference_cannot_cover_affirmative_semantic": True,
+        "excluded_or_unread_scope_does_not_establish_implementation_location": True,
         "container_context_is_inherited_by_each_fragment": True,
         "focused_review_forbids_boundary_deferral": True,
     }
@@ -742,6 +745,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "content_unit_indices": (0,),
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
+                    "content_coverage_inline_code_anchor_exact_reference_required": True,
                     "challenge_assessment_ids_required_exact_order": (
                         "challenge-1",
                     ),
@@ -1113,7 +1117,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1580,7 +1584,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2430,7 +2434,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2475,6 +2479,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             content_challenge["complete_ordered_assessment_required"]
+        )
+        self.assertTrue(
+            content_challenge[
+                "every_inline_code_anchor_requires_exact_mapped_reference_lexeme"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
+                "uncertain_reference_cannot_cover_affirmative_semantic"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
+                "excluded_or_unread_scope_does_not_establish_implementation_location"
+            ]
         )
         self.assertEqual(
             reviewer_repair_payload["boundary_challenge_projection"],
@@ -2588,6 +2607,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
                 "content_coverage_complete_order_required"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_inline_code_anchor_exact_reference_required"
             ]
         )
         self.assertTrue(
@@ -3214,7 +3238,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@30",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@31",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -6227,6 +6251,81 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ("UNCLAIMED_CLASSIFICATION", "UNBOUND_UNCERTAINTY"),
         )
 
+    def test_content_coverage_rejects_run123_unmatched_inline_code_anchor(self) -> None:
+        boundary_id = StableId(f"observation_{'8' * 32}")
+        content = (
+            "## 证据边界\n"
+            "- `Dao.load` 的实现位于 `src/main/resources`，"
+            "但当前证据不证明实现位置。"
+        )
+        request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=SimpleNamespace(
+                    content=content,
+                    claims=(
+                        SimpleNamespace(
+                            statement=(
+                                "Dao.load 的声明不证明 SQL、映射实现的位置或内容。"
+                            )
+                        ),
+                    ),
+                    boundary_observation_ids=(boundary_id,),
+                ),
+                package=SimpleNamespace(
+                    support_observations=(),
+                    boundary_observations=(
+                        SimpleNamespace(
+                            observation_id=boundary_id,
+                            content=(
+                                "The implementation behavior dimension is unavailable."
+                            ),
+                        ),
+                    ),
+                ),
+                focus=(
+                    EngineeringAgentReviewFocus.EVIDENCE_BOUNDARY_CHALLENGE
+                ),
+            )
+        )
+        output = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                },
+                {
+                    "content_unit_index": 1,
+                    "disposition": "COVERED",
+                    "claim_indices": [0],
+                    "boundary_observation_ids": [boundary_id.value],
+                    "finding_code": None,
+                },
+            ],
+            "requirement_coverage_assessment": (
+                _requirement_coverage_payload()
+            ),
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as caught:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(output, ensure_ascii=False),
+                request=request,
+                model_call_ref="run123-unmatched-inline-code-anchor",
+            )
+        self.assertIn(
+            "unmatched exact inline-code anchors",
+            str(caught.exception),
+        )
+
     def test_structural_caller_challenge_requires_exact_focused_assessment(self) -> None:
         turn_id = StableId(f"turn_{'1' * 32}")
         observation_id = StableId(f"observation_{'2' * 32}")
@@ -7424,6 +7523,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "content_unit_indices": (0,),
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
+                    "content_coverage_inline_code_anchor_exact_reference_required": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,

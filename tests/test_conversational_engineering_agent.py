@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 from dataclasses import replace
+from types import SimpleNamespace
 
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
@@ -43,6 +44,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_unmatched_inline_code_anchors,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_draft_content_units,
     project_engineering_agent_evidence_boundary_challenges,
@@ -647,6 +649,48 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
             "cannot expose redacted Boundary IDs",
             str(comprehensive.exception),
         )
+
+    def test_content_coverage_requires_exact_inline_code_anchor_in_reference(self) -> None:
+        unit = project_engineering_agent_draft_content_units(
+            "- `Dao.load` is not proven to live in `config/sql`."
+        )[0]
+        assessment = EngineeringAgentContentCoverageAssessment.create(
+            content_unit_index=0,
+            disposition=EngineeringAgentContentCoverageDisposition.COVERED,
+            claim_indices=(0,),
+            finding_code=None,
+        )
+        package = SimpleNamespace(boundary_observations=())
+        missing = engineering_agent_content_coverage_unmatched_inline_code_anchors(
+            package,
+            SimpleNamespace(
+                claims=(
+                    SimpleNamespace(
+                        statement="Dao.load does not establish implementation location."
+                    ),
+                )
+            ),
+            unit,
+            assessment,
+        )
+        self.assertEqual(missing, ("config/sql",))
+
+        covered = engineering_agent_content_coverage_unmatched_inline_code_anchors(
+            package,
+            SimpleNamespace(
+                claims=(
+                    SimpleNamespace(
+                        statement=(
+                            "Dao.load does not establish that config/sql is its "
+                            "implementation location."
+                        )
+                    ),
+                )
+            ),
+            unit,
+            assessment,
+        )
+        self.assertEqual(covered, ())
 
     def test_observation_driven_replan_closes_a_reviewed_turn(self) -> None:
         driver = ReplanningAnswerDriver()
