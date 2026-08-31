@@ -445,3 +445,8 @@ fresh Ark Conformance，PASS 后立即创建并执行 run-108。
 被 closed-output validator 拒绝，故资格正确 FAIL；随后固定 probe 是 pre-HTTP DNS unavailable。旧 Conformance 汇总会丢失 rejected completed
 response 的安全 model/request-id/usage，使失败 artifact 看似没有 response。current successor 只修复该证据真实性并增加枚举失败分类，raw
 output、wire bytes、route 与 eligibility 不变；目标验证和 clean commit 后再执行 fresh Conformance，尚不创建 run-108。
+
+该 safe successor 随后把失败精确分类为 `INCOMPLETE_TERMINATION`，且 completed response 的 output token 正好等于旧 Conformance CLI
+默认 `96`。`FINDING-010-240` 因而只把固定无源码 canary 默认上限升到现有授权预算内的 `512`；Adapter/product runtime、wire contract、route
+与 no-retry 均不变。一次显式 512 attempt 在 HTTP 前独立 `TLS_FAILURE`，不构成资格结果。下一连续动作是在该默认值的 clean implementation
+上 fresh 2/2 Conformance，PASS 后创建 run-108。

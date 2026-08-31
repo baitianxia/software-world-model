@@ -45,7 +45,7 @@ def build_parser() -> argparse.ArgumentParser:
     conformance.add_argument("--result-directory", required=True)
     conformance.add_argument("--operator", default="local-operator")
     conformance.add_argument("--timeout-milliseconds", type=int, default=30_000)
-    conformance.add_argument("--max-output-tokens", type=int, default=96)
+    conformance.add_argument("--max-output-tokens", type=int, default=512)
     return parser
 
 

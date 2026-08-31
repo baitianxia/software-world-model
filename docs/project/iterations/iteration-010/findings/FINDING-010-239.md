@@ -41,3 +41,9 @@ output digest；缺口只在 Conformance 汇总层丢弃该对象。raw output/p
    `CLOSED_SCHEMA_MISMATCH`。Provider message/body、model text 与 schema value 均不记录。
 4. 单元测试证明 JSON-invalid completed response 的 identity/usage 被保留、原文未泄漏且结果仍为 FAIL。修改进入 Conformance
    implementation aggregate，故须在 clean successor 上重新执行 fresh qualification。
+
+clean successor `d8ae7bceff902b1228a188829246f47b2634af59 / 2c9d1929420b44ad29ca77c34f1b83be51a328a3` 的 fresh
+`ccrun_c0769582b200432c96bb06e742f0c111` 验证该处置：artifact 现在如实保留 actual `glm-5.3`、request ID、input/output `171/96` 和
+usage complete，同时只把失败密封为 `INCOMPLETE_TERMINATION`，没有 raw output。result digest 为
+`sha256:2edbba567b4716fc45ccedecdf20b22d50b630fae428bd5d41d0e14c9aef340d`；该枚举证据进一步触发 `FINDING-010-240` 的
+Conformance resource-bound 修复。

@@ -34,10 +34,12 @@ class EchoingArkTransport:
         self.calls = 0
         self.duplicate_request_id = duplicate_request_id
         self.invalid_json_on_call = invalid_json_on_call
+        self.request_max_tokens: list[int] = []
 
     def post_json(self, **arguments):
         self.calls += 1
         body = json.loads(arguments["body"])
+        self.request_max_tokens.append(body["max_tokens"])
         schema = json.loads(
             body["messages"][0]["content"].rsplit("Schema: ", 1)[1]
         )
@@ -297,6 +299,7 @@ class ArkChatConformanceTests(unittest.TestCase):
 
     def test_cli_seals_summary_without_secret_or_raw_content(self) -> None:
         output = StringIO()
+        transport = EchoingArkTransport()
         with tempfile.TemporaryDirectory() as directory:
             code = provider_main(
                 [
@@ -308,7 +311,7 @@ class ArkChatConformanceTests(unittest.TestCase):
                 ],
                 stdout=output,
                 environment={"ARK_API_KEY": "fixture-secret-never-persist"},
-                transport=EchoingArkTransport(),
+                transport=transport,
             )
             summary = json.loads(output.getvalue())
             result_path = Path(summary["result_path"])
@@ -317,6 +320,7 @@ class ArkChatConformanceTests(unittest.TestCase):
             self.assertEqual(summary["conformance"], "PASS")
             self.assertTrue(result_path.is_file())
             self.assertFalse(summary["production_eligible"])
+            self.assertEqual(transport.request_max_tokens, [512, 512])
             self.assertNotIn("fixture-secret-never-persist", output.getvalue())
 
 if __name__ == "__main__":

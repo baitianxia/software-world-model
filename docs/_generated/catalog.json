@@ -4896,6 +4896,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-239.md"
   },
   {
+    "id": "FINDING-010-240",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-240.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
