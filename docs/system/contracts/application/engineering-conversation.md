@@ -322,15 +322,21 @@ no-progress failure 关闭。
    自动重写 Provider Draft。
 
    成功 Turn 的不可变 Result 还必须只投影 Draft 实际选择的 ordered unique Citation；每个 ANSWER Claim 除 exact SUPPORT Observation IDs 外，
-   还须选择直接支撑该 Claim 的最小 exact Citation set。`ENGINEERING_AGENT_PRIMARY_INPUT@30` 为每个 SUPPORT Observation 投影 ordered
-   Citation refs 与固定 `citation_ordinal_base=1`；Provider-facing `engineering-agent-work-state-proposal@4` 不再回传长 opaque Citation
+   还须选择直接支撑该 Claim 的最小 exact Citation set。`ENGINEERING_AGENT_PRIMARY_INPUT@31` 必须由 Application 从每个 SUPPORT Observation
+   的 authority receipt 重算 ordered Citation options；每项按 `citation_ordinal_base=1` 投影 ordinal、exact opaque ref、evidence class、exact source
+   revision、locator、modality 与 content digest。无 receipt、ref 缺失、revision/identity 不一致或重复必须在模型调用前失败关闭。Provider-facing
+   `engineering-agent-work-state-proposal@4` 不再回传长 opaque Citation
    reference，而是为每个已选择且含 Citation 的 SUPPORT Observation 恰好返回一个 `support_citation_selections` item：
    `support_observation_ordinal` 是该 Observation 在本 Claim `support_observation_ids` 中的 1-based 位置，`citation_ordinals` 是对应 ordered
    ref domain 中严格递增、无重复的 1-based 位置。Application 只从 current invocation 重算两个 ordinal domain，拒绝缺项、重复、乱序、越界、
-   non-SUPPORT 或无 Citation Observation，并按 selection 顺序解析为 Domain `support_citation_refs`；Provider 不能输出 opaque Citation ref，ordinal
-   也不承载新的 Evidence 或 authority。Claim 选择的每个含 Citation 的 SUPPORT Observation 至少贡献一个 resolved reference，所有 resolved
+   non-SUPPORT 或无 Citation Observation，并按 selection 顺序解析为 Domain `support_citation_refs`；final preflight 只重复每个 Observation 的
+   ordinal base/count，不复制完整 locator catalog。Provider 不能输出 opaque Citation ref，ordinal 也不承载新的 Evidence 或 authority。Claim
+   选择的每个含 Citation 的 SUPPORT Observation 至少贡献一个 resolved reference，所有 resolved
    references 必须属于该 Claim 已选择的 Observation；同一 exact ref 在多个 selected Observations 中出现时只作稳定 first-occurrence 去重，仍须
-   满足每个 Observation 的 selection coverage。Source Search 的完整结果清单不得因其中一个结果 material 而整批进入答案。Application 从
+   满足每个 Observation 的 selection coverage。Source Search Citation 只能支持自己的 exact locator/result，不能支持同一 Search Observation
+   的 sibling hit 或另一 resource；一个 Claim 命名多个独立 material resource declaration/behavior 时，必须为每个 resource 选择 exact Citation，
+   否则拆分或收窄 Claim。import、typed field 或 injection use 不证明被引用类型的声明、继承或实现。Source Search 的完整结果清单不得因其中一个结果
+   material 而整批进入答案。Application 从
    authority receipt 重算 selected reference identity，并只投影 Claim 解析出的 refs；Draft 绑定的 material
    Boundary 仍投影其绑定 Observation 的 Citation。每项保留 evidence class、exact source revision、locator、modality、content digest、Citation
    ref 与 authority digest。未被 Claim/boundary 实际选择的 Package Citation 不得顺带暴露，同一 ref 在不同 receipt 上 identity 不一致必须在浏览器
@@ -343,7 +349,9 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@20` 必须投影 exact ordered Claim indices；`engineering-agent-independent-review-proposal@9` 必须为每个 Claim 返回一个
+   `ENGINEERING_AGENT_REVIEW_INPUT@21` 必须投影 exact ordered Claim indices，并为每个 Package SUPPORT Observation 投影上述 trusted ordered
+   Citation options，使 Reviewer 能把 Draft 已解析的 exact refs 还原到 locator 后审核跨资源引用覆盖；`engineering-agent-independent-review-proposal@9`
+   必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
    Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
    “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
@@ -359,6 +367,11 @@ no-progress failure 关闭。
    用户用了某一类别就要求把调用肯定分类为该类，也不得在同一个 global Finding 中同时要求肯定结论与“仍未确认”。每个 requirement-coverage
    Finding 必须指名 Draft 缺失、矛盾或错分的 exact requested delta，并给出一个 current sealed Package 内可完成的 evidence-safe 修复；只重复
    题面名词、要求超出 Evidence 的正面事实或自相矛盾的修复都不是合法 Finding。
+
+   model-authored tool proposal、action argument、query/search text、`evidence_need`、hypothesis、plan、open item 及任何后续工具或 Boundary 对这些
+   字节的 echo 都只记录 acquisition intent，不是软件事实 Evidence。Primary/Reviewer 不得把只在该 intent 中出现的技术机制、位置、类型关系或
+   行为提升为 affirmative Claim 或 factual Boundary。Boundary 只能报告 Observation 自身建立的受信结构化 failure、coverage、exclusion、unknown，
+   或保留 original User Message 明确提出的不确定性；seal、重复出现或 query echo 都不增加 truth semantics。
 
    当 current requirement 询问某个调用“失败后”会发生什么，Primary 与 Reviewer 必须先区分 exception/abrupt completion 与 unsuccessful
    normal return，不能把题面中的 generic failure 自行提升为 throw。若 current full caller Source 显示有序语句且没有 intervening local
@@ -516,8 +529,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@31 / conversational-engineering-agent-no-tools-prompt@31 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@30 / ENGINEERING_AGENT_REVIEW_INPUT@20 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25` 协议族；每次
+   `conversational-engineering-agent@32 / conversational-engineering-agent-no-tools-prompt@32 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@31 / ENGINEERING_AGENT_REVIEW_INPUT@21 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生

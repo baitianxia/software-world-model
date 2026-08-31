@@ -644,6 +644,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "boundary_relevance_allowed_exact_dispositions_are_exhaustive": True,
                     "bound_empty_boundary_fragments_require_kind_specific_audit_only_and_global_reference_removal_finding": True,
                     "unbound_empty_boundary_fragments_require_not_disclosed": True,
+                    "source_search_citation_support_is_exact_locator_only": True,
+                    "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "model_authored_acquisition_intent_is_not_evidence": True,
+                    "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,
@@ -996,7 +1000,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1455,7 +1459,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2305,7 +2309,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2356,6 +2360,16 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             comparison_contract[
                 "unknown_category_must_not_be_promoted_to_affirmative_fact"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "model_authored_acquisition_intent_is_not_evidence_of_fact"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "echoed_query_or_evidence_need_is_not_boundary_fact"
             ]
         )
         self.assertTrue(
@@ -2479,6 +2493,25 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "search_or_interface_evidence_is_not_implementation_evidence"
             ]
         )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "source_search_citation_support_is_exact_locator_only"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "multi_resource_claim_requires_each_exact_resource_citation_or_split"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "model_authored_acquisition_intent_is_not_evidence"
+            ]
+        )
+        self.assertIn(
+            "support_citation_options_by_observation",
+            reviewer_repair_payload["evidence_package"],
+        )
         reviewer_policy = reviewer_repair_payload[
             "review_reference_policy"
         ]
@@ -2557,6 +2590,26 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             reviewer_policy[
                 "review_reports_all_observed_material_defects_in_one_pass"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "source_search_citation_support_is_exact_locator_only"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "multi_resource_claim_requires_each_exact_resource_citation_or_split"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "model_authored_acquisition_intent_is_not_evidence"
+            ]
+        )
+        self.assertTrue(
+            reviewer_policy[
+                "echoed_query_or_evidence_need_is_not_boundary_fact"
             ]
         )
         self.assertTrue(
@@ -2774,6 +2827,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "never expand the investigation merely to",
             reviewer_prompt,
         )
+        self.assertIn(
+            "A Source Search Citation supports only its own exact locator/result",
+            reviewer_prompt_compact,
+        )
+        self.assertIn(
+            "fields that merely echo them are acquisition intent",
+            reviewer_prompt_compact,
+        )
         self.assertIn("code-generation or tool", reviewer_prompt)
         self.assertIn(
             "approval of the narrower claim does not approve its container",
@@ -2921,7 +2982,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -3125,6 +3186,63 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         rendered_invocation = _primary_input_view(invocation)
         policy = rendered_invocation["tool_reference_policy"]
         work_state_policy = rendered_invocation["work_state_reference_policy"]
+        citation_option_domain = rendered_invocation[
+            "draft_reference_policy"
+        ]["answer_claim_support_citation_options_by_observation"]
+        self.assertEqual(
+            citation_option_domain,
+            (
+                {
+                    "observation_id": observation.observation_id.value,
+                    "citation_ordinal_base": 1,
+                    "citation_options": (
+                        {
+                            "citation_ordinal": 1,
+                            "citation_ref": locator_reference,
+                            "evidence_class": "SOURCE",
+                            "source_revision": (
+                                capture.request.binding.repository_revision
+                            ),
+                            "locator": (
+                                "src/main/java/example/LoginService.java:L10"
+                            ),
+                            "modality": "JAVA_SOURCE",
+                            "content_digest": digest_of(
+                                "login-source"
+                            ).value,
+                        },
+                        {
+                            "citation_ordinal": 2,
+                            "citation_ref": same_resource_reference,
+                            "evidence_class": "SOURCE",
+                            "source_revision": (
+                                capture.request.binding.repository_revision
+                            ),
+                            "locator": (
+                                "src/main/java/example/LoginService.java:L20-L24"
+                            ),
+                            "modality": "JAVA_SOURCE",
+                            "content_digest": digest_of(
+                                "same-login-source"
+                            ).value,
+                        },
+                        {
+                            "citation_ordinal": 3,
+                            "citation_ref": other_resource_reference,
+                            "evidence_class": "SOURCE",
+                            "source_revision": (
+                                capture.request.binding.repository_revision
+                            ),
+                            "locator": "src/main/java/example/AuthConfig.java:L5",
+                            "modality": "JAVA_SOURCE",
+                            "content_digest": digest_of(
+                                "auth-config-source"
+                            ).value,
+                        },
+                    ),
+                },
+            ),
+        )
 
         citation_invocation = replace(invocation, available_operations=())
         citation_output = {
@@ -3408,17 +3526,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             exhausted_without_draft.exception.code,
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
         )
-        unreceipted_view = _primary_input_view(
-            replace(
-                invocation,
-                observations=(replace(observation, authority_receipt=None),),
+        with self.assertRaises(DomainError) as unreceipted_citation:
+            _primary_input_view(
+                replace(
+                    invocation,
+                    observations=(
+                        replace(observation, authority_receipt=None),
+                    ),
+                )
             )
-        )
-        unreceipted_policy = unreceipted_view["tool_reference_policy"]
-        self.assertEqual(unreceipted_policy["source_read_options"], ())
         self.assertEqual(
-            tuple(item["operation"] for item in unreceipted_view["tool_catalog"]),
-            ("SOURCE_SEARCH",),
+            unreceipted_citation.exception.code,
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
         )
 
         navigation_citation = EngineeringAgentCitation.create(
@@ -4512,7 +4631,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             disposition=EngineeringAgentEvidenceDisposition.SUPPORT,
             progress=True,
-            citation_refs=(item_id,),
+            citation_refs=(),
             authority_receipt=None,
             tool_evidence_digest=digest_of("world-support-evidence"),
             digest=digest_of("world-support-observation"),
@@ -6570,6 +6689,10 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                         "unbound_empty_boundary_fragments_require_not_"
                         "disclosed"
                     ): True,
+                    "source_search_citation_support_is_exact_locator_only": True,
+                    "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                    "model_authored_acquisition_intent_is_not_evidence": True,
+                    "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                 },
             },
             output_schema_ref=ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
@@ -6784,13 +6907,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reference_preflight[
-                "answer_claim_support_citation_refs_by_observation_allowed_exact"
+                "answer_claim_support_citation_ordinal_domains_allowed_exact"
             ],
             (
                 {
                     "observation_id": support_observation.observation_id.value,
                     "citation_ordinal_base": 1,
-                    "citation_refs": (),
+                    "citation_ordinal_count": 0,
                 },
             ),
         )
@@ -6825,13 +6948,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "answer_claim_support_observation_ids": (
                     support_observation.observation_id.value,
                 ),
-                "answer_claim_support_citation_refs_by_observation": (
+                "answer_claim_support_citation_options_by_observation": (
                     {
                         "observation_id": (
                             support_observation.observation_id.value
                         ),
                         "citation_ordinal_base": 1,
-                        "citation_refs": (),
+                        "citation_options": (),
                     },
                 ),
                 "limitation_boundary_observation_ids": (
@@ -6892,6 +7015,13 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
                 "self_introduced_adjacent_detail_allows_evidence_expansion": False,
                 "generation_or_tool_provenance_requires_direct_support": True,
+                "source_search_citation_support_is_exact_locator_only": True,
+                "same_observation_sibling_citation_does_not_support_named_resource": True,
+                "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+                "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+                "model_authored_acquisition_intent_is_not_evidence": True,
+                "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+                "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,
             },
         )
         payload = {

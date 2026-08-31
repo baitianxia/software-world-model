@@ -4,7 +4,7 @@ kind: development-design-index
 status: current
 authority: project-plan
 owners: [engineering, architecture, product, quality]
-depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-SLICE-001, ITER-010-PDR-010, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -188,8 +188,14 @@ run-113 已令 Ark 7 个 attempts 全部完成并把网络从 first divergence �
 输出 selected SUPPORT Observation 与其 Citation domain 的 1-based ordinals，Application 从 sealed invocation 确定性解析。current protocol
 为 `@31 / Primary @30 / output @4 / preflight @25`；下一动作是门禁、clean commit、fresh Ark qualification 和 run-114。
 
-上述门禁已由 clean `912712c… / e40ba2f…` 与 fresh Ark `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 闭合，13/13 case PASS、
-TLS/credential/HTTP `2/2/2`、retry/unknown 0；下一动作收敛为 fresh pricing/exact run-114 Session。
+上述门禁已由 clean `912712c… / e40ba2f…` 与 fresh Ark qualification 13/13 PASS 闭合。run-114 preparation-only、run-115 trusted Ark
+pre-dispatch unavailable 后 DeepSeek definite HTTP 402，以及 run-116 Ark 9-call `SUCCEEDED / ACCEPTED` 已连续封存；周期重试使用 fresh logical
+request，未发生 request replay 或 post-dispatch retry。
+
+run-116 的 independent audit 形成 `FINDING-010-247`：Primary/Reviewer 看不到 exact Citation locator 对照，导致跨资源 Claim 漏引
+Repository declaration；模型 acquisition intent 中的 `SpEL/DTO` 又经 query echo 被写成 Boundary 事实。current `@32 / Primary @31 /
+Review @21 / preflight @26` 投影 trusted Citation options 并禁止 intent echo 作为 Evidence。下一动作是 clean gate、fresh run-117 同题与异质
+冻结题复验；run-116 不取得质量或 MVP PASS。
 
 | Slice | 状态 | 当前目的 |
 |---|---|---|

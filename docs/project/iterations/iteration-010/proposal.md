@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -342,5 +342,13 @@ run-113 的 Ark 7 个 attempts 已全部完成 TLS、credential 和 HTTP，证�
 解析为 exact Domain refs；不改变 Citation authority、Provider route、预算或 Production。该通用 candidate 通过目标/文档/计划门禁与 clean
 commit 后，以 fresh qualification 和 run-114 复验同一 Q4。
 
-clean `912712c… / e40ba2f…` 的 fresh `ccrun_d92ca17528c84bb7a403b3f3ea48d463` 已令 Ark `@12 / 1.12.0` 13/13 case PASS，
-actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0；run-114 现可在 fresh pricing 与 exact Session authority 下启动。
+clean `912712c… / e40ba2f…` 的 fresh Ark qualification 13/13 PASS 后，run-114 preparation-only、run-115 Ark pre-dispatch unavailable →
+DeepSeek definite HTTP 402 与 run-116 fresh Ark success 依次封存；run-116 的 9 个 Ark calls 全部 completed，页面形成
+`SUCCEEDED / ACCEPTED`、3 Citation、fresh Review 与 Delivery。周期重试只创建 fresh logical request，仍未重放单个 request 或
+post-dispatch unknown。
+
+`FINDING-010-247` 的 independent source audit 证明该 Delivery 仍有 query-intent laundering 和跨资源 Citation coverage 漏判：`SpEL/DTO`
+机制/位置只来自模型自己的 acquisition intent，`EsProductRepository extends ElasticsearchRepository` 又没有选择 Repository declaration
+Citation。current protocol 升为 `@32 / Primary @31 / Review @21 / preflight @26`，向 Primary/Reviewer 投影 authority-receipt-derived
+ordinal/ref-to-locator options，并禁止 action/query/evidence need/hypothesis echo 变成事实。完成 clean gate 后以 fresh run-117 与异质冻结题
+复验；route、budget、standing authority 与 Production hold 不变。

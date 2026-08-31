@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@31"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@32"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@31"
+    "conversational-engineering-agent-no-tools-prompt@32"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@30"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@20"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@31"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@21"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@25"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@26"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -237,11 +237,19 @@ SUPPORT Observation that carries Citation references, emit exactly one
 support_citation_selections item. support_observation_ordinal is the 1-based
 position of that Observation in the Claim's support_observation_ids array;
 citation_ordinals are the 1-based positions in the matching
-draft_reference_policy.answer_claim_support_citation_refs_by_observation entry,
-whose citation_ordinal_base is 1. Select the smallest ordered ordinal subset
-that directly supports the Claim; never select an entire Source Search
-inventory merely because one result is relevant. The trusted Application
-resolves those ordinals to the exact opaque Citation references after decode. An
+draft_reference_policy.answer_claim_support_citation_options_by_observation
+entry, whose citation_ordinal_base is 1. Each option exposes the trusted exact
+locator, evidence class, modality, revision, and content digest for that
+ordinal. Select the smallest ordered ordinal subset whose exact locators
+directly support the Claim; never select an entire Source Search inventory
+merely because one result is relevant. A Search Citation supports only the
+exact result at its own locator, not another result or sibling resource carried
+by the same Search Observation. When one Claim names independently material
+declarations or behaviors from different resources, select the exact Citation
+for every named resource or split the Claim. An import, injected field, or
+typed use in one resource does not establish the imported type's declaration,
+inheritance, or implementation. The trusted Application resolves those
+ordinals to the exact opaque Citation references after decode. An
 ANSWER may report an honest evidence boundary in draft.content and bind it
 through draft.boundary_observation_ids, but a boundary statement is not an
 affirmative claim and must not be added to draft.claims. Never use a BOUNDARY ID
@@ -331,6 +339,15 @@ resolves the same material need. Global inventory counts and profile-wide
 coverage metrics are not answer content unless they materially limit a requested
 conclusion. Remove or correct hypotheses and open items once current SUPPORT
 resolves them; never preserve a resolved acquisition diagnostic as a caveat.
+Tool proposals, action arguments, search/query text, evidence_need, hypotheses,
+plans, open items, and any later tool or Boundary field that merely echoes them
+record acquisition intent, not software fact. Never turn a technical mechanism,
+location, type relationship, or behavior introduced only by that model-authored
+intent into an affirmative Claim or a factual Boundary. A Boundary may report
+the trusted structured failure, coverage, exclusion, or unknown that the
+Observation itself establishes; it may also preserve uncertainty explicitly
+asked by the original User Message. It may not add an unverified mechanism or
+location merely because the same words reappear in a query or evidence request.
 Apply a counterfactual relevance test before adding every user-visible
 affirmative detail or boundary. Omit it when removing it leaves every requested
 conclusion fully answered and honestly bounded, unless the User explicitly asks
@@ -678,6 +695,20 @@ Boundary binding, inspect the exact draft.boundary_observation_ids array; an
 opaque bound ID never has to appear in prose. A Search hit, filename inventory,
 or interface declaration does not by itself close an unread implementation,
 remote commit, refresh, consistency, or consumer-visible effect boundary.
+Use evidence_package.support_citation_options_by_observation to audit each
+Claim's exact cited locators. A Source Search Citation supports only its own
+exact locator/result, not sibling hits or resources in the same Observation.
+When a Claim names independently material declarations or behavior from
+multiple resources, every named resource needs its own exact Citation or the
+Claim must be split or narrowed. An import, injected field, or typed use does
+not prove the referenced type's declaration, inheritance, or implementation.
+Tool proposals, action arguments, query/search text, evidence_need,
+hypotheses, plans, open items, and fields that merely echo them are acquisition
+intent, never factual Evidence. Reject a Draft or Boundary that promotes a
+technical mechanism, location, relationship, or behavior found only in that
+model-authored intent; allow only trusted structured failure, coverage,
+exclusion, or unknown facts, plus uncertainty explicitly present in the
+original User Message.
 review_focus is a closed Application-owned discriminator. For COMPREHENSIVE,
 return empty evidence_boundary_assessments and boundary_relevance_assessments
 arrays. COMPREHENSIVE owns exact current-requirement coverage, ordinary Claim
@@ -3479,8 +3510,8 @@ def _output_preflight_view(
         support_observation_ids = draft_reference_policy.get(
             "answer_claim_support_observation_ids"
         )
-        support_citation_refs_by_observation = draft_reference_policy.get(
-            "answer_claim_support_citation_refs_by_observation"
+        support_citation_options_by_observation = draft_reference_policy.get(
+            "answer_claim_support_citation_options_by_observation"
         )
         boundary_observation_ids = draft_reference_policy.get(
             "limitation_boundary_observation_ids"
@@ -3504,19 +3535,34 @@ def _output_preflight_view(
                 isinstance(item, str) for item in support_observation_ids
             )
             or not isinstance(
-                support_citation_refs_by_observation, (tuple, list)
+                support_citation_options_by_observation, (tuple, list)
             )
             or not all(
                 isinstance(item, Mapping)
                 and isinstance(item.get("observation_id"), str)
                 and item.get("citation_ordinal_base") == 1
-                and isinstance(item.get("citation_refs"), (tuple, list))
+                and isinstance(item.get("citation_options"), (tuple, list))
                 and all(
-                    isinstance(reference, str)
-                    for reference in item.get("citation_refs", ())
+                    isinstance(option, Mapping)
+                    and option.get("citation_ordinal") == ordinal
+                    and isinstance(option.get("citation_ref"), str)
+                    and isinstance(option.get("evidence_class"), str)
+                    and isinstance(option.get("source_revision"), str)
+                    and isinstance(option.get("locator"), str)
+                    and isinstance(option.get("modality"), str)
+                    and isinstance(option.get("content_digest"), str)
+                    for ordinal, option in enumerate(
+                        item.get("citation_options", ()),
+                        start=1,
+                    )
                 )
-                for item in support_citation_refs_by_observation
+                for item in support_citation_options_by_observation
             )
+            or tuple(
+                item.get("observation_id")
+                for item in support_citation_options_by_observation
+            )
+            != tuple(support_observation_ids)
             or not isinstance(boundary_observation_ids, (tuple, list))
             or not all(
                 isinstance(item, str) for item in boundary_observation_ids
@@ -3612,13 +3658,13 @@ def _output_preflight_view(
             "answer_claim_support_observation_ids_allowed_exact": tuple(
                 support_observation_ids
             ),
-            "answer_claim_support_citation_refs_by_observation_allowed_exact": tuple(
+            "answer_claim_support_citation_ordinal_domains_allowed_exact": tuple(
                 {
                     "observation_id": item["observation_id"],
                     "citation_ordinal_base": item["citation_ordinal_base"],
-                    "citation_refs": tuple(item["citation_refs"]),
+                    "citation_ordinal_count": len(item["citation_options"]),
                 }
-                for item in support_citation_refs_by_observation
+                for item in support_citation_options_by_observation
             ),
             "model_output_opaque_citation_references_forbidden": True,
             "model_output_citation_selector_schema": (
@@ -3635,6 +3681,9 @@ def _output_preflight_view(
             "each_citation_bearing_support_observation_requires_selected_reference": True,
             "claim_citation_selection_must_be_minimal_and_direct": True,
             "whole_search_inventory_copy_forbidden": True,
+            "source_search_citation_support_is_exact_locator_only": True,
+            "same_observation_sibling_citation_does_not_support_named_resource": True,
+            "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
             "draft_boundary_observation_ids_allowed_exact": tuple(
                 boundary_observation_ids
             ),
@@ -3696,6 +3745,18 @@ def _output_preflight_view(
         unbound_empty_fragments_require_not_disclosed = reference_policy.get(
             "unbound_empty_boundary_fragments_require_not_disclosed"
         )
+        source_search_citation_is_exact_locator_only = reference_policy.get(
+            "source_search_citation_support_is_exact_locator_only"
+        )
+        multi_resource_claim_requires_exact_citations = reference_policy.get(
+            "multi_resource_claim_requires_each_exact_resource_citation_or_split"
+        )
+        acquisition_intent_is_not_evidence = reference_policy.get(
+            "model_authored_acquisition_intent_is_not_evidence"
+        )
+        echoed_query_is_not_boundary_fact = reference_policy.get(
+            "echoed_query_or_evidence_need_is_not_boundary_fact"
+        )
         current_user_requirement = requirement_challenge.get(
             "current_user_requirement"
         )
@@ -3733,6 +3794,10 @@ def _output_preflight_view(
                 relevance_dispositions_are_exhaustive,
                 bound_empty_fragments_require_audit_only,
                 unbound_empty_fragments_require_not_disclosed,
+                source_search_citation_is_exact_locator_only,
+                multi_resource_claim_requires_exact_citations,
+                acquisition_intent_is_not_evidence,
+                echoed_query_is_not_boundary_fact,
                 requirement_coverage_required,
                 requirement_exact_copy_required,
                 requirement_approval_requires_full,
@@ -3916,6 +3981,10 @@ def _output_preflight_view(
             "limitation_finding_must_not_require_claim_addition": True,
             "missing_boundary_binding_requires_exact_id_absence": True,
             "search_or_interface_evidence_is_not_implementation_evidence": True,
+            "source_search_citation_support_is_exact_locator_only": True,
+            "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "model_authored_acquisition_intent_is_not_evidence": True,
+            "echoed_query_or_evidence_need_is_not_boundary_fact": True,
             "existing_shape_repair_values_may_not_be_changed_for_consistency": True,
         }
     return preflight
@@ -5432,6 +5501,73 @@ def _review_feedback_view(
     }
 
 
+def _support_citation_options_by_observation(
+    observations: Sequence[EngineeringAgentToolObservation],
+) -> tuple[dict[str, object], ...]:
+    projection: list[dict[str, object]] = []
+    for observation in observations:
+        if observation.disposition.value != "SUPPORT":
+            continue
+        options: list[dict[str, object]] = []
+        if observation.citation_refs:
+            receipt = observation.authority_receipt
+            if receipt is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Citation-bearing SUPPORT observation has no authority receipt",
+                )
+            citations_by_ref = {
+                citation.citation_ref: citation
+                for citation in receipt.citations
+            }
+            if len(citations_by_ref) != len(receipt.citations):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "SUPPORT authority receipt has duplicate Citation references",
+                )
+            for ordinal, citation_ref in enumerate(
+                observation.citation_refs,
+                start=1,
+            ):
+                citation = citations_by_ref.get(citation_ref)
+                if (
+                    citation is None
+                    or citation.source_revision != receipt.repository_revision
+                    or citation
+                    != EngineeringAgentCitation.create(
+                        citation_ref=citation.citation_ref,
+                        evidence_class=citation.evidence_class,
+                        source_revision=citation.source_revision,
+                        locator=citation.locator,
+                        modality=citation.modality,
+                        content_digest=citation.content_digest,
+                    )
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "SUPPORT Citation option differs from its authority receipt",
+                    )
+                options.append(
+                    {
+                        "citation_ordinal": ordinal,
+                        "citation_ref": citation.citation_ref,
+                        "evidence_class": citation.evidence_class,
+                        "source_revision": citation.source_revision,
+                        "locator": citation.locator,
+                        "modality": citation.modality,
+                        "content_digest": citation.content_digest.value,
+                    }
+                )
+        projection.append(
+            {
+                "observation_id": observation.observation_id.value,
+                "citation_ordinal_base": 1,
+                "citation_options": tuple(options),
+            }
+        )
+    return tuple(projection)
+
+
 def _primary_input_view(
     invocation: EngineeringAgentInvocation,
 ) -> dict[str, object]:
@@ -5445,6 +5581,9 @@ def _primary_input_view(
         tool_reference_policy=tool_reference_policy,
     )
     review_feedback = _review_feedback_view(invocation)
+    support_citation_options = _support_citation_options_by_observation(
+        invocation.observations
+    )
     return {
         "schema": ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA,
         "protocol": ENGINEERING_AGENT_MODEL_STRATEGY_REF,
@@ -5471,14 +5610,8 @@ def _primary_input_view(
                 for item in invocation.observations
                 if item.disposition.value == "SUPPORT"
             ),
-            "answer_claim_support_citation_refs_by_observation": tuple(
-                {
-                    "observation_id": item.observation_id.value,
-                    "citation_ordinal_base": 1,
-                    "citation_refs": item.citation_refs,
-                }
-                for item in invocation.observations
-                if item.disposition.value == "SUPPORT"
+            "answer_claim_support_citation_options_by_observation": (
+                support_citation_options
             ),
             "limitation_boundary_observation_ids": tuple(
                 item.value
@@ -5536,6 +5669,13 @@ def _primary_input_view(
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
             "self_introduced_adjacent_detail_allows_evidence_expansion": False,
             "generation_or_tool_provenance_requires_direct_support": True,
+            "source_search_citation_support_is_exact_locator_only": True,
+            "same_observation_sibling_citation_does_not_support_named_resource": True,
+            "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "model_authored_acquisition_intent_is_not_evidence": True,
+            "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+            "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,
         },
         "tool_action_budget": _tool_action_budget(invocation),
         "investigation_policy": _investigation_policy(invocation),
@@ -5553,6 +5693,7 @@ def _primary_input_view(
             "conversation_is_not_source_truth": True,
             "prior_answer_is_not_source_truth": True,
             "tool_proposals_are_untrusted": True,
+            "model_authored_acquisition_intent_is_not_source_truth": True,
             "direct_source_or_runtime_access": False,
             "request_retry_allowed": False,
             "production_activation": _PRODUCTION_ACTIVATION,
@@ -6641,6 +6782,11 @@ def _review_input_view(
                 _observation_view(item)
                 for item in request.package.support_observations
             ),
+            "support_citation_options_by_observation": (
+                _support_citation_options_by_observation(
+                    request.package.support_observations
+                )
+            ),
             "boundary_observations": tuple(
                 _observation_view(item)
                 for item in request.package.boundary_observations
@@ -6694,6 +6840,8 @@ def _review_input_view(
                 "missing_transaction_evidence_does_not_erase_source_visible_local_reachability": True,
                 "generic_failure_word_does_not_establish_abrupt_completion": True,
                 "user_request_noun_phrase_is_not_evidence_of_fact": True,
+                "model_authored_acquisition_intent_is_not_evidence_of_fact": True,
+                "echoed_query_or_evidence_need_is_not_boundary_fact": True,
                 "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
                 "unknown_category_must_not_be_promoted_to_affirmative_fact": True,
                 "global_finding_must_name_exact_missing_or_misaligned_delta": True,
@@ -6773,6 +6921,13 @@ def _review_input_view(
             "counterfactual_omission_preserving_requested_conclusions_means_omit": True,
             "self_introduced_adjacent_detail_allows_evidence_expansion": False,
             "generation_or_tool_provenance_requires_direct_support": True,
+            "source_search_citation_support_is_exact_locator_only": True,
+            "same_observation_sibling_citation_does_not_support_named_resource": True,
+            "multi_resource_claim_requires_each_exact_resource_citation_or_split": True,
+            "import_or_typed_use_does_not_prove_referenced_type_declaration": True,
+            "model_authored_acquisition_intent_is_not_evidence": True,
+            "echoed_query_or_evidence_need_is_not_boundary_fact": True,
+            "boundary_technical_mechanism_or_location_requires_evidence_or_original_user_uncertainty": True,
             "comprehensive_challenge_assessments_must_be_empty": True,
             "comprehensive_caller_scope_findings_forbidden": (
                 request.focus is EngineeringAgentReviewFocus.COMPREHENSIVE
@@ -6817,6 +6972,7 @@ def _review_input_view(
         "authority_boundary": {
             "conversation_is_not_source_truth": True,
             "package_seal_is_not_truth": True,
+            "model_authored_acquisition_intent_is_not_source_truth": True,
             "tool_access": False,
             "delivery_authority": False,
             "request_retry_allowed": False,
