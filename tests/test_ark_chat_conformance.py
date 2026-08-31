@@ -25,9 +25,15 @@ from software_world_model.interface.provider_cli import main as provider_main
 
 
 class EchoingArkTransport:
-    def __init__(self, *, duplicate_request_id: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        duplicate_request_id: bool = False,
+        invalid_json_on_call: int | None = None,
+    ) -> None:
         self.calls = 0
         self.duplicate_request_id = duplicate_request_id
+        self.invalid_json_on_call = invalid_json_on_call
 
     def post_json(self, **arguments):
         self.calls += 1
@@ -44,6 +50,8 @@ class EchoingArkTransport:
             },
             separators=(",", ":"),
         )
+        if self.calls == self.invalid_json_on_call:
+            content = "not-json"
         request_number = 1 if self.duplicate_request_id else self.calls
         return ProviderHTTPResponse(
             status_code=200,
@@ -183,6 +191,33 @@ class ArkChatConformanceTests(unittest.TestCase):
             with self.assertRaises(DomainError) as raised:
                 seal_ark_chat_conformance_result(result, directory)
             self.assertEqual(raised.exception.code, ErrorCode.AUTHORITY_RECORD_INCONSISTENT)
+
+    def test_completed_rejected_response_preserves_only_safe_failure_evidence(self) -> None:
+        result = self.run_result(EchoingArkTransport(invalid_json_on_call=1))
+
+        self.assertEqual(result["outcome"], "FAIL")
+        self.assertEqual(result["execution"]["request_count"], 1)
+        self.assertEqual(
+            result["model"]["actual_model_fingerprints"],
+            [DEFAULT_VOLCENGINE_ARK_ACTUAL_MODEL_FINGERPRINT],
+        )
+        self.assertEqual(
+            result["execution"]["provider_request_ids"], ["ark-live-1"]
+        )
+        self.assertEqual(result["execution"]["input_tokens"], 10)
+        self.assertEqual(result["execution"]["output_tokens"], 5)
+        self.assertTrue(result["execution"]["usage_complete"])
+        self.assertEqual(
+            result["failure"],
+            {
+                "code": "STRUCTURED_OUTPUT_INVALID",
+                "details": {
+                    "structured_output_failure_class": "JSON_SYNTAX_ERROR"
+                },
+            },
+        )
+        serialized = json.dumps(result)
+        self.assertNotIn("not-json", serialized)
 
     def test_tampering_or_failed_case_cannot_load_as_qualification(self) -> None:
         duplicate = self.run_result(EchoingArkTransport(duplicate_request_id=True))

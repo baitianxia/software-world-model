@@ -440,3 +440,8 @@ scope delta，不能靠删字段或放宽 fingerprint 继续 disclosure；下一
 evaluation 与非 Production scope。`FINDING-010-238` 因而把 current Adapter 升为 `@9`，requested alias 不变，只移除已证实不兼容的
 `thinking` field，并升级 Conformance fixture `1.9.0`。当前不再等待人工授权；下一连续动作是目标测试、文档/计划门禁、clean commit 和
 fresh Ark Conformance，PASS 后立即创建并执行 run-108。
+
+`FINDING-010-239` 记录新 profile 的首两次 fresh Conformance：两次都取得 completed Ark response，但分别在第二个和第一个 response
+被 closed-output validator 拒绝，故资格正确 FAIL；随后固定 probe 是 pre-HTTP DNS unavailable。旧 Conformance 汇总会丢失 rejected completed
+response 的安全 model/request-id/usage，使失败 artifact 看似没有 response。current successor 只修复该证据真实性并增加枚举失败分类，raw
+output、wire bytes、route 与 eligibility 不变；目标验证和 clean commit 后再执行 fresh Conformance，尚不创建 run-108。

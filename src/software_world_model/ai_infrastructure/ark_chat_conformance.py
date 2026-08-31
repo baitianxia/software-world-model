@@ -28,7 +28,7 @@ from software_world_model.cross_cutting import (
     digest_of,
 )
 
-from .model_gateway import ProviderRequest, RenderedMessage
+from .model_gateway import ProviderOutputRejected, ProviderRequest, RenderedMessage
 from .openai_responses_adapter import OutputSchemaDefinition, ProviderHTTPResponse
 from .volcengine_ark_chat_adapter import (
     DEFAULT_VOLCENGINE_ARK_CHAT_COMPLETIONS_ENDPOINT,
@@ -166,6 +166,7 @@ def run_ark_chat_conformance(
     )
 
     responses = []
+    rejected_responses = []
     failure: DomainError | None = None
     for index, canary in enumerate(canaries, start=1):
         try:
@@ -181,6 +182,10 @@ def run_ark_chat_conformance(
                     )
                 )
             )
+        except ProviderOutputRejected as exc:
+            rejected_responses.append(exc.response)
+            failure = exc
+            break
         except DomainError as exc:
             failure = exc
             break
@@ -198,17 +203,22 @@ def run_ark_chat_conformance(
     completed_at = _aware_utc(now())
     implementation = current_ark_implementation_manifest()
     fixture = _fixture_manifest()
+    completed_responses = (*responses, *rejected_responses)
     request_ids = [
         response.provider_request_id
-        for response in responses
+        for response in completed_responses
         if response.provider_request_id is not None
     ]
-    total_input_tokens = sum(response.input_tokens or 0 for response in responses)
-    total_output_tokens = sum(response.output_tokens or 0 for response in responses)
+    total_input_tokens = sum(
+        response.input_tokens or 0 for response in completed_responses
+    )
+    total_output_tokens = sum(
+        response.output_tokens or 0 for response in completed_responses
+    )
     actual_models = sorted(
         {
             response.actual_model_fingerprint
-            for response in responses
+            for response in completed_responses
             if response.actual_model_fingerprint is not None
         }
     )
@@ -252,8 +262,10 @@ def run_ark_chat_conformance(
             ],
             "input_tokens": total_input_tokens,
             "output_tokens": total_output_tokens,
-            "usage_complete": bool(responses)
-            and all(response.usage_complete for response in responses),
+            "usage_complete": bool(completed_responses)
+            and all(
+                response.usage_complete for response in completed_responses
+            ),
             "raw_prompt_persisted": False,
             "raw_response_persisted": False,
             "transport_session": transport_session,
@@ -1041,7 +1053,21 @@ def _safe_failure(failure: DomainError | None) -> dict[str, object] | None:
             "provider_request_id",
         }
     }
+    if failure.code is ErrorCode.STRUCTURED_OUTPUT_INVALID:
+        details["structured_output_failure_class"] = (
+            _structured_output_failure_class(failure)
+        )
     return {"code": failure.code.value, "details": details}
+
+
+def _structured_output_failure_class(failure: DomainError) -> str:
+    if "finish_reason" in failure.details:
+        return "INCOMPLETE_TERMINATION"
+    if failure.message == "output text is not JSON":
+        return "JSON_SYNTAX_ERROR"
+    if failure.message == "structured output root is not an object":
+        return "NON_OBJECT_ROOT"
+    return "CLOSED_SCHEMA_MISMATCH"
 
 
 def _raw_digest(payload: bytes) -> Digest:
