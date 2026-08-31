@@ -382,3 +382,8 @@ structured output invalid 失败关闭且没有 Review/Delivery，故不是网�
 `COVERED` anchors、把技术事实段标为 `NON_ASSERTIVE`，而第一次 repair 只修一项后又被 coarse same-category rule 提前终止。readiness 允许在
 原 scope 内升级 `@38 / Review @27 / preflight @32`，聚合全部违规、关闭 non-assertive 逃逸，并以 changed exact diagnostic 作为最后一个
 bounded repair slot 的进展条件；完成门禁、clean commit、fresh Ark qualification 与 run-125，不扩大 route、预算或 Production。
+
+上述 readiness 动作已由 clean `6a3c04d… / 1e8c974…`、fresh Ark `ccrun_d706d40e67344b37bd907d6bf29d22b6` 与 run-125 完成。Ark 13 calls
+全部 completed，TLS/credential/HTTP `13/13/13`、DeepSeek/retry/unknown 0；浏览器 `SUCCEEDED / ACCEPTED`，4 Citation、18/18 content units、
+fresh Review 与 Delivery 完整。独立 exact-revision 审核未发现物质错误，故 aggregate/nonassertive/progress gate 对该题 live PASS。readiness 继续
+允许在原 standing scope 内执行至少两个异质冻结题与 current Codex 对照；在这些证据完成前 Quality/MVP 仍不 PASS，Production hold 不变。

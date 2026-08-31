@@ -212,6 +212,11 @@ run-124 的 Ark 8 calls 全部 completed，exact-anchor gate 令错误 Review �
 升为 `@38 / Review @27 / preflight @32`：一次聚合全部 anchor violations，拒绝 nonstructural non-assertive anchor prose，只在 output 与 exact
 diagnostic 有进展时允许第二层 repair；fresh run-125 继续同题验证。
 
+run-125 在 clean `6a3c04d… / 1e8c974…` 与 fresh Ark qualification 下由 Ark 13 completed calls 交付 `SUCCEEDED / ACCEPTED`，
+DeepSeek/retry/unknown 0；4 Citation、18/18 content units、fresh Review 与 Delivery 完整。聚合 diagnostic 同时暴露首轮两个独立缺口，
+progress-sensitive bounded repairs 又闭合后续 Primary/focused shape；独立 exact-revision 源码审核未见物质错误。当前 design 对同题 live PASS，
+但 Quality/MVP 仍须至少两个异质冻结题与 current Codex 对照。
+
 | Slice | 状态 | 当前目的 |
 |---|---|---|
 | [SLICE-001](SLICE-001-engineering-qa-direction-preview.md) | authorized / active / rework | 完成世界模型认知、主工程 Agent、受控源码、Evidence/Citation、fresh Review 和语义多轮 Web 的真实纵切；可操作即交付 |

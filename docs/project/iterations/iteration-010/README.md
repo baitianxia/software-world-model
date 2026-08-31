@@ -370,6 +370,12 @@ anchors 的事实段标为 `NON_ASSERTIVE`；第一层 repair 只修一项，coa
 `FINDING-010-253` 的 current `@38 / Primary @34 / Review @27 / preflight @32 / Review output @10` 聚合全部违规、关闭 non-assertive 逃逸，并
 以 exact diagnostic 变化判定 bounded repair 进展；fresh run-125 是下一 live 验证，Quality/MVP 仍未 PASS。
 
+clean `6a3c04d… / 1e8c974…`、fresh Ark actual `glm-5.3` qualification 与 run-125 已验证该 repair closure：Ark 13 calls 全部 completed，
+TLS/credential/HTTP `13/13/13`、DeepSeek/retry/unknown 0，页面交付 `SUCCEEDED / ACCEPTED`、4 Citation、18/18 content units、fresh Review
+与 Delivery。初始 Review 的两项独立缺口被聚合并进入同一修复链，后续 exact diagnostic 变化允许的 bounded slots 闭合了 Primary 与 focused
+Review shape；独立 exact-revision 审核未发现物质错误或遗漏。该单题只令 `FINDING-010-253` live PASS，整体 Quality/MVP 仍须至少两个异质
+冻结题与 current Codex 对照。
+
 下列 PDR-011 状态说明是历史记录，已被 PDR-012 取代。
 
 ## PDR-011 historical status and authorization

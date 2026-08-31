@@ -75,5 +75,19 @@ decoder 遇到第一个 unmatched anchor 即只返回通用错误。独立重算
 
 新增负向 fixture 要求非结构 `NON_ASSERTIVE` 技术锚点失败，并确认 pure heading 的 revision anchor 不被误判；run-123-like fixture 现在返回 exact
 anchor diagnostic。分层 repair fixture 证明不同 exact `CLOSED_OUTPUT_CONTRACT` diagnostic 可使用第二个 slot，而既有 closed-shape drift 仍停止。
-Agent/Model/Tool 定向集合 `86/86` PASS，相邻 Slice1 集合 `186/186` PASS，659 份 current documents check PASS；计划门禁、clean commit、
-fresh Ark qualification 与 run-125 同题 live successor 仍须依次完成。run-124 不取得 Quality 或 MVP PASS。
+Agent/Model/Tool 定向集合 `86/86` PASS，相邻 Slice1 集合 `186/186` PASS，659 份 current documents check PASS；计划门禁与 clean commit
+`6a3c04d7a1d3349005735ceb641ae62e3a127840 / 1e8c9745cd4e6b024fb22b1293955c5e9bf10a38` 已完成。fresh Ark qualification
+`ccrun_d706d40e67344b37bd907d6bf29d22b6` 为 13/13 cases PASS、actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0；result
+digest `sha256:51f2e34c349ed9a0dd3b58db04aef9244934cf2b1b097fadd260407c23baf4aa`，文件 SHA-256
+`8d9764b86e125ba73cb1637f6bd78a6ff311a63bee6d2a3bb945eef841a5b3bb`。
+
+run-125 同题 live successor 由 Ark 13 个 calls 全部 completed，TLS/credential/HTTP `13/13/13`，DeepSeek/retry/unknown 0。浏览器形成
+`SUCCEEDED / ACCEPTED`、4 个 exact Citation、18/18 content units、fresh Review
+`agent_review_a2edac23ae4f4d3aac99368d043e6341` 与 Delivery
+`engineering-agent-delivery:sha256:20b66d61fd68c71949d28916dc5ad9781d200ef069d845af144c0a031a823e26`。首轮 comprehensive Review 的
+create-failure Claim 缺口与 `EsProductDao.getAllEsProductList` anchor 缺口被聚合到同一修复链，后续 changed exact diagnostics 合法使用 bounded
+repair slots 并闭合 Primary citation-selection 与 focused Review anchors。独立对照 exact mall revision 的 Controller、ServiceImpl、Dao 与 Repository
+源码未发现物质错误、遗漏或假边界；terminal digest 为
+`sha256:6fa532924fecf52286e74f2696807add57fc49fff239666ec11227c4966a24d4`，terminal file SHA-256 为
+`5cb82ef368a800c8fe9607f394d0d5aee48add1af127f0b066271a9a42bad74e`。本 Finding 因而取得同题 live PASS；run-124 仍不取得 Quality/MVP，
+run-125 的单题成功也不替代至少两个异质冻结题与 current Codex 对照。

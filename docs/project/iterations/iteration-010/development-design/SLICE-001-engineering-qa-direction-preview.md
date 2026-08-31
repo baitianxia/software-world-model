@@ -342,6 +342,11 @@ diagnostic；Reviewer repair 只修一项，另有多个 anchor mismatch 和 non
 终止最后一个 slot。`FINDING-010-253` 以 `@38 / Review @27 / preflight @32` 聚合全部 anchor violations、禁止该逃逸，并仅在 exact diagnostic
 变化时允许第二层 bounded repair。下一动作是相邻门禁、clean commit、fresh qualification 与 run-125；Provider no-retry 边界不变。
 
+run-125 已在 clean `6a3c04d… / 1e8c974…` 与 fresh Ark qualification 下形成当前完整浏览器链：Ark 13 calls 全部 completed，
+TLS/credential/HTTP `13/13/13`、DeepSeek/retry/unknown 0，页面 `SUCCEEDED / ACCEPTED`，4 Citation、18/18 content units、fresh Review 与
+Delivery 完整。首轮多缺口 aggregate diagnostic 与后续 changed-diagnostic bounded repairs 均真实生效；独立 exact-revision 审核未见物质错误。
+本 Slice 下一动作是不改 scope 地执行至少两个异质冻结题与 current Codex 对照；单题通过不升级整体 Quality/MVP。
+
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

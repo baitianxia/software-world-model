@@ -373,3 +373,8 @@ DeepSeek/retry/unknown 0，页面没有 Review/Delivery。initial Reviewer 同�
 `NON_ASSERTIVE`；第一层 repair 只修一项，同属 `CLOSED_OUTPUT_CONTRACT` 的不同 diagnostic 又被 coarse category gate 提前终止。
 `FINDING-010-253` 将 current protocol 升为 `@38 / Primary @34 / Review @27 / preflight @32 / Review output @10`，聚合全部 anchor violations、
 关闭 nonstructural `NON_ASSERTIVE` 逃逸，并仅在 output 与 exact diagnostic 有进展时使用第二层 repair；门禁后以 fresh run-125 复验。
+
+clean `6a3c04d… / 1e8c974…`、fresh Ark actual `glm-5.3` qualification 与 run-125 已闭合该同题验证：Ark 13 calls 全部 completed，
+DeepSeek/retry/unknown 0，页面 `SUCCEEDED / ACCEPTED`，4 个 Citation、18/18 content units、fresh Review 与 Delivery 均存在。聚合 diagnostic
+与 progress-sensitive bounded repair 真实推动了多项 Review/Primary closure，独立 exact-revision 源码审核未见物质错误。proposal 仍不把单题
+成功当作 Quality/MVP PASS；下一步在相同 route、预算、standing authority 与非 Production 边界内执行至少两个异质冻结题和 current Codex 对照。

@@ -550,3 +550,10 @@ anchors 的事实段误标 `NON_ASSERTIVE`；第一层 repair 只修一项，旧
 `FINDING-010-253` 的 current candidate 聚合全部 anchor violations、禁止 nonstructural non-assertive anchor prose，并只在 exact diagnostic 有进展
 时允许第二层 bounded repair；协议族为 `@38 / Primary @34 / Review @27 / preflight @32 / Review output @10`。下一连续动作是相邻门禁、clean
 commit、fresh Ark qualification 与 run-125；网络失败策略、route、预算、no-replay 与非 Production 范围不变。
+
+上述 gate 已由 clean `6a3c04d… / 1e8c974…` 与 fresh Ark `ccrun_d706d40e67344b37bd907d6bf29d22b6` 闭合；qualification 13/13 cases
+PASS、actual `glm-5.3`、TLS/credential/HTTP `2/2/2`、retry/unknown 0。run-125 的 Ark 13 个 calls 全部 completed，TLS/credential/HTTP
+`13/13/13`，DeepSeek/retry/unknown 0；浏览器交付 `SUCCEEDED / ACCEPTED`、4 个 exact Citation、18/18 content units、fresh Review 与
+Delivery。聚合 diagnostic 令首轮 Review 同时暴露 create-failure Claim 缺口与 `EsProductDao.getAllEsProductList` exact-anchor 缺口，后续
+bounded repairs 又闭合 Primary citation-selection shape 与 focused Review anchors。独立 exact-revision 源码审核未发现物质错误或遗漏，
+`FINDING-010-253` 因而取得同题 live PASS；但单题成功不升级整体 Quality/MVP，下一连续动作是至少两个异质冻结题与 current Codex 对照。
