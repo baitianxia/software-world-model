@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 coding_input: false
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231]
+current_execution_finding_refs: [FINDING-010-132, FINDING-010-133, FINDING-010-134, FINDING-010-135, FINDING-010-136, FINDING-010-137, FINDING-010-138, FINDING-010-140, FINDING-010-141, FINDING-010-153, FINDING-010-161, FINDING-010-162, FINDING-010-163, FINDING-010-164, FINDING-010-165, FINDING-010-180, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232]
 current_scheduling_finding_ref: FINDING-010-179
 ---
 
@@ -250,3 +250,9 @@ Turn budget，而不是 Provider 或授权等待。current candidate 在同一 P
 
 run-102 发生在 weekday peak，Ark sealed 429 后 DeepSeek 按 PDR-007 在外调前拒绝；该部分 run 只验证 shared-budget wiring 和 Q4
 Conversation isolation，不产生 Review quality verdict。下一完整 run 仍在 standing scope 内使用 fresh off-peak evidence；peak override 另属 exact scope delta。
+
+run-103 已在 fresh off-peak window 完成同一五问：Ark 4 个 sealed 429、DeepSeek 39/39 completed、每题合计均不超过 15；Q2 ACCEPTED、Q4
+zero-dispatch Clarification，整体仍 Quality FAIL。最早通用偏差是 focused repair 可抹掉 Reviewer 已选择的 DEFECT/Finding，以及 failure
+follow-up 沿用 previous goal并把 caller local reachability 与 transaction/rollback/remote effect unknown 混为一体。current
+`@29/@19/@24` 保留 Review semantic anchor并让当前 requirement/failure condition 成为 Primary 与 Reviewer 的显式 rewrite contract；fresh
+committed run-104 是下一证据，不需要新人工授权。

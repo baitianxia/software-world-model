@@ -109,7 +109,9 @@ Application 必须在调查前从 original Turn、受信 Conversation Context �
 Primary model 可以读取 previous committed Work State 中延续 Conversation 所需的 goal、constraint、referent、hypothesis、plan 与 open item，
 但 previous Turn 的 Observation IDs 不是 current Turn Evidence copy domain，不得向模型披露或授权复用。可信 Application 必须单独投影
 `work_state_reference_policy`：exact current-Turn Observation prefix、accepted-correction prefix、superseded-conclusion prefix、sealed current
-User Message ID 与允许的 append rule。Observation prefix 完全由 Application 持有，`engineering-agent-work-state-proposal@3` 不再把
+User Message ID 与允许的 append rule。每个 invocation 的 goal 必须以 current User Message 为当前任务权威，并包含 follow-up 的 material
+delta；previous Work State goal 只能帮助解析 Context，不能因主题或源码相同而继续替代本轮目标。Observation prefix 完全由 Application 持有，
+`engineering-agent-work-state-proposal@3` 不再把
 `observation_ids` 作为 Provider output field；Application 必须从 current invocation 直接绑定完整有序 prefix，Provider 若输出、遗漏或尝试改写该
 field 均不能改变 Work State identity。accepted-correction 与 superseded-conclusion 仍由 Provider 原序复制；只有 current User Message 明确纠正
 更早 Context 时才可追加 sealed Message ID。Application 从原 Request、current observations、previous committed Work State 和 Context 重算并
@@ -175,7 +177,7 @@ Provider unavailable 或允许过早 Limitation 的依据。
 `ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4` 还必须把 query-relevant、exact-revision Java entity cognition 中可机械验证的 declaring type
 投影为 `ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1`：只有 declaring type 末段、`.java` 文件 stem 和 exact `source_path`
 一致时才形成候选；每项保留来源 cognition item/revision identity，并明确不授予 Source authority。若该 projection non-empty 且未截断，
-并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@28` 必须把这些 literal 投影为第一次
+并且 current Turn 尚未执行任何 Source action，`ENGINEERING_AGENT_PRIMARY_INPUT@29` 必须把这些 literal 投影为第一次
 `SOURCE_SEARCH.query` 的 exhaustive `allowed_exact_values`；Provider 只能精确复制，decoder 从原 World Model SUPPORT Observation 重算并
 拒绝宽泛 member word 或其他域外值。该闭域只负责第一次 cognition→Source 导航；执行一次 Source action 后，新 Observation 中出现的
 source-native symbol 仍可按既有短字面量 contract 提议。projection 缺失或有界截断时不得伪称 exhaustive，仍由原 proposal/Broker 路径
@@ -334,7 +336,7 @@ no-progress failure 关闭。
    工程 Draft，因其不提交事实、Evidence 或 Delivery 而不调用 Reviewer。Reviewer 只读 current User Message、受信相关 Conversation
    Context、当前 Package 与 Draft；无 Repository、World Model/Source Tool、Broker dispatch、shell、网络、credential 或写权限。
 4. Reviewer 从用户当前目标独立检查正确性、完整性、相关性、Citation 支持、条件/顺序/副作用、对话一致性、用户纠正和 Unknown 边界。
-   `ENGINEERING_AGENT_REVIEW_INPUT@18` 必须投影 exact ordered Claim indices；`engineering-agent-independent-review-proposal@9` 必须为每个 Claim 返回一个
+   `ENGINEERING_AGENT_REVIEW_INPUT@19` 必须投影 exact ordered Claim indices；`engineering-agent-independent-review-proposal@9` 必须为每个 Claim 返回一个
    `SUPPORTED/DEFECT` assessment。Application 重算完整 index set，禁止 SUPPORTED Claim 携带 Finding，并要求每个 DEFECT 至少绑定一个
    Finding；`APPROVED` 只允许全 SUPPORTED + empty Findings。global completeness/relevance Finding 可用 `claim_index=null`，但不能把
    “证据已支持/没有 defect”编码为 claim Finding。它只能返回 `APPROVED` 或带具体 Claim/证据缺口的 Finding；流畅、沿用上一轮或其他检查
@@ -350,6 +352,12 @@ no-progress failure 关闭。
    用户用了某一类别就要求把调用肯定分类为该类，也不得在同一个 global Finding 中同时要求肯定结论与“仍未确认”。每个 requirement-coverage
    Finding 必须指名 Draft 缺失、矛盾或错分的 exact requested delta，并给出一个 current sealed Package 内可完成的 evidence-safe 修复；只重复
    题面名词、要求超出 Evidence 的正面事实或自相矛盾的修复都不是合法 Finding。
+
+   当 current requirement 询问某个调用“失败后”会发生什么，Primary 与 Reviewer 必须先区分 exception/abrupt completion 与 unsuccessful
+   normal return，不能把题面中的 generic failure 自行提升为 throw。若 current full caller Source 显示有序语句且没有 intervening local
+   recovery，abrupt completion 可以支持“后续 local statement 未到达”这一控制流结论；它不支持更早调用已经成功、产生数据库/远端效果、已经
+   commit 或随后 rollback。local reachability 与 callee effect、persistence、transaction、remote/consumer effect 必须分别回答；缺少 transaction
+   evidence 不能反向抹掉 source-visible local reachability，也不能让 local order 证明持久化或回滚。
 
    comprehensive Review 拥有 current requirement coverage、普通 Claim support 与完整 Draft 的一般语义缺陷，但不拥有 caller/callee scope、
    Package Boundary materiality、resolved-acquisition disposition 或 opaque Boundary reference 的增删判断；后四者只由
@@ -445,7 +453,7 @@ no-progress failure 关闭。
    names、unexpected count 和 additional-fields-forbidden 状态投影给 repair；untrusted unexpected key name 不回显）同原始失败
    call receipt 和 untrusted prior output 一并绑定。repair 必须按 `allowed_exact` 重建该 object；sealed input 的 identity/metadata 字段只有
    同名进入 output allowlist 才能出现在输出。对 parseable `CLOSED_SCHEMA_SHAPE` failure，Application 必须从 untrusted prior output 与
-   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
+   trusted schema 递归形成 `ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24 / existing_allowed_field_copy_projection`：只保留已存在且当前子树 shape
    可对齐的 allowlisted field/value，排除 unexpected field 并保持 missing field 缺席。若一个 schema-invalid array 的所有 item 都没有任何
    已存在 allowlisted value，则整个 array 子树不形成 copy obligation；repair 只能从 current sealed schema/domain/template 重建它。只要该
    array 仍有一个既存 allowlisted item value，原长度/顺序与所有可对齐值就必须保持，不能用重建吞掉合法 sibling。final preflight 还必须
@@ -474,8 +482,12 @@ no-progress failure 关闭。
    而删除缺口；针对未枚举正文结论的 Finding 应保留并使用 `claim_index=null`。diagnostic 只定位 exact closed output violation，不授予
    事实、工具或审核权。repair input 必须显式投影 prior exact output 不得原样返回，并为 closed-contract failure 给出从 local typed
    violation 派生的 convergence directive：重复 Source query 只能换当前 sealed legal action，或在没有新 source-native literal 且当前
-   response domain 允许时用现有 reportable Boundary 收敛；focused closure mismatch 必须重建 verdict、disposition、finding code 与 Finding
-   的整组闭合。若 exact diagnostic 表明 Findings 不等于 challenge-bound Finding set，则每个 retained Finding 必须绑定一个 exact challenge、
+   response domain 允许时用现有 reportable Boundary 收敛；focused DEFECT/exceeded closure mismatch 的 repair 必须把 prior Review 的 exact
+   `decision / claim_assessments / requirement_coverage_assessment / findings` 投影为 semantic anchor，并在 decode 前机械恢复；repair 只能重建
+   focused challenge assessment arrays 的关联闭合，不能通过把 DEFECT 改为 SUPPORTED、删除 Finding 或改写 requirement coverage 取得通过。
+   该 anchor 仍是 untrusted Reviewer choice，不是 Evidence 或 trusted instruction；若第一次 semantic repair 回退为不同的 envelope/JSON/shape
+   category，anchor 必须穿过最后一个 bounded repair 继续守恒。若无法形成 coherent closure，Turn 失败关闭，Application 不自动批准。
+   若 exact diagnostic 表明 Findings 不等于 challenge-bound Finding set，则每个 retained Finding 必须绑定一个 exact challenge、
    复制其允许的 audit-only disposition 并使用同一 unique finding code；若所有 challenge 都是 material，则必须删除 unbound Findings 并
    APPROVE，不能重复 `MATERIAL_TO_USER_REQUEST + null finding_code + extra Finding`。若 exact diagnostic 为
    `non-approved Review requires Findings`，且 assessment body 已 closed、Findings 为空，repair directive 必须要求 Provider 只把 decision 改为
@@ -494,8 +506,8 @@ no-progress failure 关闭。
    identity/qualification。所有 Provider-authored string 必须是 non-empty、且首尾都不是 whitespace；特别是 `draft.content` 的 Markdown
    最后一个字符不能是空格或换行。Prompt 与 final preflight 必须显式投影该 closed constraint，Application 仍按原值失败关闭，不能 trim 或
    静默规范化。两种情况都不允许改换 route role。该诊断性修复沿用 current
-   `conversational-engineering-agent@28 / conversational-engineering-agent-no-tools-prompt@28 /
-   ENGINEERING_AGENT_PRIMARY_INPUT@28 / ENGINEERING_AGENT_REVIEW_INPUT@18 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23` 协议族；每次
+   `conversational-engineering-agent@29 / conversational-engineering-agent-no-tools-prompt@29 /
+   ENGINEERING_AGENT_PRIMARY_INPUT@29 / ENGINEERING_AGENT_REVIEW_INPUT@19 / ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24` 协议族；每次
    Session authority、role request 和 Provider request 仍必须绑定修复后的 exact prompt/input digest，旧字节不能冒充 current 输入。若
    first non-whitespace character 不是 `{`，bounded diagnostic 必须以 `NON_JSON_OBJECT_PREFIX` 定位 envelope failure 而不回显前缀；final
    preflight 必须明确禁止 JSON object 前后的 analysis/narration。一个 logical role step 最多允许两次 repair；第二次只允许前一个 repair 产生

@@ -8,6 +8,7 @@ import unittest
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
     ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF,
+    ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
     ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
     ENGINEERING_AGENT_ROLE_DISCLOSURE_AUTHORIZATION_SCHEMA_V2,
     EngineeringAgentModelConfiguration,
@@ -19,10 +20,12 @@ from software_world_model.ai_infrastructure.conversational_engineering_model imp
     _boundary_relevance_challenge_view,
     _boundary_relevance_allowed_dispositions,
     _closed_contract_repair_directive,
+    _format_repair_input_view,
     _evidence_boundary_challenge_view,
     _initial_format_repair_policy,
     _output_preflight_view,
     _primary_input_view,
+    _restore_focused_review_semantic_anchor_fields,
     _review_output_with_unique_finding_codes,
     decode_engineering_agent_primary_output,
     decode_engineering_agent_review_output,
@@ -55,6 +58,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentLedgerEntryReceipt,
     EngineeringAgentLoopLimits,
     EngineeringAgentModelCallFailure,
+    EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
@@ -452,7 +456,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             _closed_contract_repair_directive(
                 "focused Reviewer DEFECT Claim indices must equal the exact caller challenges"
             ),
-            "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE",
+            "PRESERVE_EXACT_REVIEWER_SEMANTIC_ANCHOR_AND_REBUILD_ONLY_"
+            "FOCUSED_CHALLENGE_ASSESSMENTS_AS_ONE_COHERENT_CLOSURE",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -467,7 +472,8 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             "MAKE_EACH_FINDING_TARGET_A_STRICTER_DIFFERENT_DRAFT_EDIT_AND_FOR_"
             "CALLER_EFFECT_FINDINGS_STATE_ONLY_INVOCATION_OR_LOCAL_ORDER_PLUS_"
-            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION",
+            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION_"
+            "AND_ANSWER_THE_CURRENT_USER_REQUIREMENT_NOT_THE_PREVIOUS_GOAL",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -495,6 +501,204 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             ),
             "USE_A_MATERIAL_ALLOWED_COGNITION_LITERAL_OR_A_DIFFERENT_"
             "WORLD_MODEL_QUERY",
+        )
+
+    def test_focused_contract_repair_preserves_reviewer_semantic_choices(self) -> None:
+        prior_review = {
+            "decision": "FINDINGS",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "DEFECT"}
+            ],
+            "requirement_coverage_assessment": {
+                "current_user_requirement": "说明调用边界。",
+                "coverage_summary": "The current requirement is addressed.",
+                "disposition": "FULLY_ADDRESSED",
+                "finding_code": None,
+            },
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": "challenge-1",
+                    "disposition": "WITHIN_CALLER_EVIDENCE",
+                    "finding_code": None,
+                }
+            ],
+            "boundary_relevance_assessments": [],
+            "findings": [
+                {
+                    "code": "CALLER_EFFECT",
+                    "message": "Narrow the effect assertion to caller evidence.",
+                    "requires_evidence": False,
+                    "claim_index": 0,
+                }
+            ],
+        }
+        receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="focused-review-invalid",
+            gateway_call_ref="focused-review-invalid",
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+            ),
+            failure_code=ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        failure = EngineeringAgentModelCallFailure(
+            receipt=receipt,
+            code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            message=(
+                "focused Reviewer DEFECT Claim indices must equal the exact "
+                "caller challenges classified as exceeding evidence"
+            ),
+            invalid_output_text=json.dumps(prior_review),
+        )
+        repair_payload = _format_repair_input_view(
+            {
+                "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
+                "format_repair_policy": _initial_format_repair_policy(),
+            },
+            failure=failure,
+        )
+        projection = repair_payload["format_repair_policy"][
+            "focused_review_semantic_anchor_projection"
+        ]
+        self.assertEqual(
+            projection,
+            {
+                field: prior_review[field]
+                for field in (
+                    "decision",
+                    "claim_assessments",
+                    "requirement_coverage_assessment",
+                    "findings",
+                )
+            },
+        )
+        envelope_regression_receipt = EngineeringAgentModelCallReceipt.create(
+            model_call_ref="focused-review-envelope-regression",
+            gateway_call_ref="focused-review-envelope-regression",
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+            failure_kind=(
+                EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID
+            ),
+            failure_code=ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+        )
+        envelope_regression = EngineeringAgentModelCallFailure(
+            receipt=envelope_regression_receipt,
+            code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            message=(
+                "$ JSON object envelope is invalid "
+                "(first_non_whitespace_character_class=NON_JSON_OBJECT_PREFIX)"
+            ),
+            invalid_output_text="I will repair the focused Review.",
+        )
+        layered_repair_payload = _format_repair_input_view(
+            {
+                "schema": ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA,
+                "format_repair_policy": _initial_format_repair_policy(),
+            },
+            failure=envelope_regression,
+            attempt=2,
+            previous_failure=failure,
+        )
+        layered_policy = layered_repair_payload["format_repair_policy"]
+        self.assertEqual(
+            layered_policy["focused_review_semantic_anchor_projection"],
+            projection,
+        )
+        self.assertEqual(
+            layered_policy[
+                "focused_review_semantic_anchor_source_model_call_ref"
+            ],
+            receipt.model_call_ref,
+        )
+        self.assertEqual(
+            layered_policy["validation_failure_category"],
+            "NON_JSON_OBJECT_PREFIX",
+        )
+        repair_payload.update(
+            {
+                "current_requirement_coverage_challenge": {
+                    "current_user_requirement": "说明调用边界。",
+                    "comparison_contract": {},
+                },
+                "boundary_relevance_challenges": (),
+                "review_reference_policy": {
+                    "claim_indices": (0,),
+                    "challenge_assessment_ids_required_exact_order": (
+                        "challenge-1",
+                    ),
+                    "boundary_relevance_assessment_ids_required_exact_order": (),
+                    "scope_classification_must_use_exact_claim_statement_only": True,
+                    "method_or_call_expression_name_has_no_effect_semantics": True,
+                    "user_requirement_neighboring_content_and_prior_review_are_not_claim_scope": True,
+                    "boundary_relevance_allowed_exact_dispositions_are_exhaustive": True,
+                    "bound_empty_boundary_fragments_require_kind_specific_audit_only_and_global_reference_removal_finding": True,
+                    "unbound_empty_boundary_fragments_require_not_disclosed": True,
+                    "requirement_coverage_assessment_required": True,
+                    "requirement_coverage_current_user_requirement_exact_copy_required": True,
+                    "requirement_coverage_approval_requires_fully_addressed": True,
+                    "requirement_coverage_misalignment_requires_global_finding": True,
+                },
+            }
+        )
+        preflight = _output_preflight_view(
+            role=EngineeringAgentModelRole.INDEPENDENT_REVIEWER,
+            role_input_payload=repair_payload,
+            output_schema_ref=ENGINEERING_AGENT_REVIEW_OUTPUT_SCHEMA_REF,
+        )
+        self.assertEqual(
+            preflight["format_repair"][
+                "focused_review_semantic_anchor_projection"
+            ],
+            projection,
+        )
+        self.assertTrue(
+            preflight["format_repair"][
+                "focused_review_semantic_anchor_exact_copy_required"
+            ]
+        )
+        self.assertEqual(
+            preflight["format_repair"][
+                "focused_review_semantic_anchor_application_restoration"
+            ],
+            "RESTORE_EXACT_REVIEWER_SEMANTIC_CHOICES_BEFORE_DECODE@1",
+        )
+
+        attempted_erasure = {
+            **prior_review,
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "evidence_boundary_assessments": [
+                {
+                    "challenge_id": "challenge-1",
+                    "disposition": "CLAIM_EXCEEDS_CALLER_EVIDENCE",
+                    "finding_code": "CALLER_EFFECT",
+                }
+            ],
+            "findings": [],
+        }
+        restored = _restore_focused_review_semantic_anchor_fields(
+            repaired_output=attempted_erasure,
+            projection=projection,
+        )
+        for field in (
+            "decision",
+            "claim_assessments",
+            "requirement_coverage_assessment",
+            "findings",
+        ):
+            self.assertEqual(restored[field], prior_review[field])
+        self.assertEqual(
+            restored["evidence_boundary_assessments"],
+            attempted_erasure["evidence_boundary_assessments"],
+        )
+        self.assertIsNone(
+            _initial_format_repair_policy()[
+                "focused_review_semantic_anchor_projection"
+            ]
         )
 
     def _service(
@@ -783,7 +987,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -924,6 +1128,18 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertIn(
             "It is not evidence of the callee implementation",
+            rendered,
+        )
+        self.assertIn(
+            "make goal describe the exact current User Message as the current",
+            rendered,
+        )
+        self.assertIn(
+            "abrupt completion can establish that later source statements are",
+            rendered,
+        )
+        self.assertIn(
+            "local reachability conclusion is separate from whether an",
             rendered,
         )
         self.assertIn("evidence_gap_is_not_authority_denial", rendered)
@@ -1226,7 +1442,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2076,7 +2292,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2128,6 +2344,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertTrue(
             comparison_contract[
                 "contradictory_positive_and_unconfirmed_demand_forbidden"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "failure_condition_must_distinguish_abrupt_from_unsuccessful_normal_return"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "abrupt_failure_local_reachability_is_separate_from_prior_effect_and_rollback"
+            ]
+        )
+        self.assertTrue(
+            comparison_contract[
+                "missing_transaction_evidence_does_not_erase_source_visible_local_reachability"
             ]
         )
         self.assertEqual(
@@ -2537,6 +2768,14 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             reviewer_prompt,
         )
         self.assertIn(
+            "For a failure follow-up, require the Draft to condition its answer",
+            reviewer_prompt,
+        )
+        self.assertIn(
+            "do not demand that the Draft label later-statement reachability",
+            reviewer_prompt,
+        )
+        self.assertIn(
             "report every independently observed material defect in this one Review",
             reviewer_prompt_compact,
         )
@@ -2642,7 +2881,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -2865,6 +3104,22 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertFalse(
             work_state_policy["prior_turn_observation_ids_authorized"]
+        )
+        self.assertTrue(
+            work_state_policy["current_user_message_is_current_goal_authority"]
+        )
+        self.assertTrue(
+            work_state_policy["previous_work_state_goal_is_context_only"]
+        )
+        self.assertTrue(
+            work_state_policy[
+                "generic_failure_requires_abrupt_vs_normal_return_condition"
+            ]
+        )
+        self.assertTrue(
+            work_state_policy[
+                "abrupt_failure_local_reachability_is_separate_from_effect_and_rollback"
+            ]
         )
         self.assertEqual(
             work_state_policy["current_user_message_id"],
@@ -3763,6 +4018,21 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 "reviewed_response_kind"
             ],
             "ANSWER",
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "current_user_requirement_is_rewrite_target"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "previous_work_state_goal_does_not_replace_current_requirement"
+            ]
+        )
+        self.assertTrue(
+            same_package_feedback["review_rewrite_contract"][
+                "failure_condition_separates_local_reachability_from_effect_and_rollback"
+            ]
         )
         self.assertTrue(
             same_package_feedback["review_rewrite_contract"][

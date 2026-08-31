@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231]
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -67,7 +67,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   具体 Finding，不替主 Agent 规划或执行工具。
 - 每个 comprehensive/focused Review 都必须逐字绑定 current User Message，并以 typed requirement-coverage assessment 独立判断 Draft 是否
   回答本轮完整目标；prior Answer/Work State、主题相同或 Claim supported 均不能替代。回答旧问题或遗漏本轮 material distinction/order/Unknown
-  时必须形成 global Finding，未 fully addressed 的 Review 不得批准或交付。
+  时必须形成 global Finding，未 fully addressed 的 Review 不得批准或交付。Primary goal 同样以 current User Message 为当前权威；failure
+  follow-up 必须区分 abrupt completion 与 unsuccessful normal return，并把 source-visible local reachability、prior effect、persistence、
+  commit/rollback、remote/consumer effect 分别回答。
 - ANSWER Claim 除 SUPPORT Observation IDs 外，还必须从每个 citation-bearing selected Observation 选择至少一个直接 supporting ref，且只
   投影最小 exact Citation set。broad Search inventory 不因一个结果 material 而整批进入 Browser；Application 从 authority receipt 重算
   selected-ref identity，ref 漂移失败关闭。
@@ -96,8 +98,9 @@ World Model Cognition → Main Engineering Agent → controlled read-only Source
   assessment 引用的重复 code 才稳定 disambiguate，且不得改变 message、binding 或顺序；任何被引用的重复 code 仍失败关闭。
 - same-Package replacement 若完整 Draft 字段仍等于 exact rejected Draft，decoder 必须拒绝，不能只改 Work State。closed-contract repair
   显式禁止原样复制 prior invalid output，并从 local typed failure 派生不授权事实/Tool 的 convergence directive：repeated Source query 只能换
-  sealed legal literal，或在没有新目标且 response domain 允许时用已有 Boundary 收敛；focused mismatch 必须按实际 DEFECT/EXCEEDS index set
-  重建 verdict/disposition/finding-code/Finding 闭合。challenge-bound Finding set mismatch 使用专用二选一 directive：每个 retained Finding
+  sealed legal literal，或在没有新目标且 response domain 允许时用已有 Boundary 收敛；focused DEFECT/exceeded mismatch 必须保留 prior
+  Review 的 exact decision/Claim assessments/requirement coverage/Findings semantic anchor，只重建 focused challenge assessment arrays；
+  Application 在 decode 前恢复 anchor，且它必须穿过不同 category 的最后一次 bounded repair。challenge-bound Finding set mismatch 使用专用二选一 directive：每个 retained Finding
   绑定一个 exact challenge 的 allowed audit-only disposition 和同一 code；若全部 challenge material，则删除 unbound Findings 并 APPROVE。
 - `LIMITATION` 始终零 Claim。Reviewer 不得要求添加 exact-answer detail、interface/search inventory 或 Claim；pure、relevant、正确绑定的
   Limitation 不因 Package 无法产生用户原本要求的 full answer 而成为 completeness defect。已有 opaque Boundary ID 不能误报 missing binding，
@@ -240,7 +243,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—231 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-102 在周一 09:44 CST weekday peak 启动；Q1 的 Ark sealed 429 后，DeepSeek 正确以 `DENIED_PEAK_WINDOW` 在 credential/TLS/HTTP 前保持零 dispatch，Q4 fresh Conversation 零调用澄清继续通过。相同 shared-budget digest 已同时投影给两个 runtime，但 `@28/@18/@23` 没有取得模型执行证据；Q2/Q3/Q5 未作无新证据的同签名外调。下一完整质量证据是 current PDR-007 off-peak 下的 fresh run；peak override 是真实 scope delta。新实现发现按
+当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—232 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-103 已在周一 12:13 CST off-peak 完成五问：Ark 4 个 sealed 429、DeepSeek 39/39 completed，shared budget 将逐题合计保持为 `14/10/8/0/11`；Q2 ACCEPTED、Q4 zero-dispatch Clarification，整体仍 FAIL。Q1 的 focused repair 会擦除已识别 DEFECT/Finding，Q3 沿用上一 goal且混淆 abrupt-failure local reachability 与 rollback/effect unknown，Q5 的 duration expiry 仅为 timing-supported inference。current `@29/@19/@24` 以 Application-restored Review semantic anchor 和 current-requirement/failure-condition contract 修复；定向 `137/137` PASS，下一证据是 committed fresh off-peak run-104。新实现发现按
 [实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
 普通失败停工点。
 

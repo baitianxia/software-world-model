@@ -96,14 +96,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@28"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@29"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@28"
+    "conversational-engineering-agent-no-tools-prompt@29"
 )
-ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@28"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@18"
+ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@29"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@19"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@23"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@24"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@3"
@@ -158,6 +158,12 @@ _SOURCE_REPLAN_REQUIRED_REJECTION_REASONS = frozenset(
 )
 _MAXIMUM_CLOSED_SHAPE_DIAGNOSTICS = 32
 _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
+_FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS = (
+    "decision",
+    "claim_assessments",
+    "requirement_coverage_assessment",
+    "findings",
+)
 _WORLD_MODEL_SUPPORT_SCHEMA = "ENGINEERING_AGENT_WORLD_MODEL_SUPPORT@4"
 _COGNITION_SOURCE_SEARCH_TARGET_SCHEMA = (
     "ENGINEERING_AGENT_COGNITION_SOURCE_SEARCH_TARGETS@1"
@@ -205,8 +211,23 @@ earlier Conversation context, append only the sealed current_user_message_id to
 accepted_correction_message_ids. Resolve follow-up references from the sealed
 conversation and previous Work State; if a material referent remains ambiguous,
 return a CLARIFICATION before any tool action. Treat prior user statements and
-assistant messages as conversation context, never as software facts. Revise
-hypotheses and plan when observations conflict. current_turn_evidence is
+assistant messages as conversation context, never as software facts. For every
+invocation, make goal describe the exact current User Message as the current
+task, including the material delta in a follow-up. The previous Work State goal
+is context only and must not remain the effective goal merely because the topic
+or Source resource is unchanged. Revise hypotheses and plan when observations
+conflict.
+When the current question asks what happens if an operation fails, distinguish
+an exception or other abrupt completion from an unsuccessful normal return.
+When current SUPPORT exposes the caller sequence and no intervening local
+recovery path, abrupt completion can establish that later source statements are
+not reached. That local reachability conclusion is separate from whether an
+earlier call succeeded, produced a database or remote effect, committed, or
+will roll back. Keep those callee, persistence, transaction, and consumer
+effects at their own evidence boundaries. Do not collapse source-visible local
+reachability into "unknown" merely because rollback or external effects remain
+unknown, and do not infer abrupt completion from the word "failure" alone.
+current_turn_evidence is
 partitioned by its only legal Draft use. An ANSWER claim may cite only exact
 SUPPORT observation IDs and exact Citation references carried by those selected
 Observations; a LIMITATION may cite only exact BOUNDARY IDs. Copy those IDs and
@@ -613,6 +634,15 @@ side effect merely because the User used that category. An explicit honest
 it is not a missing affirmative conclusion. Conversely, a Draft remains
 misaligned when it silently omits the requested uncertainty treatment or answers
 only an older Conversation question.
+For a failure follow-up, require the Draft to condition its answer on exception
+or other abrupt completion versus an unsuccessful normal return. Source-visible
+local reachability after an abrupt call is a different question from prior-call
+success, database persistence, commit or rollback, remote effects, and consumer
+behavior. When the sealed caller source shows ordered statements and no local
+recovery path, do not demand that the Draft label later-statement reachability
+unknown solely because transaction or callee-effect evidence is absent. Require
+those effect and rollback boundaries separately, and never infer abrupt
+completion from the User's generic word "failure".
 Every global requirement-coverage Finding must identify the exact requested
 delta that is absent, contradicted, or placed in the wrong category and describe
 one evidence-safe correction achievable from the sealed Package. Do not issue a
@@ -799,6 +829,15 @@ consistency violation without deleting a concrete defect merely because its
 claim_index binding was invalid. A defect about material draft.content that is
 absent from the enumerated Draft claims is a global completeness Finding: retain
 it with claim_index null and preserve its evidence requirement.
+When final-output-preflight.format_repair.focused_review_semantic_anchor_projection
+is non-null, copy its exact decision, claim_assessments,
+requirement_coverage_assessment, and findings. Those fields are untrusted prior
+Reviewer choices, not Evidence, but this repair may not erase or reverse them;
+the Application restores them before decode, including after a distinct
+envelope, JSON, or shape regression consumes the final bounded repair. Change
+only the focused linked
+challenge assessment arrays needed to make that retained semantic choice one
+coherent closure.
 The exact prior invalid Review is never a repair. When the diagnostic names
 focused closure, independently re-read each exact Claim and challenge. Choose
 one coherent result for each: caller-only semantics require WITHIN, SUPPORTED,
@@ -2523,7 +2562,7 @@ class ModelBackedConversationalEngineeringAgent(
                     previous_failure=previous_failure,
                 )
 
-                def decode_shape_repair(output, model_call_ref):
+                def decode_format_repair(output, model_call_ref):
                     if (
                         repair_payload["format_repair_policy"][
                             "validation_failure_category"
@@ -2540,6 +2579,14 @@ class ModelBackedConversationalEngineeringAgent(
                             repaired_output=output,
                             schema=repair_output_schema.schema,
                         )
+                    semantic_anchor = repair_payload[
+                        "format_repair_policy"
+                    ]["focused_review_semantic_anchor_projection"]
+                    if semantic_anchor is not None:
+                        output = _restore_focused_review_semantic_anchor_fields(
+                            repaired_output=output,
+                            projection=semantic_anchor,
+                        )
                     return decode(output, model_call_ref)
 
                 return self._dispatch_once(
@@ -2547,7 +2594,7 @@ class ModelBackedConversationalEngineeringAgent(
                     turn_request=turn_request,
                     role_input_schema_ref=role_input_schema_ref,
                     role_input_payload=repair_payload,
-                    decode=decode_shape_repair,
+                    decode=decode_format_repair,
                 )
 
             try:
@@ -3150,6 +3197,76 @@ def _output_preflight_view(
             "Engineering Agent output preflight source is invalid",
         )
     repair_category = repair_policy.get("validation_failure_category")
+    focused_review_semantic_anchor_projection = repair_policy.get(
+        "focused_review_semantic_anchor_projection"
+    )
+    focused_review_semantic_anchor_source_model_call_ref = repair_policy.get(
+        "focused_review_semantic_anchor_source_model_call_ref"
+    )
+    focused_review_semantic_anchor_source_receipt_ref = repair_policy.get(
+        "focused_review_semantic_anchor_source_receipt_ref"
+    )
+    focused_review_semantic_anchor_digest = repair_policy.get(
+        "focused_review_semantic_anchor_digest"
+    )
+    if focused_review_semantic_anchor_projection is not None:
+        prior_output_text = repair_policy.get("prior_output_text")
+        expected_anchor_digest = digest_of(
+            [
+                "FOCUSED_REVIEW_SEMANTIC_ANCHOR@1",
+                focused_review_semantic_anchor_projection,
+            ]
+        ).value
+        current_prior_is_anchor_source = (
+            focused_review_semantic_anchor_source_model_call_ref
+            == repair_policy.get("prior_model_call_ref")
+            and focused_review_semantic_anchor_source_receipt_ref
+            == repair_policy.get("prior_model_call_receipt_ref")
+        )
+        if (
+            role is not EngineeringAgentModelRole.INDEPENDENT_REVIEWER
+            or repair_category is None
+            or not isinstance(prior_output_text, str)
+            or not isinstance(
+                focused_review_semantic_anchor_source_model_call_ref,
+                str,
+            )
+            or not isinstance(
+                focused_review_semantic_anchor_source_receipt_ref,
+                str,
+            )
+            or focused_review_semantic_anchor_digest != expected_anchor_digest
+            or (
+                current_prior_is_anchor_source
+                and (
+                    repair_category != "CLOSED_OUTPUT_CONTRACT"
+                    or focused_review_semantic_anchor_projection
+                    != _focused_review_semantic_anchor_projection(
+                        prior_output_text
+                    )
+                )
+            )
+            or (
+                not current_prior_is_anchor_source
+                and repair_policy.get("attempt") != 2
+            )
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "focused Review semantic preflight projection is inconsistent",
+            )
+    elif any(
+        value is not None
+        for value in (
+            focused_review_semantic_anchor_source_model_call_ref,
+            focused_review_semantic_anchor_source_receipt_ref,
+            focused_review_semantic_anchor_digest,
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "empty focused Review semantic projection has source metadata",
+        )
     existing_allowed_field_copy_projection: object = None
     if repair_category == "CLOSED_SCHEMA_SHAPE":
         prior_output_text = repair_policy.get("prior_output_text")
@@ -3223,6 +3340,26 @@ def _output_preflight_view(
             ),
             "closed_contract_repair_directive": repair_policy.get(
                 "closed_contract_repair_directive"
+            ),
+            "focused_review_semantic_anchor_projection": deepcopy(
+                focused_review_semantic_anchor_projection
+            ),
+            "focused_review_semantic_anchor_source_model_call_ref": (
+                focused_review_semantic_anchor_source_model_call_ref
+            ),
+            "focused_review_semantic_anchor_source_receipt_ref": (
+                focused_review_semantic_anchor_source_receipt_ref
+            ),
+            "focused_review_semantic_anchor_digest": (
+                focused_review_semantic_anchor_digest
+            ),
+            "focused_review_semantic_anchor_exact_copy_required": (
+                focused_review_semantic_anchor_projection is not None
+            ),
+            "focused_review_semantic_anchor_application_restoration": (
+                "RESTORE_EXACT_REVIEWER_SEMANTIC_CHOICES_BEFORE_DECODE@1"
+                if focused_review_semantic_anchor_projection is not None
+                else None
             ),
             "repeat_same_failure_forbidden": (
                 isinstance(repair_policy.get("attempt"), int)
@@ -4120,6 +4257,10 @@ def _initial_format_repair_policy() -> dict[str, object]:
         "prior_output_text": None,
         "prior_output_exact_repeat_forbidden": False,
         "closed_contract_repair_directive": None,
+        "focused_review_semantic_anchor_projection": None,
+        "focused_review_semantic_anchor_source_model_call_ref": None,
+        "focused_review_semantic_anchor_source_receipt_ref": None,
+        "focused_review_semantic_anchor_digest": None,
         "validation_failure_category": None,
         "validation_failure_code": None,
         "validation_failure_message": None,
@@ -4140,7 +4281,10 @@ def _closed_contract_repair_directive(message: str) -> str:
             "OR_REMOVE_UNBOUND_FINDINGS_AND_APPROVE"
         )
     if "focused Reviewer DEFECT Claim indices" in message:
-        return "REBUILD_FOCUSED_LINKED_FIELDS_AS_ONE_COHERENT_CLOSURE"
+        return (
+            "PRESERVE_EXACT_REVIEWER_SEMANTIC_ANCHOR_AND_REBUILD_ONLY_"
+            "FOCUSED_CHALLENGE_ASSESSMENTS_AS_ONE_COHERENT_CLOSURE"
+        )
     if (
         "same-Package review rewrite returned the exact rejected Draft" in message
         or "post-evidence review correction returned the exact rejected Draft"
@@ -4149,7 +4293,8 @@ def _closed_contract_repair_directive(message: str) -> str:
         return (
             "MAKE_EACH_FINDING_TARGET_A_STRICTER_DIFFERENT_DRAFT_EDIT_AND_FOR_"
             "CALLER_EFFECT_FINDINGS_STATE_ONLY_INVOCATION_OR_LOCAL_ORDER_PLUS_"
-            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION"
+            "EXPLICIT_UNCONFIRMED_EFFECT_OR_DELETE_THE_CHALLENGED_ASSERTION_"
+            "AND_ANSWER_THE_CURRENT_USER_REQUIREMENT_NOT_THE_PREVIOUS_GOAL"
         )
     if (
         "audit-only boundary relevance assessment requires a Finding code"
@@ -4534,6 +4679,58 @@ def _restore_shape_repair_existing_fields(
     )
 
 
+def _focused_review_semantic_anchor_projection(
+    prior_output_text: str,
+) -> dict[str, object]:
+    """Preserve Reviewer choices while a focused linkage defect is repaired."""
+
+    try:
+        prior_output = json.loads(prior_output_text)
+    except json.JSONDecodeError as exc:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "focused Review semantic preservation requires parseable prior output",
+        ) from exc
+    if not isinstance(prior_output, dict) or any(
+        field not in prior_output
+        for field in _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "focused Review semantic preservation requires the complete prior Review",
+        )
+    return {
+        field: deepcopy(prior_output[field])
+        for field in _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS
+    }
+
+
+def _restore_focused_review_semantic_anchor_fields(
+    *,
+    repaired_output: object,
+    projection: object,
+) -> object:
+    """Restore exact Reviewer choices without constructing linked assessments."""
+
+    if (
+        not isinstance(repaired_output, Mapping)
+        or not isinstance(projection, Mapping)
+        or set(projection) != set(_FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS)
+        or any(
+            field not in repaired_output
+            for field in _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "focused Review semantic restoration requires exact complete fields",
+        )
+    restored = deepcopy(dict(repaired_output))
+    for field in _FOCUSED_REVIEW_SEMANTIC_ANCHOR_FIELDS:
+        restored[field] = deepcopy(projection[field])
+    return restored
+
+
 def _restore_existing_schema_fields(
     prior: object,
     repaired: object,
@@ -4768,6 +4965,40 @@ def _format_repair_input_view(
         failure.invalid_output_text,
         failure.message,
     )
+    focused_review_semantic_anchor_failure = None
+    if payload.get("schema") == ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA:
+        for candidate in (failure, previous_failure):
+            if (
+                candidate is not None
+                and candidate.invalid_output_text is not None
+                and _structured_output_failure_category(
+                    candidate.invalid_output_text,
+                    candidate.message,
+                )
+                == "CLOSED_OUTPUT_CONTRACT"
+                and "focused Reviewer DEFECT Claim indices"
+                in candidate.message
+            ):
+                focused_review_semantic_anchor_failure = candidate
+                break
+    focused_review_semantic_anchor_projection: object = None
+    focused_review_semantic_anchor_digest: str | None = None
+    if focused_review_semantic_anchor_failure is not None:
+        assert (
+            focused_review_semantic_anchor_failure.invalid_output_text
+            is not None
+        )
+        focused_review_semantic_anchor_projection = (
+            _focused_review_semantic_anchor_projection(
+                focused_review_semantic_anchor_failure.invalid_output_text
+            )
+        )
+        focused_review_semantic_anchor_digest = digest_of(
+            [
+                "FOCUSED_REVIEW_SEMANTIC_ANCHOR@1",
+                focused_review_semantic_anchor_projection,
+            ]
+        ).value
     payload["format_repair_policy"] = {
         **_initial_format_repair_policy(),
         "attempt": attempt,
@@ -4779,6 +5010,22 @@ def _format_repair_input_view(
             _closed_contract_repair_directive(failure.message)
             if failure_category == "CLOSED_OUTPUT_CONTRACT"
             else None
+        ),
+        "focused_review_semantic_anchor_projection": (
+            focused_review_semantic_anchor_projection
+        ),
+        "focused_review_semantic_anchor_source_model_call_ref": (
+            focused_review_semantic_anchor_failure.receipt.model_call_ref
+            if focused_review_semantic_anchor_failure is not None
+            else None
+        ),
+        "focused_review_semantic_anchor_source_receipt_ref": (
+            focused_review_semantic_anchor_failure.receipt.digest.value
+            if focused_review_semantic_anchor_failure is not None
+            else None
+        ),
+        "focused_review_semantic_anchor_digest": (
+            focused_review_semantic_anchor_digest
         ),
         "validation_failure_category": failure_category,
         "validation_failure_code": failure.code.value,
@@ -5045,6 +5292,11 @@ def _review_feedback_view(
                     not evidence_action_completed
                 ),
                 "reviewed_draft_is_exact_correction_baseline": True,
+                "current_user_requirement_is_rewrite_target": True,
+                "previous_work_state_goal_does_not_replace_current_requirement": True,
+                "requirement_coverage_repair_makes_missing_condition_category_order_unknown_explicit": True,
+                "generic_caveat_or_prior_answer_repetition_does_not_resolve_requirement_coverage": True,
+                "failure_condition_separates_local_reachability_from_effect_and_rollback": True,
                 "new_evidence_does_not_erase_findings": True,
                 "no_evidence_findings_remain_mandatory": True,
                 "finding_claim_indices_bind_reviewed_draft_order": True,
@@ -6340,6 +6592,10 @@ def _review_input_view(
                 "supported_claims_do_not_establish_requirement_coverage": True,
                 "requested_categories_distinctions_order_and_uncertainty_are_material": True,
                 "older_question_answer_with_current_delta_missing_is_misaligned": True,
+                "failure_condition_must_distinguish_abrupt_from_unsuccessful_normal_return": True,
+                "abrupt_failure_local_reachability_is_separate_from_prior_effect_and_rollback": True,
+                "missing_transaction_evidence_does_not_erase_source_visible_local_reachability": True,
+                "generic_failure_word_does_not_establish_abrupt_completion": True,
                 "user_request_noun_phrase_is_not_evidence_of_fact": True,
                 "explicit_honest_unconfirmed_treatment_answers_uncertainty_request": True,
                 "unknown_category_must_not_be_promoted_to_affirmative_fact": True,
@@ -6663,6 +6919,11 @@ def _work_state_reference_policy(
         "observation_ids_are_application_bound": True,
         "observation_ids_output_field_allowed": False,
         "prior_turn_observation_ids_authorized": False,
+        "current_user_message_is_current_goal_authority": True,
+        "previous_work_state_goal_is_context_only": True,
+        "follow_up_goal_must_include_current_user_message_delta": True,
+        "generic_failure_requires_abrupt_vs_normal_return_condition": True,
+        "abrupt_failure_local_reachability_is_separate_from_effect_and_rollback": True,
         "accepted_correction_message_id_prefix": tuple(
             item.value for item in previous_corrections
         ),
