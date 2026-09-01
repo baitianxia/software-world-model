@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT]
-derived_from: [FINDING-010-135, FINDING-010-261]
+derived_from: [FINDING-010-135, FINDING-010-261, FINDING-010-270]
 code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/infrastructure/file_capability_cognition.py, src/software_world_model/interface/java_capability_cognition_cli.py]
 tests: [tests/test_java_source_semantics.py, tests/test_capability_cognition.py, tests/test_source_operations.py]
 ---
@@ -109,9 +109,25 @@ closure 再执行 consistency Oracle；此时失败不回滚 Snapshot，而是�
 ## Capability-cognition query projection
 
 PDR-014 Alpha 可以在提问前从同一 exact Source、冻结 Java frontend 和明确选择的 `src/main/java` roots 构建一份不可变的
-`JAVA_CAPABILITY_COGNITION@1` 查询投影。它补齐 module/package/file/type/method 层级、contain/import/inherit/invoke 关系和 Source
+`JAVA_CAPABILITY_COGNITION@1` 查询投影。它补齐 module/package/file/type/method 层级、contain/import/inherit/implements/invoke 关系和 Source
 可直接观察的 condition/throw/catch/state read/state write/call/external call/return 行为；每项必须保留 exact revision、tree、path、line、
 content digest、Coverage、Conflict 与 Unknown。行为按方法内 Source ordinal 排序；外部或歧义目标不得伪造成内部实体。
+
+类型的 `INHERITS` 只表示 `extends`，类型的 `IMPLEMENTS` 只表示 `implements`；两者都以实际 Java clause 作为 relation provenance，并以
+`relation_scope=TYPE` 标识。具备 Source body 的非 private/static 方法若可沿内部类型关系、名称、arity 和 erased parameter types 匹配到
+接口或父类型方法，且该声明沿整个类型路径确实可继承，则另形成 implementation method → declaration method 的 `IMPLEMENTS`，以
+`relation_scope=METHOD_CONTRACT` 和 `contract_kind` 区分接口声明与父类型声明。interface 非 private/static 方法按 Java implicit-public 语义
+处理；class 的 public/protected 方法可跨 package，package-private 方法只在整个 inheritance path 与声明类型同 package 时可形成关系。
+该关系必须同时返回实现端、声明端各自的 declaration provenance，以及支持这条闭包的类型关系 Source chain；不能只靠查询时签名猜测临时
+拼接。当前投影不执行 generic type-variable substitution 或未解析 signature namespace 求解；当内部 ancestor 的同名同 arity candidate
+实际需要该能力时，不伪造 method-contract relation，并在 snapshot/page 披露对应 Unknown。外部父类型或多候选 wildcard import 同样保持
+`PARTIAL` 并披露具体 Unknown，不能伪装为完整内部声明闭包。
+
+type/method 的 Source annotations 和声明属性属于可检索 entity attributes。search 对复合 repository-native identifier 同时保留完整标识符和
+通用 CamelCase 词元，并把已建成的 method contract companion 双向纳入有界结果；它仍是 source-derived lexical retrieval，不是语义搜索或
+题面别名。traverse/detail 的 relation 结果必须返回 endpoint summaries，使每个内部 endpoint 的实际 Source provenance 可直接核对。三类操作
+的每一页除逐项认识论状态外，还返回 snapshot-level Coverage/Conflict/Unknown；只要工件存在 partial file、Conflict 或 Unknown，页面不得把
+整体 Coverage 报为 `COMPLETE`。
 
 该投影复用本 Contract 的冻结 frontend 与 Source 语义边界，但不是第二套正式知识库：它没有 CURRENT pointer、跨 revision continuity、
 独立 publication/adoption 或闭世界负向权威，也不能替代上述正式 Snapshot、Coverage State 和 no-payload Bundle。其 canonical private artifact

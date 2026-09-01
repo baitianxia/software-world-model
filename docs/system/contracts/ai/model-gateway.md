@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [ai]
 depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
-derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236, FINDING-010-242, FINDING-010-243, FINDING-010-244]
+derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-271]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -131,8 +131,9 @@ admission plugin 的 current inputs/verdict 或 exact override，以及逐 dispa
 
 ## 当前配置实例与历史实现证据
 
-当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile。当前 DeepSeek Adapter
-contract 把 schema authority 与 leading semantic authority 合并为恰好一个 leading system message；当前 Ark Engineering Chat profile 固定
+当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile。当前 Ark 与 DeepSeek
+Adapter contract 都把 schema authority 与 leading semantic authority 合并为恰好一个 leading system message；自然语言任务或审核正文不得
+翻译 closed Schema 的 field name 与 enum protocol token，Adapter 也不得通过语言别名接受漂移输出。当前 Ark Engineering Chat profile 固定
 每 request 一个 verified TLS session、每 session 一个 HTTP dispatch、`Connection: close`、TLS 后逐 dispatch 解析 credential 与 retry 0。
 Ark Gateway request/result 对调用方仍为非流式单终态；Provider wire 使用 `stream:true`、`stream_options.include_usage:true`、
 `reasoning_effort:low` 与 SSE，`thinking` field 保持缺席。Adapter

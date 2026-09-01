@@ -4427,6 +4427,66 @@
       "validation/iteration_010_mvp"
     ]
   },
+  "FINDING-010-269": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-269.md",
+    "code": [
+      "validation/iteration_010_mvp/independent_supervision.py",
+      "validation/iteration_010_mvp/direction_check.py"
+    ],
+    "tests": [
+      "tests/test_iteration_010_independent_supervision.py",
+      "tests/test_iteration_010_direction_check.py"
+    ]
+  },
+  "FINDING-010-270": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-270.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "src/software_world_model/application_services/java_capability_cognition.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py",
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
+  "FINDING-010-271": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-271.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
+  "FINDING-010-272": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-272.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
+  "FINDING-010-273": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-273.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/lightweight_engineering_agent.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_iteration_010_direction_check.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
