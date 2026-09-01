@@ -37,8 +37,8 @@ ITER-010 的产品目标和总体架构不变，但 PDR-013 的执行计划已�
 Phase A 的 source-only Browser 诊断基线已用两个异质问题和一个追问通过；Phase B 的 exact-source 认知纵切已在同一 artifact 上用五个独立
 任务 5/5 通过。Phase C 首个真实 Browser run 已完成三个异质问题和一个追问，但事务追问漏掉接口 `@Transactional` 并被 Reviewer 错误
 批准，因此状态保持 REWORK。通用 ranking 已让 frozen source-native 查询同时返回实现和接口；真实 run-005 进一步证明 Agent 把中文转述
-误当 lexical cognition query，随后仍只读实现。Application Control 已拒绝该错误答案；current 修复只澄清 source-native 查询和声明检查的
-通用工具契约，真实 successor 与 same-Agent 消融仍未完成。
+误当 lexical cognition query，随后仍只读实现。该错误答案因越界 Citation 在 review 前被 Application Control 拒绝，这不等于语义判错；
+current 修复只澄清 source-native 查询和声明检查的通用工具契约，真实 successor 与 same-Agent 消融仍未完成。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
