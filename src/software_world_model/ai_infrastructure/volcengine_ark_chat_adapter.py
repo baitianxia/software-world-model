@@ -609,7 +609,7 @@ UrllibVolcengineArkChatTransport = DirectVerifiedVolcengineArkChatTransport
 
 class VolcengineArkChatCompletionsNoToolsAdapter:
     provider_type = "VOLCENGINE_ARK"
-    adapter_version = "openai-chat-completions-no-tools@12"
+    adapter_version = "openai-chat-completions-no-tools@13"
 
     def __init__(
         self,
