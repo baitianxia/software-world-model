@@ -5100,6 +5100,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-254.md"
   },
   {
+    "id": "FINDING-010-255",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "ai",
+      "application",
+      "quality",
+      "operations"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-255.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -6971,6 +6985,22 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-012-product-first-continuous-browser-chat-build.md"
+  },
+  {
+    "id": "ITER-010-PDR-013",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-013-agent-first-convergence-cutover.md"
   },
   {
     "id": "ITER-010-PROPOSAL",

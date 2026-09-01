@@ -9,8 +9,8 @@ code: [src/software_world_model]
 tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
-current_execution_decision_ref: ITER-010-PDR-012
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, FINDING-010-250, FINDING-010-251, FINDING-010-252, FINDING-010-253, FINDING-010-254]
+current_execution_decision_ref: ITER-010-PDR-013
+current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, FINDING-010-250, FINDING-010-251, FINDING-010-252, FINDING-010-253, FINDING-010-254, FINDING-010-255]
 current_scheduling_finding_ref: FINDING-010-179
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -19,15 +19,32 @@ product_goal_web_checkpoint_id: V-CHAT-EXPERIENCE-001
 direction_preview_web_checkpoint_id: V-CHAT-EXPERIENCE-001
 product_goal_direction_preview_checkpoint_id: V-PREVIEW-002
 product_goal_reflection_gate_case_id: V-PREVIEW-002
-product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-PUBLIC-OSS-AUTHORITY-ADMISSION-001, V-MODEL-TRANSPARENT-ROUTING-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-QUALITY-001, V-CHAT-XD-001, V-DIRECTION-QUALITY-001, V-PREVIEW-002]
+product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-AGENT-FIRST-CONVERGENCE-001, V-PUBLIC-OSS-AUTHORITY-ADMISSION-001, V-MODEL-TRANSPARENT-ROUTING-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-XD-001, V-DIRECTION-QUALITY-001, V-PREVIEW-002]
 ---
 
 # SLICE-001：真实浏览器 Chat 纵切
 
+## PDR-013 当前开发切片
+
+本 Slice 已从旧协议收敛循环切换为 Agent-first 产品收敛。run-127 及 `FINDING-010-255` 是旧路线的终止证据；不得开发 `@40` successor 或
+run-128。当前实现必须建立一条不依赖 Claim/Boundary/content-unit 文本证明协议的浏览器路径：世界模型提供认知和入口，主工程 Agent 自主
+调查源码并回答，独立 Reviewer 面向原问题、完整答案与证据一次报告全部重大缺陷，Application 只执行确定性安全和交付边界。
+
+执行顺序固定为：
+
+1. 建立简化 Agent-first 候选并立即提供 loopback 体验；
+2. 同一候选一次运行五个异质问题，至少三个未参与实现，同时由 actual current Codex 独立回答；
+3. independent exact-source evaluation 逐题比较；
+4. 失败只修最早责任层的一项系统性根因，并复验原题加两个未参与修复问题；
+5. 同一层第二次仍靠新增语义规则或只改善原题时，停止该实现并删除/绕过控制层或替换 Agent 策略。
+
+第一实现提交必须加入 PDR-013 定义的轻量架构检查，阻断问题/工程特判、Application 对答案正文的词法语义判断，以及旧协议文件继续增长。
+该检查不判断答案内容。full regression、hidden、跨工程和硬化不得前置。
+
 ## Status and dependencies
 
-`AUTHORIZED / PDR-012 PRODUCT BUILD ACTIVE / coding_input=true`。依赖 ITER-006 accepted 能力、当前 Proposal/Readiness/Verification、PDR-010
-产品方向和现行 System Contracts；PDR-011 只保存历史失败，不再控制当前产品动作。
+`AUTHORIZED / PDR-013 AGENT-FIRST PRODUCT CONVERGENCE ACTIVE / coding_input=true`。依赖 ITER-006 accepted 能力、当前
+Proposal/Readiness/Verification、PDR-010 产品方向和现行 System Contracts；PDR-012 以前的运行只保存历史证据，不再控制当前产品动作。
 
 ## 目标
 
@@ -190,24 +207,21 @@ revision 且只读；每个重要结论绑定 Citation；prior Answer/Review 与
 
 ## 唯一工作计划
 
-1. 使用已有 run-052/053 trace 和当前代码建立最小分层证据表，确定最早可证实偏差；不得从最终错误文案猜根因。
-2. 只修复该 Owner 的最小通用问题。禁止题面、关键词、工程名、符号、类、方法、fixture、示例答案或 Provider/model identity 分支。
-3. 在一个非 POM/Maven 的代表性工程问题上打通首轮：世界模型有可观察的行为/职责/失败边界认知贡献；Gap 触发 Agent 受控读源码；页面
-   得到自然 Answer、可打开 Citation 和本轮 fresh Review。
-4. 在同一 Conversation 完成上下文追问和纠正/深入/总结；新 Conversation 用模糊指代验证隔离。每轮有独立 Request/Evidence/Review；
-   prior Answer 和 hidden memory 不作事实证据。
-5. 运行最小 targeted、startup、安全和失败真实性测试。链一旦可操作，立即启动固定 loopback 页面作为“开发体验候选”交给用户，
-   requires_result=false；该候选不得称为 MVP、质量 PASS、方向 PASS 或完成。
-6. 候选交付后不暂停、不等待新的用户决定，立即在同一候选上运行至少两个未参与修复的异质问题，并让 actual current Codex 在隔离任务中
-   回答相同问题。独立 exact-source 证据和技术复核判断双方正确性、完整性、Citation、Unknown 和用户目标满足度。只有系统重大错误为 0、
-   逐题无物质退步、总体严格更优且有非 locator 世界模型价值，才能称为 MVP。
+1. 隔离 run-127 后的 `@40` candidate，不创建 run-128 successor；不再改动旧协议模型文件、对应测试或协议型 System Contract。
+2. 建立简化 Agent-first 浏览器路径，并加入只阻断工程/问题特判、正文词法语义判断和旧协议增长的轻量架构检查。
+3. 候选首次可运行即交付 loopback 体验，同时冻结同一 product/source identity。
+4. 一次运行五个异质问题，至少三个未参与实现；actual current Codex 在隔离任务中同时回答相同问题。
+5. independent exact-source evaluation 逐题判断正确性、完整性、Citation、Unknown、世界模型实质贡献和相对 Codex 质量。
+6. 失败只修最早责任层的一项系统性根因并复验原题加两个异质题；同层第二次仍需新增语义规则或只改善原题时，必须删除/绕过控制层或替换
+   Agent 策略，禁止第三次局部修补。只有五题无重大问题、逐题不低于 Codex、总体严格更好且世界模型有非 locator 价值时才称为 MVP。
 7. 质量不足时回到第 1 步继续同一 BUILD。停止同 signature 的无新证据外调，但不停止产品开发，不切备用碰答案，不创建失败 Result/PDR。
 
 ## Acceptance scenarios
 
 | Case | 必须可观察的结果 |
 |---|---|
-| V-BROWSER-CHAT-MVP-BUILD-001 | 兼容技术 ID；持续完成开发体验候选及其质量资格，不能因 ID 含 MVP 就声明完成 |
+| V-AGENT-FIRST-CONVERGENCE-001 | 简化 Agent-first 浏览器候选、五个异质问题、同步 Codex 对比与一次根因修复止损 |
+| V-BROWSER-CHAT-MVP-BUILD-001 | PDR-012 可信动作的兼容汇总 Case；只有 PDR-013 Agent-first 候选、Chat、独立质量与 Codex 对照全部达标才可通过 |
 | V-CHAT-XD-001 | 同一答案链同时使用问题相关世界模型认知和 Gap 驱动的受控源码证据，且二者来源区分正确 |
 | V-CHAT-001 | 至少三轮语义连续：首问、追问、纠正/深入/总结；新 Conversation 隔离 |
 | V-CHAT-QUALITY-001 | 每轮自然回答、重大错误 0、关键结论有可打开 Citation、fresh Review 无重大漏判 |
@@ -248,7 +262,7 @@ strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不�
 
 ## Findings
 
-当前纠偏由 PDR-012 拥有；FINDING-010-153、161、163、165、191、204、206—235 与既有 Results 保留计划自锁、答案前失败和最新真实/本地质量归因证据。run-103 已在周一 12:13 CST off-peak 完成五问：Ark 4 个 sealed 429、DeepSeek 39/39 completed，shared budget 将逐题合计保持为 `14/10/8/0/11`；Q2 ACCEPTED、Q4 zero-dispatch Clarification，整体仍 FAIL。Q1 的 focused repair 会擦除已识别 DEFECT/Finding，Q3 沿用上一 goal且混淆 abrupt-failure local reachability 与 rollback/effect unknown，Q5 的 duration expiry 仅为 timing-supported inference。current `@29/@19/@24` 以 Application-restored Review semantic anchor 和 current-requirement/failure-condition contract 修复；定向 `137/137` PASS。run-104 随后密封 Q1 的 Ark 1 + DeepSeek 14 exact-budget failure、Q2 的 Ark 429 + DeepSeek sealed HTTP 402 与 Q4 zero-dispatch Clarification；Q3/Q5 按同签名停止边界未发送。Q1 的 first divergence 是 comprehensive redaction 丢失 trusted Boundary presence；current `@30/@20/@24` 以 presence-only Package/Draft counts 修复而不转移 focused ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。run-105 按用户明确要求执行 Ark-first recheck，Q1 唯一 Ark dispatch 仍为 sealed 429，DeepSeek 于周一 peak 在网络前拒绝，Q4 zero-dispatch Clarification 通过，Q2/Q3/Q5 未重复同签名外调；它不产生 current candidate 的质量 verdict或代码变化。用户随后明确报告 Ark 流量问题已处理，materially new evidence 已出现；下一项是文档/可信父门禁、提交并立即执行 fresh run-106。新实现发现按
+当前纠偏由 PDR-013 拥有；FINDING-010-153、161、163、165、191、204、206—255 与既有 Results 保留计划自锁、答案前失败和真实/本地质量归因证据。以下 run 叙述均为历史证据，不再定义下一动作。run-103 已在周一 12:13 CST off-peak 完成五问：Ark 4 个 sealed 429、DeepSeek 39/39 completed，shared budget 将逐题合计保持为 `14/10/8/0/11`；Q2 ACCEPTED、Q4 zero-dispatch Clarification，整体仍 FAIL。Q1 的 focused repair 会擦除已识别 DEFECT/Finding，Q3 沿用上一 goal且混淆 abrupt-failure local reachability 与 rollback/effect unknown，Q5 的 duration expiry 仅为 timing-supported inference。current `@29/@19/@24` 以 Application-restored Review semantic anchor 和 current-requirement/failure-condition contract 修复；定向 `137/137` PASS。run-104 随后密封 Q1 的 Ark 1 + DeepSeek 14 exact-budget failure、Q2 的 Ark 429 + DeepSeek sealed HTTP 402 与 Q4 zero-dispatch Clarification；Q3/Q5 按同签名停止边界未发送。Q1 的 first divergence 是 comprehensive redaction 丢失 trusted Boundary presence；current `@30/@20/@24` 以 presence-only Package/Draft counts 修复而不转移 focused ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。run-105 按用户明确要求执行 Ark-first recheck，Q1 唯一 Ark dispatch 仍为 sealed 429，DeepSeek 于周一 peak 在网络前拒绝，Q4 zero-dispatch Clarification 通过，Q2/Q3/Q5 未重复同签名外调；它不产生 current candidate 的质量 verdict或代码变化。用户随后明确报告 Ark 流量问题已处理，materially new evidence 已出现；下一项是文档/可信父门禁、提交并立即执行 fresh run-106。新实现发现按
 `FINDING-010-235 / run-106` 已完成该 successor：Ark 前 6 个 call completed，第 6 个 malformed Primary JSON 被 current validator 阻断，
 第 7 个 fresh same-profile repair 在 HTTP dispatch 后 outcome unknown，按 contract 无 retry、无 fallback；Q4 zero-dispatch Clarification
 继续通过。未发现本地 contract 偏差，下一 clean run-107 先执行未重复的 Q2/Q3/Q4/Q5，并在没有重复 stop signature 时补 Q1。
