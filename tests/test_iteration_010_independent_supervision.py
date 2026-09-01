@@ -288,7 +288,7 @@ class IndependentSupervisionTest(unittest.TestCase):
         report = self._audit(direction_report=direction_report)
 
         self.assertEqual(report["decision"], "CONTINUE")
-        self.assertEqual(report["direction_check_status"], "PASS")
+        self.assertEqual(report["direction_check_status"], "ADVISORY")
         self.assertTrue(report["semantic_assessment_required"])
         self.assertEqual(
             report["direction_advisories"],

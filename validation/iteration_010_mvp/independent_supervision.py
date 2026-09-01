@@ -647,7 +647,11 @@ def audit(
         "evidence_missing": list(evidence.missing),
         "evidence_mismatched": list(evidence.mismatched),
         "direction_check_status": (
-            "CORRECT" if direction_violations else "PASS"
+            "CORRECT"
+            if direction_violations
+            else "ADVISORY"
+            if direction_advisories
+            else "PASS"
         )
         if direction_report is not None
         else "NOT_RUN",
@@ -662,6 +666,8 @@ def audit(
         "direction_next_phase": (
             direction_report.get("next_phase")
             if direction_report is not None
+            and direction_report.get("progress_verdict")
+            == "CAPABILITY_EVIDENCE_PRESENT"
             else None
         ),
         "semantic_assessment_required": False,
