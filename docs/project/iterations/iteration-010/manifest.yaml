@@ -4,9 +4,9 @@ iteration:
   status: authorized
   outcome_scope: agent-first-world-model-assisted-browser-chat-convergence-with-immediate-current-codex-comparison
   current_decision: REWORK
-  current_decision_ref: ITER-010-PDR-013
-  current_gate_decision_ref: ITER-010-PDR-013
-  current_continuation_decision_ref: ITER-010-PDR-013
+  current_decision_ref: ITER-010-PDR-014
+  current_gate_decision_ref: ITER-010-PDR-014
+  current_continuation_decision_ref: ITER-010-PDR-014
   coding_input: true
 
 baseline:
@@ -202,7 +202,7 @@ plan_execution_control:
         provider_dispatch: true
 product_convergence_control:
   schema: AGENT_FIRST_PRODUCT_CONVERGENCE@1
-  active_decision_ref: ITER-010-PDR-013
+  active_decision_ref: ITER-010-PDR-014
   legacy_protocol_candidate_status: quarantined-no-run128-successor
   legacy_protocol_files_quarantined:
     - src/software_world_model/ai_infrastructure/conversational_engineering_model.py
@@ -219,6 +219,34 @@ product_convergence_control:
   second_same_layer_failure_requires_control_layer_removal_or_agent_strategy_replacement: true
   full_regression_before_direction_verdict_allowed: false
   hardening_before_direction_verdict_allowed: false
+
+branch_convergence_control:
+  schema: SINGLE_DEVELOPMENT_LANE@1
+  owner_decision_ref: ITER-010-PDR-014
+  owner_finding_ref: FINDING-010-269
+  trusted_product_baseline_commit: 268b4546a893ff346da34d4f4d06057d860e2aa3
+  development_branch: codex/development
+  supervision_branch: codex/supervision
+  allowed_active_branches:
+    - main
+    - codex/development
+    - codex/supervision
+  legacy_branch_policy: archive-tags-only
+  dirty_candidate_policy: archive-only-selective-reapply-after-independent-evidence
+  active_phase: B
+  active_phase_status: REWORK
+  phase_state_owner: codex/supervision
+  developer_phase_self_report_accepted: false
+  supervision_interval_minutes: 30
+  supervision_on_candidate_change: true
+  supervision_heartbeat_required: true
+  supervision_assessment_required: true
+  supervision_target_mismatch_action: repair-supervision-binding-without-stopping-development
+  current_owner_layer: cognition-retrieval
+  current_objective: declaration-inheritance-annotation-and-implementation-retrieval-closure
+  current_exit_case_id: V-WORLD-MODEL-COGNITION-001
+  current_independent_task_count: 5
+  phase_c_or_d_work_allowed: false
 
 direction_quality_gate:
   schema: POST_EXPERIENCE_STRONG_BASELINE_GATE@1
@@ -563,8 +591,8 @@ critical_assumption_catalog_cutover:
 
 rework:
   decision: REWORK
-  decision_ref: ITER-010-PDR-013
-  continuous_execution_decision_ref: ITER-010-PDR-013
+  decision_ref: ITER-010-PDR-014
+  continuous_execution_decision_ref: ITER-010-PDR-014
   restart_instruction_ref: local-user-message-utf8:sha256:291f60538287486c899e285ebe74d587b9c8b5ba11937ccc12bfd9122fb08499
   previous_decision_ref: ITER-010-PDR-004
   user_receipt_ref: codex-user-message:sha256:d8239ea7da3d767caa5d0a091726849d1a644e45d44f631d36f3028787093a90
@@ -611,7 +639,7 @@ rework_policy:
 authorization_continuation_policy:
   schema: JUST_IN_TIME_EXACT_AUTHORIZATION@1
   owner_ref: PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN
-  current_decision_ref: ITER-010-PDR-013
+  current_decision_ref: ITER-010-PDR-014
   current_authority_amendment_ref: ITER-010-PDR-008
   slice_development_authorization_separate_from_external_grant: true
   active_exact_grant_must_be_reused: true
@@ -644,7 +672,7 @@ public_oss_evaluation_standing_authority:
   generic_schema: PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1
   system_contract_ref: SYS-ADR-019
   owner_decision_ref: ITER-010-PDR-008
-  current_plan_amendment_ref: ITER-010-PDR-013
+  current_plan_amendment_ref: ITER-010-PDR-014
   owner_finding_ref: FINDING-010-140
   authority_status: active
   human_authority_source: existing-iter010-slice001-root-development-authorization
@@ -687,8 +715,8 @@ public_oss_evaluation_standing_authority:
 experience_delivery_policy:
   schema: EXPERIENCE_FIRST_DELIVERY@1
   owner_slice_ref: ITER-010-SLICE-001
-  current_execution_decision_ref: ITER-010-PDR-013
-  current_gate_decision_ref: ITER-010-PDR-013
+  current_execution_decision_ref: ITER-010-PDR-014
+  current_gate_decision_ref: ITER-010-PDR-014
   direction_discovery_principle_ref: codex-user-message:sha256:27ad0abac79f239eb13793fed79f65b8a5dfd7042e1c828b63e7d8545577d88f
   first_operable_browser_delivery_case_id: V-CHAT-EXPERIENCE-001
   first_operable_browser_delivery_requires_result: false
@@ -2156,7 +2184,7 @@ development:
       project_decision_ref: ITER-010-PDR-004
       restart_execution_decision_ref: ITER-010-PDR-005
       continuous_execution_decision_ref: ITER-010-PDR-006
-      current_execution_decision_ref: ITER-010-PDR-013
+      current_execution_decision_ref: ITER-010-PDR-014
       recovery_decision_ref: ITER-010-PDR-003
       historical_reflection_decision: REDIRECT
       historical_reflection_decision_ref: codex-user-message:sha256:d746968f58cea4d2b7689b5902c0ff97f42f63c93ffc4cbc40551cfa2c0359e0

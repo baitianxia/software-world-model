@@ -4,13 +4,13 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: iteration-010-slice-001-capability-separated-recovery
+worktree_status: single-development-and-independent-supervision-lanes
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
 live_model_path: preferred-execution-profile-first-fallback-only-on-trusted-unavailability
 plan_revision_ref: ITER-010-PDR-012
@@ -34,25 +34,27 @@ ITER-010 的产品目标和总体架构不变，但 PDR-013 的执行计划已�
 4. 同一浏览器 Chat 中的自然答案、真实 Citation、fresh 独立技术审核和多轮上下文；
 5. same-Agent source-only、same-Agent World Model + source 与 actual current Codex 的独立比较。
 
-Phase A 的 source-only Browser 诊断基线已用两个异质问题和一个追问通过；Phase B 的 exact-source 认知纵切已在同一 artifact 上用五个独立
-任务 5/5 通过。Phase C 首个真实 Browser run 已完成三个异质问题和一个追问，但事务追问漏掉接口 `@Transactional` 并被 Reviewer 错误
-批准，因此状态保持 REWORK。通用 ranking 已让 frozen source-native 查询同时返回实现和接口；真实 run-005 进一步证明 Agent 把中文转述
-误当 lexical cognition query，随后仍只读实现。该错误答案因越界 Citation 在 review 前被 Application Control 拒绝，这不等于语义判错；
-current 修复只澄清 source-native 查询和声明检查的通用工具契约，真实 successor 与 same-Agent 消融仍未完成。
+Phase A 的 source-only Browser 诊断基线保留为已完成的诊断证据。Phase B 保持 `REWORK`：此前 `5/5` 只能证明首版认知工件可查询，后续真实
+事务问题已反证其声明/继承闭包不足，世界模型虽含接口 `@Transactional`，有界检索却没有稳定返回；因此该证据不能推动 Phase B 或 C。
+Phase C/D 均未激活。未提交的 Reviewer Agent、Provider recovery 和自行晋级文档只作为可恢复归档，必须在对应阶段重新取证后才能选择性
+引入，不能直接进入产品基线。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
 
-## 唯一下一动作
+## 唯一开发入口与下一动作
 
-严格按 PDR-014 继续执行尚未完成的 C→D：
+- 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
+- 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
+- 当前唯一产品任务是 Phase B 的通用声明/继承认知闭包：让 method/type 查询稳定返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，
+  并由监督方持有的五个未参与实现任务独立验证 search/traverse/detail 与跨问题复用。
+- 开发方不得自行推进 Phase；只有 `codex/supervision` 对当前 clean commit、exact Source 和独立原始证据给出 `ADVANCE` 才能进入 Phase C。
 
-- C：复跑已修正 cognition ranking 与 source-native query 使用的浏览器 Alpha，并冻结 same-Agent source-only / World Model + source 消融；
-- D：用五个异质问题、多轮 Chat、same-Agent 消融和 current Codex 完成质量判断。
+Phase B 期间不继续 Reviewer、Provider recovery、回答 Prompt/Schema 或 Phase C/D 验收器。它们不是删除，而是留在归档中，等最早缺失能力
+闭合后按新证据选择性恢复。普通测试、模型、答案或网络失败仍不暂停开发、不重复申请授权。
 
-run-006/007 的 Ark 失败均发生在 HTTP/model dispatch 前，不是等待条件。新的 successor 按 `5 分钟 → 15 分钟 → 每 30 分钟` 自动调度；每次
-使用新的 logical run/request identity，same-request retry 仍为 0。计时期间继续独立本地开发；本地工作穷尽时也保持带下次唤醒时间的活动
-重试状态，不结束任务。到达备用允许窗口后仍先执行首选路线，只有本次可信不可用才透明回退。
+监督每 30 分钟以及每次 HEAD/工作树/运行证据变化时检查一次。监督必须同时写入可观察 heartbeat 和独立 assessment；目标分支、工作树或
+baseline 不匹配时只修复监督绑定，不能把开发误判为完成、暂停或重新授权。
 
 时间上限只触发自动简化或换实现，不触发暂停、失败 Result、重复授权或质量降低。第一个可操作候选立即交付；full regression、hidden、
 跨工程、性能和工程化只在用户确认方向后开始。

@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -29,6 +29,19 @@ product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-AGENT-FIRST-C
 
 本 Slice 继续使用 PDR-012 的 standing authority 和 Manifest action，但执行内容完全由 PDR-014 定义。PDR-013、run-127 以前的 Answer/Review/
 preflight 协议和未提交 `@40` candidate 只保留历史证据，不得继续开发或重新运行。
+
+### 当前执行卡（分支收敛后唯一有效）
+
+- 可信产品基线：`268b4546a893ff346da34d4f4d06057d860e2aa3`；唯一开发分支：`codex/development`；唯一监督分支：
+  `codex/supervision`；`main` 只接收通过验收的成果。
+- 当前阶段：Phase B `REWORK`。Phase A 仅为诊断完成，Phase C/D 未激活；历史 `5/5` 世界模型报告不足以证明真实声明/继承检索闭包。
+- 唯一下一任务：让 method/type 认知查询通用地返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，并通过五个由监督方持有、未参与
+  实现的独立任务。
+- 当前禁止：Reviewer/Provider recovery、回答 Prompt/Schema、Phase C/D 验收器和已知题专用规则。归档内容只能在对应阶段重新取证后选择性
+  引入。
+- Phase 只能由 `codex/supervision` 针对 clean commit 和 exact Source 产生 `ADVANCE`；开发分支的自报、自改文档或本地通过不能晋级。
+- 固定工作区为仓库忽略目录 `var/workspaces/development` 与 `var/workspaces/supervision`。监督每次候选变化及最长每 30 分钟写 heartbeat 和
+  assessment，并在偏航时直接纠正唯一下一动作；监督失联只触发监督恢复，不停止开发。
 
 ## Product-goal contribution and cumulative integration
 
@@ -155,6 +168,7 @@ retry/replay 始终为 0。重试计时不占用开发线程，本地工作继�
 | V-WORLD-MODEL-COGNITION-001 | 五个独立任务证明结构、关系、行为、来源和 Coverage/Unknown 可正确构建、检索和复用 |
 | V-INTEGRATED-ALPHA-001 | 三个异质问题和一个追问真实贯通，浏览器立即可体验，WM+Source 对 source-only 有非 locator 正增益 |
 | V-PROVIDER-RECOVERY-CONTINUITY-001 | pre-HTTP 临时失败创建 5/15/30 分钟 fresh successor；任务保持 active、授权请求和 same-request replay 为 0 |
+| V-SUPERVISION-CONTINUITY-001 | 监督绑定唯一开发分支、可信基线与 HEAD；每次变化及最长 30 分钟有 heartbeat/assessment，偏航直接 CORRECT，只有独立证据可 ADVANCE |
 | V-BROWSER-CHAT-MVP-BUILD-001 | Phase D 五题、多轮、独立审核和 Codex Gate 全部通过后才取得 MVP 名称 |
 | V-PREVIEW-002 | 用户查看真实 Alpha/MVP、比较和已知限制后决定 CONTINUE / REWORK / REDIRECT / REJECT |
 
@@ -189,7 +203,8 @@ Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基�
 
 `FINDING-010-256` 保存投入结构和计划失效的 Git 证据；`FINDING-010-257` 保存成熟 harness、Agent 工具和图认知研究揭示的能力缺口；
 `FINDING-010-263—265` 保存 Phase C 首个真实 Browser 的事务漏判、cognition ranking 替换实验，以及 run-005 暴露的 source-native lexical
-query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口。后续实现若改变系统边界、认知
+query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口；`FINDING-010-269` 保存分支
+增殖、监督目标错绑和开发自报晋级的系统性执行缺口。后续实现若改变系统边界、认知
 模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 
