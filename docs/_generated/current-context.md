@@ -4,7 +4,7 @@
 
 - Active iteration: `ITER-010-INDEX`
 - Active slice: `ITER-010-SLICE-001`
-- Worktree status: `iteration-010-slice-001-product-first-browser-chat-build`
+- Worktree status: `iteration-010-slice-001-capability-separated-recovery`
 - Strategy relation: `dual-core-world-model-cognition-and-conversational-lead-engineering-agent`
 - Live model path: `preferred-execution-profile-first-fallback-only-on-trusted-unavailability`
 - Normative source: `docs/system/`

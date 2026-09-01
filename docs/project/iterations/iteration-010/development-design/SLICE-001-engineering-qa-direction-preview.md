@@ -5,13 +5,12 @@ status: authorized
 authority: current-development
 owners: [engineering, architecture, quality, product]
 depends_on: [ITER-010-PROPOSAL, ITER-010-READINESS, ITER-010-VERIFICATION, ITER-010-PDR-010, ITER-006-RESULT-ACCEPTANCE, ITER-009-RESULT-SLICE-001-STOP-REDIRECT, SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-EVIDENCE-ANSWERING, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-CONTRACT-APPLICATION-WORLD-MODEL-ANSWERING, SYS-CONTRACT-KNOWLEDGE-STRUCTURE-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-QUALITY-ACCEPTANCE, SYS-QUALITY-SECURITY]
-code: [src/software_world_model]
+code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/ai_infrastructure, src/software_world_model/interface]
 tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
-current_execution_decision_ref: ITER-010-PDR-013
-current_execution_finding_refs: [FINDING-010-153, FINDING-010-161, FINDING-010-163, FINDING-010-165, FINDING-010-180, FINDING-010-181, FINDING-010-182, FINDING-010-183, FINDING-010-184, FINDING-010-185, FINDING-010-186, FINDING-010-187, FINDING-010-188, FINDING-010-189, FINDING-010-190, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-202, FINDING-010-203, FINDING-010-204, FINDING-010-205, FINDING-010-206, FINDING-010-207, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-219, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-223, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-227, FINDING-010-228, FINDING-010-229, FINDING-010-230, FINDING-010-231, FINDING-010-232, FINDING-010-233, FINDING-010-234, FINDING-010-235, FINDING-010-236, FINDING-010-237, FINDING-010-238, FINDING-010-239, FINDING-010-240, FINDING-010-241, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-245, FINDING-010-246, FINDING-010-247, FINDING-010-248, FINDING-010-249, FINDING-010-250, FINDING-010-251, FINDING-010-252, FINDING-010-253, FINDING-010-254, FINDING-010-255]
-current_scheduling_finding_ref: FINDING-010-179
+current_execution_decision_ref: ITER-010-PDR-014
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -22,356 +21,177 @@ product_goal_reflection_gate_case_id: V-PREVIEW-002
 product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-AGENT-FIRST-CONVERGENCE-001, V-PUBLIC-OSS-AUTHORITY-ADMISSION-001, V-MODEL-TRANSPARENT-ROUTING-001, V-CHAT-EXPERIENCE-001, V-CHAT-001, V-CHAT-XD-001, V-DIRECTION-QUALITY-001, V-PREVIEW-002]
 ---
 
-# SLICE-001：真实浏览器 Chat 纵切
-
-## PDR-013 当前开发切片
-
-本 Slice 已从旧协议收敛循环切换为 Agent-first 产品收敛。run-127 及 `FINDING-010-255` 是旧路线的终止证据；不得开发 `@40` successor 或
-run-128。当前实现必须建立一条不依赖 Claim/Boundary/content-unit 文本证明协议的浏览器路径：世界模型提供认知和入口，主工程 Agent 自主
-调查源码并回答，独立 Reviewer 面向原问题、完整答案与证据一次报告全部重大缺陷，Application 只执行确定性安全和交付边界。
-
-执行顺序固定为：
-
-1. 建立简化 Agent-first 候选并立即提供 loopback 体验；
-2. 同一候选一次运行五个异质问题，至少三个未参与实现，同时由 actual current Codex 独立回答；
-3. independent exact-source evaluation 逐题比较；
-4. 失败只修最早责任层的一项系统性根因，并复验原题加两个未参与修复问题；
-5. 同一层第二次仍靠新增语义规则或只改善原题时，停止该实现并删除/绕过控制层或替换 Agent 策略。
-
-第一实现提交必须加入 PDR-013 定义的轻量架构检查，阻断问题/工程特判、Application 对答案正文的词法语义判断，以及旧协议文件继续增长。
-该检查不判断答案内容。full regression、hidden、跨工程和硬化不得前置。
+# SLICE-001：世界模型与主工程 Agent 能力恢复
 
 ## Status and dependencies
 
-`AUTHORIZED / PDR-013 AGENT-FIRST PRODUCT CONVERGENCE ACTIVE / coding_input=true`。依赖 ITER-006 accepted 能力、当前
-Proposal/Readiness/Verification、PDR-010 产品方向和现行 System Contracts；PDR-012 以前的运行只保存历史证据，不再控制当前产品动作。
+`AUTHORIZED / PDR-014 CAPABILITY-SEPARATED RECOVERY / coding_input=true`。
 
-## 目标
-
-尽快交付普通用户可直接体验的无认证浏览器 Chat，同时验证整体方向：
-
-World Model Cognition → Main Engineering Agent → controlled read-only Source → Evidence/Citation → natural Answer → fresh independent Review → semantic multi-turn Web。
-
-这是一条产品纵切，不是组件清单。世界模型、Agent、Evidence、Review 或 Web 单独完成都不算交付；POM/Maven-only 回答、静态回放、
-一次性 CLI 和预制问题页面也不算。
-
-## Current vs expected behavior
-
-- 现有 loopback 页面、Conversation/Turn 骨架、受控 Source、Evidence/Citation 和 Reviewer 资产可复用；
-- 历史候选曾在部分问题上形成答案，但长期出现代码走读、Maven-only 认知、遗漏副作用、Reviewer 漏判和 closed structured output 拒绝；
-- run-052/053 在 Answer/Citation/Review 前失败，证明产品仍不可体验，不证明总体架构应停止；
-- 最大风险是继续针对单题或输出字段碰答案，而没有区分世界模型构建/查询、Agent、Evidence/Answer、Review 与 Web 的最早偏差。
-
-期望行为是用户在同一浏览器 Conversation 中连续提问、追问和纠正，Agent 先使用问题相关认知、再按 Gap 补证，每轮交付自然答案、Citation
-和 fresh Review；实际行为仍会在答案形成前失败，因此本 Slice 必须直接修复并贯通该链。
+本 Slice 继续使用 PDR-012 的 standing authority 和 Manifest action，但执行内容完全由 PDR-014 定义。PDR-013、run-127 以前的 Answer/Review/
+preflight 协议和未提交 `@40` candidate 只保留历史证据，不得继续开发或重新运行。
 
 ## Product-goal contribution and cumulative integration
 
-- 软件世界模型维护 exact revision 上持久、版本化、可验证、可更新的软件认知，包括结构、行为、关系、职责、影响、失败边界、Coverage、
-  Gap、来源和检索入口；它不是文字手册、Maven 快照或 locator 缓存。
-- 主工程 Agent 是回答问题的大脑：维护用户目标、指代、约束、假设、计划和观察；先利用问题相关世界模型认知，认知不足时提出受控源码
-  操作，根据结果重规划并形成自然答案。
-- World Model 的 query-relevant Java entity projection 若已给出 non-empty、non-truncated exact declaring-type target，第一次 Source search 只能
-  从该 closed target domain 复制精确字面量；它是 cognition→Source 导航约束，不是 path authority，也不限制首次 Source action 后根据新
-  Observation 继续发现其他 source-native symbol。
-- exact literal 若命中同一可信 projection 的 canonical `source_path`，Application/Broker 还要把这些路径密封为 Search-only scope，让
-  Worker 只在 scope 内验证 case-sensitive literal 并签发 locator；scope 不进入模型 action、不授予 READ authority，Broker 仍重验
-  allowlist/Profile/revision/fuse，Coverage 也不能把 scoped complete 冒充全 Evidence Class complete。普通无 scope Search 保持原行为。
-- Search operation 自身达到 file/byte maximum 只产生 operation-local Partial Boundary；只有 Broker 因 whole-Turn actual resource 不足
-  拒绝 operation 才是 terminal Source fuse。两个层级不得复用同一 failure code，使主 Agent 把仍可用 Source 错当成已撤销。
-- Application/Broker/Worker 拥有权限、exact revision、只读执行、证据身份和安全熔断；模型不取得直接文件、Shell、网络、凭据或写入权。
-- fresh independent Reviewer 检查原问题是否满足、关键事实是否正确完整、Citation 是否支持、Unknown 是否来自真实 Coverage/Gap；它返回
-  具体 Finding，不替主 Agent 规划或执行工具。
-- 每个 comprehensive/focused Review 都必须逐字绑定 current User Message，并以 typed requirement-coverage assessment 独立判断 Draft 是否
-  回答本轮完整目标；prior Answer/Work State、主题相同或 Claim supported 均不能替代。回答旧问题或遗漏本轮 material distinction/order/Unknown
-  时必须形成 global Finding，未 fully addressed 的 Review 不得批准或交付。Primary goal 同样以 current User Message 为当前权威；failure
-  follow-up 必须区分 abrupt completion 与 unsuccessful normal return，并把 source-visible local reachability、prior effect、persistence、
-  commit/rollback、remote/consumer effect 分别回答。
-- ANSWER Claim 除 SUPPORT Observation IDs 外，还必须从每个 citation-bearing selected Observation 选择至少一个直接 supporting ref，且只
-  投影最小 exact Citation set。broad Search inventory 不因一个结果 material 而整批进入 Browser；Application 从 authority receipt 重算
-  selected-ref identity，ref 漂移失败关闭。
-- Reviewer Findings 的 Primary successor 必须同时取得 exact rejected Draft、ordered Findings 和 Review digest；三者缺失或 Turn/Work
-  State/digest/reference domain 错配时在 Provider 前失败关闭。无需新 Evidence 的同包 rewrite 以 rejected Draft 为 exact edit base，只按
-  Finding 删除、收窄、限定、重排或重述，不增加新的用户可见物质断言；global completeness 只能枚举原正文已有断言。final preflight
-  重复 exact SUPPORT/BOUNDARY ID domains 和 active rewrite contract，但不新增 Evidence/Tool/Review/Delivery authority。
-- Claim coverage 是 semantic/many-fragment-to-one，不要求每个 phrase、call 或 sentence 单列 Claim；matching exact-revision attribution 是
-  sealed provenance context，不能制造 redundant Claim。纯 material evidence boundary 不属于 affirmative Claim；Limitation 保持零 Claim，
-  同包 global-completeness rewrite 通过删除/收窄无 SUPPORT 的相邻 diagnostic 收敛，只有既有 assertion 有 current SUPPORT 时才可转 Answer。
-  structured Boundary ID 是非正文 binding，不要求显示 opaque ID 或 raw Observation。
-- Claim/Boundary inventory 之外的用户可见正文也必须进入 Review closure。Application 从 exact Draft 按非空可见行投影最多 128 个 ordered
-  content units，并为 fragment 继承 heading/standalone-label context；comprehensive/focused Reviewer 必须逐项标为 exact Claim/Boundary
-  `COVERED`、comprehensive-only `BOUNDARY_REVIEW_DEFERRED`、真正 `NON_ASSERTIVE` 或绑定 Finding 的 `DEFECT`。focused Review 不得 defer；
-  Delivery 不得保留 deferred/defect。Application 在 preflight、decode、Review seal 与 Response Control 重算完整顺序和 reference domain；该结构
-  使每个正文单元的审核选择可见、可绑定，但自然语言语义是否真实覆盖仍由 fresh independent Reviewer 判断，不能由字符串 overlap 冒充。
-- 每个 Draft 先取得 comprehensive Review。Application 从 cited full Java Source 与 Claim 结构投影 exact caller/callee challenge，并为每个
-  Package Boundary 投影 ordered relevance challenge；`SOURCE_SEARCH / LITERAL_TEXT_SEARCH_HIT` item 被后续
-  `SOURCE_READ / EXACT_STATIC_SOURCE_TEXT / coverage_complete=true` 闭合时使用 `RESOLVED_ACQUISITION`，其余使用
-  `BOUNDARY_MATERIALITY`。不同 opaque locator 只能按 authorized exact canonical resource path（去除规范行后缀）关联，不能 basename/fuzzy
-  匹配，也不得因 Draft 未声明 Boundary ID 而跳过；存在任一 challenge 时再执行 fresh focused Review。两类投影都只是 review lead：Reviewer 用
-  closed semantic scope 区分 caller invocation、local order、callee/return、external-state effect 和 consumer-visible effect，并从每个 challenge
-  直接复制由 trusted kind/reference flag 派生的 `allowed_exact_dispositions`，区分 material
-  bound Boundary、resolved/non-material audit-only 与 not-disclosed。Response Control 重算 exact ordered assessment set；Observation prefix 由
-  Application 直接绑定，不作为 Provider output copy obligation；每 Turn `11 Agent + 4 Review = 15`，不提高 Tool/Source fuse、retry 或 dispatch
-  authority。
-- Reviewer 必须在一次完整 Draft audit 中报告全部已观察到的独立 material defects；Primary 的同包 replacement 必须解决全部 ordered
-  Findings，而不是只改第一个或无关 Boundary。focused Review 的 exact DEFECT Claim indices 必须等于 exceeded caller challenges，exact
-  Finding codes 必须等于 exceeded caller 与 audit-only relevance assessments 所引用的集合；focused role 不引入 comprehensive Finding。
-  `decision` 只由 Reviewer 按 typed body 修复，Application 不生成 approval。Finding code 仅是 local identity；只有完全未被 focused
-  assessment 引用的重复 code 才稳定 disambiguate，且不得改变 message、binding 或顺序；任何被引用的重复 code 仍失败关闭。
-- same-Package replacement 若完整 Draft 字段仍等于 exact rejected Draft，decoder 必须拒绝，不能只改 Work State。closed-contract repair
-  显式禁止原样复制 prior invalid output，并从 local typed failure 派生不授权事实/Tool 的 convergence directive：repeated Source query 只能换
-  sealed legal literal，或在没有新目标且 response domain 允许时用已有 Boundary 收敛；focused DEFECT/exceeded mismatch 必须保留 prior
-  Review 的 exact decision/Claim assessments/requirement coverage/Findings semantic anchor，只重建 focused challenge assessment arrays；
-  Application 在 decode 前恢复 anchor，且它必须穿过不同 category 的最后一次 bounded repair。challenge-bound Finding set mismatch 使用专用二选一 directive：每个 retained Finding
-  绑定一个 exact challenge 的 allowed audit-only disposition 和同一 code；若全部 challenge material，则删除 unbound Findings 并 APPROVE。
-- `LIMITATION` 始终零 Claim。Reviewer 不得要求添加 exact-answer detail、interface/search inventory 或 Claim；pure、relevant、正确绑定的
-  Limitation 不因 Package 无法产生用户原本要求的 full answer 而成为 completeness defect。已有 opaque Boundary ID 不能误报 missing binding，
-  Search hit/interface declaration 不能冒充 implementation、remote effect 或 consumer-visible evidence；相邻 affirmative diagnostic 只能
-  删除/收窄为 pure material boundary。
-- DeepSeek fallback 的 listener preparation 只密封 non-dispatching decision；真正的 600 秒 active receipt 在 trusted Ark unavailable 后的 first
-  DeepSeek preflight 以同一 plan 激活，并重新核验 900 秒 pricing freshness、闲时/override、run authority 和完整质量预算。激活与任何拒绝都
-  发生在 credential/TLS/HTTP 前；后续 request 不得重新延长 receipt。
-- Engineering Chat DeepSeek runtime ref `DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 在每次 qualified transport call 前检查
-  fully consumed socket：non-blocking readiness 为可读/异常，或自最后 HTTP completion 起 idle ≥60 秒时先关闭，再由 exact base
-  transport acquisition。轮转仍受 transport lifetime 3 次 TLS 和每 session 20 dispatch 约束，不构成 request retry；base Adapter、
-  Conformance identity与HTTP开始后的 outcome-unknown/零 replay语义不变。
-- World Model evidence-tool adapter 必须把 model-facing SUPPORT 与 BOUNDARY 按认识论语义分区：SUPPORT 顶层不得复制 global
-  coverage/conflict/unknown，只保留 novel affirmative item 及其 per-item coverage；完整 Context、Ledger、receipt 继续绑定 global
-  Coverage，且该全局边界只在 BOUNDARY 中呈现。
-- SUPPORT 的 typed item domain 只含 `ENTITY/RELATION/BEHAVIOR/CONSTRAINT/STATE`；`COVERAGE/EVIDENCE/UNKNOWN` metadata 不取得
-  affirmative Claim 资格，metadata-only Context 形成 `WORLD_MODEL_HAS_NO_SUPPORTED_ITEMS` Boundary。
-- World Model query relevance 只使用语义 value：表示层 value 与 path 公共前缀不作特征，cohort-common exact token 不作 anchor；强 exact
-  match 存在时关闭 prefix-only 和低于 strongest score 75% 的弱尾部。排序必须确定性且不按工程、题面、业务词、类或方法特判；Profile
-  incomplete 的实现细节继续形成 Source gap，不能由 relevance 补造。
-- 已选 typed relation 必须在同一 Snapshot/Revision 和剩余 item/byte bound 内紧邻保留 exact subject/object 的直接 Entity state；只作一跳
-  graph closure、按 subject→object 与 digest 去重，不恢复词法弱尾部或递归邻居。verified endpoint path 只进入既有 Source navigation，
-  Broker/Source authority 不变。
-- original User Message 精确点名 sealed Source allowlist 的 top-level scope 时，multi-Profile projection 在 relevance ranking 前排除 formal
-  Coverage root 与其完全不相交的非 repository-wide Profile；其 affirmative item 与 Profile gap 都不得进入 Context。selector 只来自原始
-  问题的 exact boundary match，模型 query 不能改写；mismatch 是 Coverage Boundary 而非授权拒绝，repository-wide partial Profile 仍可参与。
-- Boundary/Audit 的完整保留不要求全部写入用户答案。只有仍限制 current User Message material requirement 或用户明确询问的诊断才可披露；
-  已被后续 SUPPORT 闭合的 acquisition diagnostic 和不限制具体结论的 global inventory/coverage metric 通常只留 audit。Application 不自动
-  删除 retained Boundary；focused Reviewer 只有在实际披露的每个 fragment 都 material 且 Draft 已绑定 Boundary 时返回
-  `MATERIAL_TO_USER_REQUEST`。resolved diagnostic 用 `RESOLVED_AUDIT_ONLY`、其他非物质 Boundary 用 `NON_MATERIAL_AUDIT_ONLY`，均以
-  `claim_index=null + requires_evidence=false` 阻断泄漏；未绑定且未披露才可 `NOT_DISCLOSED_IN_DRAFT`，从而保留用户明确询问诊断本身的合法路径。
-- 所有普通 affirmative detail 与 Boundary 同样执行反事实相关性测试：删除后仍完整回答并诚实定界的邻接 declaration/helper/provenance
-  必须省略，不能为 Draft 自己引入的细节扩大调查；code-generation/tool provenance 不能从 path/package/import/symbol/directory convention
-  推断，material claim 必须有 direct current SUPPORT。
-- Reviewer 指定现有 Package 足够时，同包 rewrite 必须生成 successor Work State/Draft/fresh Review；Package origin 保留首次封装该证据集的
-  Work State，不随 rewrite 改写，也不能被 Response Control 当成当前 Delivery Work State。任何新 Observation 仍形成新 Package。
-- closed-shape repair 的 copy obligation 只覆盖 prior output 中已经存在、allowlisted 且可按 schema 对齐的值。完全没有既存 allowlisted item
-  value 的 invalid array 子树必须从 sealed schema/domain/template 重建，不继承原长度；其余 array 长度/顺序继续守恒。Application 在 Proposal
-  decode 前只把 repair 对可对齐既存值的漂移恢复为 prior exact value，再执行原 closed-schema、tool catalog、Context/Evidence 和 completion
-  校验；它不生成缺失字段、不解释 unexpected key、不扩大工具或把 raw drift 追认为授权语义。一个 role step 最多有两次 same-profile repair；
-  第二次仅在前一 repair 的 local validator category 严格前进时允许，重复/倒退 category 仍停止，且只能消耗现有 15 次 per-Turn authority 的
-  剩余 slot，不构成 Provider retry、fallback eligibility 或预算扩张。
-- Source resource receipt 的 file budget 必须进入与 effective catalog 同源的 model-facing policy。`64/64` 等 exhausted 状态同时清空
-  Source Search/Read operation 和 read options；`63/64` 且已有 locator 时继续保留唯一 READ slot。预算状态不代替或伪造 Broker terminal
-  denial，Decoder 仍从受信 receipt 重算。
-- Claim inventory 与 fresh Reviewer 都必须把 heading、table column、list lead-in、label 或 surrounding sentence 继承的 category、scope、
-  condition、certainty、negation 视为 contained assertion 的一部分；漏 qualifier 是 global completeness Finding，错误 qualifier 是 concrete
-  defect。不得只审核脱离容器的窄 action/outcome Claim。
-- 空新 Conversation 的语言 policy 必须在任何 external attempt 前覆盖单数、复数与类别性指示表达；例如没有先行对象的“这些/那些/此类”
-  只能形成零 dispatch Clarification。该规则只看 versioned language capability 和可信 Context，不按业务名词、问题或工程分支。
-- 失败 Turn 的 Browser projection 与显示必须区分 execution-stage failure 和 raw Provider classification/code。raw evidence 不自动等于
-  trusted unavailable verdict；UI 不能隐藏该差异，也不能据此启动 fallback。
-- Provider HTTP failure 的安全 status/code/type/request-id 必须由不改变 request/transport 的 Gateway decorator 在 inner terminal 后绑定
-  call/request/isolation 密封，并以 status + evidence digest
-  贯穿 replay/egress/model receipt/Turn/attempt。当前可信 owner 只接受 typed pre-HTTP unavailable，或密封
-  `{402,408,425,429,500,502,503,504}`；auth/config/client status 和没有 digest 的字符串/status 失败关闭。fallback profile 的资格、standing
-  authority 派生与 fresh admission 仍逐 route 独立验证；外围 evidence implementation 不改变 exact Provider Conformance identity，也不放宽
-  既有 manifest/config/model/fixture/validity 校验。
-- Source content Search 不能把 authorized module/directory/file-name path segment 当作正文 literal。Broker 必须在 Worker 与资源消费前 typed reject；该
-  Boundary 不等于 Source 撤销，并且在 Source 仍可用时不满足 material follow-up。Primary 必须读取 latest sealed Broker decision、禁止重复
-  rejected query，并改用可能在目标正文逐字出现的不同 source-native literal，不能交付假 Limitation。
-- Worker 遇到 exact filename-stem anchor 时，必须先检查全部 basename equals/contains query 的安全 cohort；取得 case-sensitive 正文 hit 后可在
-  进入低排名 fallback 前以 `SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP` Partial 停止。结果必须披露 truncation/coverage，实际读取继续计入
-  56/64 fuse；无 anchor/hit 或 cohort 有安全、编码、fuse gap 时继续原 bounded scan，不能冒充 corpus complete。
+普通用户在无认证 loopback Web 中与一个真正的主工程 Agent 持续对话。Agent 先使用提问前构建的软件世界模型获得系统认知，再按真实 Gap
+受控读取源码、文档、配置或测试，根据观察修改计划，并交付自然答案、可打开 Citation 和 fresh 独立审核。同一 Conversation 支持追问、
+纠正、深入和总结；新 Conversation 隔离。
 
-该纵切在 ITER-006 已接受的版本化知识能力之上，第一次把世界模型认知、主工程 Agent、受控源码、逐 Turn Evidence/Review 和语义多轮 Web
-组合成普通用户可直接判断方向的产品结果。
+首个浏览器 Alpha 用于尽快确认方向，不冒充 MVP。MVP 仍要求五个异质问题无重大错误、逐题不低于 current Codex、总体严格更好，并证明
+世界模型带来非 locator 的实质增益。
+
+## Current vs expected behavior
+
+- 可复用：Provider-neutral Gateway、standing authority、只读 Source Broker/Worker、Conversation/Turn、Evidence/Citation、Web 和已有
+  formal/structure/Java static-semantics 资产；
+- 不可继续：把回答拆成不断扩张的封闭 Claim/Boundary/content-unit 证明协议，用 Markdown/标题/substring 判断语义，或针对一个已知问题
+  增加 Prompt/Schema/Validator 后只重放该题；
+- 现有 prompt-heavy 模型边界是迁移来源和失败基线，不是新候选必须兼容的产品本体；
+- 产品失败必须能在 knowledge construction、cognition retrieval、Agent harness/tool use、answer synthesis、review 或 Web 中定位最早责任层。
+
+## Development order and effort limits
+
+上限只触发自动简化或换路，开发继续；不得用它降低答案质量或申请新授权。
+
+### Phase A — source-only Agent 诊断基线（累计 ≤2h）
+
+实现最小 Provider-neutral Agent loop：保留 Conversation 目标和紧凑 Work State，模型自主选择只读 search/read，Application 返回 Observation，
+模型据此重规划并回答。接通现有浏览器，以两个异质问题和一个追问真实运行；一旦可操作立即交付。该候选用于判断 harness/工具是否基本合格，
+不是世界模型产品或 MVP。
+
+验收关注 trajectory 中是否真实出现目标保持、合理工具选择、观察驱动重规划、停止判断、自然答案和 Citation。若明显弱于成熟源码 Agent，
+直接替换 Agent loop、memory 或工具接口；不得用回答协议遮盖。
+
+### Phase B — 世界模型最小认知纵切（累计 ≤6h）
+
+从 exact revision 在提问前构建并发布一份可跨问题复用的认知，至少覆盖：
+
+- module/package/file/type/method 实体与包含层级；
+- import/inherit/invoke 等跨文件关系；
+- 可遍历的入口—协作者行为路径，以及源码直接证明的条件、异常、状态读写或外部调用；
+- 每项认知的来源、Coverage、Conflict/Unknown 和 exact revision。
+
+复用现有知识内核和 Java 资产，以最小通用增量补齐缺口，不另建平行知识库。提供三类 Agent-facing 职责：搜索认知、按类型/方向/深度遍历
+关系、取得实体或行为详情。结果紧凑、可分页、带稳定身份和证据，不把整份 Snapshot 平铺给模型。
+
+用至少五个未参与实现的任务独立检验构建正确性、material evidence 可检索性、Coverage/Unknown 真实性和跨问题复用。此阶段不生成最终
+答案，也不以 Prompt 调整修复知识错误。
+
+### Phase C — 世界模型增强浏览器 Alpha（累计 ≤8h）
+
+把 Phase B 工具加入 Phase A 的同一个 Agent。Agent 默认先搜索/遍历认知，再按 Gap 使用 Source。用三个异质问题和一个语义追问贯通
+World Model → Agent → Source → Answer/Citation → fresh Reviewer → Web；页面折叠展示 trajectory、认知命中和 Source 补证。首次贯通立即
+交付用户，不等待全量回归、hidden、跨工程或 Codex 比较。
+
+同一 candidate 同时保存 source-only 和 World Model + source 两臂。后者至少必须增加一个正确的非 locator 结论，或让一个 source-only
+失败/遗漏的问题完整正确，且不产生物质退步；否则不得宣称世界模型有产品价值，直接回到 Phase B 的构建/查询归因。
+
+### Phase D — 质量与方向 Gate
+
+同一 candidate 运行五个异质问题和一段多轮 Chat，至少三个问题未参与实现。actual current Codex 在相同 exact revision、问题和输出目标下
+独立回答；双方完成前互不可见。独立评测方直接读 exact Source，逐题判断正确性、完整性、相关性、Citation 和 Unknown。
+
+只有系统重大错误为 0、Reviewer 无重大漏判、逐题不低于 Codex、总体严格更好且世界模型有非 locator 增益时，才称为 MVP 并进入用户方向
+决定。失败保持当前开发动作，按最早责任层通用修复；不创建逐失败 PDR/Result，不暂停，不重复授权。
 
 ## System contracts and invariants
 
-适用 Owner 为 SYS-ADR-018、Engineering Conversation、Agentic Task、Evidence/World Model Answering、Source Artifact、Security 和 Local
-Browser contracts。若实现证据改变跨模块语义，先按 Finding policy 写回唯一 System Owner；局部实现由代码和测试决定。
+`SYS-ADR-018` 继续拥有世界模型与主工程 Agent 的职责分离；Engineering Conversation、Agentic Task、Evidence/World Model Answering、
+Knowledge Structure、Source Artifact、Security 和 Acceptance 继续拥有跨模块契约。Conversation/Turn 属 Application；模型不直接取得文件、
+Shell、网络、凭据或写权限；Source 固定 exact revision 且只读；重要结论绑定真实 Citation；fresh Reviewer 独立于回答生成。PDR-014 只改变
+实现与验证顺序，不降低这些边界，也不把具体模型或 Provider 写进产品语义。
 
-Conversation/Turn/Context 由 Application 拥有；模型不直接访问 Repository、FS、Shell、network、credential 或 write；源码固定 exact
-revision 且只读；每个重要结论绑定 Citation；prior Answer/Review 与 Provider hidden memory 不取得事实权威；Reviewer 必须 fresh 且独立。
+## Agent and tool contract for this Slice
+
+Agent runtime 必须是模型/Provider 透明的小循环，不是固定角色流水线。最小职责是：
+
+`conversation goal → current plan → tool proposal → trusted observation → revised plan or finish → answer → independent review`
+
+世界模型工具返回实体、关系、行为和边界；Source 工具返回 exact-revision 只读证据。工具命名和参数应像给新工程师使用的接口一样明确，支持
+搜索、过滤、遍历深度、分页和可行动错误；不得要求模型制造 opaque identity 或重复 Application 已知字段。
+
+Reviewer 在 fresh 上下文中读取原问题、相关 Conversation context、完整答案、Citation 和必要 Source evidence，一次返回 verdict 与全部
+重大缺陷。Application 只校验身份、Citation 存在、结构可解析和失败真实性；不按正文词语或 Markdown 判断技术含义。现有证据足够时最多
+一次整体重写；需要新证据时回 Agent loop 调查并重新审核。
+
+## Mechanical drift control
+
+第一开发提交必须加入一个轻量方向检查，且不得发展成答案协议：
+
+1. 旧 `conversational_engineering_model.py` 及对应测试相对 PDR-014 产品基线净行数不得增长，只能删除、简化或薄适配；
+2. 拒绝新增 `ENGINEERING_AGENT_*@N` 协议版本、正文词法/Markdown/substring 语义验证和测试工程专有题面/类/方法/path 分支；
+3. Phase B 完成声明必须有知识构建/查询 diff 和独立 knowledge evidence；Phase C 必须有 Agent 工具循环、世界模型调用和真实 Browser Turn；
+4. 每两小时生成 `knowledge / agent / browser / prompt-schema` 四项进度。仅 Docs/Test/Prompt/Schema 变化时标记
+   `NO_PRODUCT_PROGRESS`，下一任务自动回到最早缺失 Phase，开发不停；
+5. 改 Prompt/Schema 前必须有 trajectory 和替换实验确认它是最早偏差；一个修复同时复验原问题和两个异质问题。
+
+## Failure attribution
+
+| 观察 | 最早责任层 | 允许的下一动作 |
+|---|---|---|
+| 正确实体/关系未被构建或内容错误 | knowledge construction | 修解析、准入、表示或 Coverage；不动回答 Prompt |
+| 认知存在但搜不到、噪声过大或无法多跳 | cognition retrieval/tools | 修索引、ranking、遍历或工具返回；不补题面规则 |
+| source-only Agent 就不会调查或重规划 | Agent harness / ACI | 换 loop、memory、工具接口或成熟 harness adapter |
+| source-only 正常，加入认知后退步 | cognition projection/integration | 修工具选择、认知粒度或 Context，不改答案格式协议 |
+| 证据充分但答案错误/遗漏 | synthesis | 先检查模型能力与精简任务说明；只做一项通用变更 |
+| 答案有明确缺陷但 Reviewer 批准 | reviewer | 改独立审核策略或 Reviewer 能力，不增加 Application 正文规则 |
+| 内部结果正确但页面错误 | Web/presentation | 只修显示/会话绑定 |
+
+Provider/network failure 独立记录，不得被归为任何产品语义层，也不得触发答案逻辑改变。
 
 ## Interfaces and affected code
 
-允许修改 `src/software_world_model/` 中的 Application、AI infrastructure 和 Interface 产品路径，以及 `tests/`、
-`validation/iteration_010_mvp/` 中与纵切直接相关的定向验证。具体文件由最早偏差证据决定，
-不得预先扩大重构范围。
-
-## 唯一工作计划
-
-1. 隔离 run-127 后的 `@40` candidate，不创建 run-128 successor；不再改动旧协议模型文件、对应测试或协议型 System Contract。
-2. 建立简化 Agent-first 浏览器路径，并加入只阻断工程/问题特判、正文词法语义判断和旧协议增长的轻量架构检查。
-3. 候选首次可运行即交付 loopback 体验，同时冻结同一 product/source identity。
-4. 一次运行五个异质问题，至少三个未参与实现；actual current Codex 在隔离任务中同时回答相同问题。
-5. independent exact-source evaluation 逐题判断正确性、完整性、Citation、Unknown、世界模型实质贡献和相对 Codex 质量。
-6. 失败只修最早责任层的一项系统性根因并复验原题加两个异质题；同层第二次仍需新增语义规则或只改善原题时，必须删除/绕过控制层或替换
-   Agent 策略，禁止第三次局部修补。只有五题无重大问题、逐题不低于 Codex、总体严格更好且世界模型有非 locator 价值时才称为 MVP。
-7. 质量不足时回到第 1 步继续同一 BUILD。停止同 signature 的无新证据外调，但不停止产品开发，不切备用碰答案，不创建失败 Result/PDR。
+允许按最早偏差修改 `src/software_world_model/knowledge_engine/`、现有 Application Agent/Tool、模型网关薄适配和 loopback Web，以及对应的
+`tests/` 与 `validation/iteration_010_mvp/`。不得预先扩张重构范围；旧 prompt-heavy 模型边界只允许删除、绕过或薄适配，不能继续净增长。
+具体类、文件和接口由 Phase A/B 的 trajectory 与 knowledge evidence 决定，而不是由已知问题题面预设。
 
 ## Acceptance scenarios
 
-| Case | 必须可观察的结果 |
+| Case | Exit condition |
 |---|---|
-| V-AGENT-FIRST-CONVERGENCE-001 | 简化 Agent-first 浏览器候选、五个异质问题、同步 Codex 对比与一次根因修复止损 |
-| V-BROWSER-CHAT-MVP-BUILD-001 | PDR-012 可信动作的兼容汇总 Case；只有 PDR-013 Agent-first 候选、Chat、独立质量与 Codex 对照全部达标才可通过 |
-| V-CHAT-XD-001 | 同一答案链同时使用问题相关世界模型认知和 Gap 驱动的受控源码证据，且二者来源区分正确 |
-| V-CHAT-001 | 至少三轮语义连续：首问、追问、纠正/深入/总结；新 Conversation 隔离 |
-| V-CHAT-QUALITY-001 | 每轮自然回答、重大错误 0、关键结论有可打开 Citation、fresh Review 无重大漏判 |
-| V-MODEL-TRANSPARENT-ROUTING-001 | 产品只使用首选/备用执行角色；只有可信不可用结论触发备用，输出或审核失败不触发 |
+| V-PLAN-DIVERGENCE-001 | 方向检查阻止旧协议净增长，四项进度能把无产品增量自动拉回最早缺失 Phase |
+| V-HARNESS-BASELINE-001 | source-only 浏览器基线完成两个异质问题和一个追问，trajectory 证明观察驱动重规划 |
+| V-WORLD-MODEL-COGNITION-001 | 五个独立任务证明结构、关系、行为、来源和 Coverage/Unknown 可正确构建、检索和复用 |
+| V-INTEGRATED-ALPHA-001 | 三个异质问题和一个追问真实贯通，浏览器立即可体验，WM+Source 对 source-only 有非 locator 正增益 |
+| V-BROWSER-CHAT-MVP-BUILD-001 | Phase D 五题、多轮、独立审核和 Codex Gate 全部通过后才取得 MVP 名称 |
+| V-PREVIEW-002 | 用户查看真实 Alpha/MVP、比较和已知限制后决定 CONTINUE / REWORK / REDIRECT / REJECT |
 
-首次 Web 交付只证明“候选可操作”，不冒充 MVP、方向、质量、稳定性或 Production PASS。交付后必须立即继续质量资格：系统自身重大错误
-为 0；逐题相对 current Codex 无物质退步；总体严格更优；至少一项重要价值来自非 locator 世界模型认知。Codex 不是 Oracle 或裁判。
+## Deferred work
+
+方向确认前不执行 full regression、hidden、第二工程、大型持久化/恢复、性能调优、完整安全矩阵、Production 或大规模重构。最小 exact、
+只读、Secret、Citation、独立审核和失败真实性边界始终保留。
 
 ## Compatibility, data and security boundaries
 
-当前公开 mall exact revision、只读 Source、既有配置路线、披露、预算和 loopback evaluation 属 standing scope；每个真实 dispatch 自动
-记录 exact source/product/session/route/disclosure/budget，人工重复授权请求为 0。只有私有/新 Source、新接收方或账户、扩大披露/预算、
-外部写入、非 loopback、Production 或破坏性操作才申请权限。
-
-首次体验前不做 full regression、hidden、第二工程、持久化、性能优化、完整四路因果消融或 Production。它们是方向确认后的夯实顺序，
-不是当前权限停工点。模型调用次数和成本不能降低单个已开始 Turn 的调查、答案或独立审核质量。
-
-开发只有在用户明确 STOP/REDIRECT/REJECT、真实 scope delta 的 exact 请求已发出且独立安全工作穷尽，或不可绕过的安全禁止时才能停。
-普通答案、格式、测试和 Reviewer 失败只关闭对应 Turn 或完成声明。
-
-strict WORLD_MODEL 与显式 DIRECT 兼容入口不得静默串线。Secret 不进入仓库、Prompt、日志、Evidence 或页面；late/unknown/不合格结果不得覆盖
-已交付答案。既有 route/disclosure/budget 内的公开源码评估继续使用 standing authority，真实 scope delta 才失败关闭并申请最小权限。
+现有 `WORLD_MODEL` 与显式诊断基线入口不得静默串线；Phase C 的两臂必须共享 Agent、问题、exact revision 和质量口径，只改变世界模型工具
+是否可用。Secret 不进入仓库、Prompt、日志、Evidence 或页面；late/unknown/不合格结果不能覆盖已交付答案。首次体验前只运行受影响、启动、
+只读安全和失败真实性测试，方向确认后再做 full regression、hidden、跨工程与 Production 验收。
 
 ## Architecture reflection checkpoint
 
-首次体验后以真实 Turn 判断 A1/A2/A3/A5/A6，并在后续跨工程阶段判断 A4。current Codex 是强基线，独立源码证据负责事实，独立技术复核负责
-质量判断；模型答案不是 Oracle。结论不足时继续 REWORK 当前 Slice，不因一次失败停止产品开发。
+Phase C 首次真实体验后立即判断：Agent 是否像高级工程师一样使用认知并按需读源码；世界模型是否提供了非 locator 的正确增益；多轮
+Conversation 是否保持目标；平台安全边界是否仍清晰。任一答案为否，按消融结果回到 Phase A 或 B，不把一次可运行页面解释成架构通过。
+Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基线，不是 Oracle 或裁判。
 
 ## Open questions and implementation risks
 
-- 最早偏差究竟位于世界模型投影、Agent 工作状态、typed evidence/answer contract 还是 Reviewer；
-- 世界模型非 locator 认知能否稳定参与不同类型问题，而不是只在示例题出现；
-- Agent 是否根据观察重规划并在证据充分时结束，而不是固定流水线或无界探索；
-- 三轮 Chat 是否真正使用当前 Context，同时隔离新 Conversation；
-- Reviewer 是否能阻断物质遗漏和错误 Citation，而不接管工具规划。
+- 现有 Java 认知资产能否在六小时上限内形成包含行为、条件、异常和状态影响的真实纵切；
+- 现有 Agent 工具接口是否足够紧凑、可遍历，还是需要替换 loop/ACI；
+- 世界模型增强是否在陌生问题上产生稳定增益，而不是增加噪声或只改善定位；
+- fresh Reviewer 能否发现物质错误而不重新演化成正文证明协议；
+- 旧 prompt-heavy 路径与三处未提交候选是否会污染基线。
 
-这些问题由 trace、最小复现和未参与修复的异质问题回答，不通过题面特判或重复外调碰答案。
+这些风险分别用 knowledge task、trajectory、same-Agent 消融、独立 exact-source 评测和 Git/direction check 回答，不用新增题面规则回答。
 
 ## Findings
 
-当前纠偏由 PDR-013 拥有；FINDING-010-153、161、163、165、191、204、206—255 与既有 Results 保留计划自锁、答案前失败和真实/本地质量归因证据。以下 run 叙述均为历史证据，不再定义下一动作。run-103 已在周一 12:13 CST off-peak 完成五问：Ark 4 个 sealed 429、DeepSeek 39/39 completed，shared budget 将逐题合计保持为 `14/10/8/0/11`；Q2 ACCEPTED、Q4 zero-dispatch Clarification，整体仍 FAIL。Q1 的 focused repair 会擦除已识别 DEFECT/Finding，Q3 沿用上一 goal且混淆 abrupt-failure local reachability 与 rollback/effect unknown，Q5 的 duration expiry 仅为 timing-supported inference。current `@29/@19/@24` 以 Application-restored Review semantic anchor 和 current-requirement/failure-condition contract 修复；定向 `137/137` PASS。run-104 随后密封 Q1 的 Ark 1 + DeepSeek 14 exact-budget failure、Q2 的 Ark 429 + DeepSeek sealed HTTP 402 与 Q4 zero-dispatch Clarification；Q3/Q5 按同签名停止边界未发送。Q1 的 first divergence 是 comprehensive redaction 丢失 trusted Boundary presence；current `@30/@20/@24` 以 presence-only Package/Draft counts 修复而不转移 focused ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。run-105 按用户明确要求执行 Ark-first recheck，Q1 唯一 Ark dispatch 仍为 sealed 429，DeepSeek 于周一 peak 在网络前拒绝，Q4 zero-dispatch Clarification 通过，Q2/Q3/Q5 未重复同签名外调；它不产生 current candidate 的质量 verdict或代码变化。用户随后明确报告 Ark 流量问题已处理，materially new evidence 已出现；下一项是文档/可信父门禁、提交并立即执行 fresh run-106。新实现发现按
-`FINDING-010-235 / run-106` 已完成该 successor：Ark 前 6 个 call completed，第 6 个 malformed Primary JSON 被 current validator 阻断，
-第 7 个 fresh same-profile repair 在 HTTP dispatch 后 outcome unknown，按 contract 无 retry、无 fallback；Q4 zero-dispatch Clarification
-继续通过。未发现本地 contract 偏差，下一 clean run-107 先执行未重复的 Q2/Q3/Q4/Q5，并在没有重复 stop signature 时补 Q1。
+`FINDING-010-256` 保存投入结构和计划失效的 Git 证据；`FINDING-010-257` 保存成熟 harness、Agent 工具和图认知研究揭示的能力缺口。
+PDR-014 已 disposition 两项 Finding。后续实现若改变系统边界、认知模型、Agent 工具职责或质量口径，按 implementation feedback policy
+写入新的 Finding 并同步唯一 Owner；普通答案失败只形成最早偏差证据，不形成停工 PDR。
 
-`FINDING-010-236 / run-107` 已执行 Q2/Q3/Q4/Q5：Q2 为 Ark pre-HTTP TLS unavailable 且 DeepSeek peak-window zero-network denial；Q3/Q5
-为 Ark HTTP 400 `InvalidParameter / BadRequest`；Q4 为 zero-dispatch Clarification。400 non-eligible 行为正确，但 optional Provider
-parameter-name 未进入安全 evidence。current candidate 升级 evidence/SQLite/Egress 与 Ark conformance negative oracle，禁止 message/body
-持久化且不改变 route；fresh Ark Conformance 后 run-108 先重放 Q5。
+## Authorization
 
-`FINDING-010-237` 的 Conformance differential 已证明只移除 `thinking` 可越过 HTTP validation，而最小 request 的两个 response 都报告
-actual `glm-5.3`。该值不匹配 current frozen `glm-5.2`，所以 exact-identity gate 正确阻断；临时 variant 已恢复。下一产品 dispatch 等
-Provider restore 或用户批准 exact model delta 后重做 request contract/Conformance/Capability qualification。
+公开 mall exact revision、只读 Source、既有首选/备用执行配置、披露、预算和 loopback evaluation 已在 standing scope 内；新问题、Turn、
+候选和同范围外调不重复申请。首选配置成功时备用调用为 0；只有可信不可用结论触发一次透明备用执行。真实 scope delta 才申请最小新增权限。
 
-用户现已用 exact authority delta
-`sha256:d27184be5bb47c2526e275232aac3c2b2091e3405310b4d4239b98af2edf1cfd` 批准 actual `glm-5.3`，并把 run-108 严格限定在此前相同的数据、预算、
-loopback evaluation 和非 Production scope。`FINDING-010-238` 将 current preferred Adapter 升为 `@9`：requested alias 不变，只删除已由
-one-field differential 证明不兼容的 `thinking`，Conformance fixture 升为 `1.9.0`。下一连续动作是目标验证、可信父提交、fresh Ark
-Conformance；PASS 后立即创建并执行 run-108，旧 `glm-5.2/@8` 结果不得复用。
-
-`FINDING-010-240` 的 clean successor 已以 default 512-token canary 完成 `glm-5.3/@9` fresh Conformance 2/2 PASS；result digest 为
-`sha256:5cc4d3662573c06dd1ad174121c4c9a9565ae4743805d51b120ea502415a2363`，有效至 `2026-09-30T11:10:37.983023Z`。下一连续动作现为
-fresh pricing + exact run-108 Session preparation，并先在 Browser 执行 Q5。
-
-`FINDING-010-241 / run-108` 已执行该 Q5：`@9` request 越过旧 HTTP 400 后在 HTTP dispatch 后 `REMOTE_DISCONNECTED`，安全终态为
-`PROVIDER_OUTCOME_UNKNOWN`。按 no-retry 与 trusted-unavailable-only fallback，Ark 1、DeepSeek 0；Q4 fresh Conversation 继续以零 dispatch
-Clarification 通过。该 partial run 没有 Draft/Review/Delivery，不形成五问质量 verdict。Q1—Q3 与 fresh Q5 successor 等待 materially new Ark
-network evidence；本 Slice 的本地开发、证据和计划门禁继续。
-
-用户允许周期性重试后，fresh `@9` 短 Conformance 2/2 PASS 触发 run-109，但此前未执行的 Q1 仍在 Ark dispatch 后约 `55.996s`
-`REMOTE_DISCONNECTED`；run-108 Q5 是 `56.075s`。这排除了“整体网络仍不可达”，并证明短 canary 对长产品生成是假阳性。
-`FINDING-010-242` 的通用 repair 将 Provider wire 升为 SSE、Adapter identity 升为 `@10`、fixture 升为 `1.10.0`，同时保持 Gateway
-单 terminal response、no partial delivery、same-request retry 0、trusted-unavailable-only fallback 和全部 standing scope。下一动作是目标
-验证、文档/计划门禁、clean commit、fresh Conformance，PASS 后执行未重复历史 unknown request 的 run-110。
-
-该门禁已完成：clean `e95fa929… / 95431f1c…` 的 `ccrun_b222fc9abdf641469baae1cec7080f5d` 以 actual `glm-5.3`、Usage 完整、
-retry/unknown 0 取得 2/2 PASS。run-110 现进入 fresh pricing/exact Session preparation；Conformance 只证明 SSE adapter compatibility，不提前
-证明长产品答案、Review、质量或 MVP。
-
-`FINDING-010-243 / run-110` 已证明 SSE 令首个长 call 在约 `80.333s` completed；第二个约 `102.925s` 后则由本地 parser 以
-`PROVIDER_RESPONSE_INVALID` 拒绝，transport unknown 0。raw frame 未持久化，所以 comment keep-alive 仍是待 successor differential 的假设；
-但 current parser 确定违反 SSE comment-ignore 规则。`@11 / 1.11.0` candidate 仅忽略 comment/重复空分隔并保留其他 closed framing、terminal、
-no-retry/fallback 约束。下一动作是 clean qualification 后执行 run-111，而不是停工、重复历史 unknown request 或切 fallback 碰答案。
-
-clean `8d7927f… / fffe078…` 的 `ccrun_e837a716a9e243c29c4affc4fcd113a0` 现已令该 identity 13/13 case PASS，actual
-`glm-5.3`、Usage 完整、retry/unknown 0。下一动作收敛为 fresh pricing/exact run-111 Session 与原失败长问题复验；若仍拒绝，继续定位下一
-parser divergence，不把短 Conformance 或 comment 假设写成产品结论。
-
-run-111 differential 已将当前最早偏差定位到生成预算：前两次 Ark calls completed，第二次 output `8192`、finish `length` 且 JSON string
-中途截断；第三次 format repair 的 raw response shape 未保存，只能保留 `PROVIDER_RESPONSE_INVALID`。Ark transport unknown/retry 0、
-DeepSeek 0，故不满足网络 retry/fallback。`FINDING-010-244` 将 candidate 升为 `@12 / 1.12.0`，固定 `reasoning_effort=low` 并修正
-empty/incomplete terminal evidence 分类；目标门禁与 fresh qualification PASS 后执行 run-112。
-
-fresh `ccrun_74a415e279f24556a605f6213a26b41e` 已在 clean `2506dec… / f8a9d37…` 上 13/13 PASS，证明 exact Coding Plan endpoint
-接受 `reasoning_effort=low`。下一动作是 fresh pricing/exact run-112 Session 与原问题复验；短 qualification 不产生 Draft/Review/MVP verdict。
-
-run-112 differential 已由前四个 Ark completed calls 证明旧 output-budget 分歧消除，并推进到两次 Source read；第五个 attempt 在 HTTP 前
-`TLS_FAILURE`，受信 fallback 后 DeepSeek definite HTTP 402。`FINDING-010-245` 不改 product contract，只在 bounded delay 后用 fresh
-pricing/exact Session 执行 run-113；same-request retry 与 post-dispatch unknown 仍为 0。
-
-run-113 已取得 Ark TLS/credential/HTTP `7/7/7`、DeepSeek/retry/unknown 0；网络恢复后，第一份 Draft 因一个 long opaque Citation ref
-单字符漂移而被 exact validator 拒绝，两个 bounded repairs 未收敛。`FINDING-010-246` 把 Provider-facing Claim Citation 改为 1-based
-Observation/Citation ordinal selection，由 Application 从 current sealed invocation 解析回 exact Domain refs；route、预算、Evidence authority
-与 Production hold 不变。目标/文档/计划门禁和 clean commit 后，fresh qualification 与 run-114 是下一验证。
-
-clean `912712c… / e40ba2f…` 的 fresh Ark qualification 13/13 PASS 后，run-114 preparation-only、run-115 的 Ark pre-dispatch
-unavailable → DeepSeek definite HTTP 402 与 fresh run-116 的 Ark 9-call success 已按顺序封存。run-116 页面形成
-`SUCCEEDED / ACCEPTED`、3 Citation、fresh Review 与 Delivery，说明 ordinal protocol 已 live 贯通且当前不等待 Ark 网络。
-
-run-120 在 fresh Ark qualification 后由 Ark 7-call/DeepSeek 0 交付同题并证明 direct declaration Citation 修复生效。
-`FINDING-010-250` 仍发现已存在的 Controller import/delete HTTP mappings 被 stale Search truncation Boundary 误报为 Unknown，尽管同一次
-Search 的 exact Controller read 仍可用；两个 Reviewer 错误 APPROVED。Slice current candidate 在 Primary decode 机械禁止普通工程问题以
-resolved-acquisition candidate 代替可执行的 same-Search exact read，并在 Review decode 仅允许显式检索诊断请求把该 candidate 判为
-material。协议族为 `@35 / Primary @34 / Review @24 / preflight @29`。完成 clean gate 后执行 fresh run-121 同题及异质冻结题；route、budget、
-Source authority 和 Production hold 不变。
-
-clean `3326fdf… / d3c5385…` 与 fresh Ark actual `glm-5.3` qualification 先闭合上述 gate。run-121 随后在 Ark HTTP 前 typed TLS unavailable，
-DeepSeek off-peak fallback 得到 definite HTTP 402；按用户允许的 bounded-delay fresh retry，run-122 由 Ark 12 个 completed calls 形成
-`SUCCEEDED / ACCEPTED`，DeepSeek/retry/unknown 0。独立审核仍发现最终正文在 3 个 Claim 和零 Boundary ID 之外断言 DAO return shape、
-Repository/Template classification 及 conversion/remote-effect Unknown，comprehensive/focused Reviewer 均未逐项看到这些 prose 而错误批准。
-`FINDING-010-251` 因而把协议族升为 `@36 / Primary @34 / Review @25 / preflight @30 / Review output @10`，以 exact ordered Draft content-unit
-coverage 闭合正文、Claim、Boundary、Finding 与 Delivery。下一动作是完成目标/相邻测试、文档/计划门禁、clean commit、fresh Ark
-qualification 与 run-123 同题复验；周期性网络重试仍只创建 fresh logical run，不重放 outcome-unknown request。
-
-run-123 已在 fresh Ark qualification 下以 10 个 completed calls 交付，26/26 exact content units 均被审核；但最终 Review 仍把
-``src/main/resources``、``CommonResult.failed()`` 等技术锚点映射到不包含 exact lexeme 或只表达相反 uncertainty 的 reference。
-`FINDING-010-252` 以 `@37 / Review @26 / preflight @31` 增加 mapped exact inline-code anchor 必要条件，并在 decode、seal、Delivery 三处
-重算。下一动作是相邻测试、文档/计划门禁、clean commit、fresh qualification 与 run-124；bounded Ark retry 仍只创建 fresh logical run。
-
-run-124 已以 Ark 8 个 completed calls、DeepSeek/retry/unknown 0 失败关闭：Application 拒绝了 Reviewer 错误映射，但只返回第一项通用 anchor
-diagnostic；Reviewer repair 只修一项，另有多个 anchor mismatch 和 nonstructural `NON_ASSERTIVE` 技术事实逃逸，旧 same-category rule 又提前
-终止最后一个 slot。`FINDING-010-253` 以 `@38 / Review @27 / preflight @32` 聚合全部 anchor violations、禁止该逃逸，并仅在 exact diagnostic
-变化时允许第二层 bounded repair。下一动作是相邻门禁、clean commit、fresh qualification 与 run-125；Provider no-retry 边界不变。
-
-run-125 已在 clean `6a3c04d… / 1e8c974…` 与 fresh Ark qualification 下形成当前完整浏览器链：Ark 13 calls 全部 completed，
-TLS/credential/HTTP `13/13/13`、DeepSeek/retry/unknown 0，页面 `SUCCEEDED / ACCEPTED`，4 Citation、18/18 content units、fresh Review 与
-Delivery 完整。首轮多缺口 aggregate diagnostic 与后续 changed-diagnostic bounded repairs 均真实生效；独立 exact-revision 审核未见物质错误。
-本 Slice 下一动作是不改 scope 地执行至少两个异质冻结题与 current Codex 对照；单题通过不升级整体 Quality/MVP。
-
-run-126 已执行第一项异质 mall-portal 订单题：Ark 11 calls 全部 completed、DeepSeek/retry/unknown 0，Browser 机械 Accepted；独立源码审核却
-发现“步骤 1–5 是数据库写入调用”的 visible assertion 没有进入 mapped Claims，两个 Reviewer 均漏判。`FINDING-010-254` 的 current Slice
-candidate 升为 `@39 / Review @28 / preflight @33`，要求 whole normalized affirmative fragment 在一个 mapped Claim 中连续复现，并让
-ANSWER/LIMITATION 普通 body 无法借 `NON_ASSERTIVE` 绕过；decode、seal 与 Delivery 各自重算。完成门禁和 fresh qualification 后复验原题及
-至少两个异质冻结题；run-126 永久保持 Quality FAIL，当前不等待 Ark 网络。
-
-[实现发现回写规则](../../../governance/implementation-feedback-policy.md) 写入 [Findings index](../findings/README.md)，不得用 Finding 创建新的
-普通失败停工点。
-
-## 交付
-
-第一条真实三轮链完成后立即提供启动命令、固定 URL、exact product/source revision、可操作页面和已知限制，并明确标记“开发体验候选，
-质量未通过，不是 MVP”。该交付无 Result、不移动游标；开发不停，立即继续同候选异质质量检查和 current Codex 同题比较。只有质量资格
-通过后才以 MVP 交给用户判向；最终方向与验收事实再在适当的完成记录中密封，不把过程治理放回产品关键路径。
+开发只能因用户明确 STOP/REDIRECT/REJECT、scope delta 请求已实际发出且所有独立工作穷尽，或不可绕过的安全禁止而等待。普通失败和时间上限
+都只改变下一实现动作，不结束开发。

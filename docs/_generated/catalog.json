@@ -5114,6 +5114,34 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-255.md"
   },
   {
+    "id": "FINDING-010-256",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-256.md"
+  },
+  {
+    "id": "FINDING-010-257",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "architecture",
+      "engineering",
+      "ai",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-257.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7001,6 +7029,22 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-013-agent-first-convergence-cutover.md"
+  },
+  {
+    "id": "ITER-010-PDR-014",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "product",
+      "project",
+      "architecture",
+      "engineering",
+      "quality",
+      "ai"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-014-capability-separated-agent-and-world-model-recovery.md"
   },
   {
     "id": "ITER-010-PROPOSAL",

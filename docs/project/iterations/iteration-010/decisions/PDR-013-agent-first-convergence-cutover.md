@@ -13,9 +13,13 @@ rework_strategy: AGENT_FIRST_PRODUCT_CONVERGENCE_CUTOVER
 decision_ref: local-user-message-utf8:sha256:246ac00e741f49834fe83711bc97b24f10772f3abd630d706409d6175b4fb749
 effective_scope: ITER-010-SLICE-001
 coding_input: true
+superseded_by: ITER-010-PDR-014
 ---
 
 # PDR-013：终止协议扩张和逐题修补，切换到 Agent 优先的产品收敛
+
+> `SUPERSEDED FOR EXECUTION BY ITER-010-PDR-014`。本决定停止旧协议扩张的结论继续有效，但其整体 Agent-first 工作计划不再调度开发；
+> PDR-014 已把知识构建、Agent harness、集成增益和浏览器质量拆成独立、连续交付的能力阶段。
 
 本决定是 PDR-012 已授权产品目标、总体架构、Source、外部范围和持续开发动作内的执行设计收敛，不创建新的
 `plan_execution_control` 版本，不迁移动作游标，也不改变 standing authority。可信 Manifest 继续使用 PDR-012 及其现有产品动作；

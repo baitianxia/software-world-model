@@ -4298,6 +4298,28 @@
       "tests/test_conversational_engineering_model.py"
     ]
   },
+  "FINDING-010-256": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-256.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/conversational_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_model.py"
+    ]
+  },
+  "FINDING-010-257": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-257.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services/conversational_engineering_agent.py",
+      "src/software_world_model/application_services/conversational_engineering_tools.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -5545,7 +5567,10 @@
   "ITER-010-SLICE-001": {
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
     "code": [
-      "src/software_world_model"
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
     ],
     "tests": [
       "tests",
