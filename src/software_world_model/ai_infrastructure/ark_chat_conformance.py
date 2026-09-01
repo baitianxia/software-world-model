@@ -699,6 +699,12 @@ def _evaluate_cases(
         and isinstance(body.get("messages"), list)
         and len(body["messages"]) >= 2
         and body["messages"][0].get("role") == "system"
+        and sum(
+            message.get("role") == "system"
+            for message in body["messages"]
+            if isinstance(message, dict)
+        )
+        == 1
         and "closed JSON Schema" in body["messages"][0].get("content", "")
         and '"additionalProperties":false' in body["messages"][0].get("content", "")
         and "thinking" not in body

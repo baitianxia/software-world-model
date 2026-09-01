@@ -683,10 +683,10 @@ class VolcengineArkChatCompletionsNoToolsAdapter:
         schema_instruction = _json_object_schema_instruction(definition)
         payload: dict[str, object] = {
             "model": request.model_ref,
-            "messages": [{"role": "system", "content": schema_instruction}] + [
-                {"role": message.role, "content": message.content}
-                for message in request.messages
-            ],
+            "messages": _ark_wire_messages(
+                request.messages,
+                schema_instruction=schema_instruction,
+            ),
             "tools": [],
             "tool_choice": "none",
             "parallel_tool_calls": False,
@@ -800,6 +800,43 @@ def _json_object_schema_instruction(
         "Do not emit Markdown fences or text outside the object. Schema name: "
         f"{definition.name}. Schema: {schema}"
     )
+
+
+def _ark_wire_messages(
+    messages: tuple[RenderedMessage, ...],
+    *,
+    schema_instruction: str,
+) -> list[dict[str, str]]:
+    """Render one leading Ark system authority for JSON-mode calls.
+
+    The Gateway supplies at most one leading semantic system message.  Keeping
+    that authority and the closed output contract in one system turn prevents
+    non-English task prose from competing with or translating protocol field
+    names and enum tokens.  User/assistant message order is otherwise
+    preserved.
+    """
+
+    if messages and messages[0].role == "system":
+        combined_system = "\n\n".join(
+            (
+                "TASK AND SEMANTIC AUTHORITY:\n" + messages[0].content,
+                "OUTPUT CONTRACT:\n" + schema_instruction,
+            )
+        )
+        return [
+            {"role": "system", "content": combined_system},
+            *(
+                {"role": message.role, "content": message.content}
+                for message in messages[1:]
+            ),
+        ]
+    return [
+        {"role": "system", "content": schema_instruction},
+        *(
+            {"role": message.role, "content": message.content}
+            for message in messages
+        ),
+    ]
 
 
 def _validate_json_object_text(output_text: str) -> None:

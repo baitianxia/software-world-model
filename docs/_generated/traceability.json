@@ -4440,6 +4440,18 @@
       "tests/test_lightweight_engineering_model.py"
     ]
   },
+  "FINDING-010-271": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-271.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py",
+      "src/software_world_model/ai_infrastructure/ark_chat_conformance.py"
+    ],
+    "tests": [
+      "tests/test_volcengine_ark_chat_adapter.py",
+      "tests/test_ark_chat_conformance.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

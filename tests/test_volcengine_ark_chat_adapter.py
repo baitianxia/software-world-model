@@ -251,7 +251,19 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(payload["messages"][0]["role"], "system")
         self.assertIn("closed JSON Schema", payload["messages"][0]["content"])
         self.assertIn('"additionalProperties":false', payload["messages"][0]["content"])
-        self.assertEqual(payload["messages"][1], {"role": "system", "content": "Return JSON."})
+        self.assertIn(
+            "TASK AND SEMANTIC AUTHORITY:\nReturn JSON.",
+            payload["messages"][0]["content"],
+        )
+        self.assertIn("OUTPUT CONTRACT:\n", payload["messages"][0]["content"])
+        self.assertEqual(
+            sum(item["role"] == "system" for item in payload["messages"]),
+            1,
+        )
+        self.assertEqual(
+            payload["messages"][1],
+            {"role": "user", "content": "Authorized facts only."},
+        )
         self.assertEqual(payload["tools"], [])
         self.assertEqual(payload["tool_choice"], "none")
         self.assertFalse(payload["parallel_tool_calls"])
@@ -271,6 +283,70 @@ class VolcengineArkChatAdapterTests(unittest.TestCase):
         self.assertEqual(result.replay_classification, ReplayClassification.PINNED)
         self.assertTrue(result.usage_complete)
         self.assertEqual(result.output_normalization, "IDENTITY")
+
+    def test_non_english_task_keeps_review_schema_tokens_in_one_system_authority(self) -> None:
+        review_schema = OutputSchemaDefinition(
+            "independent_review",
+            {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "type": "string",
+                        "enum": ["APPROVED", "REWRITE", "MORE_EVIDENCE"],
+                    },
+                    "findings": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["verdict", "findings"],
+                "additionalProperties": False,
+            },
+        )
+        adapter, _, recording = self.adapter(
+            success_response(
+                content='{"verdict":"MORE_EVIDENCE","findings":["缺少实现证据"]}'
+            ),
+            output_schemas={"review@1": review_schema},
+        )
+        request = self.request(
+            messages=(
+                RenderedMessage(
+                    "system",
+                    "请使用中文审核正文，但不要翻译协议字段。",
+                    "instruction",
+                    digest_of("请使用中文审核正文，但不要翻译协议字段。"),
+                ),
+                RenderedMessage(
+                    "user",
+                    '{"answer":"事务边界未知"}',
+                    "facts",
+                    digest_of('{"answer":"事务边界未知"}'),
+                ),
+            ),
+            output_schema_ref="review@1",
+        )
+
+        result = adapter.invoke(request)
+
+        payload = json.loads(recording.requests[0].body)
+        self.assertEqual(
+            sum(item["role"] == "system" for item in payload["messages"]),
+            1,
+        )
+        system = payload["messages"][0]["content"]
+        self.assertIn("请使用中文审核正文", system)
+        self.assertIn('"verdict"', system)
+        self.assertIn('"findings"', system)
+        self.assertIn('"MORE_EVIDENCE"', system)
+        self.assertEqual(
+            payload["messages"][1],
+            {"role": "user", "content": '{"answer":"事务边界未知"}'},
+        )
+        self.assertEqual(
+            result.output_text,
+            '{"verdict":"MORE_EVIDENCE","findings":["缺少实现证据"]}',
+        )
 
     def test_stream_reassembles_content_and_discards_reasoning_channel(self) -> None:
         adapter, _, _ = self.adapter(
