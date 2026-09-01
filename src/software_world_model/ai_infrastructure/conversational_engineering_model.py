@@ -63,7 +63,9 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentWorkPhase,
     EngineeringAgentWorkStateProposal,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_nonassertive_body_fragments,
     engineering_agent_content_coverage_nonassertive_inline_code_anchors,
+    engineering_agent_content_coverage_unmatched_claim_assertion_replicas,
     engineering_agent_content_coverage_unmatched_inline_code_anchors,
     engineering_agent_evidence_boundary_assessment_matches_challenge,
     project_engineering_agent_draft_boundaries,
@@ -103,14 +105,14 @@ from .provider_http_failure_evidence import (
 )
 
 
-ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@38"
+ENGINEERING_AGENT_MODEL_STRATEGY_REF = "conversational-engineering-agent@39"
 ENGINEERING_AGENT_MODEL_PROMPT_REF = (
-    "conversational-engineering-agent-no-tools-prompt@38"
+    "conversational-engineering-agent-no-tools-prompt@39"
 )
 ENGINEERING_AGENT_PRIMARY_INPUT_SCHEMA = "ENGINEERING_AGENT_PRIMARY_INPUT@34"
-ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@27"
+ENGINEERING_AGENT_REVIEW_INPUT_SCHEMA = "ENGINEERING_AGENT_REVIEW_INPUT@28"
 ENGINEERING_AGENT_OUTPUT_PREFLIGHT_SCHEMA = (
-    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32"
+    "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@33"
 )
 ENGINEERING_AGENT_PRIMARY_OUTPUT_SCHEMA_REF = (
     "engineering-agent-work-state-proposal@4"
@@ -304,6 +306,14 @@ do not place a path, symbol, method, declaration, route, or literal only in the
 presentation prose and then bind the unit to a narrower Claim. For a pure
 boundary unit, use an anchor only when the selected exact Boundary observation
 contains it. Otherwise remove the anchor or add a legal SUPPORT-bound Claim.
+Every affirmative visible body line must also have its whole assertion replicated
+as one contiguous substring in at least one covering Claim statement after only
+these presentation normalizations on both sides: remove one leading Markdown
+list marker, remove inline-code backticks and paired bold markers, and collapse
+whitespace. This lexical replica is a necessary review floor, not proof that the
+Claim is true. Do not map a broader presentation classification to a narrower
+related Claim. Split mixed affirmative and unresolved-boundary prose into
+separate visible lines so an affirmative Claim never has to absorb uncertainty.
 Claim coverage is semantic, not one Claim entry per phrase or call. One Claim may
 cover several content assertions when its statement expressly preserves every
 material category, scope, condition, certainty, negation, and local ordering
@@ -692,15 +702,23 @@ necessary mechanical check, not sufficient semantic coverage. A Claim that says
 a location, effect, category, or certainty is unknown cannot cover a unit that
 affirmatively states it. An excluded or unread path establishes only the scope
 boundary; it does not establish that an implementation exists in that path.
+When a COVERED unit maps any affirmative Claim, the whole visible fragment must
+occur as one contiguous substring in at least one mapped Claim after removing
+one leading Markdown list marker, inline-code backticks and paired bold markers,
+then collapsing whitespace on both sides. This assertion replica is another
+necessary mechanical floor, not semantic or factual proof. A narrower Claim
+cannot cover a broader category or cross-reference such as “steps 1–5”; rewrite
+that visible unit to be self-contained or return DEFECT. Split a line that mixes
+affirmative and unresolved-boundary semantics before mapping it.
 Split mixed affirmative and uncertain prose or return DEFECT whenever the
 affirmative part lacks its own SUPPORT-bound Claim. Use
-NON_ASSERTIVE only for formatting, a question, or trusted provenance context
-that makes no software, evidence, scope, or uncertainty assertion. A
-NON_ASSERTIVE fragment may not contain inline-code anchors unless the whole
-fragment is a pure Markdown heading or standalone bold label; a prefixed label
-followed by factual prose is not structural. The Application reports every
-anchor violation in one bounded diagnostic, so repair every listed unit rather
-than stopping after the first example. Use DEFECT
+NON_ASSERTIVE only for a pure Markdown heading or standalone bold label; a
+CLARIFICATION response may also use it for its clarification question or
+instruction. Ordinary ANSWER or LIMITATION body prose must instead be COVERED,
+legally deferred, or DEFECT even when it has no inline-code anchor. A prefixed
+label followed by factual prose is not structural. The Application reports every
+assertion-closure violation in one bounded diagnostic, so repair every listed
+unit rather than stopping after the first example. Use DEFECT
 for any uncovered or misclassified material semantic and bind finding_code to
 one concrete Finding. In COMPREHENSIVE only, use BOUNDARY_REVIEW_DEFERRED when
 the unit contains a genuine boundary semantic whose exact binding is redacted;
@@ -4016,10 +4034,19 @@ def _output_preflight_view(
                     "content_coverage_inline_code_anchor_exact_reference_required"
                 ),
                 reference_policy.get(
+                    "content_coverage_claim_assertion_replica_required"
+                ),
+                reference_policy.get(
                     "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden"
                 ),
                 reference_policy.get(
+                    "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification"
+                ),
+                reference_policy.get(
                     "content_coverage_anchor_violations_aggregated"
+                ),
+                reference_policy.get(
+                    "content_coverage_assertion_closure_violations_aggregated"
                 ),
                 content_challenge.get(
                     "complete_ordered_assessment_required"
@@ -4034,10 +4061,19 @@ def _output_preflight_view(
                     "every_inline_code_anchor_requires_exact_mapped_reference_lexeme"
                 ),
                 content_challenge.get(
+                    "covered_claim_mapping_requires_whole_normalized_fragment_replica"
+                ),
+                content_challenge.get(
                     "nonstructural_nonassertive_inline_code_anchors_forbidden"
                 ),
                 content_challenge.get(
+                    "nonstructural_nonassertive_body_forbidden_except_clarification"
+                ),
+                content_challenge.get(
                     "all_inline_code_anchor_violations_reported_together"
+                ),
+                content_challenge.get(
+                    "all_assertion_closure_violations_reported_together"
                 ),
                 content_challenge.get(
                     "uncertain_reference_cannot_cover_affirmative_semantic"
@@ -4285,8 +4321,11 @@ def _output_preflight_view(
             "content_coverage_complete_order_required": True,
             "content_coverage_defect_requires_bound_finding": True,
             "content_coverage_inline_code_anchor_exact_reference_required": True,
+            "content_coverage_claim_assertion_replica_required": True,
             "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification": True,
             "content_coverage_anchor_violations_aggregated": True,
+            "content_coverage_assertion_closure_violations_aggregated": True,
             "evidence_boundary_assessment_ids_required_exact_order": tuple(
                 caller_challenge_ids
             ),
@@ -4745,6 +4784,13 @@ def _initial_format_repair_policy() -> dict[str, object]:
 
 
 def _closed_contract_repair_directive(message: str) -> str:
+    if "content coverage assertion closure violations" in message:
+        return (
+            "REPAIR_EVERY_LISTED_UNIT_TOGETHER_REPLICATE_EACH_COVERED_"
+            "AFFIRMATIVE_FRAGMENT_WHOLE_IN_ONE_MAPPED_CLAIM_PRESERVE_EXACT_"
+            "ANCHORS_SPLIT_MIXED_BOUNDARY_PROSE_AND_NEVER_LABEL_ORDINARY_"
+            "ANSWER_OR_LIMITATION_BODY_NONASSERTIVE"
+        )
     if "content coverage inline-code anchor violations" in message:
         return (
             "REPAIR_EVERY_LISTED_UNIT_AND_ANCHOR_TOGETHER_MAP_COVERED_ANCHORS_"
@@ -7282,8 +7328,11 @@ def _review_input_view(
             "every_affirmative_semantic_requires_claim_coverage": True,
             "every_boundary_semantic_requires_boundary_coverage": True,
             "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+            "covered_claim_mapping_requires_whole_normalized_fragment_replica": True,
             "nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "nonstructural_nonassertive_body_forbidden_except_clarification": True,
             "all_inline_code_anchor_violations_reported_together": True,
+            "all_assertion_closure_violations_reported_together": True,
             "uncertain_reference_cannot_cover_affirmative_semantic": True,
             "excluded_or_unread_scope_does_not_establish_implementation_location": True,
             "container_context_is_inherited_by_each_fragment": True,
@@ -7306,8 +7355,11 @@ def _review_input_view(
             "complete_content_coverage_assessments_required": True,
             "content_coverage_defect_requires_bound_finding": True,
             "content_coverage_inline_code_anchor_exact_reference_required": True,
+            "content_coverage_claim_assertion_replica_required": True,
             "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+            "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification": True,
             "content_coverage_anchor_violations_aggregated": True,
+            "content_coverage_assertion_closure_violations_aggregated": True,
             "supported_claim_findings_forbidden": True,
             "defect_claim_finding_required": True,
             "approved_findings_must_be_empty": True,
@@ -8595,7 +8647,7 @@ def _review_output_with_unique_finding_codes(
     return normalized
 
 
-def _content_coverage_inline_code_anchor_violation_message(
+def _content_coverage_assertion_closure_violation_message(
     *,
     package: EngineeringAgentEvidencePackage,
     draft: EngineeringAgentAnswerDraft,
@@ -8609,9 +8661,25 @@ def _content_coverage_inline_code_anchor_violation_message(
         assessments,
         strict=True,
     ):
+        nonassertive_anchors = (
+            engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                content_unit,
+                assessment,
+            )
+        )
         violation_groups = (
             (
+                "COVERED_ASSERTION_REPLICA_ABSENT_FROM_MAPPED_CLAIM",
+                "fragment",
+                engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+                    draft,
+                    content_unit,
+                    assessment,
+                ),
+            ),
+            (
                 "COVERED_ANCHOR_ABSENT_FROM_MAPPED_REFERENCE",
+                "anchor",
                 engineering_agent_content_coverage_unmatched_inline_code_anchors(
                     package,
                     draft,
@@ -8621,35 +8689,45 @@ def _content_coverage_inline_code_anchor_violation_message(
             ),
             (
                 "NONSTRUCTURAL_NONASSERTIVE_TECHNICAL_ANCHOR",
-                engineering_agent_content_coverage_nonassertive_inline_code_anchors(
-                    content_unit,
-                    assessment,
+                "anchor",
+                nonassertive_anchors,
+            ),
+            (
+                "NONSTRUCTURAL_NONASSERTIVE_BODY",
+                "fragment",
+                (
+                    ()
+                    if nonassertive_anchors
+                    else engineering_agent_content_coverage_nonassertive_body_fragments(
+                        draft,
+                        content_unit,
+                        assessment,
+                    )
                 ),
             ),
         )
-        for violation_kind, anchors in violation_groups:
-            for anchor in anchors:
+        for violation_kind, value_field, values in violation_groups:
+            for value in values:
                 if (
                     len(diagnostics)
                     >= _MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTICS
                 ):
                     truncated = True
                     continue
-                bounded_anchor = anchor[
+                bounded_value = value[
                     :_MAXIMUM_CONTENT_COVERAGE_ANCHOR_DIAGNOSTIC_CHARACTERS
                 ]
-                diagnostics.append(
-                    {
-                        "content_unit_index": content_unit.content_unit_index,
-                        "violation": violation_kind,
-                        "anchor": bounded_anchor,
-                        "anchor_truncated": bounded_anchor != anchor,
-                    }
-                )
+                diagnostic = {
+                    "content_unit_index": content_unit.content_unit_index,
+                    "violation": violation_kind,
+                    value_field: bounded_value,
+                    f"{value_field}_truncated": bounded_value != value,
+                }
+                diagnostics.append(diagnostic)
     if not diagnostics:
         return None
     return (
-        "content coverage inline-code anchor violations: "
+        "content coverage assertion closure violations: "
         + json.dumps(
             {
                 "diagnostics": diagnostics,
@@ -8986,18 +9064,18 @@ def _decode_review_output(
                 ErrorCode.STRUCTURED_OUTPUT_INVALID,
                 "focused content coverage cannot defer exact Boundary coverage",
             )
-    anchor_violation_message = (
-        _content_coverage_inline_code_anchor_violation_message(
+    assertion_closure_violation_message = (
+        _content_coverage_assertion_closure_violation_message(
             package=request.package,
             draft=request.draft,
             content_units=expected_content_units,
             assessments=content_coverage_assessments,
         )
     )
-    if anchor_violation_message is not None:
+    if assertion_closure_violation_message is not None:
         raise DomainError(
             ErrorCode.STRUCTURED_OUTPUT_INVALID,
-            anchor_violation_message,
+            assertion_closure_violation_message,
         )
     expected_challenges = (
         project_engineering_agent_evidence_boundary_challenges(

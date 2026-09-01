@@ -385,7 +385,11 @@ def proposal(
             content=draft.content,
             claims=tuple(
                 EngineeringAgentClaimProposal.create(
-                    statement=claim.statement,
+                    statement=(
+                        f"{claim.statement}\n{draft.content}"
+                        if index == 0 and draft.content not in claim.statement
+                        else claim.statement
+                    ),
                     support_observation_ids=claim.support_observation_ids,
                     support_citation_refs=tuple(
                         observation.citation_refs[0]
@@ -394,7 +398,7 @@ def proposal(
                         if observation.citation_refs
                     ),
                 )
-                for claim in draft.claims
+                for index, claim in enumerate(draft.claims)
             ),
             boundary_observation_ids=draft.boundary_observation_ids,
         )

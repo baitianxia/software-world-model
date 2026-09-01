@@ -44,6 +44,13 @@ _MAXIMUM_DRAFT_CONTENT_UNITS = 128
 _MARKDOWN_HEADING_RE = re.compile(r"^(?P<marks>#{1,6})\s+(?P<title>.+)$")
 _MARKDOWN_STANDALONE_LABEL_RE = re.compile(r"^\*\*[^\n]+\*\*$")
 _MARKDOWN_INLINE_CODE_SPAN_RE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
+_MARKDOWN_LIST_ITEM_PREFIX_RE = re.compile(
+    r"^(?:(?:[-+*])|(?:[0-9]+[.)]))[ \t]+"
+)
+_MARKDOWN_PAIRED_BOLD_SPAN_RE = re.compile(
+    r"(?P<delimiter>\*\*|__)(?P<content>\S(?:.*?\S)?)"
+    r"(?P=delimiter)"
+)
 
 
 class EngineeringAgentToolOperation(str, Enum):
@@ -1720,6 +1727,61 @@ def _draft_content_unit_inline_code_anchors(
     )
 
 
+def _draft_assertion_replica_text(value: str) -> str:
+    """Remove only Markdown presentation bytes before exact assertion matching."""
+
+    normalized_lines: list[str] = []
+    for line in value.splitlines():
+        normalized = _MARKDOWN_LIST_ITEM_PREFIX_RE.sub(
+            "",
+            line.strip(),
+            count=1,
+        )
+        normalized = _MARKDOWN_INLINE_CODE_SPAN_RE.sub(
+            lambda match: match.group(1),
+            normalized,
+        )
+        normalized = _MARKDOWN_PAIRED_BOLD_SPAN_RE.sub(
+            lambda match: match.group("content"),
+            normalized,
+        )
+        if normalized:
+            normalized_lines.append(normalized)
+    return re.sub(r"\s+", " ", " ".join(normalized_lines)).strip()
+
+
+def engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+    draft: EngineeringAgentAnswerDraft,
+    content_unit: EngineeringAgentDraftContentUnit,
+    assessment: EngineeringAgentContentCoverageAssessment,
+) -> tuple[str, ...]:
+    """Return a visible assertion absent in full from every mapped Claim.
+
+    This is a conservative lexical floor, not a factual or semantic proof. It
+    applies only when a Reviewer maps the unit to one or more affirmative
+    Claims; pure Boundary coverage remains a semantic Review responsibility.
+    """
+
+    if (
+        not isinstance(draft, EngineeringAgentAnswerDraft)
+        or assessment.disposition
+        is not EngineeringAgentContentCoverageDisposition.COVERED
+        or not assessment.claim_indices
+    ):
+        return ()
+    assertion = _draft_assertion_replica_text(content_unit.fragment)
+    if not assertion:
+        return ()
+    claim_texts = tuple(
+        _draft_assertion_replica_text(draft.claims[index].statement)
+        for index in assessment.claim_indices
+        if 0 <= index < len(draft.claims)
+    )
+    if any(assertion in statement for statement in claim_texts):
+        return ()
+    return (assertion,)
+
+
 def engineering_agent_content_coverage_unmatched_inline_code_anchors(
     package: EngineeringAgentEvidencePackage,
     draft: EngineeringAgentAnswerDraft,
@@ -1774,6 +1836,31 @@ def engineering_agent_content_coverage_nonassertive_inline_code_anchors(
     ):
         return ()
     return _draft_content_unit_inline_code_anchors(content_unit)
+
+
+def engineering_agent_content_coverage_nonassertive_body_fragments(
+    draft: EngineeringAgentAnswerDraft,
+    content_unit: EngineeringAgentDraftContentUnit,
+    assessment: EngineeringAgentContentCoverageAssessment,
+) -> tuple[str, ...]:
+    """Return ordinary Answer/Limitation body mislabeled as non-assertive."""
+
+    if (
+        not isinstance(draft, EngineeringAgentAnswerDraft)
+        or assessment.disposition
+        is not EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE
+        or draft.response_kind
+        is EngineeringAgentResponseKind.CLARIFICATION
+    ):
+        return ()
+    fragment = content_unit.fragment.strip()
+    if (
+        _MARKDOWN_HEADING_RE.fullmatch(fragment) is not None
+        or _MARKDOWN_STANDALONE_LABEL_RE.fullmatch(fragment) is not None
+    ):
+        return ()
+    normalized = _draft_assertion_replica_text(fragment)
+    return (normalized,) if normalized else ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -4451,7 +4538,12 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                 assessment.content_unit_index
             ]
             if (
-                engineering_agent_content_coverage_unmatched_inline_code_anchors(
+                engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+                    draft,
+                    content_unit,
+                    assessment,
+                )
+                or engineering_agent_content_coverage_unmatched_inline_code_anchors(
                     package,
                     draft,
                     content_unit,
@@ -4461,10 +4553,15 @@ class ApplicationOwnedEngineeringAgentTurnExecutor(
                     content_unit,
                     assessment,
                 )
+                or engineering_agent_content_coverage_nonassertive_body_fragments(
+                    draft,
+                    content_unit,
+                    assessment,
+                )
             ):
                 raise DomainError(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "Reviewer content coverage has invalid exact inline-code anchor closure",
+                    "Reviewer content coverage has invalid assertion closure",
                 )
         requirement_coverage = proposal.requirement_coverage_assessment
         expected_requirement_coverage = (
@@ -4978,13 +5075,23 @@ def _engineering_agent_review_closes_boundary_challenges(
         )
         or any(
             (
-                engineering_agent_content_coverage_unmatched_inline_code_anchors(
+                engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+                    draft,
+                    content_unit,
+                    assessment,
+                )
+                or engineering_agent_content_coverage_unmatched_inline_code_anchors(
                     package,
                     draft,
                     content_unit,
                     assessment,
                 )
                 or engineering_agent_content_coverage_nonassertive_inline_code_anchors(
+                    content_unit,
+                    assessment,
+                )
+                or engineering_agent_content_coverage_nonassertive_body_fragments(
+                    draft,
                     content_unit,
                     assessment,
                 )
@@ -5504,7 +5611,9 @@ __all__ = [
     "SealedEngineeringAgentResponseControl",
     "engineering_agent_boundary_relevance_assessment_is_closed",
     "engineering_agent_boundary_relevance_assessment_matches_challenge",
+    "engineering_agent_content_coverage_nonassertive_body_fragments",
     "engineering_agent_content_coverage_nonassertive_inline_code_anchors",
+    "engineering_agent_content_coverage_unmatched_claim_assertion_replicas",
     "engineering_agent_content_coverage_unmatched_inline_code_anchors",
     "engineering_agent_evidence_boundary_assessment_matches_challenge",
     "project_engineering_agent_draft_boundaries",

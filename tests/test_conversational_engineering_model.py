@@ -311,6 +311,15 @@ def _with_review_turn_request(
         request.draft.content = "Fixture Draft content."
     if not hasattr(request.draft, "boundary_observation_ids"):
         request.draft.boundary_observation_ids = ()
+    if not hasattr(request.draft, "response_kind"):
+        if request.draft.claims:
+            request.draft.response_kind = EngineeringAgentResponseKind.ANSWER
+        elif request.draft.boundary_observation_ids:
+            request.draft.response_kind = EngineeringAgentResponseKind.LIMITATION
+        else:
+            request.draft.response_kind = (
+                EngineeringAgentResponseKind.CLARIFICATION
+            )
     if not hasattr(request, "focus"):
         request.focus = EngineeringAgentReviewFocus.COMPREHENSIVE
     if not hasattr(request, "package"):
@@ -391,8 +400,11 @@ def _content_coverage_challenge_payload(
         "every_affirmative_semantic_requires_claim_coverage": True,
         "every_boundary_semantic_requires_boundary_coverage": True,
         "every_inline_code_anchor_requires_exact_mapped_reference_lexeme": True,
+        "covered_claim_mapping_requires_whole_normalized_fragment_replica": True,
         "nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+        "nonstructural_nonassertive_body_forbidden_except_clarification": True,
         "all_inline_code_anchor_violations_reported_together": True,
+        "all_assertion_closure_violations_reported_together": True,
         "uncertain_reference_cannot_cover_affirmative_semantic": True,
         "excluded_or_unread_scope_does_not_establish_implementation_location": True,
         "container_context_is_inherited_by_each_fragment": True,
@@ -611,6 +623,15 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             "REPAIR_EVERY_LISTED_UNIT_AND_ANCHOR_TOGETHER_MAP_COVERED_ANCHORS_"
             "VERBATIM_OR_MARK_DEFECT_AND_NEVER_LABEL_NONSTRUCTURAL_ANCHOR_"
             "PROSE_NONASSERTIVE",
+        )
+        self.assertEqual(
+            _closed_contract_repair_directive(
+                "content coverage assertion closure violations: {}"
+            ),
+            "REPAIR_EVERY_LISTED_UNIT_TOGETHER_REPLICATE_EACH_COVERED_"
+            "AFFIRMATIVE_FRAGMENT_WHOLE_IN_ONE_MAPPED_CLAIM_PRESERVE_EXACT_"
+            "ANCHORS_SPLIT_MIXED_BOUNDARY_PROSE_AND_NEVER_LABEL_ORDINARY_"
+            "ANSWER_OR_LIMITATION_BODY_NONASSERTIVE",
         )
         self.assertEqual(
             _closed_contract_repair_directive(
@@ -842,8 +863,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
                     "content_coverage_inline_code_anchor_exact_reference_required": True,
+                    "content_coverage_claim_assertion_replica_required": True,
                     "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+                    "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification": True,
                     "content_coverage_anchor_violations_aggregated": True,
+                    "content_coverage_assertion_closure_violations_aggregated": True,
                     "challenge_assessment_ids_required_exact_order": (
                         "challenge-1",
                     ),
@@ -1215,7 +1239,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         output_preflight = json.loads(adapter.requests[0].messages[-1].content)
         self.assertEqual(
             output_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@33",
         )
         self.assertTrue(output_preflight["shape_only"])
         self.assertFalse(output_preflight["semantic_or_tool_authority"])
@@ -1682,7 +1706,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         repair_preflight = json.loads(adapter.requests[1].messages[-1].content)
         self.assertEqual(
             repair_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@33",
         )
         self.assertEqual(
             repair_preflight["format_repair"][
@@ -2532,7 +2556,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertEqual(
             reviewer_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@33",
         )
         self.assertEqual(
             reviewer_repair_payload["format_repair_policy"][
@@ -2585,7 +2609,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             content_challenge[
+                "covered_claim_mapping_requires_whole_normalized_fragment_replica"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
                 "nonstructural_nonassertive_inline_code_anchors_forbidden"
+            ]
+        )
+        self.assertTrue(
+            content_challenge[
+                "nonstructural_nonassertive_body_forbidden_except_clarification"
             ]
         )
         self.assertTrue(
@@ -2724,7 +2758,17 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         )
         self.assertTrue(
             reviewer_preflight["review_output_contract"][
+                "content_coverage_claim_assertion_replica_required"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
                 "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden"
+            ]
+        )
+        self.assertTrue(
+            reviewer_preflight["review_output_contract"][
+                "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification"
             ]
         )
         self.assertTrue(
@@ -3356,7 +3400,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         final_preflight = json.loads(adapter.requests[3].messages[-1].content)
         self.assertEqual(
             final_preflight["schema"],
-            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@32",
+            "ENGINEERING_AGENT_OUTPUT_PREFLIGHT@33",
         )
         self.assertIsNone(
             final_preflight["format_repair"][
@@ -6440,7 +6484,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                 model_call_ref="run123-unmatched-inline-code-anchor",
             )
         self.assertIn(
-            "content coverage inline-code anchor violations",
+            "content coverage assertion closure violations",
             str(caught.exception),
         )
         self.assertIn("src/main/resources", str(caught.exception))
@@ -6510,6 +6554,131 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
         self.assertIn("Mapper", diagnostic)
         self.assertIn("src/main/resources", diagnostic)
         self.assertNotIn("0504e86b", diagnostic)
+
+    def test_content_coverage_rejects_run126_broader_classification_replica(
+        self,
+    ) -> None:
+        content = (
+            "**分类说明**：步骤 1–5 是对 Mapper/Service 的调用"
+            "（调用方源码可见的数据库写入调用）。"
+        )
+        draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'a' * 32}"),
+            turn_id=StableId(f"turn_{'b' * 32}"),
+            work_state_digest=digest_of("run126-work"),
+            package_digest=digest_of("run126-package"),
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content=content,
+            claims=(
+                SimpleNamespace(
+                    statement=(
+                        "步骤 1–5 是调用方源码可见的本地调用；"
+                        "数据库实际提交无法确认。"
+                    ),
+                ),
+            ),
+            boundary_observation_ids=(),
+            digest=digest_of("run126-draft"),
+        )
+        request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=draft,
+                package=SimpleNamespace(
+                    support_observations=(),
+                    boundary_observations=(),
+                ),
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+            )
+        )
+        output = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "COVERED",
+                    "claim_indices": [0],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                }
+            ],
+            "requirement_coverage_assessment": (
+                _requirement_coverage_payload()
+            ),
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as caught:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(output, ensure_ascii=False),
+                request=request,
+                model_call_ref="run126-broader-classification",
+            )
+        diagnostic = str(caught.exception)
+        self.assertIn(
+            "COVERED_ASSERTION_REPLICA_ABSENT_FROM_MAPPED_CLAIM",
+            diagnostic,
+        )
+        self.assertIn("数据库写入调用", diagnostic)
+
+    def test_content_coverage_rejects_plain_nonassertive_answer_body(self) -> None:
+        draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId(f"agent_answer_{'c' * 32}"),
+            turn_id=StableId(f"turn_{'d' * 32}"),
+            work_state_digest=digest_of("plain-nonassertive-work"),
+            package_digest=digest_of("plain-nonassertive-package"),
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content="步骤 1–5 是数据库写入调用。",
+            claims=(
+                SimpleNamespace(statement="步骤 1–5 是数据库写入调用。"),
+            ),
+            boundary_observation_ids=(),
+            digest=digest_of("plain-nonassertive-draft"),
+        )
+        request = _with_review_turn_request(
+            SimpleNamespace(
+                draft=draft,
+                package=SimpleNamespace(
+                    support_observations=(),
+                    boundary_observations=(),
+                ),
+                focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
+            )
+        )
+        output = {
+            "decision": "APPROVED",
+            "claim_assessments": [
+                {"claim_index": 0, "verdict": "SUPPORTED"}
+            ],
+            "content_coverage_assessments": [
+                {
+                    "content_unit_index": 0,
+                    "disposition": "NON_ASSERTIVE",
+                    "claim_indices": [],
+                    "boundary_observation_ids": [],
+                    "finding_code": None,
+                }
+            ],
+            "requirement_coverage_assessment": (
+                _requirement_coverage_payload()
+            ),
+            "evidence_boundary_assessments": [],
+            "boundary_relevance_assessments": [],
+            "findings": [],
+        }
+        with self.assertRaises(DomainError) as caught:
+            decode_engineering_agent_review_output(
+                output_text=json.dumps(output, ensure_ascii=False),
+                request=request,
+                model_call_ref="plain-nonassertive-answer-body",
+            )
+        self.assertIn(
+            "NONSTRUCTURAL_NONASSERTIVE_BODY",
+            str(caught.exception),
+        )
 
     def test_structural_caller_challenge_requires_exact_focused_assessment(self) -> None:
         turn_id = StableId(f"turn_{'1' * 32}")
@@ -7350,7 +7519,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
             turn_id=turn_id,
             work_state_digest=digest_of("boundary-relevance-work"),
             package_digest=package_digest,
-            response_kind=EngineeringAgentResponseKind.ANSWER,
+            response_kind=EngineeringAgentResponseKind.CLARIFICATION,
             content="业务流程见已确认调用顺序。",
             claims=(),
             boundary_observation_ids=(),
@@ -7709,8 +7878,11 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     "complete_content_coverage_assessments_required": True,
                     "content_coverage_defect_requires_bound_finding": True,
                     "content_coverage_inline_code_anchor_exact_reference_required": True,
+                    "content_coverage_claim_assertion_replica_required": True,
                     "content_coverage_nonstructural_nonassertive_inline_code_anchors_forbidden": True,
+                    "content_coverage_nonstructural_nonassertive_body_forbidden_except_clarification": True,
                     "content_coverage_anchor_violations_aggregated": True,
+                    "content_coverage_assertion_closure_violations_aggregated": True,
                     "requirement_coverage_assessment_required": True,
                     "requirement_coverage_current_user_requirement_exact_copy_required": True,
                     "requirement_coverage_approval_requires_fully_addressed": True,
@@ -8144,6 +8316,7 @@ class ConversationalEngineeringModelTests(unittest.TestCase):
                     claims=(),
                     content="请明确登录入口。",
                     boundary_observation_ids=(),
+                    response_kind=EngineeringAgentResponseKind.CLARIFICATION,
                 ),
                 focus=EngineeringAgentReviewFocus.COMPREHENSIVE,
                 package=SimpleNamespace(boundary_observations=()),

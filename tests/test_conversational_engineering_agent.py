@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from software_world_model.application_services.conversational_engineering_agent import (
     ApplicationOwnedEngineeringAgentTurnExecutor,
+    EngineeringAgentAnswerDraft,
     EngineeringAgentBoundaryRelevanceAssessment,
     EngineeringAgentBoundaryRelevanceAssessmentDisposition,
     EngineeringAgentBoundaryRelevanceChallenge,
@@ -44,7 +45,9 @@ from software_world_model.application_services.conversational_engineering_agent 
     InMemoryEngineeringAgentWorkStateRepository,
     SealedEngineeringAgentResponseControl,
     engineering_agent_boundary_relevance_assessment_matches_challenge,
+    engineering_agent_content_coverage_nonassertive_body_fragments,
     engineering_agent_content_coverage_nonassertive_inline_code_anchors,
+    engineering_agent_content_coverage_unmatched_claim_assertion_replicas,
     engineering_agent_content_coverage_unmatched_inline_code_anchors,
     project_engineering_agent_boundary_relevance_challenges,
     project_engineering_agent_draft_content_units,
@@ -165,12 +168,14 @@ def _proposal(
         observations = {
             item.observation_id: item for item in invocation.observations
         }
-        draft = EngineeringAgentDraftProposal.create(
-            response_kind=draft.response_kind,
-            content=draft.content,
-            claims=tuple(
+        replicated_claims = []
+        for index, claim in enumerate(draft.claims):
+            statement = claim.statement
+            if index == 0 and draft.content not in statement:
+                statement = f"{statement}\n{draft.content}"
+            replicated_claims.append(
                 EngineeringAgentClaimProposal.create(
-                    statement=claim.statement,
+                    statement=statement,
                     support_observation_ids=claim.support_observation_ids,
                     support_citation_refs=tuple(
                         observation.citation_refs[0]
@@ -179,8 +184,11 @@ def _proposal(
                         if observation.citation_refs
                     ),
                 )
-                for claim in draft.claims
-            ),
+            )
+        draft = EngineeringAgentDraftProposal.create(
+            response_kind=draft.response_kind,
+            content=draft.content,
+            claims=tuple(replicated_claims),
             boundary_observation_ids=draft.boundary_observation_ids,
         )
     return EngineeringAgentWorkStateProposal.create(
@@ -711,6 +719,133 @@ class ConversationalEngineeringAgentTests(unittest.TestCase):
         self.assertEqual(
             engineering_agent_content_coverage_nonassertive_inline_code_anchors(
                 structural_heading,
+                nonassertive,
+            ),
+            (),
+        )
+
+    def test_content_coverage_requires_whole_assertion_replica_in_mapped_claim(
+        self,
+    ) -> None:
+        unit = project_engineering_agent_draft_content_units(
+            "1. **分类说明**：步骤 1–5 是数据库写入调用，含 "
+            "`orderMapper.insert`。"
+        )[0]
+        assessment = EngineeringAgentContentCoverageAssessment.create(
+            content_unit_index=0,
+            disposition=EngineeringAgentContentCoverageDisposition.COVERED,
+            claim_indices=(0,),
+            finding_code=None,
+        )
+        narrower = EngineeringAgentAnswerDraft(
+            answer_id=StableId("agent_answer_" + "1" * 32),
+            turn_id=StableId("turn_" + "2" * 32),
+            work_state_digest=digest_of("replica-work"),
+            package_digest=digest_of("replica-package"),
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content=unit.fragment,
+            claims=(
+                SimpleNamespace(
+                    statement="步骤 1–5 是调用方源码可见的本地调用。"
+                ),
+            ),
+            boundary_observation_ids=(),
+            digest=digest_of("narrower-replica-draft"),
+        )
+        self.assertEqual(
+            engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+                narrower,
+                unit,
+                assessment,
+            ),
+            (
+                "分类说明：步骤 1–5 是数据库写入调用，含 "
+                "orderMapper.insert。",
+            ),
+        )
+
+        exact = EngineeringAgentAnswerDraft(
+            answer_id=StableId("agent_answer_" + "3" * 32),
+            turn_id=StableId("turn_" + "2" * 32),
+            work_state_digest=digest_of("replica-work"),
+            package_digest=digest_of("replica-package"),
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content=unit.fragment,
+            claims=(
+                SimpleNamespace(
+                    statement=(
+                        "分类说明：步骤 1–5 是数据库写入调用，含 "
+                        "orderMapper.insert。"
+                        "该分类必须由所选证据直接支持。"
+                    )
+                ),
+            ),
+            boundary_observation_ids=(),
+            digest=digest_of("exact-replica-draft"),
+        )
+        self.assertEqual(
+            engineering_agent_content_coverage_unmatched_claim_assertion_replicas(
+                exact,
+                unit,
+                assessment,
+            ),
+            (),
+        )
+
+    def test_nonassertive_body_is_limited_to_structure_or_clarification(self) -> None:
+        nonassertive = EngineeringAgentContentCoverageAssessment.create(
+            content_unit_index=0,
+            disposition=EngineeringAgentContentCoverageDisposition.NON_ASSERTIVE,
+            finding_code=None,
+        )
+        body = project_engineering_agent_draft_content_units(
+            "步骤 1–5 是数据库写入调用。"
+        )[0]
+        answer_draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId("agent_answer_" + "4" * 32),
+            turn_id=StableId("turn_" + "5" * 32),
+            work_state_digest=digest_of("nonassertive-work"),
+            package_digest=digest_of("nonassertive-package"),
+            response_kind=EngineeringAgentResponseKind.ANSWER,
+            content=body.fragment,
+            claims=(),
+            boundary_observation_ids=(),
+            digest=digest_of("nonassertive-answer-draft"),
+        )
+        self.assertEqual(
+            engineering_agent_content_coverage_nonassertive_body_fragments(
+                answer_draft,
+                body,
+                nonassertive,
+            ),
+            ("步骤 1–5 是数据库写入调用。",),
+        )
+        heading = project_engineering_agent_draft_content_units(
+            "## 数据库写入"
+        )[0]
+        self.assertEqual(
+            engineering_agent_content_coverage_nonassertive_body_fragments(
+                answer_draft,
+                heading,
+                nonassertive,
+            ),
+            (),
+        )
+        clarification_draft = EngineeringAgentAnswerDraft(
+            answer_id=StableId("agent_answer_" + "6" * 32),
+            turn_id=StableId("turn_" + "5" * 32),
+            work_state_digest=digest_of("nonassertive-work"),
+            package_digest=digest_of("nonassertive-package"),
+            response_kind=EngineeringAgentResponseKind.CLARIFICATION,
+            content=body.fragment,
+            claims=(),
+            boundary_observation_ids=(),
+            digest=digest_of("nonassertive-clarification-draft"),
+        )
+        self.assertEqual(
+            engineering_agent_content_coverage_nonassertive_body_fragments(
+                clarification_draft,
+                body,
                 nonassertive,
             ),
             (),
