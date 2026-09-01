@@ -224,7 +224,7 @@ branch_convergence_control:
   schema: SINGLE_DEVELOPMENT_LANE@1
   owner_decision_ref: ITER-010-PDR-014
   owner_finding_ref: FINDING-010-269
-  trusted_product_baseline_commit: 268b4546a893ff346da34d4f4d06057d860e2aa3
+  trusted_product_baseline_commit: b3c19ff31fcc8e498bcbaf9c36f2434e86570e75
   development_branch: codex/development
   supervision_branch: codex/supervision
   allowed_active_branches:
@@ -233,8 +233,8 @@ branch_convergence_control:
     - codex/supervision
   legacy_branch_policy: archive-tags-only
   dirty_candidate_policy: archive-only-selective-reapply-after-independent-evidence
-  active_phase: B
-  active_phase_status: REWORK
+  active_phase: C
+  active_phase_status: ACTIVE
   phase_state_owner: codex/supervision
   developer_phase_self_report_accepted: false
   supervision_interval_minutes: 30
@@ -242,13 +242,17 @@ branch_convergence_control:
   supervision_heartbeat_required: true
   supervision_assessment_required: true
   supervision_target_mismatch_action: repair-supervision-binding-without-stopping-development
-  current_owner_layer: cognition-retrieval
-  current_objective: declaration-inheritance-annotation-and-implementation-retrieval-closure
+  phase_b_advance_product_commit: b3c19ff31fcc8e498bcbaf9c36f2434e86570e75
+  phase_b_advance_supervision_commit: 7615bffccaf3df3b299304a52b1218f8b4680585
+  phase_b_advance_report_digest: sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66
+  current_owner_layer: cognition-agent-browser-integration
+  current_objective: same-agent-cognition-source-answer-review-browser-vertical-slice
   current_candidate_evidence_ref: FINDING-010-270
-  current_candidate_gate: clean-exact-commit-independent-five-task-rerun
-  current_exit_case_id: V-WORLD-MODEL-COGNITION-001
-  current_independent_task_count: 5
-  phase_c_or_d_work_allowed: false
+  current_candidate_gate: first-complete-operable-browser-chain-then-three-heterogeneous-plus-followup
+  current_exit_case_id: V-INTEGRATED-ALPHA-001
+  current_independent_task_count: 3-plus-one-followup
+  phase_c_work_allowed: true
+  phase_d_work_allowed: false
 
 direction_quality_gate:
   schema: POST_EXPERIENCE_STRONG_BASELINE_GATE@1

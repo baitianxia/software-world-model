@@ -32,16 +32,17 @@ preflight 协议和未提交 `@40` candidate 只保留历史证据，不得继�
 
 ### 当前执行卡（分支收敛后唯一有效）
 
-- 可信产品基线：`268b4546a893ff346da34d4f4d06057d860e2aa3`；唯一开发分支：`codex/development`；唯一监督分支：
+- 可信产品基线：`b3c19ff31fcc8e498bcbaf9c36f2434e86570e75`（Phase B independent `ADVANCE` 锚点）；唯一开发分支：
+  `codex/development`；唯一监督分支：
   `codex/supervision`；`main` 只接收通过验收的成果。
-- 当前阶段：Phase B `REWORK`。Phase A 仅为诊断完成，Phase C/D 未激活；历史 `5/5` 世界模型报告不足以证明真实声明/继承检索闭包。
-- 唯一下一任务：让 method/type 认知查询通用地返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，并通过五个由监督方持有、未参与
-  实现的独立任务。
-- 当前 candidate 已按 `FINDING-010-270` 在 artifact construction/query 层形成上述闭包，并通过 dirty candidate 的独立五题；它仍须先形成
-  clean product commit 并由监督方在该 exact commit 上重建、复验和决定是否 `ADVANCE`，开发侧不得据此自行启动 Phase C。
-- 当前禁止：Reviewer/Provider recovery、回答 Prompt/Schema、Phase C/D 验收器和已知题专用规则。归档内容只能在对应阶段重新取证后选择性
-  引入。
-- Phase 只能由 `codex/supervision` 针对 clean commit 和 exact Source 产生 `ADVANCE`；开发分支的自报、自改文档或本地通过不能晋级。
+- 当前阶段：Phase C `ACTIVE`。Phase B clean commit `b3c19ff31fcc8e498bcbaf9c36f2434e86570e75` 已由
+  `codex/supervision@7615bffccaf3df3b299304a52b1218f8b4680585` 独立给出 `ADVANCE → C`；clean held report digest 为
+  `sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66`。
+- 唯一下一任务：把 Phase B cognition 工具接入 Phase A 的同一个 Agent，贯通 cognition→Source Gap→Answer/Citation→fresh review→Web；用
+  三个异质问题和一个语义追问验证，首次完整可操作链立即交付。
+- 当前禁止：Provider recovery、回答 Prompt/Schema、Phase D 验收器和已知题专用规则。fresh Reviewer 只实现 Phase C 所需的独立技术审核
+  职责；归档内容不能直接恢复。
+- Phase D 仍只能由后续独立证据推进；开发分支不能把 Phase C 可运行或局部通过自报为 MVP。
 - 固定工作区为仓库忽略目录 `var/workspaces/development` 与 `var/workspaces/supervision`。监督每次候选变化及最长每 30 分钟写 heartbeat 和
   assessment，并在偏航时直接纠正唯一下一动作；监督失联只触发监督恢复，不停止开发。
 
@@ -207,7 +208,7 @@ Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基�
 `FINDING-010-263—265` 保存 Phase C 首个真实 Browser 的事务漏判、cognition ranking 替换实验，以及 run-005 暴露的 source-native lexical
 query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口；`FINDING-010-269` 保存分支
 增殖、监督目标错绑和开发自报晋级的系统性执行缺口；`FINDING-010-270` 保存显式 Source-bound declaration/implementation 认知闭包及其
-dirty candidate 独立证据，但不代替 clean `ADVANCE` Gate。后续实现若改变系统边界、认知
+dirty candidate 独立证据；其 clean commit 已由监督分支独立 `ADVANCE`，从而激活 Phase C。后续实现若改变系统边界、认知
 模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 

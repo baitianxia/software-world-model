@@ -34,10 +34,12 @@ ITER-010 的产品目标和总体架构不变，但 PDR-013 的执行计划已�
 4. 同一浏览器 Chat 中的自然答案、真实 Citation、fresh 独立技术审核和多轮上下文；
 5. same-Agent source-only、same-Agent World Model + source 与 actual current Codex 的独立比较。
 
-Phase A 的 source-only Browser 诊断基线保留为已完成的诊断证据。Phase B 保持 `REWORK`：此前 `5/5` 只能证明首版认知工件可查询，后续真实
-事务问题已反证其声明/继承闭包不足，世界模型虽含接口 `@Transactional`，有界检索却没有稳定返回；因此该证据不能推动 Phase B 或 C。
-Phase C/D 均未激活。未提交的 Reviewer Agent、Provider recovery 和自行晋级文档只作为可恢复归档，必须在对应阶段重新取证后才能选择性
-引入，不能直接进入产品基线。
+Phase A 的 source-only Browser 诊断基线保留为已完成的诊断证据。Phase B 的首版认知证据曾因声明/继承闭包不足进入 `REWORK`；该缺口已由
+`FINDING-010-270` 的 clean product commit `b3c19ff31fcc8e498bcbaf9c36f2434e86570e75` 修复。独立监督在
+`codex/supervision@7615bffccaf3df3b299304a52b1218f8b4680585` 对同一 exact Source 重建 artifact，并以 report
+`sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66` 给出 `ADVANCE → C`。Phase C 现已激活，
+Phase D 继续锁定。Reviewer 只按 Phase C 的 fresh review 最小职责接入；Provider recovery 和其他归档内容仍须在对应阶段重新取证后才能
+选择性引入，不能直接恢复到产品线。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
@@ -46,15 +48,14 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 
 - 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
-- 当前唯一产品任务是 Phase B 的通用声明/继承认知闭包：让 method/type 查询稳定返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，
-  并由监督方持有的五个未参与实现任务独立验证 search/traverse/detail 与跨问题复用。
-- `FINDING-010-270` 的候选已把 type `extends/implements`、method implementation→interface/parent declaration、双方 Source、annotations 和
-  page-level Coverage/Conflict/Unknown 形成显式 artifact/query 契约；开发侧原问题加两个异质问题及监督侧 dirty 五题均已通过。当前仍保持
-  `REWORK`，因为监督方尚须在最终 clean exact product commit 上重建并独立复验后才可给出 `ADVANCE`。
-- 开发方不得自行推进 Phase；只有 `codex/supervision` 对当前 clean commit、exact Source 和独立原始证据给出 `ADVANCE` 才能进入 Phase C。
+- Phase B 已由监督方在 clean exact commit 上独立 `ADVANCE`；该结论不由开发分支修改或重新解释。
+- 当前唯一产品任务是 Phase C：把同一份已验证 cognition artifact 接入 Phase A 的同一个轻量 Agent，让 cognition→按 Gap 读 Source→自然
+  Answer/Citation→fresh review→loopback Web 形成最小完整链。用三个异质问题和一个语义追问验证，首次可操作时立即交付地址。
+- Phase D、完整质量 Gate、Provider recovery 和归档协议扩张仍禁止；Phase C 若失败，按最早 knowledge/integration/Agent/review/Web 层做通用
+  修复，不回写题面规则。
 
-Phase B 期间不继续 Reviewer、Provider recovery、回答 Prompt/Schema 或 Phase C/D 验收器。它们不是删除，而是留在归档中，等最早缺失能力
-闭合后按新证据选择性恢复。普通测试、模型、答案或网络失败仍不暂停开发、不重复申请授权。
+Phase C 只启用集成纵切所需的 fresh Reviewer，不继续 Provider recovery、回答 Prompt/Schema 或 Phase D 验收器。普通测试、模型、答案或
+网络失败仍不暂停开发、不重复申请授权。
 
 监督每 30 分钟以及每次 HEAD/工作树/运行证据变化时检查一次。监督必须同时写入可观察 heartbeat 和独立 assessment；目标分支、工作树或
 baseline 不匹配时只修复监督绑定，不能把开发误判为完成、暂停或重新授权。
@@ -78,4 +79,4 @@ baseline 不匹配时只修复监督绑定，不能把开发误判为完成、�
 Conversation、Turn、问题、候选、定向测试和外调不重复申请授权；每次外调仍自动生成 exact runtime record。只有私有/新 Source、新接收方
 或账户、扩大披露/预算、外部写入、非 loopback、Production 或破坏性操作才属于 scope delta。
 
-当前状态：`AUTHORIZED / REWORK / PDR-014 CAPABILITY-SEPARATED RECOVERY / NON-PRODUCTION`。
+当前状态：`AUTHORIZED / PHASE C ACTIVE / PDR-014 INTEGRATED BROWSER ALPHA / NON-PRODUCTION`。
