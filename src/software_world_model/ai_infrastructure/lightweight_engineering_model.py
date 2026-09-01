@@ -82,7 +82,14 @@ LIGHTWEIGHT_STEP_OUTPUT_SCHEMA = OutputSchemaDefinition(
             "cognition_index": _NULLABLE_INTEGER,
             "relation_kind": {
                 "type": ["string", "null"],
-                "enum": ["CONTAINS", "IMPORTS", "INHERITS", "INVOKES", None],
+                "enum": [
+                    "CONTAINS",
+                    "IMPORTS",
+                    "INHERITS",
+                    "IMPLEMENTS",
+                    "INVOKES",
+                    None,
+                ],
             },
             "direction": {
                 "type": ["string", "null"],

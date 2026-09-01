@@ -4427,6 +4427,19 @@
       "validation/iteration_010_mvp"
     ]
   },
+  "FINDING-010-270": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-270.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "src/software_world_model/application_services/java_capability_cognition.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py",
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

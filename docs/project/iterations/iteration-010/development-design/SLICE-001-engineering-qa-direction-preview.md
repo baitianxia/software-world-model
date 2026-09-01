@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -37,6 +37,8 @@ preflight 协议和未提交 `@40` candidate 只保留历史证据，不得继�
 - 当前阶段：Phase B `REWORK`。Phase A 仅为诊断完成，Phase C/D 未激活；历史 `5/5` 世界模型报告不足以证明真实声明/继承检索闭包。
 - 唯一下一任务：让 method/type 认知查询通用地返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，并通过五个由监督方持有、未参与
   实现的独立任务。
+- 当前 candidate 已按 `FINDING-010-270` 在 artifact construction/query 层形成上述闭包，并通过 dirty candidate 的独立五题；它仍须先形成
+  clean product commit 并由监督方在该 exact commit 上重建、复验和决定是否 `ADVANCE`，开发侧不得据此自行启动 Phase C。
 - 当前禁止：Reviewer/Provider recovery、回答 Prompt/Schema、Phase C/D 验收器和已知题专用规则。归档内容只能在对应阶段重新取证后选择性
   引入。
 - Phase 只能由 `codex/supervision` 针对 clean commit 和 exact Source 产生 `ADVANCE`；开发分支的自报、自改文档或本地通过不能晋级。
@@ -204,7 +206,8 @@ Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基�
 `FINDING-010-256` 保存投入结构和计划失效的 Git 证据；`FINDING-010-257` 保存成熟 harness、Agent 工具和图认知研究揭示的能力缺口；
 `FINDING-010-263—265` 保存 Phase C 首个真实 Browser 的事务漏判、cognition ranking 替换实验，以及 run-005 暴露的 source-native lexical
 query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口；`FINDING-010-269` 保存分支
-增殖、监督目标错绑和开发自报晋级的系统性执行缺口。后续实现若改变系统边界、认知
+增殖、监督目标错绑和开发自报晋级的系统性执行缺口；`FINDING-010-270` 保存显式 Source-bound declaration/implementation 认知闭包及其
+dirty candidate 独立证据，但不代替 clean `ADVANCE` Gate。后续实现若改变系统边界、认知
 模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 

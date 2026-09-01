@@ -298,7 +298,7 @@ class _CognitionFirstModel(_Model):
                 **common,
                 plan="Find the entry in reusable cognition first.",
                 action=LightweightAgentAction.SEARCH_COGNITION,
-                query="CheckoutController",
+                query="CheckoutServiceImpl",
                 read_index=None,
                 cursor=None,
             )
@@ -310,7 +310,7 @@ class _CognitionFirstModel(_Model):
                 query=None,
                 read_index=None,
                 cognition_index=request.cognition_candidates[0].cognition_index,
-                relation_kind=CognitionRelationKind.INVOKES,
+                relation_kind=CognitionRelationKind.IMPLEMENTS,
                 direction=CognitionDirection.OUTGOING,
                 maximum_depth=1,
                 cursor=None,
@@ -369,8 +369,7 @@ def _cognition() -> CapabilityCognitionIndex:
             ),
         ),
         source_files={
-            "app/src/main/java/com/example/CheckoutController.java": b"""
-package com.example;
+            "app/src/main/java/com/example/CheckoutController.java": b"""package com.example;
 public class CheckoutController {
     private CheckoutService checkoutService;
     public String checkout(String input) {
@@ -379,9 +378,16 @@ public class CheckoutController {
     }
 }
 """,
-            "app/src/main/java/com/example/CheckoutService.java": b"""
-package com.example;
-public interface CheckoutService { String checkout(String input); }
+            "app/src/main/java/com/example/CheckoutService.java": b"""package com.example;
+public interface CheckoutService {
+    String checkout(String input);
+}
+""",
+            "app/src/main/java/com/example/CheckoutServiceImpl.java": b"""package com.example;
+public class CheckoutServiceImpl implements CheckoutService {
+    @Override
+    public String checkout(String input) { return input; }
+}
 """,
         },
     )
@@ -436,6 +442,7 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
         ]
         self.assertEqual(len(cognition_events), 2)
         self.assertTrue(all(item["snapshot_digest"] for item in cognition_events))
+        self.assertGreater(cognition_events[1]["item_count"], 0)
 
     def test_two_questions_and_followup_replan_from_source_observations(self) -> None:
         binding = _binding()

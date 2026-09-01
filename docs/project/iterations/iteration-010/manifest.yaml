@@ -244,6 +244,8 @@ branch_convergence_control:
   supervision_target_mismatch_action: repair-supervision-binding-without-stopping-development
   current_owner_layer: cognition-retrieval
   current_objective: declaration-inheritance-annotation-and-implementation-retrieval-closure
+  current_candidate_evidence_ref: FINDING-010-270
+  current_candidate_gate: clean-exact-commit-independent-five-task-rerun
   current_exit_case_id: V-WORLD-MODEL-COGNITION-001
   current_independent_task_count: 5
   phase_c_or_d_work_allowed: false
@@ -2148,7 +2150,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:5d18b154c0dd18b9e62abc3814d71b27650df797d1e38bf9d89c500045254579
+  system_contract_set_digest: sha256:8833859cb9357dd063dc112a57bcd4c6c0b27009f749f8b285d61095fa7c5764
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

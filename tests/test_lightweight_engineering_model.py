@@ -42,6 +42,9 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     LightweightReviewRequest,
 )
 from software_world_model.cross_cutting import StableId, digest_of
+from software_world_model.knowledge_engine.capability_cognition import (
+    CognitionRelationKind,
+)
 from software_world_model.infrastructure import (
     SqliteDatabase,
     SqliteModelGatewayRepository,
@@ -401,6 +404,34 @@ class LightweightEngineeringModelTest(unittest.TestCase):
         self.assertIn(
             "Application-issued numeric cognition_index",
             adapter.requests[0].messages[0].content,
+        )
+
+    def test_cognition_action_schema_accepts_typed_implements_traversal(self) -> None:
+        model, _, _, request, _, _ = self._runtime(
+            [
+                {
+                    "goal": "Find the implementation contract.",
+                    "plan": "Traverse the selected declaration to implementations.",
+                    "action": "TRAVERSE_RELATIONS",
+                    "query": None,
+                    "read_index": None,
+                    "cognition_index": 1,
+                    "relation_kind": "IMPLEMENTS",
+                    "direction": "INCOMING",
+                    "maximum_depth": 1,
+                    "cursor": None,
+                    "response_kind": None,
+                    "answer": None,
+                    "citations": [],
+                }
+            ]
+        )
+
+        decision = model.decide(self._step(request)).decision
+
+        self.assertIs(
+            decision.relation_kind,
+            CognitionRelationKind.IMPLEMENTS,
         )
 
 

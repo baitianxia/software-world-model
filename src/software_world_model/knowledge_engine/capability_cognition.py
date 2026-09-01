@@ -65,6 +65,7 @@ class CognitionRelationKind(str, Enum):
     CONTAINS = "CONTAINS"
     IMPORTS = "IMPORTS"
     INHERITS = "INHERITS"
+    IMPLEMENTS = "IMPLEMENTS"
     INVOKES = "INVOKES"
 
 
@@ -505,6 +506,7 @@ class CognitionPage:
     total: int
     next_cursor: int | None
     snapshot_digest: Digest
+    snapshot_epistemics: CognitionEpistemics
 
     def to_payload(self) -> dict[str, object]:
         return {
@@ -513,6 +515,7 @@ class CognitionPage:
             "total": self.total,
             "next_cursor": self.next_cursor,
             "snapshot_digest": self.snapshot_digest.value,
+            "snapshot_epistemics": self.snapshot_epistemics.to_payload(),
         }
 
 
@@ -523,6 +526,15 @@ class CapabilityCognitionIndex:
         if not isinstance(snapshot, CapabilityCognitionSnapshot):
             raise DomainError(ErrorCode.INVALID_ARGUMENT, "cognition index needs a snapshot")
         self.snapshot = snapshot
+        self._snapshot_epistemics = (
+            CognitionEpistemics(
+                CognitionCoverage.PARTIAL,
+                conflicts=snapshot.conflicts,
+                unknowns=snapshot.unknowns,
+            )
+            if snapshot.conflicts or snapshot.unknowns or snapshot.partial_file_count
+            else CognitionEpistemics(CognitionCoverage.COMPLETE)
+        )
         self._entities = {item.entity_id: item for item in snapshot.entities}
         self._relations = {item.relation_id: item for item in snapshot.relations}
         self._behaviors_by_method: dict[StableId, tuple[CognitionBehavior, ...]] = {}
@@ -546,46 +558,32 @@ class CapabilityCognitionIndex:
             token_frequency.update(searchable_tokens)
             self._search_documents[entity.entity_id] = searchable_tokens
         self._search_token_frequency = dict(token_frequency)
-        inherited_types: dict[StableId, tuple[StableId, ...]] = {}
-        for entity in snapshot.entities:
-            if entity.kind is not CognitionEntityKind.TYPE:
+        method_contract_companions: dict[StableId, dict[StableId, CognitionEntity]] = {}
+        for relation in snapshot.relations:
+            if (
+                relation.kind is not CognitionRelationKind.IMPLEMENTS
+                or relation.object_id is None
+            ):
                 continue
-            inherited_types[entity.entity_id] = tuple(
-                relation.object_id
-                for relation in snapshot.relations
-                if relation.kind is CognitionRelationKind.INHERITS
-                and relation.subject_id == entity.entity_id
-                and relation.object_id is not None
+            subject = self._entities[relation.subject_id]
+            object_entity = self._entities[relation.object_id]
+            if (
+                subject.kind is not CognitionEntityKind.METHOD
+                or object_entity.kind is not CognitionEntityKind.METHOD
+            ):
+                continue
+            method_contract_companions.setdefault(subject.entity_id, {})[
+                object_entity.entity_id
+            ] = object_entity
+            method_contract_companions.setdefault(object_entity.entity_id, {})[
+                subject.entity_id
+            ] = subject
+        self._method_contract_companions = {
+            entity_id: tuple(
+                sorted(values.values(), key=lambda item: item.entity_id.value)
             )
-        methods_by_parent_and_signature = {
-            (entity.parent_id, _method_signature(entity)): entity
-            for entity in snapshot.entities
-            if entity.kind is CognitionEntityKind.METHOD
-            and entity.parent_id is not None
+            for entity_id, values in method_contract_companions.items()
         }
-        declaration_companions: dict[StableId, tuple[CognitionEntity, ...]] = {}
-        for entity in snapshot.entities:
-            if entity.kind is not CognitionEntityKind.METHOD or entity.parent_id is None:
-                continue
-            companions: list[CognitionEntity] = []
-            frontier = list(inherited_types.get(entity.parent_id, ()))
-            seen: set[StableId] = set()
-            while frontier:
-                inherited_type = frontier.pop(0)
-                if inherited_type in seen:
-                    continue
-                seen.add(inherited_type)
-                companion = methods_by_parent_and_signature.get(
-                    (inherited_type, _method_signature(entity))
-                )
-                if companion is not None:
-                    companions.append(companion)
-                frontier.extend(inherited_types.get(inherited_type, ()))
-            if companions:
-                declaration_companions[entity.entity_id] = tuple(
-                    sorted(companions, key=lambda item: item.entity_id.value)
-                )
-        self._declaration_companions = declaration_companions
 
     def search(
         self,
@@ -637,19 +635,8 @@ class CapabilityCognitionIndex:
             if entity.entity_id not in selected_ids:
                 expanded.append(item)
                 selected_ids.add(entity.entity_id)
-            own_counts = self._counts_for_tokens(
-                query_tokens,
-                self._search_documents[entity.entity_id],
-            )
-            for companion in self._declaration_companions.get(entity.entity_id, ()):
+            for companion in self._method_contract_companions.get(entity.entity_id, ()):
                 if companion.entity_id in selected_ids:
-                    continue
-                combined_counts = self._counts_for_tokens(
-                    query_tokens,
-                    self._search_documents[entity.entity_id]
-                    | self._search_documents[companion.entity_id],
-                )
-                if combined_counts == own_counts:
                     continue
                 companion_exact, companion_prefix = self._counts_for_tokens(
                     query_tokens,
@@ -670,7 +657,14 @@ class CapabilityCognitionIndex:
                 selected_ids.add(companion.entity_id)
         selected, next_cursor = _page(expanded, cursor, limit)
         items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
-        return CognitionPage("SEARCH_COGNITION", items, len(expanded), next_cursor, self.snapshot.digest)
+        return CognitionPage(
+            "SEARCH_COGNITION",
+            items,
+            len(expanded),
+            next_cursor,
+            self.snapshot.digest,
+            self._snapshot_epistemics,
+        )
 
     def traverse(
         self,
@@ -728,7 +722,14 @@ class CapabilityCognitionIndex:
             )
         )
         selected, next_cursor = _page(paths, cursor, limit)
-        return CognitionPage("TRAVERSE_RELATIONS", tuple(selected), len(paths), next_cursor, self.snapshot.digest)
+        return CognitionPage(
+            "TRAVERSE_RELATIONS",
+            tuple(selected),
+            len(paths),
+            next_cursor,
+            self.snapshot.digest,
+            self._snapshot_epistemics,
+        )
 
     def detail(
         self,
@@ -756,11 +757,31 @@ class CapabilityCognitionIndex:
         ]
         for relation in self.snapshot.relations:
             if relation.subject_id == target or relation.object_id == target:
-                details.append({"detail_kind": "RELATION", "relation": self._relation_summary(relation)})
+                details.append(
+                    {
+                        "detail_kind": "RELATION",
+                        "relation": self._relation_summary(relation),
+                        "from": self._entity_summary(
+                            self._entities[relation.subject_id]
+                        ),
+                        "to": (
+                            self._entity_summary(self._entities[relation.object_id])
+                            if relation.object_id is not None
+                            else {"external_symbol": relation.object_symbol}
+                        ),
+                    }
+                )
         for behavior in self._behaviors_by_method.get(target, ()):
             details.append({"detail_kind": "BEHAVIOR", "behavior": behavior.to_payload()})
         selected, next_cursor = _page(details, cursor, limit)
-        return CognitionPage("RETRIEVE_COGNITION_DETAIL", tuple(selected), len(details), next_cursor, self.snapshot.digest)
+        return CognitionPage(
+            "RETRIEVE_COGNITION_DETAIL",
+            tuple(selected),
+            len(details),
+            next_cursor,
+            self.snapshot.digest,
+            self._snapshot_epistemics,
+        )
 
     def _score(self, query: str, entity: CognitionEntity) -> int:
         exact, prefix = self._match_counts(self._search_query_tokens(query), entity)
@@ -783,7 +804,7 @@ class CapabilityCognitionIndex:
         entity: CognitionEntity,
     ) -> tuple[int, int]:
         item_tokens = self._search_documents[entity.entity_id]
-        for companion in self._declaration_companions.get(entity.entity_id, ()):
+        for companion in self._method_contract_companions.get(entity.entity_id, ()):
             item_tokens = item_tokens | self._search_documents[companion.entity_id]
         return self._counts_for_tokens(query_tokens, item_tokens)
 
@@ -835,6 +856,7 @@ class CapabilityCognitionIndex:
             "coverage": entity.epistemics.coverage.value,
             "conflicts": list(entity.epistemics.conflicts),
             "unknowns": list(entity.epistemics.unknowns),
+            "attributes": dict(entity.attributes),
             "provenance": entity.provenance.to_payload(),
         }
         if score is not None:
@@ -853,15 +875,9 @@ class CapabilityCognitionIndex:
             "coverage": relation.epistemics.coverage.value,
             "conflicts": list(relation.epistemics.conflicts),
             "unknowns": list(relation.epistemics.unknowns),
+            "attributes": dict(relation.attributes),
             "provenance": relation.provenance.to_payload(),
         }
-
-
-def _method_signature(entity: CognitionEntity) -> str:
-    _, separator, signature = entity.qualified_name.partition("#")
-    if entity.kind is not CognitionEntityKind.METHOD or not separator or not signature:
-        raise DomainError(ErrorCode.INVALID_ARGUMENT, "cognition method signature is invalid")
-    return signature
 
 
 def _search_kind_priority(kind: CognitionEntityKind) -> int:
@@ -917,15 +933,13 @@ def _page(values: Sequence, cursor: int, limit: int):
 
 def _tokens(value: str) -> tuple[str, ...]:
     expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", value)
+    raw_identifiers = re.findall(r"[^\W_]+", value, flags=re.UNICODE)
+    split_identifiers = re.findall(r"[^\W_]+", expanded, flags=re.UNICODE)
     return tuple(
         sorted(
             {
                 item.casefold()
-                for item in re.findall(
-                    r"[^\W_]+",
-                    expanded,
-                    flags=re.UNICODE,
-                )
+                for item in (*raw_identifiers, *split_identifiers)
                 if item
             }
         )

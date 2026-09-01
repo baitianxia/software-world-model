@@ -5281,6 +5281,19 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-269.md"
   },
   {
+    "id": "FINDING-010-270",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "knowledge",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-270.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -8789,7 +8802,8 @@
     ],
     "derived_from": [
       "FINDING-010-135",
-      "FINDING-010-261"
+      "FINDING-010-261",
+      "FINDING-010-270"
     ],
     "path": "docs/system/contracts/knowledge/java-source-semantics.md"
   },

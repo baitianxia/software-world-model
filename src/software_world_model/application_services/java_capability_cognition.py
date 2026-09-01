@@ -56,6 +56,40 @@ _CONDITION_NODES = frozenset(
         "ternary_expression",
     }
 )
+_IMPLICIT_JAVA_LANG_TYPES = frozenset(
+    {
+        "Boolean",
+        "Byte",
+        "Character",
+        "Class",
+        "Double",
+        "Enum",
+        "Exception",
+        "Float",
+        "Integer",
+        "Iterable",
+        "Long",
+        "Math",
+        "Number",
+        "Object",
+        "Record",
+        "RuntimeException",
+        "Short",
+        "String",
+        "StringBuffer",
+        "StringBuilder",
+        "System",
+        "Throwable",
+        "Void",
+    }
+)
+_JAVA_PRIMITIVE_TYPES = frozenset(
+    {"boolean", "byte", "char", "double", "float", "int", "long", "short"}
+)
+_GENERIC_METHOD_CONTRACT_UNKNOWN = (
+    "method contract closure is partial when generic type-variable substitution "
+    "or unresolved signature namespaces are required"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,13 +149,20 @@ class _CompilationUnit:
 
 
 @dataclass(slots=True)
+class _InheritanceProjection:
+    raw_target: str
+    node: Node
+    kind: str
+
+
+@dataclass(slots=True)
 class _TypeProjection:
     entity: CognitionEntity
     node: Node
     body: Node
     unit: _CompilationUnit
     fields: dict[str, str]
-    inheritance: tuple[tuple[str, Node], ...]
+    inheritance: tuple[_InheritanceProjection, ...]
     methods: list["_MethodProjection"]
 
 
@@ -133,6 +174,7 @@ class _MethodProjection:
     owner: _TypeProjection
     arity: int
     parameters: dict[str, str]
+    parameter_types: tuple[str, ...]
 
 
 class JavaCapabilityCognitionBuilder:
@@ -160,6 +202,7 @@ class JavaCapabilityCognitionBuilder:
             self._project_compilation_unit(path, source.source_files[path])
         self._index_types_and_methods()
         self._project_imports_and_inheritance()
+        self._project_method_contracts()
         self._project_method_behavior()
         if not self.entities:
             raise DomainError(ErrorCode.SOURCE_OPERATION_FAILED, "Java cognition produced no entities")
@@ -333,6 +376,8 @@ class JavaCapabilityCognitionBuilder:
         local = simple if enclosing_name is None else f"{enclosing_name}.{simple}"
         qualified = f"{unit.package_name}.{local}" if unit.package_name else local
         declaration_kind = node.type.removesuffix("_declaration").upper()
+        modifier_text = _modifier_text(node, unit.payload)
+        annotation_text = _annotation_text(node, unit.payload)
         entity = self._entity(
             kind=CognitionEntityKind.TYPE,
             identity=(unit.path, qualified, str(node.start_byte)),
@@ -340,10 +385,16 @@ class JavaCapabilityCognitionBuilder:
             qualified_name=qualified,
             parent_id=parent.entity_id,
             provenance=self._node_provenance(unit.path, unit.payload, node, "JAVA_TYPE_DECLARATION"),
-            attributes=(
-                ("declaration_kind", declaration_kind),
-                ("package", unit.package_name or "<default>"),
-                ("source_path", unit.path),
+            attributes=tuple(
+                sorted(
+                    {
+                        "annotations": annotation_text or "<none>",
+                        "declaration_kind": declaration_kind,
+                        "modifiers": modifier_text or "<none>",
+                        "package": unit.package_name or "<default>",
+                        "source_path": unit.path,
+                    }.items()
+                )
             ),
         )
         projection = _TypeProjection(
@@ -405,6 +456,7 @@ class JavaCapabilityCognitionBuilder:
         )
         signature = f"{owner.entity.qualified_name}#{name}({','.join(parameter_types)})"
         modifier_text = _modifier_text(node, payload)
+        annotation_text = _annotation_text(node, payload)
         entity = self._entity(
             kind=CognitionEntityKind.METHOD,
             identity=(owner.unit.path, signature, str(node.start_byte)),
@@ -416,8 +468,14 @@ class JavaCapabilityCognitionBuilder:
                 sorted(
                     {
                         "arity": str(len(parameter_types)),
+                        "annotations": annotation_text or "<none>",
                         "declaration_kind": node.type,
+                        "has_body": str(body is not None).lower(),
                         "modifiers": modifier_text or "<none>",
+                        "owner_declaration_kind": dict(owner.entity.attributes)[
+                            "declaration_kind"
+                        ],
+                        "parameter_types": ",".join(parameter_types) or "<none>",
                         "return_type": return_type,
                         "source_path": owner.unit.path,
                     }.items()
@@ -434,9 +492,18 @@ class JavaCapabilityCognitionBuilder:
                 provenance=entity.provenance,
             )
         )
-        return _MethodProjection(entity, node, body, owner, len(parameter_types), parameters)
+        return _MethodProjection(
+            entity,
+            node,
+            body,
+            owner,
+            len(parameter_types),
+            parameters,
+            tuple(parameter_types),
+        )
 
     def _index_types_and_methods(self) -> None:
+        self.types_by_id = {item.entity.entity_id: item for item in self.types}
         self.types_by_qualified: dict[str, list[_TypeProjection]] = {}
         self.types_by_simple: dict[str, list[_TypeProjection]] = {}
         for item in self.types:
@@ -452,6 +519,10 @@ class JavaCapabilityCognitionBuilder:
             ).append(item)
 
     def _project_imports_and_inheritance(self) -> None:
+        self.inheritance_edges: dict[
+            StableId,
+            list[tuple[_TypeProjection, CognitionRelation]],
+        ] = {}
         for unit in self.units:
             for imported, node, is_static, is_wildcard in unit.imports:
                 target, resolution, unknowns = self._resolve_type(imported, unit, allow_wildcard=is_wildcard)
@@ -469,19 +540,296 @@ class JavaCapabilityCognitionBuilder:
                     )
                 )
         for item in self.types:
-            for raw_target, node in item.inheritance:
-                target, resolution, unknowns = self._resolve_type(raw_target, item.unit)
-                self.relations.append(
-                    self._relation(
-                        CognitionRelationKind.INHERITS,
-                        item.entity,
-                        object_entity=target.entity if target is not None else None,
-                        object_symbol=raw_target,
-                        resolution=resolution,
-                        provenance=self._node_provenance(item.unit.path, item.unit.payload, node, "JAVA_INHERITANCE_CLAUSE"),
-                        unknowns=unknowns,
-                    )
+            for inheritance in item.inheritance:
+                target, resolution, unknowns = self._resolve_type(
+                    inheritance.raw_target,
+                    item.unit,
                 )
+                relation_kind = (
+                    CognitionRelationKind.IMPLEMENTS
+                    if inheritance.kind == "IMPLEMENTS"
+                    else CognitionRelationKind.INHERITS
+                )
+                relation = self._relation(
+                    relation_kind,
+                    item.entity,
+                    object_entity=target.entity if target is not None else None,
+                    object_symbol=inheritance.raw_target,
+                    resolution=resolution,
+                    provenance=self._node_provenance(
+                        item.unit.path,
+                        item.unit.payload,
+                        inheritance.node,
+                        f"JAVA_TYPE_{inheritance.kind}_CLAUSE",
+                    ),
+                    unknowns=unknowns,
+                    attributes=(
+                        ("inheritance_kind", inheritance.kind),
+                        ("relation_scope", "TYPE"),
+                    ),
+                )
+                self.relations.append(relation)
+                if target is not None:
+                    self.inheritance_edges.setdefault(item.entity.entity_id, []).append(
+                        (target, relation)
+                    )
+
+    def _project_method_contracts(self) -> None:
+        generic_boundary_observed = False
+        for method in self.methods:
+            if method.body is None or not self._contract_method(method):
+                continue
+            for ancestor, relation_path in self._ancestor_paths(method.owner):
+                candidates = self.methods_by_owner_name_arity.get(
+                    (
+                        ancestor.entity.qualified_name,
+                        method.entity.name,
+                        method.arity,
+                    ),
+                    (),
+                )
+                declarations = []
+                for candidate in candidates:
+                    if (
+                        not self._contract_method(candidate)
+                        or not self._declaration_is_inherited(
+                            candidate,
+                            relation_path,
+                        )
+                    ):
+                        continue
+                    if (
+                        self._signature_uses_type_parameters(method)
+                        or self._signature_uses_type_parameters(candidate)
+                    ):
+                        generic_boundary_observed = True
+                    match_unknowns = self._method_contract_match(
+                        method,
+                        candidate,
+                    )
+                    if match_unknowns is not None:
+                        declarations.append((candidate, match_unknowns))
+                for declaration, match_unknowns in declarations:
+                    inheritance_sources = ";".join(
+                        relation.provenance.locator for relation in relation_path
+                    )
+                    inheritance_relation_ids = ",".join(
+                        relation.relation_id.value for relation in relation_path
+                    )
+                    owner_kind = dict(declaration.owner.entity.attributes)[
+                        "declaration_kind"
+                    ]
+                    contract_kind = (
+                        "INTERFACE_DECLARATION"
+                        if owner_kind == "INTERFACE"
+                        else "PARENT_TYPE_DECLARATION"
+                    )
+                    self.relations.append(
+                        self._relation(
+                            CognitionRelationKind.IMPLEMENTS,
+                            method.entity,
+                            object_entity=declaration.entity,
+                            object_symbol=declaration.entity.qualified_name,
+                            provenance=relation_path[0].provenance,
+                            unknowns=match_unknowns,
+                            attributes=tuple(
+                                sorted(
+                                    {
+                                        "contract_kind": contract_kind,
+                                        "declaration_source": (
+                                            declaration.entity.provenance.locator
+                                        ),
+                                        "implementation_source": (
+                                            method.entity.provenance.locator
+                                        ),
+                                        "inheritance_depth": str(
+                                            len(relation_path)
+                                        ),
+                                        "inheritance_relation_ids": (
+                                            inheritance_relation_ids
+                                        ),
+                                        "inheritance_sources": inheritance_sources,
+                                        "method_match": (
+                                            "ERASED_PARAMETER_TYPES"
+                                        ),
+                                        "relation_scope": "METHOD_CONTRACT",
+                                    }.items()
+                                )
+                            ),
+                        )
+                    )
+        if generic_boundary_observed:
+            self.unknowns.append(_GENERIC_METHOD_CONTRACT_UNKNOWN)
+
+    def _ancestor_paths(
+        self,
+        owner: _TypeProjection,
+    ) -> tuple[tuple[_TypeProjection, tuple[CognitionRelation, ...]], ...]:
+        frontier: list[
+            tuple[_TypeProjection, tuple[CognitionRelation, ...]]
+        ] = [(owner, ())]
+        paths: dict[
+            StableId,
+            tuple[_TypeProjection, tuple[CognitionRelation, ...]],
+        ] = {}
+        while frontier:
+            current, path = frontier.pop(0)
+            edges = sorted(
+                self.inheritance_edges.get(current.entity.entity_id, ()),
+                key=lambda item: (
+                    item[0].entity.qualified_name,
+                    item[1].relation_id.value,
+                ),
+            )
+            for target, relation in edges:
+                if target.entity.entity_id in paths:
+                    continue
+                target_path = (*path, relation)
+                paths[target.entity.entity_id] = (target, target_path)
+                frontier.append((target, target_path))
+        return tuple(
+            sorted(
+                paths.values(),
+                key=lambda item: (
+                    len(item[1]),
+                    item[0].entity.qualified_name,
+                    item[0].entity.entity_id.value,
+                ),
+            )
+        )
+
+    @staticmethod
+    def _contract_method(method: _MethodProjection) -> bool:
+        attributes = dict(method.entity.attributes)
+        if attributes["declaration_kind"] != "method_declaration":
+            return False
+        modifiers = frozenset(re.findall(r"[A-Za-z_$][A-Za-z0-9_$]*", attributes["modifiers"]))
+        return not {"private", "static"}.intersection(modifiers)
+
+    def _declaration_is_inherited(
+        self,
+        declaration: _MethodProjection,
+        relation_path: tuple[CognitionRelation, ...],
+    ) -> bool:
+        owner_attributes = dict(declaration.owner.entity.attributes)
+        if owner_attributes["declaration_kind"] == "INTERFACE":
+            return True
+        modifiers = frozenset(
+            re.findall(
+                r"[A-Za-z_$][A-Za-z0-9_$]*",
+                dict(declaration.entity.attributes)["modifiers"],
+            )
+        )
+        if {"public", "protected"}.intersection(modifiers):
+            return True
+        declaration_package = declaration.owner.unit.package_name
+        return all(
+            self.types_by_id[relation.subject_id].unit.package_name
+            == declaration_package
+            for relation in relation_path
+        )
+
+    @staticmethod
+    def _signature_uses_type_parameters(method: _MethodProjection) -> bool:
+        type_parameters = _type_parameter_names(
+            method.owner.node,
+            method.owner.unit.payload,
+        ) | _type_parameter_names(method.node, method.owner.unit.payload)
+        if not type_parameters:
+            return False
+        signature_tokens = {
+            item
+            for value in (
+                *method.parameter_types,
+                dict(method.entity.attributes)["return_type"],
+            )
+            for item in re.findall(r"[A-Za-z_$][A-Za-z0-9_$]*", value)
+        }
+        return bool(type_parameters.intersection(signature_tokens))
+
+    def _method_contract_match(
+        self,
+        implementation: _MethodProjection,
+        declaration: _MethodProjection,
+    ) -> tuple[str, ...] | None:
+        implementation_types = tuple(
+            self._erased_parameter_candidates(value, implementation.owner.unit)
+            for value in implementation.parameter_types
+        )
+        declaration_types = tuple(
+            self._erased_parameter_candidates(value, declaration.owner.unit)
+            for value in declaration.parameter_types
+        )
+        if len(implementation_types) != len(declaration_types) or any(
+            not implementation_candidates.intersection(declaration_candidates)
+            for implementation_candidates, declaration_candidates in zip(
+                implementation_types,
+                declaration_types,
+                strict=True,
+            )
+        ):
+            return None
+        if any(
+            len(implementation_candidates) > 1
+            or len(declaration_candidates) > 1
+            for implementation_candidates, declaration_candidates in zip(
+                implementation_types,
+                declaration_types,
+                strict=True,
+            )
+        ):
+            return (
+                "wildcard imports leave more than one erased parameter type candidate",
+            )
+        return ()
+
+    def _erased_parameter_candidates(
+        self,
+        raw: str,
+        unit: _CompilationUnit,
+    ) -> frozenset[str]:
+        annotations_removed = re.sub(
+            r"@[A-Za-z_$][A-Za-z0-9_$.]*(?:\([^)]*\))?",
+            "",
+            raw,
+        ).strip()
+        array_depth = annotations_removed.count("[]") + (
+            1 if "..." in annotations_removed else 0
+        )
+        base = _base_type(annotations_removed)
+        suffix = "[]" * array_depth
+        if base in _JAVA_PRIMITIVE_TYPES or "." in base:
+            return frozenset((base + suffix,))
+        imported = {
+            value.rsplit(".", 1)[-1]: value
+            for value, _, is_static, is_wildcard in unit.imports
+            if not is_static and not is_wildcard
+        }.get(base)
+        if imported is not None:
+            return frozenset((imported + suffix,))
+        same_package = f"{unit.package_name}.{base}" if unit.package_name else base
+        if same_package in self.types_by_qualified:
+            return frozenset((same_package + suffix,))
+        if base in _IMPLICIT_JAVA_LANG_TYPES:
+            return frozenset((f"java.lang.{base}{suffix}",))
+        wildcard_packages = {
+            value.removesuffix(".*")
+            for value, _, is_static, is_wildcard in unit.imports
+            if not is_static and is_wildcard
+        }
+        internal_matches = {
+            f"{package}.{base}"
+            for package in wildcard_packages
+            if f"{package}.{base}" in self.types_by_qualified
+        }
+        if len(internal_matches) == 1:
+            return frozenset(value + suffix for value in internal_matches)
+        candidates = internal_matches or {
+            f"{package}.{base}" for package in wildcard_packages
+        }
+        if not candidates:
+            candidates = {same_package}
+        return frozenset(value + suffix for value in candidates)
 
     def _project_method_behavior(self) -> None:
         for method in self.methods:
@@ -676,8 +1024,9 @@ class JavaCapabilityCognitionBuilder:
 
     def _inherits_external(self, owner: _TypeProjection) -> bool:
         return any(
-            self._resolve_type(raw, owner.unit)[1] is CognitionResolution.EXTERNAL
-            for raw, _ in owner.inheritance
+            self._resolve_type(inheritance.raw_target, owner.unit)[1]
+            is CognitionResolution.EXTERNAL
+            for inheritance in owner.inheritance
         )
 
     def _behavior(
@@ -836,18 +1185,30 @@ class JavaCapabilityCognitionBuilder:
         return values
 
     @staticmethod
-    def _inheritance(node: Node, payload: bytes) -> tuple[tuple[str, Node], ...]:
-        values: list[tuple[str, Node]] = []
+    def _inheritance(
+        node: Node,
+        payload: bytes,
+    ) -> tuple[_InheritanceProjection, ...]:
+        values: list[_InheritanceProjection] = []
         for child in node.named_children:
             if child.type not in {"superclass", "super_interfaces", "extends_interfaces"}:
                 continue
+            inheritance_kind = (
+                "IMPLEMENTS" if child.type == "super_interfaces" else "EXTENDS"
+            )
             candidates = child.named_children
             if len(candidates) == 1 and candidates[0].type == "type_list":
                 candidates = candidates[0].named_children
             for candidate in candidates:
                 text = _node_text(payload, candidate)
                 if text:
-                    values.append((text, candidate))
+                    values.append(
+                        _InheritanceProjection(
+                            raw_target=text,
+                            node=candidate,
+                            kind=inheritance_kind,
+                        )
+                    )
         return tuple(values)
 
     @staticmethod
@@ -933,6 +1294,31 @@ def _display_text(payload: bytes, node: Node) -> tuple[str, bool]:
 def _modifier_text(node: Node, payload: bytes) -> str:
     modifiers = next((item for item in node.named_children if item.type == "modifiers"), None)
     return " ".join(_node_text(payload, modifiers).split()) if modifiers is not None else ""
+
+
+def _annotation_text(node: Node, payload: bytes) -> str:
+    modifiers = next(
+        (item for item in node.named_children if item.type == "modifiers"),
+        None,
+    )
+    if modifiers is None:
+        return ""
+    return " ".join(
+        " ".join(_node_text(payload, child).split())
+        for child in modifiers.named_children
+        if child.type in {"annotation", "marker_annotation"}
+    )
+
+
+def _type_parameter_names(node: Node, payload: bytes) -> frozenset[str]:
+    type_parameters = node.child_by_field_name("type_parameters")
+    if type_parameters is None:
+        return frozenset()
+    return frozenset(
+        _node_text(payload, parameter.named_children[0])
+        for parameter in type_parameters.named_children
+        if parameter.type == "type_parameter" and parameter.named_children
+    )
 
 
 def _base_type(value: str) -> str:

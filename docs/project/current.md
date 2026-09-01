@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
@@ -48,6 +48,9 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
 - 当前唯一产品任务是 Phase B 的通用声明/继承认知闭包：让 method/type 查询稳定返回实现、接口/父类型声明、相关注解、关系来源和 Coverage，
   并由监督方持有的五个未参与实现任务独立验证 search/traverse/detail 与跨问题复用。
+- `FINDING-010-270` 的候选已把 type `extends/implements`、method implementation→interface/parent declaration、双方 Source、annotations 和
+  page-level Coverage/Conflict/Unknown 形成显式 artifact/query 契约；开发侧原问题加两个异质问题及监督侧 dirty 五题均已通过。当前仍保持
+  `REWORK`，因为监督方尚须在最终 clean exact product commit 上重建并独立复验后才可给出 `ADVANCE`。
 - 开发方不得自行推进 Phase；只有 `codex/supervision` 对当前 clean commit、exact Source 和独立原始证据给出 `ADVANCE` 才能进入 Phase C。
 
 Phase B 期间不继续 Reviewer、Provider recovery、回答 Prompt/Schema 或 Phase C/D 验收器。它们不是删除，而是留在归档中，等最早缺失能力
