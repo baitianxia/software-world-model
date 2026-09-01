@@ -8,6 +8,7 @@ boundary before an answer is delivered.
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
 import re
@@ -19,6 +20,37 @@ from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, S
 
 CAPABILITY_COGNITION_SCHEMA = "JAVA-CAPABILITY-COGNITION@1"
 CAPABILITY_COGNITION_PROFILE = "JAVA_CAPABILITY_COGNITION@1"
+
+_EXACT_SEARCH_MATCH_WEIGHT = 4
+_PREFIX_SEARCH_MATCH_WEIGHT = 1
+_MINIMUM_RELATIVE_SEARCH_NUMERATOR = 3
+_MINIMUM_RELATIVE_SEARCH_DENOMINATOR = 4
+_SEARCH_QUERY_STOP_TOKENS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "in",
+        "into",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "the",
+        "these",
+        "this",
+        "to",
+        "with",
+    }
+)
 
 
 class CognitionEntityKind(str, Enum):
@@ -498,6 +530,62 @@ class CapabilityCognitionIndex:
             self._behaviors_by_method[method_id] = tuple(
                 item for item in snapshot.behaviors if item.method_id == method_id
             )
+        self._search_documents: dict[StableId, frozenset[str]] = {}
+        token_frequency: Counter[str] = Counter()
+        for entity in snapshot.entities:
+            semantic_values = [entity.name, entity.qualified_name]
+            semantic_values.extend(
+                PurePosixPath(value).name if key == "source_path" else value
+                for key, value in entity.attributes
+            )
+            semantic_values.extend(
+                behavior.statement
+                for behavior in self._behaviors_by_method.get(entity.entity_id, ())
+            )
+            searchable_tokens = frozenset(_tokens(" ".join(semantic_values)))
+            token_frequency.update(searchable_tokens)
+            self._search_documents[entity.entity_id] = searchable_tokens
+        self._search_token_frequency = dict(token_frequency)
+        inherited_types: dict[StableId, tuple[StableId, ...]] = {}
+        for entity in snapshot.entities:
+            if entity.kind is not CognitionEntityKind.TYPE:
+                continue
+            inherited_types[entity.entity_id] = tuple(
+                relation.object_id
+                for relation in snapshot.relations
+                if relation.kind is CognitionRelationKind.INHERITS
+                and relation.subject_id == entity.entity_id
+                and relation.object_id is not None
+            )
+        methods_by_parent_and_signature = {
+            (entity.parent_id, _method_signature(entity)): entity
+            for entity in snapshot.entities
+            if entity.kind is CognitionEntityKind.METHOD
+            and entity.parent_id is not None
+        }
+        declaration_companions: dict[StableId, tuple[CognitionEntity, ...]] = {}
+        for entity in snapshot.entities:
+            if entity.kind is not CognitionEntityKind.METHOD or entity.parent_id is None:
+                continue
+            companions: list[CognitionEntity] = []
+            frontier = list(inherited_types.get(entity.parent_id, ()))
+            seen: set[StableId] = set()
+            while frontier:
+                inherited_type = frontier.pop(0)
+                if inherited_type in seen:
+                    continue
+                seen.add(inherited_type)
+                companion = methods_by_parent_and_signature.get(
+                    (inherited_type, _method_signature(entity))
+                )
+                if companion is not None:
+                    companions.append(companion)
+                frontier.extend(inherited_types.get(inherited_type, ()))
+            if companions:
+                declaration_companions[entity.entity_id] = tuple(
+                    sorted(companions, key=lambda item: item.entity_id.value)
+                )
+        self._declaration_companions = declaration_companions
 
     def search(
         self,
@@ -511,17 +599,78 @@ class CapabilityCognitionIndex:
         allowed = frozenset(kinds)
         if any(not isinstance(item, CognitionEntityKind) for item in allowed):
             raise DomainError(ErrorCode.INVALID_ARGUMENT, "cognition kind filter is invalid")
-        ranked: list[tuple[int, str, CognitionEntity]] = []
+        query_tokens = self._search_query_tokens(query_value)
+        matches: list[tuple[int, int, str, CognitionEntity]] = []
         for entity in self.snapshot.entities:
             if allowed and entity.kind not in allowed:
                 continue
-            score = self._score(query_value, entity)
+            exact, prefix = self._match_counts(query_tokens, entity)
+            score = exact * _EXACT_SEARCH_MATCH_WEIGHT + prefix * _PREFIX_SEARCH_MATCH_WEIGHT
             if score > 0:
-                ranked.append((-score, entity.qualified_name.lower(), entity))
-        ranked.sort(key=lambda item: (item[0], item[1], item[2].entity_id.value))
-        selected, next_cursor = _page(ranked, cursor, limit)
-        items = tuple(self._entity_summary(item[2], score=-item[0]) for item in selected)
-        return CognitionPage("SEARCH_COGNITION", items, len(ranked), next_cursor, self.snapshot.digest)
+                matches.append((score, exact, entity.qualified_name.lower(), entity))
+        strongest_score = max((item[0] for item in matches), default=0)
+        strongest_exact = max((item[1] for item in matches), default=0)
+        minimum_score = (
+            strongest_score * _MINIMUM_RELATIVE_SEARCH_NUMERATOR
+            + _MINIMUM_RELATIVE_SEARCH_DENOMINATOR
+            - 1
+        ) // _MINIMUM_RELATIVE_SEARCH_DENOMINATOR
+        ranked = [
+            (-score, -exact, qualified_name, entity)
+            for score, exact, qualified_name, entity in matches
+            if score >= max(1, minimum_score)
+            and not (strongest_exact >= 2 and exact == 0)
+        ]
+        ranked.sort(
+            key=lambda item: (
+                item[0],
+                item[1],
+                _search_kind_priority(item[3].kind),
+                item[2],
+                item[3].entity_id.value,
+            )
+        )
+        expanded: list[tuple[int, int, str, CognitionEntity]] = []
+        selected_ids: set[StableId] = set()
+        for item in ranked:
+            entity = item[3]
+            if entity.entity_id not in selected_ids:
+                expanded.append(item)
+                selected_ids.add(entity.entity_id)
+            own_counts = self._counts_for_tokens(
+                query_tokens,
+                self._search_documents[entity.entity_id],
+            )
+            for companion in self._declaration_companions.get(entity.entity_id, ()):
+                if companion.entity_id in selected_ids:
+                    continue
+                combined_counts = self._counts_for_tokens(
+                    query_tokens,
+                    self._search_documents[entity.entity_id]
+                    | self._search_documents[companion.entity_id],
+                )
+                if combined_counts == own_counts:
+                    continue
+                companion_exact, companion_prefix = self._counts_for_tokens(
+                    query_tokens,
+                    self._search_documents[companion.entity_id],
+                )
+                companion_score = (
+                    companion_exact * _EXACT_SEARCH_MATCH_WEIGHT
+                    + companion_prefix * _PREFIX_SEARCH_MATCH_WEIGHT
+                )
+                expanded.append(
+                    (
+                        -companion_score,
+                        -companion_exact,
+                        companion.qualified_name.lower(),
+                        companion,
+                    )
+                )
+                selected_ids.add(companion.entity_id)
+        selected, next_cursor = _page(expanded, cursor, limit)
+        items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
+        return CognitionPage("SEARCH_COGNITION", items, len(expanded), next_cursor, self.snapshot.digest)
 
     def traverse(
         self,
@@ -614,29 +763,50 @@ class CapabilityCognitionIndex:
         return CognitionPage("RETRIEVE_COGNITION_DETAIL", tuple(selected), len(details), next_cursor, self.snapshot.digest)
 
     def _score(self, query: str, entity: CognitionEntity) -> int:
-        lowered = query.lower()
-        name = entity.name.lower()
-        qualified = entity.qualified_name.lower()
-        if lowered == name:
-            base = 120
-        elif lowered == qualified:
-            base = 110
-        elif lowered in name:
-            base = 90
-        elif lowered in qualified:
-            base = 75
-        else:
-            base = 0
-        query_tokens = set(_tokens(query))
-        searchable = " ".join(
-            [entity.name, entity.qualified_name, *(value for _, value in entity.attributes)]
+        exact, prefix = self._match_counts(self._search_query_tokens(query), entity)
+        return exact * _EXACT_SEARCH_MATCH_WEIGHT + prefix * _PREFIX_SEARCH_MATCH_WEIGHT
+
+    def _search_query_tokens(self, query: str) -> tuple[str, ...]:
+        query_tokens = tuple(
+            token for token in _tokens(query) if token not in _SEARCH_QUERY_STOP_TOKENS
         )
-        if entity.kind is CognitionEntityKind.METHOD:
-            searchable += " " + " ".join(
-                item.statement for item in self._behaviors_by_method.get(entity.entity_id, ())
+        discriminative = tuple(
+            token
+            for token in query_tokens
+            if self._search_token_frequency.get(token, 0) * 2 <= len(self.snapshot.entities)
+        )
+        return discriminative or query_tokens
+
+    def _match_counts(
+        self,
+        query_tokens: Sequence[str],
+        entity: CognitionEntity,
+    ) -> tuple[int, int]:
+        item_tokens = self._search_documents[entity.entity_id]
+        for companion in self._declaration_companions.get(entity.entity_id, ()):
+            item_tokens = item_tokens | self._search_documents[companion.entity_id]
+        return self._counts_for_tokens(query_tokens, item_tokens)
+
+    @staticmethod
+    def _counts_for_tokens(
+        query_tokens: Sequence[str],
+        item_tokens: frozenset[str],
+    ) -> tuple[int, int]:
+        exact = sum(token in item_tokens for token in query_tokens)
+        prefix = sum(
+            1
+            for query_token in query_tokens
+            if query_token not in item_tokens
+            and any(
+                min(len(query_token), len(item_token)) >= 4
+                and (
+                    query_token.startswith(item_token)
+                    or item_token.startswith(query_token)
+                )
+                for item_token in item_tokens
             )
-        overlap = len(query_tokens.intersection(_tokens(searchable)))
-        return base + overlap * 8
+        )
+        return exact, prefix
 
     def _adjacent(
         self,
@@ -687,6 +857,23 @@ class CapabilityCognitionIndex:
         }
 
 
+def _method_signature(entity: CognitionEntity) -> str:
+    _, separator, signature = entity.qualified_name.partition("#")
+    if entity.kind is not CognitionEntityKind.METHOD or not separator or not signature:
+        raise DomainError(ErrorCode.INVALID_ARGUMENT, "cognition method signature is invalid")
+    return signature
+
+
+def _search_kind_priority(kind: CognitionEntityKind) -> int:
+    return {
+        CognitionEntityKind.TYPE: 0,
+        CognitionEntityKind.METHOD: 1,
+        CognitionEntityKind.FILE: 2,
+        CognitionEntityKind.PACKAGE: 3,
+        CognitionEntityKind.MODULE: 4,
+    }[kind]
+
+
 def _snapshot_core(
     *,
     project_name: str,
@@ -730,7 +917,19 @@ def _page(values: Sequence, cursor: int, limit: int):
 
 def _tokens(value: str) -> tuple[str, ...]:
     expanded = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", value)
-    return tuple(item.lower() for item in re.findall(r"[A-Za-z_$][A-Za-z0-9_$]*|[\u4e00-\u9fff]+", expanded))
+    return tuple(
+        sorted(
+            {
+                item.casefold()
+                for item in re.findall(
+                    r"[^\W_]+",
+                    expanded,
+                    flags=re.UNICODE,
+                )
+                if item
+            }
+        )
+    )
 
 
 def _attributes(values: tuple[tuple[str, str], ...]) -> None:

@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
@@ -35,8 +35,9 @@ ITER-010 的产品目标和总体架构不变，但 PDR-013 的执行计划已�
 5. same-Agent source-only、same-Agent World Model + source 与 actual current Codex 的独立比较。
 
 Phase A 的 source-only Browser 诊断基线已用两个异质问题和一个追问通过；Phase B 的 exact-source 认知纵切已在同一 artifact 上用五个独立
-任务 5/5 通过。两者都是能力证据，不是答案质量或 MVP。当前最早未完成能力是 Phase C：把三类认知工具接入同一个 Agent 并形成真实
-Browser Alpha 与 same-Agent 消融。
+任务 5/5 通过。Phase C 首个真实 Browser run 已完成三个异质问题和一个追问，但事务追问漏掉接口 `@Transactional` 并被 Reviewer 错误
+批准，因此状态保持 REWORK。最早偏差已归到 cognition ranking；同 artifact 的通用替换把实现和接口声明同时带入首屏，真实 successor 与
+same-Agent 消融仍未完成。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
@@ -45,7 +46,7 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 
 严格按 PDR-014 继续执行尚未完成的 C→D：
 
-- C：把已经冻结的 source-only Agent 与 exact-source cognition 接成可立即体验的浏览器 Alpha，并保存 same-Agent 消融；
+- C：复跑已修正 cognition ranking 的浏览器 Alpha，并冻结 same-Agent source-only / World Model + source 消融；
 - D：用五个异质问题、多轮 Chat、same-Agent 消融和 current Codex 完成质量判断。
 
 时间上限只触发自动简化或换实现，不触发暂停、失败 Result、重复授权或质量降低。第一个可操作候选立即交付；full regression、hidden、

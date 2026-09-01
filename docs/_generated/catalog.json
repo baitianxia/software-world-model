@@ -5213,6 +5213,34 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-262.md"
   },
   {
+    "id": "FINDING-010-263",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "knowledge",
+      "application",
+      "ai",
+      "quality",
+      "web"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-263.md"
+  },
+  {
+    "id": "FINDING-010-264",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "knowledge",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-264.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

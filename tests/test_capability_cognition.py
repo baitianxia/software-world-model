@@ -50,7 +50,10 @@ public class CheckoutController {
 """
     api_service = b"""package com.example.api;
 
+import org.springframework.transaction.annotation.Transactional;
+
 public interface PaymentService {
+    @Transactional
     String pay(String orderId);
 }
 """
@@ -199,6 +202,23 @@ class CapabilityCognitionTest(unittest.TestCase):
         )
         self.assertGreater(len(continuation.items), 0)
         self.assertEqual(detail.snapshot_digest, continuation.snapshot_digest)
+
+    def test_search_ranks_rare_declaration_contracts_above_common_context(self) -> None:
+        page = self.index.search(
+            "PaymentServiceImpl pay transaction rollback service implementation"
+        )
+        leading = [item["qualified_name"] for item in page.items[:6]]
+        self.assertIn("com.example.app.PaymentServiceImpl#pay(String)", leading)
+        self.assertIn("com.example.api.PaymentService#pay(String)", leading)
+        interface_method = next(
+            item
+            for item in page.items
+            if item["qualified_name"] == "com.example.api.PaymentService#pay(String)"
+        )
+        self.assertEqual(
+            interface_method["provenance"]["path"],
+            "api/src/main/java/com/example/api/PaymentService.java",
+        )
 
     def test_external_target_is_unknown_bounded_not_fabricated_entity(self) -> None:
         pay = self._entity("com.example.app.PaymentServiceImpl#pay(String)")

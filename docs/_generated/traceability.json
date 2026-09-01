@@ -4387,6 +4387,30 @@
       "tests/test_engineering_chat_browser.py"
     ]
   },
+  "FINDING-010-263": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-263.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "src/software_world_model/interface/engineering_chat_browser.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py",
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py",
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
+  "FINDING-010-264": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-264.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
