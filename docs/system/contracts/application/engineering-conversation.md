@@ -37,7 +37,10 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
    World Model + Source 臂在同一循环额外暴露有界 `search cognition / traverse relations / retrieve cognition detail`。Session 在 listener 和
    Provider attempt 前按 canonical private artifact、snapshot digest/ID、project、exact revision/tree 一次加载 Phase B query projection；所有
    Turn 只读复用同一 snapshot。模型只能提交 Application 分配的数字 `cognition_index`，以及注册的 relation kind、direction、depth 和 cursor，
-   不能制造 entity ID。每页保留 snapshot digest、Coverage/Conflict/Unknown 与 provenance；默认先建立 cognition，再按真实 Gap 读 Source；
+   不能制造 entity ID。cognition search 是对 source-derived identifier/statement 的有界 lexical query，不是翻译后的自然语言或通用语义搜索；
+   Agent 必须使用预期存在于源码中的 repository-native identifier/technical token，且不能只用 module name。若物质 contract 可能声明在 interface
+   或 supertype，Agent 必须在 `FINISH` 前检查该声明，不能从单个 implementation body 的缺失推出 contract 不存在。每页保留 snapshot
+   digest、Coverage/Conflict/Unknown 与 provenance；默认先建立 cognition，再按真实 Gap 读 Source；
 2. goal 每次以 current User Message 为权威，相关历史仅帮助解析追问。每个 Observation 后模型必须有机会修改 plan 或停止；Application 保存
    ordered trajectory，并用成功 Turn 的 Work State digest/revision 维持 Conversation 连续性；
 3. 模型每次调用前自动密封 one-use runtime authorization，绑定 exact product/source/session/route、完整 disclosure digest、Provider binding、

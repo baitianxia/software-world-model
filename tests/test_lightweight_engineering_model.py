@@ -254,6 +254,11 @@ class LightweightEngineeringModelTest(unittest.TestCase):
         self.assertTrue(all(item.tools == () for item in adapter.requests))
         self.assertTrue(all(len(item.messages) == 2 for item in adapter.requests))
         step_system_prompt = adapter.requests[0].messages[0].content
+        self.assertIn(
+            "lexical over source-derived identifiers and statements",
+            step_system_prompt,
+        )
+        self.assertIn("interface or supertype", step_system_prompt)
         self.assertIn("one identifier or one exact phrase", step_system_prompt)
         self.assertIn("never concatenate separate search terms", step_system_prompt)
         disclosed_text = "\n".join(

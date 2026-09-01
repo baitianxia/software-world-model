@@ -4411,6 +4411,15 @@
       "tests/test_capability_cognition.py"
     ]
   },
+  "FINDING-010-265": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-265.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
