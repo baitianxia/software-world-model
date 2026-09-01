@@ -6,6 +6,7 @@ import unittest
 from software_world_model.application_services.conversational_engineering_agent import (
     EngineeringAgentCitation,
     EngineeringAgentEvidenceDisposition,
+    EngineeringAgentLoopLimits,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelRole,
@@ -36,6 +37,21 @@ from software_world_model.cross_cutting import Revision, StableId, digest_of
 
 
 REVISION = "a" * 40
+
+
+def _binding() -> EngineeringChatBinding:
+    return EngineeringChatBinding.create(
+        product_revision="b" * 40,
+        project_name="example",
+        repository_revision=REVISION,
+        world_model_status=RuntimeCapabilityStatus.READY,
+        world_model_authority_digest=digest_of("world-model"),
+        source_profile_ref="source-profile",
+        source_access_status=RuntimeCapabilityStatus.READY,
+        provider_status=RuntimeCapabilityStatus.READY,
+        provider_route_ref="preferred-then-fallback",
+        known_limitations=("diagnostic baseline",),
+    )
 
 
 def _id(kind: str, ordinal: int) -> StableId:
@@ -202,20 +218,54 @@ class _Model:
         )
 
 
+class _NeedsMoreEvidenceModel(_Model):
+    def decide(self, request):
+        self.steps.append(request)
+        if not request.observations:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Search once before deciding.",
+                action=LightweightAgentAction.SEARCH_SOURCE,
+                query="Entry",
+                read_index=None,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="The tool budget is closed; report the evidence gap.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.LIMITATION,
+                answer="现有证据不足以确认请求中的实现行为。",
+                citations=(),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+    def review(self, request):
+        self.reviews.append(request)
+        return LightweightReviewResult(
+            review=LightweightReview(
+                verdict=LightweightReviewVerdict.MORE_EVIDENCE,
+                findings=("需要读取实现源码才能回答。",),
+            ),
+            receipt=self._receipt(
+                EngineeringAgentModelRole.INDEPENDENT_REVIEWER
+            ),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 class LightweightEngineeringAgentTest(unittest.TestCase):
     def test_two_questions_and_followup_replan_from_source_observations(self) -> None:
-        binding = EngineeringChatBinding.create(
-            product_revision="b" * 40,
-            project_name="example",
-            repository_revision=REVISION,
-            world_model_status=RuntimeCapabilityStatus.READY,
-            world_model_authority_digest=digest_of("world-model"),
-            source_profile_ref="source-profile",
-            source_access_status=RuntimeCapabilityStatus.READY,
-            provider_status=RuntimeCapabilityStatus.READY,
-            provider_route_ref="preferred-then-fallback",
-            known_limitations=("diagnostic baseline",),
-        )
+        binding = _binding()
         model = _Model()
         tool = _SourceTool()
         traces = LightweightAgentTraceStore()
@@ -263,12 +313,62 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             self.assertEqual(
                 actions, ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
             )
+            decisions = [
+                item
+                for item in trace.events
+                if item["kind"] == "MODEL_DECISION"
+            ]
+            self.assertEqual(decisions[0]["query"], "Entry")
+            self.assertIsNone(decisions[0]["read_index"])
+            self.assertIsNone(decisions[1]["query"])
+            self.assertIsInstance(decisions[1]["read_index"], int)
+            self.assertIsNone(decisions[2]["query"])
+            self.assertIsNone(decisions[2]["read_index"])
             plans = [
                 item["plan"]
                 for item in trace.events
                 if item["kind"] == "MODEL_DECISION"
             ]
             self.assertEqual(len(set(plans)), 3)
+
+    def test_more_evidence_after_tool_fuse_fails_without_repeated_reviews(self) -> None:
+        model = _NeedsMoreEvidenceModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-tool-fuse",
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=11,
+                maximum_tool_actions=1,
+                maximum_reviews=4,
+            ),
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        snapshot = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=snapshot.conversation.conversation_id,
+            expected_revision=snapshot.conversation.revision,
+            message="实现失败时会发生什么？",
+        )
+
+        self.assertEqual(submission.turn.failure_code, "BUDGET_EXHAUSTED")
+        self.assertEqual(submission.turn.provider_dispatch_count, 3)
+        self.assertEqual(len(model.steps), 2)
+        self.assertEqual(len(model.reviews), 1)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(trace.terminal_status, "FAILED")
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "INDEPENDENT_REVIEW"
+            ),
+            1,
+        )
 
 
 if __name__ == "__main__":

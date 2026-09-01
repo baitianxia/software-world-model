@@ -583,6 +583,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         "goal": goal,
                         "plan": plan,
                         "action": decision.action.value,
+                        "query": decision.query,
+                        "read_index": decision.read_index,
                         "disclosure_record_ref": result.disclosure_record_ref,
                         "model_call_receipt_ref": result.receipt.digest.value,
                     }
@@ -657,6 +659,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     raise DomainError(
                         ErrorCode.BUDGET_EXHAUSTED,
                         "lightweight independent review budget is exhausted",
+                    )
+                if (
+                    review.verdict is LightweightReviewVerdict.MORE_EVIDENCE
+                    and tool_actions >= self._limits.maximum_tool_actions
+                ):
+                    raise DomainError(
+                        ErrorCode.BUDGET_EXHAUSTED,
+                        "fresh review requested evidence after the read-only tool budget closed",
                     )
                 rejected_answer = decision.answer
                 review_findings = review.findings

@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258, FINDING-010-259]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/lightweight_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -31,8 +31,9 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
 当前 profile 的最小循环是
 `current goal → short plan → read-only action → trusted observation → revised plan or finish → natural response → fresh independent review`：
 
-1. source-only 诊断臂只暴露 Source search/read；模型提交普通 query 或 Application 分配的数字 `read_index`，不提交 locator authority、文件系统
-   命令或重复的 Turn/Binding identity。Application 把选择映射到已有 Broker/Worker 请求并验证 exact authority receipt；
+1. source-only 诊断臂只暴露 Source search/read；search query 是预期在 Source 中连续出现的单个 identifier 或 exact phrase，不是多关键词或
+   semantic query；read 只提交 Application 分配的数字 `read_index`。模型不提交 locator authority、文件系统命令或重复的 Turn/Binding
+   identity。Application 把选择映射到已有 Broker/Worker 请求并验证 exact authority receipt；
 2. goal 每次以 current User Message 为权威，相关历史仅帮助解析追问。每个 Observation 后模型必须有机会修改 plan 或停止；Application 保存
    ordered trajectory，并用成功 Turn 的 Work State digest/revision 维持 Conversation 连续性；
 3. 模型每次调用前自动密封 one-use runtime authorization，绑定 exact product/source/session/route、完整 disclosure digest、Provider binding、
@@ -40,7 +41,8 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
 4. 回答以 Observation/Citation 的 1-based ordinal 选择受信 Citation。Application 解析 ordinal 并保留 authority-owned identity；ANSWER 至少有
    一项 exact-revision Citation，模型不能制造 opaque Citation ref；
 5. fresh Reviewer 只读 current request、相关 Conversation context、完整 response、selected Citation 和必要 evidence，一次返回 verdict 与全部
-   material findings。现有 Evidence 足够时最多一次整体 rewrite；缺 Evidence 时回同一 Agent 调查，不能用正文规则补齐；
+   material findings。现有 Evidence 足够时最多一次整体 rewrite；缺 Evidence 且只读工具仍可用时回同一 Agent 调查，不能用正文规则补齐；
+   工具熔断已关闭时必须立即失败当前 Turn，不能重复生成相同 Limitation/Review 消耗预算；
 6. 独立 one-use Delivery Control 重新验证 Reviewer 成功回执、空 Finding、response/Citation identity、Citation 唯一性与 Binding exact
    revision 后才能授权。它不按正文词语、标题、格式、句段或 Claim 映射判断技术语义；Agent 和 Reviewer 都不能创建或重复消费授权；
 7. source-only 与后续 World Model + Source 两臂使用同一个 loop、Conversation、Reviewer、Provider route 和质量口径，只改变 cognition tools
