@@ -1,0 +1,20 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_CONTROL@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "supervision_branch": "codex/supervision",
+  "trusted_product_baseline_commit": "268b4546a893ff346da34d4f4d06057d860e2aa3",
+  "trusted_plan_commit": "e0a2d2fdd3e0f2b5d7fc4bf01dae0d1d7358d577",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "active_phase": "B",
+  "next_phase": "C",
+  "phase_exit_case_id": "V-WORLD-MODEL-COGNITION-001",
+  "phase_exit_requirements": [
+    "declaration-inheritance-annotation-implementation-closure",
+    "bounded-search-traverse-detail-retrieval",
+    "exact-source-coverage-conflict-and-unknown",
+    "five-independent-unseen-tasks-reuse-one-snapshot"
+  ],
+  "objective": "先闭合可复用的软件世界模型认知，再进入浏览器集成；当前不开发 Reviewer、Provider recovery、回答协议或 Phase C/D。",
+  "check_interval_minutes": 30
+}
