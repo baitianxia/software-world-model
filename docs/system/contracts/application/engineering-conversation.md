@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258, FINDING-010-259]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258, FINDING-010-259, FINDING-010-262]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/lightweight_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -34,6 +34,10 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
 1. source-only 诊断臂只暴露 Source search/read；search query 是预期在 Source 中连续出现的单个 identifier 或 exact phrase，不是多关键词或
    semantic query；read 只提交 Application 分配的数字 `read_index`。模型不提交 locator authority、文件系统命令或重复的 Turn/Binding
    identity。Application 把选择映射到已有 Broker/Worker 请求并验证 exact authority receipt；
+   World Model + Source 臂在同一循环额外暴露有界 `search cognition / traverse relations / retrieve cognition detail`。Session 在 listener 和
+   Provider attempt 前按 canonical private artifact、snapshot digest/ID、project、exact revision/tree 一次加载 Phase B query projection；所有
+   Turn 只读复用同一 snapshot。模型只能提交 Application 分配的数字 `cognition_index`，以及注册的 relation kind、direction、depth 和 cursor，
+   不能制造 entity ID。每页保留 snapshot digest、Coverage/Conflict/Unknown 与 provenance；默认先建立 cognition，再按真实 Gap 读 Source；
 2. goal 每次以 current User Message 为权威，相关历史仅帮助解析追问。每个 Observation 后模型必须有机会修改 plan 或停止；Application 保存
    ordered trajectory，并用成功 Turn 的 Work State digest/revision 维持 Conversation 连续性；
 3. 模型每次调用前自动密封 one-use runtime authorization，绑定 exact product/source/session/route、完整 disclosure digest、Provider binding、
@@ -45,8 +49,9 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
    工具熔断已关闭时必须立即失败当前 Turn，不能重复生成相同 Limitation/Review 消耗预算；
 6. 独立 one-use Delivery Control 重新验证 Reviewer 成功回执、空 Finding、response/Citation identity、Citation 唯一性与 Binding exact
    revision 后才能授权。它不按正文词语、标题、格式、句段或 Claim 映射判断技术语义；Agent 和 Reviewer 都不能创建或重复消费授权；
-7. source-only 与后续 World Model + Source 两臂使用同一个 loop、Conversation、Reviewer、Provider route 和质量口径，只改变 cognition tools
-   是否可用。旧 prompt-heavy profile 不得静默成为 fallback 或继续增长。
+7. source-only 与 World Model + Source 两臂使用同一个 loop、Conversation、Reviewer、Provider route、dispatch fuse 和质量口径，只改变
+   cognition artifact/tools 是否可用。Cognition Observation 可以指导路径和提供非 locator 认知，但 ANSWER 的重要结论仍须选择 exact Source
+   Citation；Coverage/Unknown 不得被改写成肯定事实。旧 prompt-heavy profile 不得静默成为 fallback 或继续增长。
 
 ## Ownership and state separation
 
@@ -703,6 +708,9 @@ current `@4` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/
 admission，再派生 exact Session/Turn/call 摘要链且记录人工重复审批数 0；`@3` admission、`@2` 多 Profile 与 `@1` 单 Profile 配置继续
 只读兼容，但不能取得 current standing-authority preparation 状态。唯一 `--session-config` selector 让固定
 `127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
+PDR-014 `@5` 在完整继承 `@4` standing scope 的同时，额外固定一个 `JAVA_CAPABILITY_COGNITION@1` private artifact 的 path、digest、snapshot
+ID 和 exact Source revision/tree；只有全部重算一致才启用 `WORLD_MODEL_SOURCE_LIGHTWEIGHT_AGENT`，否则在 listener、credential 与 Provider
+dispatch 前失败关闭。没有该字段的 `@4` 继续形成同 Agent source-only 消融臂。
 Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 availability raw evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
 exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与
 `run-036-chat-alpha` 均真实启动 listener、执行 Browser 五轮 Chat、消费受限 Source/Provider 并优雅停止，但五轮各自 5/5 失败；run-036 的

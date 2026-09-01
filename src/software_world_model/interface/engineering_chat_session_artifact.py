@@ -93,6 +93,12 @@ from software_world_model.cross_cutting import (
 from software_world_model.infrastructure.file_structure_read_bundle import (
     FileStructureReadBundleStore,
 )
+from software_world_model.infrastructure.file_capability_cognition import (
+    load_capability_cognition,
+)
+from software_world_model.knowledge_engine.capability_cognition import (
+    CapabilityCognitionIndex,
+)
 
 from .engineering_chat_candidate import (
     engineering_chat_product_candidate_digest,
@@ -106,6 +112,7 @@ from .engineering_chat_provider_runtime import (
 from .engineering_chat_session_runtime import (
     ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_STATUS,
     ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+    ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE,
     PreparedEngineeringChatSessionRuntime,
     prepare_engineering_chat_session_runtime,
 )
@@ -134,6 +141,9 @@ ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3 = (
 )
 ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@4"
+)
+ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5 = (
+    "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@5"
 )
 ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA_V2 = (
     "SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-PREPARATION@2"
@@ -195,6 +205,24 @@ _SESSION_CONFIG_V3_FIELDS = _SESSION_CONFIG_V2_FIELDS | {
 _SESSION_CONFIG_V4_FIELDS = (
     _SESSION_CONFIG_V3_FIELDS - {"authorization_message_digest"}
 ) | {"standing_authority"}
+_SESSION_CONFIG_V5_FIELDS = _SESSION_CONFIG_V4_FIELDS | {
+    "capability_cognition"
+}
+_CURRENT_SESSION_CONFIG_SCHEMAS = frozenset(
+    {
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5,
+    }
+)
+_CAPABILITY_COGNITION_FIELDS = frozenset(
+    {
+        "artifact",
+        "artifact_digest",
+        "snapshot_id",
+        "source_revision",
+        "source_tree",
+    }
+)
 _COGNITION_PROFILE_FIELDS = frozenset(
     {
         "ordinal",
@@ -333,6 +361,15 @@ class EngineeringChatArtifactCognitionProfileConfig:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineeringChatArtifactCapabilityCognitionConfig:
+    artifact: str
+    artifact_digest: Digest
+    snapshot_id: str
+    source_revision: str
+    source_tree: str
+
+
+@dataclass(frozen=True, slots=True)
 class EngineeringChatArtifactDeepSeekAdmissionConfig:
     run_type: str
     run_ref: str
@@ -364,6 +401,7 @@ class EngineeringChatArtifactSessionConfig:
     test_paths: tuple[str, ...]
     excluded_source_paths: tuple[str, ...]
     cognition_profiles: tuple[EngineeringChatArtifactCognitionProfileConfig, ...]
+    capability_cognition: EngineeringChatArtifactCapabilityCognitionConfig | None
     deepseek_dispatch_admission: (
         EngineeringChatArtifactDeepSeekAdmissionConfig | None
     )
@@ -461,6 +499,18 @@ class PreparedEngineeringChatArtifactSession:
                 ),
                 "profiles": tuple(
                     item.public_status() for item in self.cognition_profiles
+                ),
+                "capability_cognition": (
+                    {
+                        "snapshot_id": (
+                            self.session_config.capability_cognition.snapshot_id
+                        ),
+                        "digest": (
+                            self.session_config.capability_cognition.artifact_digest.value
+                        ),
+                    }
+                    if self.session_config.capability_cognition is not None
+                    else None
                 ),
             },
             "authority_chain": (
@@ -654,6 +704,9 @@ def load_engineering_chat_artifact_session_config(
         ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA: (
             _SESSION_CONFIG_V4_FIELDS
         ),
+        ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5: (
+            _SESSION_CONFIG_V5_FIELDS
+        ),
     }.get(schema)
     if expected_fields is None:
         raise DomainError(
@@ -667,7 +720,7 @@ def load_engineering_chat_artifact_session_config(
         )
     routes = _provider_routes(decoded)
     authorization_message_digest = None
-    if schema != ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA:
+    if schema not in _CURRENT_SESSION_CONFIG_SCHEMAS:
         try:
             authorization_message_digest = Digest(
                 _required_text(decoded, "authorization_message_digest")
@@ -678,6 +731,11 @@ def load_engineering_chat_artifact_session_config(
                 "Engineering Chat authorization message digest is invalid",
             ) from exc
     cognition_profiles = _cognition_profiles(decoded, schema=schema)
+    capability_cognition = (
+        _capability_cognition(decoded)
+        if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5
+        else None
+    )
     source_paths = _required_text_list(decoded, "source_paths")
     document_paths = _required_text_list(decoded, "document_paths")
     build_paths = _required_text_list(decoded, "build_paths")
@@ -708,7 +766,7 @@ def load_engineering_chat_artifact_session_config(
             ),
             excluded_source_paths=excluded_source_paths,
         )
-        if schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA
+        if schema in _CURRENT_SESSION_CONFIG_SCHEMAS
         else None
     )
     config = EngineeringChatArtifactSessionConfig(
@@ -732,12 +790,14 @@ def load_engineering_chat_artifact_session_config(
         test_paths=test_paths,
         excluded_source_paths=excluded_source_paths,
         cognition_profiles=cognition_profiles,
+        capability_cognition=capability_cognition,
         deepseek_dispatch_admission=(
             _deepseek_dispatch_admission(decoded)
             if schema
             in {
                 ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3,
                 ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA,
+                ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5,
             }
             else None
         ),
@@ -770,6 +830,13 @@ def load_engineering_chat_artifact_session_config(
         != config.required_conversation_turns
         * config.maximum_dispatches_per_turn
         or "src/main/resources" not in config.excluded_source_paths
+        or config.capability_cognition is not None
+        and config.capability_cognition.source_revision
+        != config.repository_revision
+        or config.capability_cognition is not None
+        and config.standing_authority is not None
+        and config.capability_cognition.source_tree
+        != config.standing_authority.source_tree
     ):
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
@@ -840,7 +907,7 @@ def prepare_engineering_chat_artifact_session(
         session_config.repository_revision,
     )
     standing_authority = session_config.standing_authority
-    if session_config.schema == ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA:
+    if session_config.schema in _CURRENT_SESSION_CONFIG_SCHEMAS:
         if standing_authority is None:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -933,6 +1000,31 @@ def prepare_engineering_chat_artifact_session(
         loaded=loaded_cognition_profiles,
         capabilities=capabilities,
     )
+    capability_cognition_index = None
+    capability_config = session_config.capability_cognition
+    if capability_config is not None:
+        capability_path = _canonical_private_file(
+            capability_config.artifact,
+            "capability cognition artifact",
+        )
+        capability_snapshot = load_capability_cognition(
+            capability_path,
+            expected_revision=repository_revision,
+            expected_tree=observed_source_tree,
+            expected_digest=capability_config.artifact_digest,
+        )
+        if (
+            capability_snapshot.snapshot_id.value
+            != capability_config.snapshot_id
+            or capability_snapshot.project_name != session_config.project_name
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "capability cognition identity does not bind the Chat Session",
+            )
+        capability_cognition_index = CapabilityCognitionIndex(
+            capability_snapshot
+        )
     prepared_cognition_profiles = tuple(
         PreparedEngineeringChatCognitionProfileArtifact(
             ordinal=capability.ordinal,
@@ -1269,7 +1361,12 @@ def prepare_engineering_chat_artifact_session(
         artifact_session_config_digest=session_config.file_digest,
         fixed_command_wired=True,
         availability_clock=runtime_clock,
-        agent_mode=ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+        agent_mode=(
+            ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE
+            if capability_cognition_index is not None
+            else ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE
+        ),
+        capability_cognition=capability_cognition_index,
     )
     if (
         runtime.receipt.status
@@ -1302,6 +1399,11 @@ def prepare_engineering_chat_artifact_session(
         ),
         "cognition_profiles": tuple(
             item.public_status() for item in prepared_cognition_profiles
+        ),
+        "capability_cognition_digest": (
+            capability_config.artifact_digest.value
+            if capability_config is not None
+            else None
         ),
         "ark_conformance_result_digest": ark_qualification.result_digest.value,
         "deepseek_conformance_result_digest": (
@@ -1587,6 +1689,24 @@ def _public_source_standing_authority(
         expires_at=_required_time(value, "expires_at"),
         sink=_required_text(value, "sink"),
         loopback_origin=_required_text(value, "loopback_origin"),
+    )
+
+
+def _capability_cognition(
+    document: Mapping[str, object],
+) -> EngineeringChatArtifactCapabilityCognitionConfig:
+    value = document.get("capability_cognition")
+    if not isinstance(value, Mapping) or set(value) != _CAPABILITY_COGNITION_FIELDS:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat capability cognition config is invalid",
+        )
+    return EngineeringChatArtifactCapabilityCognitionConfig(
+        artifact=_required_absolute_path_text(value, "artifact"),
+        artifact_digest=_required_digest(value, "artifact_digest"),
+        snapshot_id=_required_text(value, "snapshot_id"),
+        source_revision=_required_text(value, "source_revision"),
+        source_tree=_required_text(value, "source_tree"),
     )
 
 
@@ -2014,7 +2134,10 @@ def _gateway_repository_ref(
 def _active_lightweight_models(
     runtime: PreparedEngineeringChatSessionRuntime,
 ) -> tuple[object | None, object | None]:
-    if runtime.receipt.agent_mode != ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE:
+    if runtime.receipt.agent_mode not in {
+        ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+        ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE,
+    }:
         return None, None
     factory = runtime.attempt_factory
     primary = getattr(getattr(factory, "primary", None), "model", None)
@@ -2374,11 +2497,13 @@ __all__ = [
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3",
+    "ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_SCHEMA_V2",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS",
     "ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS_V2",
     "EngineeringChatArtifactCognitionProfileConfig",
+    "EngineeringChatArtifactCapabilityCognitionConfig",
     "EngineeringChatArtifactDeepSeekAdmissionConfig",
     "EngineeringChatArtifactProviderRouteConfig",
     "EngineeringChatArtifactSessionConfig",

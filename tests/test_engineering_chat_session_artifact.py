@@ -38,6 +38,7 @@ from software_world_model.interface.engineering_chat_session_artifact import (
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V1,
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V2,
     ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V3,
+    ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5,
     ENGINEERING_CHAT_ARTIFACT_SESSION_PREPARATION_STATUS,
     load_engineering_chat_artifact_session_config,
     prepare_engineering_chat_artifact_session,
@@ -110,6 +111,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.java_snapshot = self.root / "java-snapshot.json"
         self.ark_conformance = self.root / "ark-conformance.json"
         self.deepseek_conformance = self.root / "deepseek-conformance.json"
+        self.capability_cognition = self.root / "capability-cognition.json"
         for path in (
             self.ordered,
             self.snapshot,
@@ -117,6 +119,7 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             self.java_snapshot,
             self.ark_conformance,
             self.deepseek_conformance,
+            self.capability_cognition,
         ):
             path.write_text("{}\n", encoding="utf-8")
         self.now = datetime(2026, 8, 25, 10, tzinfo=timezone.utc)
@@ -349,6 +352,18 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         }
         return document
 
+    def document_v5(self) -> dict[str, object]:
+        document = self.document_v4()
+        document["schema"] = ENGINEERING_CHAT_ARTIFACT_SESSION_CONFIG_SCHEMA_V5
+        document["capability_cognition"] = {
+            "artifact": str(self.capability_cognition),
+            "artifact_digest": digest_of("capability-cognition").value,
+            "snapshot_id": "cog_snapshot_" + "6" * 32,
+            "source_revision": self.source_revision,
+            "source_tree": self.source_tree,
+        }
+        return document
+
     def write_config(
         self,
         document: dict[str, object],
@@ -508,6 +523,28 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         with self.assertRaises(DomainError):
             load_engineering_chat_artifact_session_config(
                 self.write_config(widened, name="v4-widened.json")
+            )
+
+    def test_v5_loader_binds_capability_cognition_to_exact_source(self) -> None:
+        loaded = load_engineering_chat_artifact_session_config(
+            self.write_config(self.document_v5(), name="session-v5.json")
+        )
+
+        self.assertIsNotNone(loaded.capability_cognition)
+        self.assertEqual(
+            loaded.capability_cognition.source_revision,
+            self.source_revision,
+        )
+        self.assertEqual(
+            loaded.capability_cognition.source_tree,
+            self.source_tree,
+        )
+
+        drifted = self.document_v5()
+        drifted["capability_cognition"]["source_tree"] = "e" * 40
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(drifted, name="v5-drifted-tree.json")
             )
 
     def test_prepare_loads_artifact_identities_without_runtime_io(self) -> None:

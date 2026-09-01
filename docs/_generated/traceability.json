@@ -4346,6 +4346,47 @@
       "tests/test_lightweight_engineering_model.py"
     ]
   },
+  "FINDING-010-260": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-260.md",
+    "code": [
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/interface/lightweight_engineering_chat.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_engineering_chat_provider_runtime.py"
+    ]
+  },
+  "FINDING-010-261": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-261.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "src/software_world_model/application_services/java_capability_cognition.py",
+      "src/software_world_model/infrastructure/file_capability_cognition.py",
+      "src/software_world_model/interface/java_capability_cognition_cli.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py",
+      "tests/test_source_operations.py"
+    ]
+  },
+  "FINDING-010-262": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-262.md",
+    "code": [
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "src/software_world_model/interface/lightweight_engineering_chat.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py",
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -6340,10 +6381,14 @@
     "path": "docs/system/contracts/knowledge/java-source-semantics.md",
     "code": [
       "src/software_world_model/knowledge_engine",
-      "src/software_world_model/application_services"
+      "src/software_world_model/application_services",
+      "src/software_world_model/infrastructure/file_capability_cognition.py",
+      "src/software_world_model/interface/java_capability_cognition_cli.py"
     ],
     "tests": [
-      "tests"
+      "tests/test_java_source_semantics.py",
+      "tests/test_capability_cognition.py",
+      "tests/test_source_operations.py"
     ]
   },
   "SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL": {

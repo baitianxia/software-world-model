@@ -45,6 +45,9 @@ from software_world_model.cross_cutting import (
     ErrorCode,
     digest_of,
 )
+from software_world_model.knowledge_engine.capability_cognition import (
+    CapabilityCognitionIndex,
+)
 
 from .engineering_chat_provider_launcher import (
     ENGINEERING_CHAT_PROVIDER_OPERATIONS,
@@ -63,10 +66,13 @@ from .lightweight_engineering_chat import (
 
 
 ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@4"
+    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@5"
 )
 ENGINEERING_CHAT_LEGACY_AGENT_MODE = "LEGACY_PROTOCOL"
 ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE = "SOURCE_ONLY_LIGHTWEIGHT_AGENT"
+ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE = (
+    "WORLD_MODEL_SOURCE_LIGHTWEIGHT_AGENT"
+)
 ENGINEERING_CHAT_SESSION_RUNTIME_STATUS = (
     "SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE"
 )
@@ -236,6 +242,7 @@ class EngineeringChatSessionRuntimeReceipt:
     logical_turn_dispatch_budget_digest: Digest | None
     launcher_receipt_digest: Digest
     agent_mode: str
+    capability_cognition_digest: Digest | None
     blocking_gaps: tuple[str, ...]
     artifact_session_config_loaded: bool
     artifact_session_config_digest: Digest | None
@@ -272,6 +279,11 @@ class EngineeringChatSessionRuntimeReceipt:
             ),
             "launcher_receipt_digest": self.launcher_receipt_digest.value,
             "agent_mode": self.agent_mode,
+            "capability_cognition_digest": (
+                self.capability_cognition_digest.value
+                if self.capability_cognition_digest is not None
+                else None
+            ),
             "blocking_gaps": self.blocking_gaps,
             "artifact_session_config_loaded": self.artifact_session_config_loaded,
             "artifact_session_config_digest": (
@@ -330,6 +342,7 @@ def prepare_engineering_chat_session_runtime(
     fixed_command_wired: bool = False,
     availability_clock: Callable[[], datetime] | None = None,
     agent_mode: str = ENGINEERING_CHAT_LEGACY_AGENT_MODE,
+    capability_cognition: CapabilityCognitionIndex | None = None,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""
 
@@ -337,10 +350,26 @@ def prepare_engineering_chat_session_runtime(
     if agent_mode not in {
         ENGINEERING_CHAT_LEGACY_AGENT_MODE,
         ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+        ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE,
     }:
         raise DomainError(
             ErrorCode.INVALID_ARGUMENT,
             "Engineering Chat Agent mode is not registered",
+        )
+    cognition_mode = agent_mode == ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE
+    if (
+        cognition_mode != (capability_cognition is not None)
+        or capability_cognition is not None
+        and (
+            not isinstance(capability_cognition, CapabilityCognitionIndex)
+            or capability_cognition.snapshot.project_name != binding.project_name
+            or capability_cognition.snapshot.source_revision
+            != binding.repository_revision
+        )
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat capability cognition does not bind its Agent mode",
         )
     if artifact_session_config_digest is not None and not isinstance(
         artifact_session_config_digest, Digest
@@ -426,7 +455,10 @@ def prepare_engineering_chat_session_runtime(
     )
 
     turn_trace_reader = None
-    if agent_mode == ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE:
+    if agent_mode in {
+        ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+        ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE,
+    }:
         if primary_logical_budget is None:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
@@ -477,6 +509,7 @@ def prepare_engineering_chat_session_runtime(
             primary=primary_lightweight,
             fallback=fallback_lightweight,
             dispatch_budget_digest=dispatch_budget.digest,
+            capability_cognition=capability_cognition,
             loop_limits=loop_limits,
         )
         turn_trace_reader = lambda request_digest: tuple(
@@ -556,6 +589,11 @@ def prepare_engineering_chat_session_runtime(
         ),
         "launcher_receipt_digest": launcher.receipt.digest.value,
         "agent_mode": agent_mode,
+        "capability_cognition_digest": (
+            capability_cognition.snapshot.digest.value
+            if capability_cognition is not None
+            else None
+        ),
         "blocking_gaps": blocking_gaps,
         "artifact_session_config_loaded": artifact_loaded,
         "artifact_session_config_digest": (
@@ -588,6 +626,11 @@ def prepare_engineering_chat_session_runtime(
         ),
         launcher_receipt_digest=launcher.receipt.digest,
         agent_mode=agent_mode,
+        capability_cognition_digest=(
+            capability_cognition.snapshot.digest
+            if capability_cognition is not None
+            else None
+        ),
         blocking_gaps=blocking_gaps,
         artifact_session_config_loaded=artifact_loaded,
         artifact_session_config_digest=artifact_session_config_digest,
@@ -631,6 +674,7 @@ __all__ = [
     "ENGINEERING_CHAT_SESSION_RUNTIME_STATUS",
     "ENGINEERING_CHAT_LEGACY_AGENT_MODE",
     "ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE",
+    "ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE",
     "EngineeringChatEvidenceToolFactory",
     "EngineeringChatSessionRuntimeReceipt",
     "PreparedEngineeringChatSessionRuntime",

@@ -5170,6 +5170,49 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-259.md"
   },
   {
+    "id": "FINDING-010-260",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "ai",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-260.md"
+  },
+  {
+    "id": "FINDING-010-261",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "knowledge",
+      "source",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-261.md"
+  },
+  {
+    "id": "FINDING-010-262",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "application",
+      "knowledge",
+      "ai",
+      "security",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-262.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -8429,7 +8472,8 @@
       "FINDING-010-249",
       "FINDING-010-250",
       "FINDING-010-258",
-      "FINDING-010-259"
+      "FINDING-010-259",
+      "FINDING-010-262"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },
@@ -8676,7 +8720,8 @@
       "knowledge"
     ],
     "derived_from": [
-      "FINDING-010-135"
+      "FINDING-010-135",
+      "FINDING-010-261"
     ],
     "path": "docs/system/contracts/knowledge/java-source-semantics.md"
   },

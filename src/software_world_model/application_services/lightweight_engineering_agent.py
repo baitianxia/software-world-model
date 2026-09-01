@@ -14,6 +14,7 @@ from threading import Lock
 from typing import Mapping, Protocol, Sequence
 
 from software_world_model.cross_cutting import (
+    canonical_json_bytes,
     Digest,
     DomainError,
     ErrorCode,
@@ -22,6 +23,13 @@ from software_world_model.cross_cutting import (
     StableId,
     Uuid4IdGenerator,
     digest_of,
+)
+from software_world_model.knowledge_engine.capability_cognition import (
+    CapabilityCognitionIndex,
+    CognitionDirection,
+    CognitionEntityKind,
+    CognitionPage,
+    CognitionRelationKind,
 )
 
 from .conversational_engineering_agent import (
@@ -47,6 +55,9 @@ from .engineering_conversation import (
 
 
 class LightweightAgentAction(str, Enum):
+    SEARCH_COGNITION = "SEARCH_COGNITION"
+    TRAVERSE_RELATIONS = "TRAVERSE_RELATIONS"
+    RETRIEVE_COGNITION_DETAIL = "RETRIEVE_COGNITION_DETAIL"
     SEARCH_SOURCE = "SEARCH_SOURCE"
     READ_SOURCE = "READ_SOURCE"
     FINISH = "FINISH"
@@ -80,6 +91,11 @@ class LightweightAgentDecision:
     response_kind: LightweightAgentResponseKind | None
     answer: str | None
     citations: tuple[LightweightCitationSelection, ...]
+    cognition_index: int | None = None
+    relation_kind: CognitionRelationKind | None = None
+    direction: CognitionDirection | None = None
+    maximum_depth: int | None = None
+    cursor: int | None = None
 
     @classmethod
     def from_payload(
@@ -91,6 +107,11 @@ class LightweightAgentDecision:
             "action",
             "query",
             "read_index",
+            "cognition_index",
+            "relation_kind",
+            "direction",
+            "maximum_depth",
+            "cursor",
             "response_kind",
             "answer",
             "citations",
@@ -108,6 +129,11 @@ class LightweightAgentDecision:
             ) from exc
         query = _optional_text(payload["query"], "Source query")
         read_index = payload["read_index"]
+        cognition_index = payload["cognition_index"]
+        raw_relation_kind = payload["relation_kind"]
+        raw_direction = payload["direction"]
+        maximum_depth = payload["maximum_depth"]
+        cursor = payload["cursor"]
         raw_kind = payload["response_kind"]
         answer = _optional_text(payload["answer"], "Agent answer")
         raw_citations = payload["citations"]
@@ -132,22 +158,70 @@ class LightweightAgentDecision:
         if len(citations) != len(set(citations)):
             _invalid("lightweight Agent citation selections must be unique")
         response_kind: LightweightAgentResponseKind | None = None
-        if action is LightweightAgentAction.SEARCH_SOURCE:
+        relation_kind = None
+        if raw_relation_kind is not None:
+            try:
+                relation_kind = CognitionRelationKind(raw_relation_kind)
+            except (TypeError, ValueError):
+                _invalid("cognition relation kind is not registered")
+        direction = None
+        if raw_direction is not None:
+            try:
+                direction = CognitionDirection(raw_direction)
+            except (TypeError, ValueError):
+                _invalid("cognition direction is not registered")
+        base_tool_fields = (
+            raw_kind is None and answer is None and not citations
+        )
+        if action in {
+            LightweightAgentAction.SEARCH_SOURCE,
+            LightweightAgentAction.SEARCH_COGNITION,
+        }:
             valid = (
                 query is not None
                 and read_index is None
-                and raw_kind is None
-                and answer is None
-                and not citations
+                and cognition_index is None
+                and relation_kind is None
+                and direction is None
+                and maximum_depth is None
+                and (cursor is None or (type(cursor) is int and cursor >= 0))
+                and base_tool_fields
             )
         elif action is LightweightAgentAction.READ_SOURCE:
             valid = (
                 query is None
                 and type(read_index) is int
                 and read_index >= 1
-                and raw_kind is None
-                and answer is None
-                and not citations
+                and cognition_index is None
+                and relation_kind is None
+                and direction is None
+                and maximum_depth is None
+                and cursor is None
+                and base_tool_fields
+            )
+        elif action is LightweightAgentAction.TRAVERSE_RELATIONS:
+            valid = (
+                query is None
+                and read_index is None
+                and type(cognition_index) is int
+                and cognition_index >= 1
+                and direction is not None
+                and type(maximum_depth) is int
+                and 1 <= maximum_depth <= 4
+                and (cursor is None or (type(cursor) is int and cursor >= 0))
+                and base_tool_fields
+            )
+        elif action is LightweightAgentAction.RETRIEVE_COGNITION_DETAIL:
+            valid = (
+                query is None
+                and read_index is None
+                and type(cognition_index) is int
+                and cognition_index >= 1
+                and relation_kind is None
+                and direction is None
+                and maximum_depth is None
+                and (cursor is None or (type(cursor) is int and cursor >= 0))
+                and base_tool_fields
             )
         else:
             try:
@@ -157,6 +231,11 @@ class LightweightAgentDecision:
             valid = (
                 query is None
                 and read_index is None
+                and cognition_index is None
+                and relation_kind is None
+                and direction is None
+                and maximum_depth is None
+                and cursor is None
                 and response_kind is not None
                 and answer is not None
                 and (
@@ -172,6 +251,15 @@ class LightweightAgentDecision:
             action=action,
             query=query,
             read_index=read_index if type(read_index) is int else None,
+            cognition_index=(
+                cognition_index if type(cognition_index) is int else None
+            ),
+            relation_kind=relation_kind,
+            direction=direction,
+            maximum_depth=(
+                maximum_depth if type(maximum_depth) is int else None
+            ),
+            cursor=cursor if type(cursor) is int else None,
             response_kind=response_kind,
             answer=answer,
             citations=tuple(citations),
@@ -220,9 +308,32 @@ class LightweightReadCandidate:
 
 
 @dataclass(frozen=True, slots=True)
+class LightweightCognitionCandidate:
+    cognition_index: int
+    entity_id: StableId
+    kind: CognitionEntityKind
+    name: str
+    qualified_name: str
+    coverage: str
+    unknowns: tuple[str, ...]
+    locator: str
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "cognition_index": self.cognition_index,
+            "kind": self.kind.value,
+            "name": self.name,
+            "qualified_name": self.qualified_name,
+            "coverage": self.coverage,
+            "unknowns": list(self.unknowns),
+            "locator": self.locator,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class LightweightObservation:
     observation_index: int
-    operation: EngineeringAgentToolOperation
+    operation: EngineeringAgentToolOperation | LightweightAgentAction
     disposition: EngineeringAgentEvidenceDisposition
     content: str
     progress: bool
@@ -257,12 +368,18 @@ class LightweightAgentStepRequest:
     observations: tuple[LightweightObservation, ...]
     read_candidates: tuple[LightweightReadCandidate, ...]
     tools_enabled: bool
+    cognition_candidates: tuple[LightweightCognitionCandidate, ...] = ()
+    cognition_enabled: bool = False
     rejected_answer: str | None = None
     review_findings: tuple[str, ...] = ()
 
     def model_view(self) -> dict[str, object]:
         return {
-            "mode": "SOURCE_ONLY",
+            "mode": (
+                "WORLD_MODEL_PLUS_SOURCE"
+                if self.cognition_enabled
+                else "SOURCE_ONLY"
+            ),
             "repository": {
                 "project": self.turn_request.binding.project_name,
                 "revision": self.turn_request.binding.repository_revision,
@@ -281,11 +398,23 @@ class LightweightAgentStepRequest:
             "plan": self.plan,
             "tools_enabled": self.tools_enabled,
             "available_actions": (
-                ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
+                [
+                    "SEARCH_COGNITION",
+                    "TRAVERSE_RELATIONS",
+                    "RETRIEVE_COGNITION_DETAIL",
+                    "SEARCH_SOURCE",
+                    "READ_SOURCE",
+                    "FINISH",
+                ]
+                if self.tools_enabled and self.cognition_enabled
+                else ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
                 if self.tools_enabled
                 else ["FINISH"]
             ),
             "read_candidates": [item.model_view() for item in self.read_candidates],
+            "cognition_candidates": [
+                item.model_view() for item in self.cognition_candidates
+            ],
             "observations": [item.model_view() for item in self.observations],
             "rejected_answer": self.rejected_answer,
             "review_findings": list(self.review_findings),
@@ -503,7 +632,7 @@ class LightweightAgentTraceStore:
 class ApplicationOwnedLightweightAgentTurnExecutor(
     EngineeringConversationTurnExecutor
 ):
-    """Run one bounded source-only investigation and independent review."""
+    """Run one bounded source or cognition-plus-source investigation."""
 
     def __init__(
         self,
@@ -513,6 +642,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         delivery_control: SealedLightweightDeliveryControl,
         trace_store: LightweightAgentTraceStore,
         attempt_ref: str,
+        capability_cognition: CapabilityCognitionIndex | None = None,
         limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         id_generator: IdGenerator | None = None,
     ) -> None:
@@ -522,6 +652,10 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             or not callable(getattr(tool_port, "execute", None))
             or not callable(getattr(tool_port, "source_read_options", None))
             or not callable(getattr(delivery_control, "authorize", None))
+            or (
+                capability_cognition is not None
+                and not isinstance(capability_cognition, CapabilityCognitionIndex)
+            )
         ):
             raise DomainError(
                 ErrorCode.INVALID_ARGUMENT,
@@ -532,6 +666,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         self._delivery = delivery_control
         self._traces = trace_store
         self._attempt_ref = _text(attempt_ref, "attempt reference")
+        self._cognition = capability_cognition
         self._limits = limits
         self._ids = id_generator or Uuid4IdGenerator()
 
@@ -542,6 +677,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         plan = "Investigate the exact request and stop when the evidence is sufficient."
         observations: list[LightweightObservation] = []
         read_candidates: list[LightweightReadCandidate] = []
+        cognition_candidates: list[LightweightCognitionCandidate] = []
         receipts: list[EngineeringAgentModelCallReceipt] = []
         events: list[Mapping[str, object]] = []
         rejected_answer: str | None = None
@@ -563,6 +699,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         plan=plan,
                         observations=tuple(observations),
                         read_candidates=tuple(read_candidates),
+                        cognition_candidates=tuple(cognition_candidates),
+                        cognition_enabled=self._cognition is not None,
                         tools_enabled=tools_enabled,
                         rejected_answer=rejected_answer,
                         review_findings=review_findings,
@@ -585,6 +723,19 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         "action": decision.action.value,
                         "query": decision.query,
                         "read_index": decision.read_index,
+                        "cognition_index": decision.cognition_index,
+                        "relation_kind": (
+                            decision.relation_kind.value
+                            if decision.relation_kind is not None
+                            else None
+                        ),
+                        "direction": (
+                            decision.direction.value
+                            if decision.direction is not None
+                            else None
+                        ),
+                        "maximum_depth": decision.maximum_depth,
+                        "cursor": decision.cursor,
                         "disclosure_record_ref": result.disclosure_record_ref,
                         "model_call_receipt_ref": result.receipt.digest.value,
                     }
@@ -597,6 +748,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         decision=decision,
                         observations=observations,
                         read_candidates=read_candidates,
+                        cognition_candidates=cognition_candidates,
                         events=events,
                     )
                     progress = any(
@@ -719,7 +871,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 "schema": "SWM-LIGHTWEIGHT-AGENT-TRAJECTORY@1",
                 "attempt_ref": self._attempt_ref,
                 "turn_request_digest": request.request_digest.value,
-                "mode": "SOURCE_ONLY",
+                "mode": (
+                    "WORLD_MODEL_PLUS_SOURCE"
+                    if self._cognition is not None
+                    else "SOURCE_ONLY"
+                ),
                 "events": tuple(events),
                 "terminal_status": terminal,
             }
@@ -727,7 +883,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 LightweightAgentTrajectory(
                     attempt_ref=self._attempt_ref,
                     turn_request_digest=request.request_digest,
-                    mode="SOURCE_ONLY",
+                    mode=(
+                        "WORLD_MODEL_PLUS_SOURCE"
+                        if self._cognition is not None
+                        else "SOURCE_ONLY"
+                    ),
                     events=tuple(events),
                     terminal_status=terminal,
                     digest=digest_of(core),
@@ -761,8 +921,22 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         decision: LightweightAgentDecision,
         observations: list[LightweightObservation],
         read_candidates: list[LightweightReadCandidate],
+        cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
     ) -> None:
+        if decision.action in {
+            LightweightAgentAction.SEARCH_COGNITION,
+            LightweightAgentAction.TRAVERSE_RELATIONS,
+            LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
+        }:
+            self._execute_cognition_action(
+                request=request,
+                decision=decision,
+                observations=observations,
+                cognition_candidates=cognition_candidates,
+                events=events,
+            )
+            return
         if decision.action is LightweightAgentAction.SEARCH_SOURCE:
             assert decision.query is not None
             operation = EngineeringAgentToolOperation.SOURCE_SEARCH
@@ -881,6 +1055,160 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 ErrorCode.BUDGET_EXHAUSTED,
                 "lightweight Agent evidence byte budget is exhausted",
             )
+
+    def _execute_cognition_action(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        decision: LightweightAgentDecision,
+        observations: list[LightweightObservation],
+        cognition_candidates: list[LightweightCognitionCandidate],
+        events: list[Mapping[str, object]],
+    ) -> None:
+        cognition = self._cognition
+        if cognition is None or cognition.snapshot.source_revision != (
+            request.binding.repository_revision
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "capability cognition is unavailable or binds another Source revision",
+            )
+        if decision.action is LightweightAgentAction.SEARCH_COGNITION:
+            assert decision.query is not None
+            page = cognition.search(
+                decision.query,
+                cursor=decision.cursor or 0,
+                limit=12,
+            )
+        else:
+            assert decision.cognition_index is not None
+            matches = [
+                item
+                for item in cognition_candidates
+                if item.cognition_index == decision.cognition_index
+            ]
+            if len(matches) != 1:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "lightweight Agent selected an unavailable cognition entity",
+                )
+            entity_id = matches[0].entity_id
+            if decision.action is LightweightAgentAction.TRAVERSE_RELATIONS:
+                assert decision.direction is not None
+                assert decision.maximum_depth is not None
+                page = cognition.traverse(
+                    entity_id,
+                    kinds=(
+                        (decision.relation_kind,)
+                        if decision.relation_kind is not None
+                        else ()
+                    ),
+                    direction=decision.direction,
+                    maximum_depth=decision.maximum_depth,
+                    cursor=decision.cursor or 0,
+                    limit=24,
+                )
+            else:
+                page = cognition.detail(
+                    entity_id,
+                    cursor=decision.cursor or 0,
+                    limit=32,
+                )
+        self._register_cognition_candidates(page, cognition_candidates)
+        index = len(observations) + 1
+        content = canonical_json_bytes(page.to_payload()).decode("utf-8")
+        page_digest = digest_of(page.to_payload())
+        observation = LightweightObservation(
+            observation_index=index,
+            operation=decision.action,
+            disposition=(
+                EngineeringAgentEvidenceDisposition.SUPPORT
+                if page.items
+                else EngineeringAgentEvidenceDisposition.BOUNDARY
+            ),
+            content=content,
+            progress=bool(page.items),
+            citations=(),
+            digest=digest_of(
+                {
+                    "schema": "SWM-LIGHTWEIGHT-COGNITION-OBSERVATION@1",
+                    "observation_index": index,
+                    "operation": decision.action.value,
+                    "snapshot_digest": page.snapshot_digest.value,
+                    "page_digest": page_digest.value,
+                }
+            ),
+        )
+        observations.append(observation)
+        events.append(
+            {
+                "kind": "COGNITION_OBSERVATION",
+                "observation_index": index,
+                "operation": decision.action.value,
+                "progress": observation.progress,
+                "item_count": len(page.items),
+                "total": page.total,
+                "next_cursor": page.next_cursor,
+                "snapshot_digest": page.snapshot_digest.value,
+                "observation_digest": observation.digest.value,
+            }
+        )
+        if sum(len(item.content.encode("utf-8")) for item in observations) > (
+            self._limits.maximum_evidence_package_bytes
+        ):
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "lightweight Agent evidence byte budget is exhausted",
+            )
+
+    @staticmethod
+    def _register_cognition_candidates(
+        page: CognitionPage,
+        candidates: list[LightweightCognitionCandidate],
+    ) -> None:
+        known = {item.entity_id for item in candidates}
+
+        def visit(value: object) -> None:
+            if isinstance(value, Mapping):
+                raw_id = value.get("entity_id")
+                raw_kind = value.get("kind")
+                provenance = value.get("provenance")
+                if (
+                    isinstance(raw_id, str)
+                    and isinstance(raw_kind, str)
+                    and isinstance(value.get("name"), str)
+                    and isinstance(value.get("qualified_name"), str)
+                    and isinstance(value.get("coverage"), str)
+                    and isinstance(value.get("unknowns"), list)
+                    and isinstance(provenance, Mapping)
+                    and isinstance(provenance.get("locator"), str)
+                ):
+                    entity_id = StableId(raw_id)
+                    if entity_id not in known:
+                        candidates.append(
+                            LightweightCognitionCandidate(
+                                cognition_index=len(candidates) + 1,
+                                entity_id=entity_id,
+                                kind=CognitionEntityKind(raw_kind),
+                                name=value["name"],
+                                qualified_name=value["qualified_name"],
+                                coverage=value["coverage"],
+                                unknowns=tuple(
+                                    item
+                                    for item in value["unknowns"]
+                                    if isinstance(item, str)
+                                ),
+                                locator=provenance["locator"],
+                            )
+                        )
+                        known.add(entity_id)
+                for item in value.values():
+                    visit(item)
+            elif isinstance(value, (list, tuple)):
+                for item in value:
+                    visit(item)
+
+        visit(page.items)
 
     @staticmethod
     def _resolve_citations(

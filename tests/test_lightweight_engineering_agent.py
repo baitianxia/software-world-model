@@ -20,6 +20,11 @@ from software_world_model.application_services.engineering_conversation import (
     InMemoryEngineeringConversationService,
     RuntimeCapabilityStatus,
 )
+from software_world_model.application_services.java_capability_cognition import (
+    ExactJavaCognitionSource,
+    JavaCognitionModuleSource,
+    build_java_capability_cognition,
+)
 from software_world_model.application_services.lightweight_engineering_agent import (
     ApplicationOwnedLightweightAgentTurnExecutor,
     LightweightAgentAction,
@@ -34,6 +39,11 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     SealedLightweightDeliveryControl,
 )
 from software_world_model.cross_cutting import Revision, StableId, digest_of
+from software_world_model.knowledge_engine.capability_cognition import (
+    CapabilityCognitionIndex,
+    CognitionDirection,
+    CognitionRelationKind,
+)
 
 
 REVISION = "a" * 40
@@ -263,7 +273,170 @@ class _NeedsMoreEvidenceModel(_Model):
         )
 
 
+class _CognitionFirstModel(_Model):
+    def decide(self, request):
+        self.steps.append(request)
+        question = request.turn_request.user_message.content
+        cognition_operations = [
+            item.operation
+            for item in request.observations
+            if isinstance(item.operation, LightweightAgentAction)
+        ]
+        source_operations = [
+            item.operation
+            for item in request.observations
+            if isinstance(item.operation, EngineeringAgentToolOperation)
+        ]
+        common = {
+            "goal": question,
+            "response_kind": None,
+            "answer": None,
+            "citations": (),
+        }
+        if not request.observations:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Find the entry in reusable cognition first.",
+                action=LightweightAgentAction.SEARCH_COGNITION,
+                query="CheckoutController",
+                read_index=None,
+                cursor=None,
+            )
+        elif len(cognition_operations) == 1:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Traverse the entry's collaborator relation.",
+                action=LightweightAgentAction.TRAVERSE_RELATIONS,
+                query=None,
+                read_index=None,
+                cognition_index=request.cognition_candidates[0].cognition_index,
+                relation_kind=CognitionRelationKind.INVOKES,
+                direction=CognitionDirection.OUTGOING,
+                maximum_depth=1,
+                cursor=None,
+            )
+        elif not source_operations:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Use exact Source to cite the cognition-guided conclusion.",
+                action=LightweightAgentAction.SEARCH_SOURCE,
+                query="checkout",
+                read_index=None,
+            )
+        elif source_operations[-1] is EngineeringAgentToolOperation.SOURCE_SEARCH:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Read the exact implementation selected by Source search.",
+                action=LightweightAgentAction.READ_SOURCE,
+                query=None,
+                read_index=request.read_candidates[-1].read_index,
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=question,
+                plan="Cognition established the path and Source established the behavior.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.ANSWER,
+                answer="入口先检查输入，再调用服务协作者。",
+                citations=(
+                    LightweightCitationSelection(
+                        request.observations[-1].observation_index,
+                        1,
+                    ),
+                ),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
+def _cognition() -> CapabilityCognitionIndex:
+    source = ExactJavaCognitionSource(
+        project_name="example",
+        source_revision=REVISION,
+        source_tree="c" * 40,
+        selected_roots=("app/src/main/java",),
+        modules=(
+            JavaCognitionModuleSource(
+                module_root="app",
+                module_name="app",
+                descriptor_path="app/pom.xml",
+                descriptor_bytes=b"<project><artifactId>app</artifactId></project>\n",
+            ),
+        ),
+        source_files={
+            "app/src/main/java/com/example/CheckoutController.java": b"""
+package com.example;
+public class CheckoutController {
+    private CheckoutService checkoutService;
+    public String checkout(String input) {
+        if (input == null) { throw new IllegalArgumentException(); }
+        return checkoutService.checkout(input);
+    }
+}
+""",
+            "app/src/main/java/com/example/CheckoutService.java": b"""
+package com.example;
+public interface CheckoutService { String checkout(String input); }
+""",
+        },
+    )
+    return CapabilityCognitionIndex(build_java_capability_cognition(source))
+
 class LightweightEngineeringAgentTest(unittest.TestCase):
+    def test_world_model_mode_uses_cognition_then_source_in_same_agent(self) -> None:
+        model = _CognitionFirstModel()
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-world-model",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        snapshot = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=snapshot.conversation.conversation_id,
+            expected_revision=snapshot.conversation.revision,
+            message="入口如何调用服务？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(tool.calls), 2)
+        self.assertTrue(model.steps[0].cognition_enabled)
+        self.assertTrue(model.steps[1].cognition_candidates)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(trace.mode, "WORLD_MODEL_PLUS_SOURCE")
+        self.assertEqual(
+            [
+                item["action"]
+                for item in trace.events
+                if item["kind"] == "MODEL_DECISION"
+            ],
+            [
+                "SEARCH_COGNITION",
+                "TRAVERSE_RELATIONS",
+                "SEARCH_SOURCE",
+                "READ_SOURCE",
+                "FINISH",
+            ],
+        )
+        cognition_events = [
+            item for item in trace.events if item["kind"] == "COGNITION_OBSERVATION"
+        ]
+        self.assertEqual(len(cognition_events), 2)
+        self.assertTrue(all(item["snapshot_digest"] for item in cognition_events))
+
     def test_two_questions_and_followup_replan_from_source_observations(self) -> None:
         binding = _binding()
         model = _Model()

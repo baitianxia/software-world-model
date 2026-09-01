@@ -221,6 +221,11 @@ class LightweightEngineeringModelTest(unittest.TestCase):
                     "action": "SEARCH_SOURCE",
                     "query": "selectionStrategy",
                     "read_index": None,
+                    "cognition_index": None,
+                    "relation_kind": None,
+                    "direction": None,
+                    "maximum_depth": None,
+                    "cursor": None,
                     "response_kind": None,
                     "answer": None,
                     "citations": [],
@@ -336,6 +341,11 @@ class LightweightEngineeringModelTest(unittest.TestCase):
                     "action": "SEARCH_SOURCE",
                     "query": None,
                     "read_index": None,
+                    "cognition_index": None,
+                    "relation_kind": None,
+                    "direction": None,
+                    "maximum_depth": None,
+                    "cursor": None,
                     "response_kind": None,
                     "answer": None,
                     "citations": [],
@@ -354,6 +364,39 @@ class LightweightEngineeringModelTest(unittest.TestCase):
             EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
         )
         self.assertEqual(model.audits[-1].receipt, raised.exception.receipt)
+
+    def test_cognition_action_schema_uses_application_numeric_identity(self) -> None:
+        model, _, adapter, request, _, _ = self._runtime(
+            [
+                {
+                    "goal": "Trace the entry behavior.",
+                    "plan": "Search reusable cognition before reading Source.",
+                    "action": "SEARCH_COGNITION",
+                    "query": "CheckoutController",
+                    "read_index": None,
+                    "cognition_index": None,
+                    "relation_kind": None,
+                    "direction": None,
+                    "maximum_depth": None,
+                    "cursor": None,
+                    "response_kind": None,
+                    "answer": None,
+                    "citations": [],
+                }
+            ]
+        )
+
+        decision = model.decide(self._step(request))
+
+        self.assertIs(
+            decision.decision.action,
+            LightweightAgentAction.SEARCH_COGNITION,
+        )
+        self.assertIsNone(decision.decision.cognition_index)
+        self.assertIn(
+            "Application-issued numeric cognition_index",
+            adapter.requests[0].messages[0].content,
+        )
 
 
 if __name__ == "__main__":

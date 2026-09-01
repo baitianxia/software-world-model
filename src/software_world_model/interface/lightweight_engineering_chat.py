@@ -30,6 +30,9 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     SealedLightweightDeliveryControl,
 )
 from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, digest_of
+from software_world_model.knowledge_engine.capability_cognition import (
+    CapabilityCognitionIndex,
+)
 
 
 LightweightToolFactory = Callable[
@@ -114,6 +117,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
         primary: LightweightProviderAttemptDependencies,
         fallback: LightweightProviderAttemptDependencies,
         dispatch_budget_digest: Digest,
+        capability_cognition: CapabilityCognitionIndex | None = None,
         loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         trace_store: LightweightAgentTraceStore | None = None,
     ) -> None:
@@ -124,6 +128,10 @@ class LightweightEngineeringChatProviderAttemptFactory:
             or primary.model_boundary_ref == fallback.model_boundary_ref
             or primary.gateway_repository_ref == fallback.gateway_repository_ref
             or primary.disclosure_boundary_ref == fallback.disclosure_boundary_ref
+            or (
+                capability_cognition is not None
+                and not isinstance(capability_cognition, CapabilityCognitionIndex)
+            )
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -134,6 +142,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
         self.primary = primary
         self.fallback = fallback
         self.loop_limits = loop_limits
+        self.capability_cognition = capability_cognition
         self.available_operations = (
             EngineeringAgentToolOperation.SOURCE_SEARCH,
             EngineeringAgentToolOperation.SOURCE_READ,
@@ -145,7 +154,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
         self._lock = Lock()
         self.digest = digest_of(
             {
-                "schema": "SWM-LIGHTWEIGHT-ATTEMPT-FACTORY@1",
+                "schema": "SWM-LIGHTWEIGHT-ATTEMPT-FACTORY@2",
                 "route_plan_digest": plan.digest.value,
                 "evidence_tool_configuration_digest": (
                     evidence_tool_configuration_digest.value
@@ -154,6 +163,20 @@ class LightweightEngineeringChatProviderAttemptFactory:
                 "fallback_dependencies_digest": fallback.digest.value,
                 "dispatch_budget_digest": dispatch_budget_digest.value,
                 "operations": tuple(item.value for item in self.available_operations),
+                "cognition_operations": (
+                    (
+                        "SEARCH_COGNITION",
+                        "TRAVERSE_RELATIONS",
+                        "RETRIEVE_COGNITION_DETAIL",
+                    )
+                    if capability_cognition is not None
+                    else ()
+                ),
+                "capability_cognition_digest": (
+                    capability_cognition.snapshot.digest.value
+                    if capability_cognition is not None
+                    else None
+                ),
                 "maximum_steps": loop_limits.maximum_agent_steps,
                 "maximum_tool_actions": loop_limits.maximum_tool_actions,
                 "maximum_reviews": loop_limits.maximum_reviews,
@@ -206,6 +229,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
             delivery_control=delivery,
             trace_store=self.trace_store,
             attempt_ref=authority.attempt_id.value,
+            capability_cognition=self.capability_cognition,
             limits=self.loop_limits,
         )
         component_bases = {
