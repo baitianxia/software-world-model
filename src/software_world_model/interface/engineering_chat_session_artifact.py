@@ -105,6 +105,7 @@ from .engineering_chat_provider_runtime import (
 )
 from .engineering_chat_session_runtime import (
     ENGINEERING_CHAT_FIXED_ARTIFACT_SESSION_RUNTIME_STATUS,
+    ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
     PreparedEngineeringChatSessionRuntime,
     prepare_engineering_chat_session_runtime,
 )
@@ -479,6 +480,7 @@ class PreparedEngineeringChatArtifactSession:
         service = self.runtime.launcher.service
         primary = self.runtime.primary_provider_runtime
         fallback = self.runtime.fallback_provider_runtime
+        lightweight_models = _active_lightweight_models(self.runtime)
         admission = fallback.dispatch_admission_controller
         if (
             service.statistics() != (0, 0)
@@ -488,6 +490,10 @@ class PreparedEngineeringChatArtifactSession:
             or fallback.model_boundary.audits
             or primary.authorizer.disclosure_requests
             or fallback.authorizer.disclosure_requests
+            or any(
+                model is not None and model.audits
+                for model in lightweight_models
+            )
             or admission is None
             or admission.authorizations
             or admission.invoked_envelopes
@@ -551,9 +557,16 @@ class PreparedEngineeringChatArtifactSession:
 
         service = self.runtime.launcher.service
         conversation_count, turn_count = service.statistics()
+        lightweight_models = _active_lightweight_models(self.runtime)
         provider_audits = (
-            _provider_terminal_audit(self.runtime.primary_provider_runtime),
-            _provider_terminal_audit(self.runtime.fallback_provider_runtime),
+            _provider_terminal_audit(
+                self.runtime.primary_provider_runtime,
+                lightweight_model=lightweight_models[0],
+            ),
+            _provider_terminal_audit(
+                self.runtime.fallback_provider_runtime,
+                lightweight_model=lightweight_models[1],
+            ),
         )
         provider_dispatch_count = sum(
             item["provider_dispatch_count"] for item in provider_audits
@@ -1256,6 +1269,7 @@ def prepare_engineering_chat_artifact_session(
         artifact_session_config_digest=session_config.file_digest,
         fixed_command_wired=True,
         availability_clock=runtime_clock,
+        agent_mode=ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
     )
     if (
         runtime.receipt.status
@@ -1997,11 +2011,81 @@ def _gateway_repository_ref(
     return f"sqlite-model-gateway:{route.provider_type}:{identity.value}"
 
 
-def _provider_terminal_audit(runtime) -> dict[str, object]:
-    audits = runtime.model_boundary.audits
-    requests = runtime.authorizer.disclosure_requests
-    authorizations = runtime.authorizer.issued_authorizations
-    if len(requests) != len(authorizations):
+def _active_lightweight_models(
+    runtime: PreparedEngineeringChatSessionRuntime,
+) -> tuple[object | None, object | None]:
+    if runtime.receipt.agent_mode != ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE:
+        return None, None
+    factory = runtime.attempt_factory
+    primary = getattr(getattr(factory, "primary", None), "model", None)
+    fallback = getattr(getattr(factory, "fallback", None), "model", None)
+    if (
+        primary is None
+        or fallback is None
+        or primary is fallback
+        or not hasattr(primary, "audits")
+        or not hasattr(fallback, "audits")
+    ):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "source-only Session lost its active lightweight model boundaries",
+        )
+    return primary, fallback
+
+
+def _provider_terminal_audit(
+    runtime,
+    *,
+    lightweight_model: object | None = None,
+) -> dict[str, object]:
+    if lightweight_model is None:
+        audits = runtime.model_boundary.audits
+        requests = runtime.authorizer.disclosure_requests
+        authorizations = runtime.authorizer.issued_authorizations
+        issued_envelopes = tuple(
+            (
+                f"engineering-agent:{authorization.session_authority_digest.value[-12:]}:"
+                f"{request.dispatch_ordinal}:{authorization.digest.value[-12:]}"
+            )
+            for request, authorization in zip(
+                requests,
+                authorizations,
+                strict=True,
+            )
+        )
+        disclosure_mode = "LEGACY_ROLE_DISCLOSURE"
+        request_digests = tuple(item.digest.value for item in requests)
+        authorization_digests = tuple(
+            item.digest.value for item in authorizations
+        )
+    else:
+        audits = tuple(lightweight_model.audits)
+        authorizations = tuple(item.authorization for item in audits)
+        if any(
+            authorization.provider_binding_digest
+            != runtime.configuration.digest
+            or authorization.session_authority_digest
+            != runtime.session_authority.digest
+            for authorization in authorizations
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "lightweight terminal audit binds another Provider Session",
+            )
+        issued_envelopes = tuple(
+            "lightweight-agent:"
+            + authorization.digest.value[-20:]
+            + f":{authorization.ordinal}"
+            for authorization in authorizations
+        )
+        disclosure_mode = "LIGHTWEIGHT_EXACT_DISPATCH_AUTHORIZATION"
+        request_digests = tuple(
+            item.manifest_digest.value for item in authorizations
+        )
+        authorization_digests = tuple(
+            item.digest.value for item in authorizations
+        )
+    if len(request_digests) != len(authorization_digests):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "Engineering Chat Provider disclosure audit is incomplete",
@@ -2017,17 +2101,6 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
                 "DeepSeek terminal audit is missing dispatch admission",
             )
         admission_audit = admission.public_audit()
-        issued_envelopes = tuple(
-            (
-                f"engineering-agent:{authorization.session_authority_digest.value[-12:]}:"
-                f"{request.dispatch_ordinal}:{authorization.digest.value[-12:]}"
-            )
-            for request, authorization in zip(
-                requests,
-                authorizations,
-                strict=True,
-            )
-        )
         admitted_envelopes = tuple(
             admission_audit["execution_envelope_refs"]
         )
@@ -2064,10 +2137,9 @@ def _provider_terminal_audit(runtime) -> dict[str, object]:
         "session_disclosure_authority_digest": (
             runtime.session_authority.digest.value
         ),
-        "disclosure_request_digests": tuple(item.digest.value for item in requests),
-        "disclosure_authorization_digests": tuple(
-            item.digest.value for item in authorizations
-        ),
+        "disclosure_mode": disclosure_mode,
+        "disclosure_request_digests": request_digests,
+        "disclosure_authorization_digests": authorization_digests,
         "model_dispatch_audit_digests": tuple(
             item.digest.value for item in audits
         ),

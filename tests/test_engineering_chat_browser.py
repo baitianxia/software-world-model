@@ -126,6 +126,7 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             script["body"].decode(),
         )
         self.assertIn("turnEvidenceNode", script["body"].decode())
+        self.assertIn("turnTrajectoryNode", script["body"].decode())
         self.assertIn("turnFailureSummary", script["body"].decode())
         self.assertIn("Provider evidence", script["body"].decode())
         self.assertIn("provider_http_status", script["body"].decode())
@@ -193,7 +194,18 @@ class EngineeringChatBrowserTests(unittest.TestCase):
             turn_executor=SuccessfulExecutor(),
             id_generator=SequentialIdGenerator(),
         )
-        self.app = EngineeringChatBrowserApplication(service)
+        self.app = EngineeringChatBrowserApplication(
+            service,
+            turn_trace_reader=lambda request_digest: (
+                {
+                    "attempt_ref": "attempt-primary",
+                    "turn_request_digest": request_digest.value,
+                    "mode": "SOURCE_ONLY",
+                    "events": [{"kind": "MODEL_DECISION", "step": 1}],
+                    "terminal_status": "SUCCEEDED",
+                },
+            ),
+        )
         health = self.value(self.call("GET", "/health"))
         created = self.create_conversation()
         conversation_id = created["conversation"]["conversation_id"]
@@ -216,6 +228,14 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["messages"][-1]["kind"], "ANSWER")
         self.assertEqual(value["context"]["work_state_ref"], "work-state-ref")
         self.assertEqual(value["submitted_turn"]["work_state_revision"], 1)
+        self.assertEqual(
+            value["submitted_turn"]["agent_trajectories"][0]["mode"],
+            "SOURCE_ONLY",
+        )
+        self.assertEqual(
+            value["turns"][0]["agent_trajectories"][0]["events"][0]["kind"],
+            "MODEL_DECISION",
+        )
         self.assertEqual(
             value["submitted_turn"]["citations"],
             [

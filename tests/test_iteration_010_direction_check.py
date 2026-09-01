@@ -94,6 +94,21 @@ class DirectionCheckTest(unittest.TestCase):
             {item["code"] for item in report["violations"]},
         )
 
+    def test_allows_thin_reference_to_protocol_already_present_at_base(self) -> None:
+        protocol = "ENGINEERING_" + "AGENT_EXISTING@1"
+        self._write(MODEL_PATH, f"legacy = True\nprotocol = {protocol!r}\n")
+        _run(self.repository, "git", "add", ".")
+        _run(self.repository, "git", "commit", "-qm", "protocol baseline")
+        self.base = _run(self.repository, "git", "rev-parse", "HEAD")
+        self._write(
+            Path("src/software_world_model/new_agent.py"),
+            f"thin_adapter = {protocol!r}\n",
+        )
+
+        report = self._check()
+
+        self.assertEqual(report["direction_verdict"], "PASS")
+
     def test_agent_evidence_advances_next_task_to_world_model(self) -> None:
         self._write(Path("src/software_world_model/new_agent.py"), "agent = True\n")
         evidence = self.repository / "progress.json"

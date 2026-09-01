@@ -194,18 +194,42 @@ def _legacy_growth(
     return counts, violations
 
 
-def _added_line_violations(delta: RepositoryDelta) -> list[dict[str, str]]:
+def _protocol_exists_at_base(repository: Path, base: str, token: str) -> bool:
+    completed = subprocess.run(
+        ["git", "-C", str(repository), "grep", "-F", "-q", token, base, "--"],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    if completed.returncode not in {0, 1}:
+        detail = completed.stderr.decode("utf-8", errors="replace").strip()
+        raise DirectionCheckError(detail or "git grep failed")
+    return completed.returncode == 0
+
+
+def _added_line_violations(
+    repository: Path, base: str, delta: RepositoryDelta
+) -> list[dict[str, str]]:
     violations: list[dict[str, str]] = []
+    baseline_protocol_cache: dict[str, bool] = {}
     for path, lines in sorted(delta.added_lines.items()):
         for ordinal, line in enumerate(lines, start=1):
-            if PROTOCOL_VERSION_RE.search(line):
-                violations.append(
-                    {
-                        "code": "NEW_LEGACY_PROTOCOL_VERSION",
-                        "path": path,
-                        "detail": f"added-line ordinal {ordinal}",
-                    }
+            for match in PROTOCOL_VERSION_RE.finditer(line):
+                token = match.group(0)
+                exists = baseline_protocol_cache.setdefault(
+                    token,
+                    _protocol_exists_at_base(repository, base, token),
                 )
+                if not exists:
+                    violations.append(
+                        {
+                            "code": "NEW_LEGACY_PROTOCOL_VERSION",
+                            "path": path,
+                            "detail": (
+                                f"added-line ordinal {ordinal}: {token}"
+                            ),
+                        }
+                    )
             if path.startswith("src/software_world_model/") and (
                 ANSWER_TEXT_RULE_RE.search(line)
             ):
@@ -312,7 +336,7 @@ def build_direction_report(
 ) -> dict[str, object]:
     repository = repository.resolve()
     counts, violations = _legacy_growth(repository, base)
-    violations.extend(_added_line_violations(delta))
+    violations.extend(_added_line_violations(repository, base, delta))
     prompt_schema_paths = _prompt_schema_delta(delta.changed_paths)
     if prompt_schema_paths and (
         not evidence.trajectory or not evidence.replacement_experiment

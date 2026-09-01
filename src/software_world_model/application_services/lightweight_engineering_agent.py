@@ -1,0 +1,1123 @@
+"""Capability-oriented Application loop for an evidence-seeking Agent.
+
+The model keeps a goal and plan, proposes one read-only action at a time, sees
+the trusted observation, and either replans or finishes.  Source access and
+delivery remain Application owned; the model receives neither a filesystem nor
+opaque tool authority identifiers.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import Enum
+from threading import Lock
+from typing import Mapping, Protocol, Sequence
+
+from software_world_model.cross_cutting import (
+    Digest,
+    DomainError,
+    ErrorCode,
+    IdGenerator,
+    Revision,
+    StableId,
+    Uuid4IdGenerator,
+    digest_of,
+)
+
+from .conversational_engineering_agent import (
+    EngineeringAgentCitation,
+    EngineeringAgentEvidenceDisposition,
+    EngineeringAgentLoopLimits,
+    EngineeringAgentModelCallReceipt,
+    EngineeringAgentModelFailureKind,
+    EngineeringAgentModelRole,
+    EngineeringAgentToolActionProposal,
+    EngineeringAgentToolOperation,
+    EngineeringAgentToolPort,
+    EngineeringAgentToolRequest,
+)
+from .engineering_conversation import (
+    ConversationMessageKind,
+    EngineeringConversationTurnExecutor,
+    EngineeringProviderFailureClassification,
+    EngineeringTurnCitation,
+    EngineeringTurnExecutionOutcome,
+    EngineeringTurnExecutionRequest,
+)
+
+
+class LightweightAgentAction(str, Enum):
+    SEARCH_SOURCE = "SEARCH_SOURCE"
+    READ_SOURCE = "READ_SOURCE"
+    FINISH = "FINISH"
+
+
+class LightweightAgentResponseKind(str, Enum):
+    ANSWER = "ANSWER"
+    CLARIFICATION = "CLARIFICATION"
+    LIMITATION = "LIMITATION"
+
+
+class LightweightReviewVerdict(str, Enum):
+    APPROVED = "APPROVED"
+    REWRITE = "REWRITE"
+    MORE_EVIDENCE = "MORE_EVIDENCE"
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightCitationSelection:
+    observation_index: int
+    citation_index: int
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightAgentDecision:
+    goal: str
+    plan: str
+    action: LightweightAgentAction
+    query: str | None
+    read_index: int | None
+    response_kind: LightweightAgentResponseKind | None
+    answer: str | None
+    citations: tuple[LightweightCitationSelection, ...]
+
+    @classmethod
+    def from_payload(
+        cls, payload: Mapping[str, object]
+    ) -> "LightweightAgentDecision":
+        fields = {
+            "goal",
+            "plan",
+            "action",
+            "query",
+            "read_index",
+            "response_kind",
+            "answer",
+            "citations",
+        }
+        if set(payload) != fields:
+            _invalid("lightweight Agent decision has an invalid field set")
+        goal = _text(payload["goal"], "Agent goal")
+        plan = _text(payload["plan"], "Agent plan")
+        try:
+            action = LightweightAgentAction(payload["action"])
+        except (TypeError, ValueError) as exc:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "lightweight Agent action is not registered",
+            ) from exc
+        query = _optional_text(payload["query"], "Source query")
+        read_index = payload["read_index"]
+        raw_kind = payload["response_kind"]
+        answer = _optional_text(payload["answer"], "Agent answer")
+        raw_citations = payload["citations"]
+        if not isinstance(raw_citations, list):
+            _invalid("lightweight Agent citations must be an array")
+        citations: list[LightweightCitationSelection] = []
+        for item in raw_citations:
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"observation_index", "citation_index"}
+                or type(item["observation_index"]) is not int
+                or item["observation_index"] < 1
+                or type(item["citation_index"]) is not int
+                or item["citation_index"] < 1
+            ):
+                _invalid("lightweight Agent citation selection is invalid")
+            citations.append(
+                LightweightCitationSelection(
+                    item["observation_index"], item["citation_index"]
+                )
+            )
+        if len(citations) != len(set(citations)):
+            _invalid("lightweight Agent citation selections must be unique")
+        response_kind: LightweightAgentResponseKind | None = None
+        if action is LightweightAgentAction.SEARCH_SOURCE:
+            valid = (
+                query is not None
+                and read_index is None
+                and raw_kind is None
+                and answer is None
+                and not citations
+            )
+        elif action is LightweightAgentAction.READ_SOURCE:
+            valid = (
+                query is None
+                and type(read_index) is int
+                and read_index >= 1
+                and raw_kind is None
+                and answer is None
+                and not citations
+            )
+        else:
+            try:
+                response_kind = LightweightAgentResponseKind(raw_kind)
+            except (TypeError, ValueError):
+                response_kind = None
+            valid = (
+                query is None
+                and read_index is None
+                and response_kind is not None
+                and answer is not None
+                and (
+                    response_kind is not LightweightAgentResponseKind.ANSWER
+                    or bool(citations)
+                )
+            )
+        if not valid:
+            _invalid("lightweight Agent decision branches are inconsistent")
+        return cls(
+            goal=goal,
+            plan=plan,
+            action=action,
+            query=query,
+            read_index=read_index if type(read_index) is int else None,
+            response_kind=response_kind,
+            answer=answer,
+            citations=tuple(citations),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightReview:
+    verdict: LightweightReviewVerdict
+    findings: tuple[str, ...]
+
+    @classmethod
+    def from_payload(cls, payload: Mapping[str, object]) -> "LightweightReview":
+        if set(payload) != {"verdict", "findings"}:
+            _invalid("lightweight review has an invalid field set")
+        try:
+            verdict = LightweightReviewVerdict(payload["verdict"])
+        except (TypeError, ValueError) as exc:
+            raise DomainError(
+                ErrorCode.STRUCTURED_OUTPUT_INVALID,
+                "lightweight review verdict is not registered",
+            ) from exc
+        raw_findings = payload["findings"]
+        if not isinstance(raw_findings, list):
+            _invalid("lightweight review findings must be an array")
+        findings = tuple(_text(item, "review finding") for item in raw_findings)
+        if len(findings) != len(set(findings)) or (
+            (verdict is LightweightReviewVerdict.APPROVED) != (not findings)
+        ):
+            _invalid("lightweight review verdict and findings disagree")
+        return cls(verdict=verdict, findings=findings)
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightReadCandidate:
+    read_index: int
+    citation: EngineeringAgentCitation
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "read_index": self.read_index,
+            "locator": self.citation.locator,
+            "modality": self.citation.modality,
+            "source_revision": self.citation.source_revision,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightObservation:
+    observation_index: int
+    operation: EngineeringAgentToolOperation
+    disposition: EngineeringAgentEvidenceDisposition
+    content: str
+    progress: bool
+    citations: tuple[EngineeringAgentCitation, ...]
+    digest: Digest
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "observation_index": self.observation_index,
+            "operation": self.operation.value,
+            "disposition": self.disposition.value,
+            "progress": self.progress,
+            "content": self.content,
+            "citations": [
+                {
+                    "citation_index": index,
+                    "locator": citation.locator,
+                    "modality": citation.modality,
+                    "source_revision": citation.source_revision,
+                }
+                for index, citation in enumerate(self.citations, 1)
+            ],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightAgentStepRequest:
+    turn_request: EngineeringTurnExecutionRequest
+    step: int
+    goal: str
+    plan: str
+    observations: tuple[LightweightObservation, ...]
+    read_candidates: tuple[LightweightReadCandidate, ...]
+    tools_enabled: bool
+    rejected_answer: str | None = None
+    review_findings: tuple[str, ...] = ()
+
+    def model_view(self) -> dict[str, object]:
+        return {
+            "mode": "SOURCE_ONLY",
+            "repository": {
+                "project": self.turn_request.binding.project_name,
+                "revision": self.turn_request.binding.repository_revision,
+            },
+            "current_request": self.turn_request.user_message.content,
+            "conversation_history": [
+                {
+                    "role": item.role.value,
+                    "kind": item.kind.value,
+                    "content": item.content,
+                }
+                for item in self.turn_request.snapshot_before.messages
+            ],
+            "step": self.step,
+            "goal": self.goal,
+            "plan": self.plan,
+            "tools_enabled": self.tools_enabled,
+            "available_actions": (
+                ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
+                if self.tools_enabled
+                else ["FINISH"]
+            ),
+            "read_candidates": [item.model_view() for item in self.read_candidates],
+            "observations": [item.model_view() for item in self.observations],
+            "rejected_answer": self.rejected_answer,
+            "review_findings": list(self.review_findings),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightReviewRequest:
+    turn_request: EngineeringTurnExecutionRequest
+    answer: str
+    response_kind: LightweightAgentResponseKind
+    observations: tuple[LightweightObservation, ...]
+    citations: tuple[EngineeringAgentCitation, ...]
+
+    def model_view(self) -> dict[str, object]:
+        selected = {item.citation_ref for item in self.citations}
+        return {
+            "repository_revision": self.turn_request.binding.repository_revision,
+            "original_request": self.turn_request.user_message.content,
+            "conversation_history": [
+                {"role": item.role.value, "content": item.content}
+                for item in self.turn_request.snapshot_before.messages
+            ],
+            "response_kind": self.response_kind.value,
+            "answer": self.answer,
+            "citations": [
+                {
+                    "locator": item.locator,
+                    "modality": item.modality,
+                    "source_revision": item.source_revision,
+                }
+                for item in self.citations
+            ],
+            "cited_evidence": [
+                item.model_view()
+                for item in self.observations
+                if any(citation.citation_ref in selected for citation in item.citations)
+            ],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightDecisionResult:
+    decision: LightweightAgentDecision
+    receipt: EngineeringAgentModelCallReceipt
+    disclosure_record_ref: str
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightReviewResult:
+    review: LightweightReview
+    receipt: EngineeringAgentModelCallReceipt
+    disclosure_record_ref: str
+
+
+class LightweightModelCallFailure(DomainError):
+    def __init__(
+        self,
+        *,
+        receipt: EngineeringAgentModelCallReceipt,
+        code: ErrorCode,
+        message: str,
+        disclosure_record_ref: str,
+    ) -> None:
+        super().__init__(code, message)
+        self.receipt = receipt
+        self.disclosure_record_ref = disclosure_record_ref
+
+
+class LightweightEngineeringModel(Protocol):
+    @property
+    def instance_ref(self) -> str: ...
+
+    def decide(self, request: LightweightAgentStepRequest) -> LightweightDecisionResult: ...
+
+    def review(self, request: LightweightReviewRequest) -> LightweightReviewResult: ...
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightDeliveryRequest:
+    turn_request: EngineeringTurnExecutionRequest
+    response_kind: LightweightAgentResponseKind
+    answer: str
+    answer_ref: str
+    review: LightweightReview
+    review_ref: str
+    review_receipt: EngineeringAgentModelCallReceipt
+    citations: tuple[EngineeringAgentCitation, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightDeliveryAuthorization:
+    request_digest: Digest
+    answer_ref: str
+    review_ref: str
+    citation_digests: tuple[Digest, ...]
+    digest: Digest
+
+
+class SealedLightweightDeliveryControl:
+    """One-use Application authority for a reviewed exact-revision response."""
+
+    def __init__(self) -> None:
+        self._authorized_turns: set[Digest] = set()
+        self._lock = Lock()
+
+    def authorize(
+        self, request: LightweightDeliveryRequest
+    ) -> LightweightDeliveryAuthorization:
+        turn = request.turn_request
+        receipt = request.review_receipt
+        citations = tuple(request.citations)
+        if (
+            request.review.verdict is not LightweightReviewVerdict.APPROVED
+            or request.review.findings
+            or not receipt.successful
+            or receipt.role is not EngineeringAgentModelRole.INDEPENDENT_REVIEWER
+            or not request.answer.strip()
+            or request.answer != request.answer.strip()
+            or not request.answer_ref
+            or not request.review_ref
+            or (
+                request.response_kind is LightweightAgentResponseKind.ANSWER
+                and not citations
+            )
+        ):
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "delivery requires a fresh approved review and grounded response",
+            )
+        for citation in citations:
+            expected = EngineeringAgentCitation.create(
+                citation_ref=citation.citation_ref,
+                evidence_class=citation.evidence_class,
+                source_revision=citation.source_revision,
+                locator=citation.locator,
+                modality=citation.modality,
+                content_digest=citation.content_digest,
+            )
+            if citation != expected or citation.source_revision != (
+                turn.binding.repository_revision
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "delivery Citation is not bound to the exact Source revision",
+                )
+        refs = tuple(item.citation_ref for item in citations)
+        if len(refs) != len(set(refs)):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "delivery Citations must have unique authority identities",
+            )
+        core = {
+            "schema": "SWM-LIGHTWEIGHT-DELIVERY-AUTHORIZATION@1",
+            "turn_request_digest": turn.request_digest.value,
+            "answer_ref": request.answer_ref,
+            "review_ref": request.review_ref,
+            "review_receipt_digest": receipt.digest.value,
+            "citation_digests": tuple(item.digest.value for item in citations),
+            "source_revision": turn.binding.repository_revision,
+            "decision": "ALLOW",
+        }
+        with self._lock:
+            if turn.request_digest in self._authorized_turns:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "a Turn cannot consume delivery authority twice",
+                )
+            self._authorized_turns.add(turn.request_digest)
+        return LightweightDeliveryAuthorization(
+            request_digest=turn.request_digest,
+            answer_ref=request.answer_ref,
+            review_ref=request.review_ref,
+            citation_digests=tuple(item.digest for item in citations),
+            digest=digest_of(core),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class LightweightAgentTrajectory:
+    attempt_ref: str
+    turn_request_digest: Digest
+    mode: str
+    events: tuple[Mapping[str, object], ...]
+    terminal_status: str
+    digest: Digest
+
+    def public_view(self) -> dict[str, object]:
+        return {
+            "attempt_ref": self.attempt_ref,
+            "turn_request_digest": self.turn_request_digest.value,
+            "mode": self.mode,
+            "events": list(self.events),
+            "terminal_status": self.terminal_status,
+            "digest": self.digest.value,
+        }
+
+
+class LightweightAgentTraceStore:
+    def __init__(self) -> None:
+        self._items: dict[Digest, list[LightweightAgentTrajectory]] = {}
+        self._lock = Lock()
+
+    def record(self, trajectory: LightweightAgentTrajectory) -> None:
+        with self._lock:
+            self._items.setdefault(trajectory.turn_request_digest, []).append(
+                trajectory
+            )
+
+    def for_turn(self, request_digest: Digest) -> tuple[LightweightAgentTrajectory, ...]:
+        with self._lock:
+            return tuple(self._items.get(request_digest, ()))
+
+
+class ApplicationOwnedLightweightAgentTurnExecutor(
+    EngineeringConversationTurnExecutor
+):
+    """Run one bounded source-only investigation and independent review."""
+
+    def __init__(
+        self,
+        *,
+        model: LightweightEngineeringModel,
+        tool_port: EngineeringAgentToolPort,
+        delivery_control: SealedLightweightDeliveryControl,
+        trace_store: LightweightAgentTraceStore,
+        attempt_ref: str,
+        limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
+        id_generator: IdGenerator | None = None,
+    ) -> None:
+        if (
+            not callable(getattr(model, "decide", None))
+            or not callable(getattr(model, "review", None))
+            or not callable(getattr(tool_port, "execute", None))
+            or not callable(getattr(tool_port, "source_read_options", None))
+            or not callable(getattr(delivery_control, "authorize", None))
+        ):
+            raise DomainError(
+                ErrorCode.INVALID_ARGUMENT,
+                "lightweight Agent requires model, read-only tool, and delivery ports",
+            )
+        self._model = model
+        self._tool = tool_port
+        self._delivery = delivery_control
+        self._traces = trace_store
+        self._attempt_ref = _text(attempt_ref, "attempt reference")
+        self._limits = limits
+        self._ids = id_generator or Uuid4IdGenerator()
+
+    def execute(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> EngineeringTurnExecutionOutcome:
+        goal = request.user_message.content
+        plan = "Investigate the exact request and stop when the evidence is sufficient."
+        observations: list[LightweightObservation] = []
+        read_candidates: list[LightweightReadCandidate] = []
+        receipts: list[EngineeringAgentModelCallReceipt] = []
+        events: list[Mapping[str, object]] = []
+        rejected_answer: str | None = None
+        review_findings: tuple[str, ...] = ()
+        tool_actions = 0
+        reviews = 0
+        rewrites = 0
+        consecutive_no_progress = 0
+        terminal = "FAILED"
+        try:
+            read_candidates.extend(self._prior_turn_read_candidates(request))
+            for step in range(1, self._limits.maximum_agent_steps + 1):
+                tools_enabled = tool_actions < self._limits.maximum_tool_actions
+                result = self._model.decide(
+                    LightweightAgentStepRequest(
+                        turn_request=request,
+                        step=step,
+                        goal=goal,
+                        plan=plan,
+                        observations=tuple(observations),
+                        read_candidates=tuple(read_candidates),
+                        tools_enabled=tools_enabled,
+                        rejected_answer=rejected_answer,
+                        review_findings=review_findings,
+                    )
+                )
+                self._record_receipt(receipts, result.receipt)
+                decision = result.decision
+                if not tools_enabled and decision.action is not LightweightAgentAction.FINISH:
+                    raise DomainError(
+                        ErrorCode.BUDGET_EXHAUSTED,
+                        "lightweight Agent did not stop after its tool budget closed",
+                    )
+                goal, plan = decision.goal, decision.plan
+                events.append(
+                    {
+                        "kind": "MODEL_DECISION",
+                        "step": step,
+                        "goal": goal,
+                        "plan": plan,
+                        "action": decision.action.value,
+                        "disclosure_record_ref": result.disclosure_record_ref,
+                        "model_call_receipt_ref": result.receipt.digest.value,
+                    }
+                )
+                if decision.action is not LightweightAgentAction.FINISH:
+                    tool_actions += 1
+                    before_count = len(observations)
+                    self._execute_action(
+                        request=request,
+                        decision=decision,
+                        observations=observations,
+                        read_candidates=read_candidates,
+                        events=events,
+                    )
+                    progress = any(
+                        item.progress for item in observations[before_count:]
+                    )
+                    consecutive_no_progress = (
+                        0 if progress else consecutive_no_progress + 1
+                    )
+                    if (
+                        consecutive_no_progress
+                        >= self._limits.maximum_consecutive_no_progress
+                    ):
+                        tool_actions = self._limits.maximum_tool_actions
+                    rejected_answer = None
+                    review_findings = ()
+                    continue
+
+                assert decision.answer is not None
+                assert decision.response_kind is not None
+                selected = self._resolve_citations(decision, observations)
+                reviews += 1
+                reviewed = self._model.review(
+                    LightweightReviewRequest(
+                        turn_request=request,
+                        answer=decision.answer,
+                        response_kind=decision.response_kind,
+                        observations=tuple(observations),
+                        citations=selected,
+                    )
+                )
+                self._record_receipt(receipts, reviewed.receipt)
+                review = reviewed.review
+                events.append(
+                    {
+                        "kind": "INDEPENDENT_REVIEW",
+                        "step": step,
+                        "verdict": review.verdict.value,
+                        "findings": list(review.findings),
+                        "disclosure_record_ref": reviewed.disclosure_record_ref,
+                        "model_call_receipt_ref": reviewed.receipt.digest.value,
+                    }
+                )
+                if review.verdict is LightweightReviewVerdict.APPROVED:
+                    outcome = self._success(
+                        request=request,
+                        goal=goal,
+                        plan=plan,
+                        answer=decision.answer,
+                        response_kind=decision.response_kind,
+                        observations=tuple(observations),
+                        citations=selected,
+                        review=review,
+                        review_receipt=reviewed.receipt,
+                        receipts=tuple(receipts),
+                        events=tuple(events),
+                    )
+                    terminal = "SUCCEEDED"
+                    return outcome
+                if reviews >= self._limits.maximum_reviews:
+                    raise DomainError(
+                        ErrorCode.BUDGET_EXHAUSTED,
+                        "lightweight independent review budget is exhausted",
+                    )
+                rejected_answer = decision.answer
+                review_findings = review.findings
+                if review.verdict is LightweightReviewVerdict.REWRITE:
+                    rewrites += 1
+                    if rewrites > 1:
+                        raise DomainError(
+                            ErrorCode.CONTROL_STATE_DENIED,
+                            "lightweight Agent permits at most one complete rewrite",
+                        )
+                    tool_actions = self._limits.maximum_tool_actions
+                else:
+                    rejected_answer = None
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "lightweight Agent step budget is exhausted",
+            )
+        except LightweightModelCallFailure as exc:
+            self._record_receipt(receipts, exc.receipt)
+            events.append(
+                {
+                    "kind": "MODEL_FAILURE",
+                    "failure_code": exc.code.value,
+                    "disclosure_record_ref": exc.disclosure_record_ref,
+                    "model_call_receipt_ref": exc.receipt.digest.value,
+                }
+            )
+            return self._failure(
+                request=request,
+                receipts=tuple(receipts),
+                code=exc.receipt.failure_code or exc.code.value,
+                message=exc.message,
+                model_failure=exc.receipt.failure_kind,
+                http_status=exc.receipt.provider_http_status,
+                http_evidence=exc.receipt.provider_http_failure_evidence_digest,
+            )
+        except DomainError as exc:
+            events.append(
+                {"kind": "APPLICATION_FAILURE", "failure_code": exc.code.value}
+            )
+            return self._failure(
+                request=request,
+                receipts=tuple(receipts),
+                code=exc.code.value,
+                message=exc.message,
+                model_failure=None,
+            )
+        finally:
+            core = {
+                "schema": "SWM-LIGHTWEIGHT-AGENT-TRAJECTORY@1",
+                "attempt_ref": self._attempt_ref,
+                "turn_request_digest": request.request_digest.value,
+                "mode": "SOURCE_ONLY",
+                "events": tuple(events),
+                "terminal_status": terminal,
+            }
+            self._traces.record(
+                LightweightAgentTrajectory(
+                    attempt_ref=self._attempt_ref,
+                    turn_request_digest=request.request_digest,
+                    mode="SOURCE_ONLY",
+                    events=tuple(events),
+                    terminal_status=terminal,
+                    digest=digest_of(core),
+                )
+            )
+
+    def _prior_turn_read_candidates(
+        self, request: EngineeringTurnExecutionRequest
+    ) -> tuple[LightweightReadCandidate, ...]:
+        return tuple(
+            LightweightReadCandidate(
+                read_index=index,
+                citation=EngineeringAgentCitation.create(
+                    citation_ref=item.locator_reference.value,
+                    evidence_class=item.evidence_class,
+                    source_revision=item.source_revision,
+                    locator=item.resource_locator,
+                    modality=item.modality,
+                    content_digest=item.content_digest,
+                ),
+            )
+            for index, item in enumerate(
+                self._tool.source_read_options(request), 1
+            )
+        )
+
+    def _execute_action(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        decision: LightweightAgentDecision,
+        observations: list[LightweightObservation],
+        read_candidates: list[LightweightReadCandidate],
+        events: list[Mapping[str, object]],
+    ) -> None:
+        if decision.action is LightweightAgentAction.SEARCH_SOURCE:
+            assert decision.query is not None
+            operation = EngineeringAgentToolOperation.SOURCE_SEARCH
+            arguments = (("evidence_class", "SOURCE"), ("query", decision.query))
+        else:
+            assert decision.read_index is not None
+            matches = [
+                item
+                for item in read_candidates
+                if item.read_index == decision.read_index
+            ]
+            if len(matches) != 1:
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "lightweight Agent selected an unavailable read candidate",
+                )
+            operation = EngineeringAgentToolOperation.SOURCE_READ
+            arguments = (("locator_reference", matches[0].citation.citation_ref),)
+        action = EngineeringAgentToolActionProposal.create(
+            operation=operation,
+            arguments=arguments,
+            evidence_need=decision.plan,
+        )
+        tool_id = self._ids.new("source_agent_tool_request")
+        work_digest = digest_of(
+            {
+                "goal": decision.goal,
+                "plan": decision.plan,
+                "observations": tuple(item.digest.value for item in observations),
+            }
+        )
+        request_core = {
+            "schema": "ENGINEERING_AGENT_TOOL_REQUEST@1",
+            "tool_request_id": tool_id.value,
+            "turn_request_digest": request.request_digest.value,
+            "binding_digest": request.binding.digest.value,
+            "work_state_digest": work_digest.value,
+            "action_digest": action.digest.value,
+        }
+        tool_request = EngineeringAgentToolRequest(
+            tool_request_id=tool_id,
+            turn_request_digest=request.request_digest,
+            binding_digest=request.binding.digest,
+            work_state_digest=work_digest,
+            turn_request=request,
+            action=action,
+            digest=digest_of(request_core),
+        )
+        result = self._tool.execute(tool_request)
+        if result.tool_request_digest != tool_request.digest:
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "read-only tool result binds another request",
+            )
+        for evidence in result.evidence:
+            receipt = evidence.authority_receipt
+            if receipt is None or receipt.tool_request_digest != tool_request.digest:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "read-only observation lacks an exact authority receipt",
+                )
+            by_ref = {item.citation_ref: item for item in receipt.citations}
+            try:
+                citations = tuple(by_ref[item] for item in evidence.citation_refs)
+            except KeyError as exc:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "observation references an unavailable Citation",
+                ) from exc
+            index = len(observations) + 1
+            observation_core = {
+                "observation_index": index,
+                "operation": operation.value,
+                "disposition": evidence.disposition.value,
+                "content": evidence.content,
+                "progress": evidence.progress,
+                "citations": tuple(item.digest.value for item in citations),
+                "tool_evidence_digest": evidence.digest.value,
+                "authority_receipt_digest": receipt.digest.value,
+            }
+            observation = LightweightObservation(
+                observation_index=index,
+                operation=operation,
+                disposition=evidence.disposition,
+                content=evidence.content,
+                progress=evidence.progress,
+                citations=citations,
+                digest=digest_of(observation_core),
+            )
+            observations.append(observation)
+            events.append(
+                {
+                    "kind": "TOOL_OBSERVATION",
+                    "observation_index": index,
+                    "operation": operation.value,
+                    "disposition": evidence.disposition.value,
+                    "progress": evidence.progress,
+                    "citation_count": len(citations),
+                    "observation_digest": observation.digest.value,
+                }
+            )
+            known = {item.citation.citation_ref for item in read_candidates}
+            for citation in citations:
+                if citation.citation_ref not in known:
+                    read_candidates.append(
+                        LightweightReadCandidate(
+                            read_index=len(read_candidates) + 1,
+                            citation=citation,
+                        )
+                    )
+                    known.add(citation.citation_ref)
+        if sum(len(item.content.encode("utf-8")) for item in observations) > (
+            self._limits.maximum_evidence_package_bytes
+        ):
+            raise DomainError(
+                ErrorCode.BUDGET_EXHAUSTED,
+                "lightweight Agent evidence byte budget is exhausted",
+            )
+
+    @staticmethod
+    def _resolve_citations(
+        decision: LightweightAgentDecision,
+        observations: Sequence[LightweightObservation],
+    ) -> tuple[EngineeringAgentCitation, ...]:
+        by_index = {item.observation_index: item for item in observations}
+        selected: list[EngineeringAgentCitation] = []
+        for choice in decision.citations:
+            observation = by_index.get(choice.observation_index)
+            if observation is None or choice.citation_index > len(
+                observation.citations
+            ):
+                raise DomainError(
+                    ErrorCode.CONTROL_STATE_DENIED,
+                    "response selected a Citation outside delivered evidence",
+                )
+            citation = observation.citations[choice.citation_index - 1]
+            if citation.citation_ref not in {
+                item.citation_ref for item in selected
+            }:
+                selected.append(citation)
+        return tuple(selected)
+
+    @staticmethod
+    def _record_receipt(
+        receipts: list[EngineeringAgentModelCallReceipt],
+        receipt: EngineeringAgentModelCallReceipt,
+    ) -> None:
+        if any(item.digest == receipt.digest for item in receipts):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "lightweight model call receipt was replayed",
+            )
+        receipts.append(receipt)
+
+    def _success(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        goal: str,
+        plan: str,
+        answer: str,
+        response_kind: LightweightAgentResponseKind,
+        observations: tuple[LightweightObservation, ...],
+        citations: tuple[EngineeringAgentCitation, ...],
+        review: LightweightReview,
+        review_receipt: EngineeringAgentModelCallReceipt,
+        receipts: tuple[EngineeringAgentModelCallReceipt, ...],
+        events: tuple[Mapping[str, object], ...],
+    ) -> EngineeringTurnExecutionOutcome:
+        evidence_ref = digest_of(
+            [
+                "SWM-LIGHTWEIGHT-EVIDENCE-PACKAGE@1",
+                tuple(item.digest.value for item in observations),
+            ]
+        ).value
+        answer_ref = digest_of(
+            [
+                "SWM-LIGHTWEIGHT-ANSWER@1",
+                request.request_digest.value,
+                answer,
+                tuple(item.digest.value for item in citations),
+            ]
+        ).value
+        review_ref = digest_of(
+            [
+                "SWM-LIGHTWEIGHT-REVIEW@1",
+                answer_ref,
+                review.verdict.value,
+                review.findings,
+                review_receipt.digest.value,
+            ]
+        ).value
+        authorization = self._delivery.authorize(
+            LightweightDeliveryRequest(
+                turn_request=request,
+                response_kind=response_kind,
+                answer=answer,
+                answer_ref=answer_ref,
+                review=review,
+                review_ref=review_ref,
+                review_receipt=review_receipt,
+                citations=citations,
+            )
+        )
+        before = request.snapshot_before.context
+        work_ref = before.work_state_ref or (
+            "lightweight-agent-state:"
+            + request.snapshot_before.conversation.conversation_id.value
+        )
+        work_revision = (
+            Revision(1)
+            if before.work_state_ref is None
+            else Revision(before.work_state_revision.value + 1)
+        )
+        work_digest = digest_of(
+            {
+                "schema": "SWM-LIGHTWEIGHT-AGENT-WORK-STATE@1",
+                "work_ref": work_ref,
+                "revision": work_revision.value,
+                "goal": goal,
+                "plan": plan,
+                "trajectory": events,
+                "answer_ref": answer_ref,
+                "review_ref": review_ref,
+                "delivery_authorization_ref": authorization.digest.value,
+            }
+        )
+        projected = tuple(
+            EngineeringTurnCitation.create(
+                citation_ref=item.citation_ref,
+                evidence_class=item.evidence_class,
+                source_revision=item.source_revision,
+                locator=item.locator,
+                modality=item.modality,
+                content_digest=item.content_digest,
+            )
+            for item in citations
+        )
+        message_kind = ConversationMessageKind(response_kind.value)
+        reviewed_refs = before.reviewed_conclusion_refs
+        if message_kind is ConversationMessageKind.ANSWER:
+            reviewed_refs = (*reviewed_refs, answer_ref)
+        quality = {
+            ConversationMessageKind.ANSWER: "ACCEPTED",
+            ConversationMessageKind.CLARIFICATION: "REVIEWED_CLARIFICATION",
+            ConversationMessageKind.LIMITATION: "REVIEWED_LIMITATION",
+        }[message_kind]
+        return EngineeringTurnExecutionOutcome.succeeded(
+            request_digest=request.request_digest,
+            assistant_kind=message_kind,
+            assistant_content=answer,
+            included_user_message_ids=(
+                *before.included_user_message_ids,
+                request.user_message.message_id,
+            ),
+            accepted_correction_message_ids=before.accepted_correction_message_ids,
+            reviewed_conclusion_refs=reviewed_refs,
+            superseded_conclusion_refs=before.superseded_conclusion_refs,
+            reducer_status="LIGHTWEIGHT_AGENT_CONTEXT_COMMITTED",
+            work_state_ref=work_ref,
+            work_state_revision=work_revision,
+            work_state_digest=work_digest,
+            evidence_package_ref=evidence_ref,
+            answer_ref=answer_ref,
+            review_ref=review_ref,
+            delivery_authorization_ref=authorization.digest.value,
+            provider_dispatch_count=sum(item.provider_dispatch_count for item in receipts),
+            model_dispatch_receipt_refs=tuple(item.digest.value for item in receipts),
+            citations=projected,
+            quality_status=quality,
+        )
+
+    @staticmethod
+    def _failure(
+        *,
+        request: EngineeringTurnExecutionRequest,
+        receipts: tuple[EngineeringAgentModelCallReceipt, ...],
+        code: str,
+        message: str,
+        model_failure: EngineeringAgentModelFailureKind | None,
+        http_status: int | None = None,
+        http_evidence: Digest | None = None,
+    ) -> EngineeringTurnExecutionOutcome:
+        classification = {
+            EngineeringAgentModelFailureKind.PROVIDER_UNAVAILABLE: (
+                EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
+            ),
+            EngineeringAgentModelFailureKind.PROVIDER_HTTP_ERROR: (
+                EngineeringProviderFailureClassification.PROVIDER_HTTP_ERROR
+            ),
+            EngineeringAgentModelFailureKind.PROVIDER_OUTCOME_UNKNOWN: (
+                EngineeringProviderFailureClassification.PROVIDER_OUTCOME_UNKNOWN
+            ),
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID: (
+                EngineeringProviderFailureClassification.PROVIDER_OUTPUT_INVALID
+            ),
+        }.get(model_failure)
+        before = request.snapshot_before.context
+        user_message = (
+            "本 Turn 的轻量工程 Agent 未能形成经独立审核的答案；"
+            "已失败关闭，Conversation 仍可继续使用。"
+        )
+        return EngineeringTurnExecutionOutcome.failed(
+            request_digest=request.request_digest,
+            assistant_content=user_message,
+            included_user_message_ids=(
+                *before.included_user_message_ids,
+                request.user_message.message_id,
+            ),
+            accepted_correction_message_ids=before.accepted_correction_message_ids,
+            reviewed_conclusion_refs=before.reviewed_conclusion_refs,
+            superseded_conclusion_refs=before.superseded_conclusion_refs,
+            reducer_status="LIGHTWEIGHT_AGENT_FAILED_CLOSED",
+            work_state_ref=before.work_state_ref,
+            work_state_revision=(
+                before.work_state_revision if before.work_state_ref else None
+            ),
+            work_state_digest=before.work_state_digest,
+            failure_code=code,
+            failure_message=message,
+            provider_dispatch_count=sum(item.provider_dispatch_count for item in receipts),
+            model_dispatch_receipt_refs=tuple(item.digest.value for item in receipts),
+            provider_failure_classification=classification,
+            provider_failure_code=code if classification is not None else None,
+            provider_http_status=http_status,
+            provider_http_failure_evidence_digest=http_evidence,
+        )
+
+
+def _invalid(message: str) -> None:
+    raise DomainError(ErrorCode.STRUCTURED_OUTPUT_INVALID, message)
+
+
+def _text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip() or value != value.strip():
+        raise DomainError(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            f"{label} must be non-empty trimmed text",
+        )
+    return value
+
+
+def _optional_text(value: object, label: str) -> str | None:
+    return None if value is None else _text(value, label)
+
+
+__all__ = [
+    "ApplicationOwnedLightweightAgentTurnExecutor",
+    "LightweightAgentAction",
+    "LightweightAgentDecision",
+    "LightweightAgentResponseKind",
+    "LightweightAgentStepRequest",
+    "LightweightAgentTraceStore",
+    "LightweightAgentTrajectory",
+    "LightweightCitationSelection",
+    "LightweightDecisionResult",
+    "LightweightDeliveryAuthorization",
+    "LightweightDeliveryRequest",
+    "LightweightEngineeringModel",
+    "LightweightModelCallFailure",
+    "LightweightObservation",
+    "LightweightReadCandidate",
+    "LightweightReview",
+    "LightweightReviewRequest",
+    "LightweightReviewResult",
+    "LightweightReviewVerdict",
+    "SealedLightweightDeliveryControl",
+]

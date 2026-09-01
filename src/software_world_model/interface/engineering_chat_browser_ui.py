@@ -144,6 +144,20 @@ function turnEvidenceNode(turn) {
   return panel;
 }
 
+function turnTrajectoryNode(trajectories) {
+  const panel=document.createElement("details");
+  panel.className="turn-evidence";
+  const eventCount=trajectories.reduce(
+    (count,item)=>count+(Array.isArray(item.events)?item.events.length:0),0
+  );
+  const heading=document.createElement("summary");
+  heading.textContent=`Agent trajectory · ${trajectories.length} attempt${trajectories.length===1?"":"s"} · ${eventCount} events`;
+  const content=document.createElement("pre");
+  content.textContent=JSON.stringify(trajectories,null,2);
+  panel.append(heading,content);
+  return panel;
+}
+
 function messageNode(message, turns) {
   const article=document.createElement("article");
   article.className=`message ${message.role==="USER"?"user":"assistant"}${message.kind==="LIMITATION"?" limitation":""}`;
@@ -171,6 +185,8 @@ function messageNode(message, turns) {
       if (turn.evidence_package_ref||turn.review_ref||turn.delivery_authorization_ref||(turn.citations||[]).length) {
         article.append(turnEvidenceNode(turn));
       }
+      const trajectories=Array.isArray(turn.agent_trajectories)?turn.agent_trajectories:[];
+      if (trajectories.length) article.append(turnTrajectoryNode(trajectories));
     }
   }
   return article;

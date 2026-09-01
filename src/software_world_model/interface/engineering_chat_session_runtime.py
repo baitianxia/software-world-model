@@ -35,6 +35,10 @@ from software_world_model.application_services.engineering_question_answering im
     SourceBroker,
     WorldModelCognitionProjector,
 )
+from software_world_model.ai_infrastructure.lightweight_engineering_model import (
+    LightweightDispatchBudget,
+    ModelBackedLightweightEngineeringAgent,
+)
 from software_world_model.cross_cutting import (
     Digest,
     DomainError,
@@ -52,11 +56,17 @@ from .engineering_chat_provider_runtime import (
     ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS,
     EngineeringChatProviderModelRuntime,
 )
+from .lightweight_engineering_chat import (
+    LightweightEngineeringChatProviderAttemptFactory,
+    LightweightProviderAttemptDependencies,
+)
 
 
 ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA = (
-    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@3"
+    "SWM-ENGINEERING-CHAT-SESSION-RUNTIME@4"
 )
+ENGINEERING_CHAT_LEGACY_AGENT_MODE = "LEGACY_PROTOCOL"
+ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE = "SOURCE_ONLY_LIGHTWEIGHT_AGENT"
 ENGINEERING_CHAT_SESSION_RUNTIME_STATUS = (
     "SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE"
 )
@@ -225,6 +235,7 @@ class EngineeringChatSessionRuntimeReceipt:
     fallback_provider_runtime_digest: Digest
     logical_turn_dispatch_budget_digest: Digest | None
     launcher_receipt_digest: Digest
+    agent_mode: str
     blocking_gaps: tuple[str, ...]
     artifact_session_config_loaded: bool
     artifact_session_config_digest: Digest | None
@@ -260,6 +271,7 @@ class EngineeringChatSessionRuntimeReceipt:
                 else None
             ),
             "launcher_receipt_digest": self.launcher_receipt_digest.value,
+            "agent_mode": self.agent_mode,
             "blocking_gaps": self.blocking_gaps,
             "artifact_session_config_loaded": self.artifact_session_config_loaded,
             "artifact_session_config_digest": (
@@ -294,7 +306,7 @@ class EngineeringChatSessionRuntimeReceipt:
 class PreparedEngineeringChatSessionRuntime:
     launcher: PreparedEngineeringChatProviderLauncher
     evidence_tool_factory: EngineeringChatEvidenceToolFactory
-    attempt_factory: EngineeringChatProviderAttemptFactory
+    attempt_factory: object
     primary_provider_runtime: EngineeringChatProviderModelRuntime
     fallback_provider_runtime: EngineeringChatProviderModelRuntime
     receipt: EngineeringChatSessionRuntimeReceipt
@@ -317,10 +329,19 @@ def prepare_engineering_chat_session_runtime(
     artifact_session_config_digest: Digest | None = None,
     fixed_command_wired: bool = False,
     availability_clock: Callable[[], datetime] | None = None,
+    agent_mode: str = ENGINEERING_CHAT_LEGACY_AGENT_MODE,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""
 
     current = _aware_utc(checked_at)
+    if agent_mode not in {
+        ENGINEERING_CHAT_LEGACY_AGENT_MODE,
+        ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
+    }:
+        raise DomainError(
+            ErrorCode.INVALID_ARGUMENT,
+            "Engineering Chat Agent mode is not registered",
+        )
     if artifact_session_config_digest is not None and not isinstance(
         artifact_session_config_digest, Digest
     ):
@@ -404,40 +425,99 @@ def prepare_engineering_chat_session_runtime(
         retrieval_worker=retrieval_worker,
     )
 
-    def response_control_factory(
-        authority: EngineeringProviderAttemptAuthority,
-    ) -> SealedEngineeringAgentResponseControl:
-        if authority.chat_binding_digest != binding.digest:
+    turn_trace_reader = None
+    if agent_mode == ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE:
+        if primary_logical_budget is None:
             raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Response Control attempt binds another Chat",
+                ErrorCode.CONTROL_STATE_DENIED,
+                "source-only Agent requires the shared standing dispatch budget",
             )
-        return SealedEngineeringAgentResponseControl()
+        dispatch_budget = LightweightDispatchBudget(parent=primary_logical_budget)
+        primary_model = ModelBackedLightweightEngineeringAgent(
+            gateway=primary_provider_runtime.gateway,
+            configuration=primary_provider_runtime.configuration,
+            session_authority=primary_provider_runtime.session_authority,
+            dispatch_budget=dispatch_budget,
+            clock=availability_clock,
+        )
+        fallback_model = ModelBackedLightweightEngineeringAgent(
+            gateway=fallback_provider_runtime.gateway,
+            configuration=fallback_provider_runtime.configuration,
+            session_authority=fallback_provider_runtime.session_authority,
+            dispatch_budget=dispatch_budget,
+            clock=availability_clock,
+        )
+        primary_lightweight = LightweightProviderAttemptDependencies.create(
+            route=primary_route,
+            configuration=primary_provider_runtime.configuration,
+            session_authority=primary_provider_runtime.session_authority,
+            model=primary_model,
+            gateway_repository_ref=primary_provider_runtime.gateway_repository_ref,
+            disclosure_boundary_ref=(
+                "lightweight-disclosure:" + dispatch_budget.digest.value
+            ),
+            tool_factory=evidence_factory,
+        )
+        fallback_lightweight = LightweightProviderAttemptDependencies.create(
+            route=fallback_route,
+            configuration=fallback_provider_runtime.configuration,
+            session_authority=fallback_provider_runtime.session_authority,
+            model=fallback_model,
+            gateway_repository_ref=fallback_provider_runtime.gateway_repository_ref,
+            disclosure_boundary_ref=(
+                "lightweight-disclosure:"
+                + dispatch_budget.digest.value
+                + ":fallback"
+            ),
+            tool_factory=evidence_factory,
+        )
+        attempt_factory = LightweightEngineeringChatProviderAttemptFactory(
+            plan=route_plan,
+            evidence_tool_configuration_digest=evidence_tools.digest,
+            primary=primary_lightweight,
+            fallback=fallback_lightweight,
+            dispatch_budget_digest=dispatch_budget.digest,
+            loop_limits=loop_limits,
+        )
+        turn_trace_reader = lambda request_digest: tuple(
+            item.public_view()
+            for item in attempt_factory.trace_store.for_turn(request_digest)
+        )
+    else:
+        def response_control_factory(
+            authority: EngineeringProviderAttemptAuthority,
+        ) -> SealedEngineeringAgentResponseControl:
+            if authority.chat_binding_digest != binding.digest:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Response Control attempt binds another Chat",
+                )
+            return SealedEngineeringAgentResponseControl()
 
-    primary_dependencies = primary_provider_runtime.attempt_dependencies(
-        route=primary_route,
-        tool_factory=evidence_factory,
-        response_control_factory=response_control_factory,
-        response_control_ref=(
-            f"engineering-agent-response-control:{primary_route.execution_profile_ref}@1"
-        ),
-    )
-    fallback_dependencies = fallback_provider_runtime.attempt_dependencies(
-        route=fallback_route,
-        tool_factory=evidence_factory,
-        response_control_factory=response_control_factory,
-        response_control_ref=(
-            f"engineering-agent-response-control:{fallback_route.execution_profile_ref}@1"
-        ),
-    )
-    attempt_factory = EngineeringChatProviderAttemptFactory(
-        plan=route_plan,
-        evidence_tool_configuration_digest=evidence_tools.digest,
-        primary=primary_dependencies,
-        fallback=fallback_dependencies,
-        loop_limits=loop_limits,
-        available_operations=ENGINEERING_CHAT_PROVIDER_OPERATIONS,
-    )
+        primary_dependencies = primary_provider_runtime.attempt_dependencies(
+            route=primary_route,
+            tool_factory=evidence_factory,
+            response_control_factory=response_control_factory,
+            response_control_ref=(
+                f"engineering-agent-response-control:{primary_route.execution_profile_ref}@1"
+            ),
+        )
+        fallback_dependencies = fallback_provider_runtime.attempt_dependencies(
+            route=fallback_route,
+            tool_factory=evidence_factory,
+            response_control_factory=response_control_factory,
+            response_control_ref=(
+                f"engineering-agent-response-control:{fallback_route.execution_profile_ref}@1"
+            ),
+        )
+        attempt_factory = EngineeringChatProviderAttemptFactory(
+            plan=route_plan,
+            evidence_tool_configuration_digest=evidence_tools.digest,
+            primary=primary_dependencies,
+            fallback=fallback_dependencies,
+            loop_limits=loop_limits,
+            available_operations=ENGINEERING_CHAT_PROVIDER_OPERATIONS,
+        )
     launcher = prepare_engineering_chat_provider_launcher(
         binding=binding,
         product_tree=product_tree,
@@ -455,6 +535,7 @@ def prepare_engineering_chat_session_runtime(
         checked_at=current,
         required_conversation_turns=required_conversation_turns,
         availability_clock=availability_clock,
+        turn_trace_reader=turn_trace_reader,
     )
     core = {
         "schema": ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA,
@@ -474,6 +555,7 @@ def prepare_engineering_chat_session_runtime(
             else None
         ),
         "launcher_receipt_digest": launcher.receipt.digest.value,
+        "agent_mode": agent_mode,
         "blocking_gaps": blocking_gaps,
         "artifact_session_config_loaded": artifact_loaded,
         "artifact_session_config_digest": (
@@ -505,6 +587,7 @@ def prepare_engineering_chat_session_runtime(
             else None
         ),
         launcher_receipt_digest=launcher.receipt.digest,
+        agent_mode=agent_mode,
         blocking_gaps=blocking_gaps,
         artifact_session_config_loaded=artifact_loaded,
         artifact_session_config_digest=artifact_session_config_digest,
@@ -546,6 +629,8 @@ __all__ = [
     "ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS",
     "ENGINEERING_CHAT_SESSION_RUNTIME_SCHEMA",
     "ENGINEERING_CHAT_SESSION_RUNTIME_STATUS",
+    "ENGINEERING_CHAT_LEGACY_AGENT_MODE",
+    "ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE",
     "EngineeringChatEvidenceToolFactory",
     "EngineeringChatSessionRuntimeReceipt",
     "PreparedEngineeringChatSessionRuntime",

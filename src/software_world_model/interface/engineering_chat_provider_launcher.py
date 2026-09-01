@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import Lock
-from typing import Callable, Sequence
+from typing import Callable, Protocol, Sequence
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
     EngineeringAgentModelConfiguration,
@@ -56,6 +56,7 @@ from software_world_model.cross_cutting import (
 from .engineering_chat_browser import (
     ENGINEERING_CHAT_LOOPBACK_ORIGIN,
     EngineeringChatBrowserApplication,
+    TurnTraceReader,
 )
 from .engineering_chat_candidate import (
     engineering_chat_product_candidate_digest,
@@ -329,6 +330,18 @@ class EngineeringChatProviderAttemptFactory:
         )
 
 
+class EngineeringChatProviderAttemptFactoryPort(Protocol):
+    plan: EngineeringProviderRoutePlan
+    evidence_tool_configuration_digest: Digest
+    loop_limits: EngineeringAgentLoopLimits
+    digest: Digest
+
+    def create(
+        self,
+        authority: EngineeringProviderAttemptAuthority,
+    ) -> EngineeringProviderAttemptRuntime: ...
+
+
 @dataclass(frozen=True, slots=True)
 class EngineeringChatProviderLauncherReceipt:
     schema: str
@@ -408,7 +421,7 @@ class PreparedEngineeringChatProviderLauncher:
     service: InMemoryEngineeringConversationService
     router: ApplicationOwnedEngineeringProviderRouter
     route_plan: EngineeringProviderRoutePlan
-    attempt_factory: EngineeringChatProviderAttemptFactory
+    attempt_factory: EngineeringChatProviderAttemptFactoryPort
     receipt: EngineeringChatProviderLauncherReceipt
 
 
@@ -422,10 +435,11 @@ def prepare_engineering_chat_provider_launcher(
     primary_session_authority: EngineeringAgentSessionDisclosureAuthority,
     fallback_session_authority: EngineeringAgentSessionDisclosureAuthority,
     route_plan: EngineeringProviderRoutePlan,
-    attempt_factory: EngineeringChatProviderAttemptFactory,
+    attempt_factory: EngineeringChatProviderAttemptFactoryPort,
     checked_at: datetime,
     required_conversation_turns: int = 5,
     availability_clock: Callable[[], datetime] | None = None,
+    turn_trace_reader: TurnTraceReader | None = None,
 ) -> PreparedEngineeringChatProviderLauncher:
     """Wire the fixed routed Browser application without executing any I/O."""
 
@@ -522,7 +536,10 @@ def prepare_engineering_chat_provider_launcher(
         binding,
         turn_executor=router,
     )
-    application = EngineeringChatBrowserApplication(service)
+    application = EngineeringChatBrowserApplication(
+        service,
+        turn_trace_reader=turn_trace_reader,
+    )
     ordered_types = tuple(item.provider_type for item in configurations)
     configuration_digests = tuple(item.digest for item in configurations)
     authority_digests = tuple(item.digest for item in authorities)

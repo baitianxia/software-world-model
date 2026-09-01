@@ -4320,6 +4320,21 @@
       "tests"
     ]
   },
+  "FINDING-010-258": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-258.md",
+    "code": [
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "src/software_world_model/interface/lightweight_engineering_chat.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py",
+      "tests/test_engineering_chat_provider_runtime.py",
+      "tests/test_engineering_chat_session_artifact.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -6006,6 +6021,7 @@
     "code": [
       "src/software_world_model/application_services",
       "src/software_world_model/ai_infrastructure/conversational_engineering_model.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
       "src/software_world_model/interface"
     ],
     "tests": [

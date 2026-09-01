@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Callable, Mapping, Sequence
 
 from software_world_model.application_services.engineering_conversation import (
     ENGINEERING_CHAT_EXPERIENCE,
@@ -17,6 +18,7 @@ from software_world_model.application_services.engineering_conversation import (
     RuntimeCapabilityStatus,
 )
 from software_world_model.cross_cutting import (
+    Digest,
     DomainError,
     ErrorCode,
     Revision,
@@ -41,6 +43,8 @@ _TURN_ROUTE = re.compile(
     r"(?P<conversation>conversation_[0-9a-f]{32})/turns$"
 )
 
+TurnTraceReader = Callable[[Digest], Sequence[Mapping[str, object]]]
+
 
 class EngineeringChatBrowserApplication:
     """WSGI surface; the trusted launcher owns the exact listener binding."""
@@ -48,9 +52,13 @@ class EngineeringChatBrowserApplication:
     maximum_request_bytes = ENGINEERING_CHAT_MAXIMUM_REQUEST_BYTES
 
     def __init__(
-        self, service: InMemoryEngineeringConversationService
+        self,
+        service: InMemoryEngineeringConversationService,
+        *,
+        turn_trace_reader: TurnTraceReader | None = None,
     ) -> None:
         self._service = service
+        self._turn_trace_reader = turn_trace_reader
 
     def __call__(self, environ, start_response):
         try:
@@ -111,9 +119,14 @@ class EngineeringChatBrowserApplication:
                     message=message,
                 )
                 projection = _snapshot_view(
-                    submission.snapshot, self._service.binding
+                    submission.snapshot,
+                    self._service.binding,
+                    self._turn_trace_reader,
                 )
-                projection["submitted_turn"] = _turn_view(submission.turn)
+                projection["submitted_turn"] = _turn_view(
+                    submission.turn,
+                    self._turn_trace_reader,
+                )
                 return self._json(start_response, "200 OK", projection)
             conversation_match = _CONVERSATION_ROUTE.fullmatch(path)
             if method == "GET" and conversation_match is not None:
@@ -123,7 +136,11 @@ class EngineeringChatBrowserApplication:
                 return self._json(
                     start_response,
                     "200 OK",
-                    _snapshot_view(snapshot, self._service.binding),
+                    _snapshot_view(
+                        snapshot,
+                        self._service.binding,
+                        self._turn_trace_reader,
+                    ),
                 )
             return self._json(
                 start_response,
@@ -340,6 +357,7 @@ class EngineeringChatBrowserApplication:
 def _snapshot_view(
     snapshot: EngineeringConversationSnapshot,
     binding: EngineeringChatBinding,
+    turn_trace_reader: TurnTraceReader | None = None,
 ) -> dict[str, object]:
     conversation = snapshot.conversation
     return {
@@ -385,7 +403,9 @@ def _snapshot_view(
             "digest": snapshot.context.digest.value,
         },
         "messages": [_message_view(item) for item in snapshot.messages],
-        "turns": [_turn_view(item) for item in snapshot.turns],
+        "turns": [
+            _turn_view(item, turn_trace_reader) for item in snapshot.turns
+        ],
         "project": {
             "name": binding.project_name,
             "repository_revision": binding.repository_revision,
@@ -408,7 +428,15 @@ def _message_view(message: EngineeringConversationMessage) -> dict[str, object]:
     }
 
 
-def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
+def _turn_view(
+    turn: EngineeringConversationTurn,
+    turn_trace_reader: TurnTraceReader | None = None,
+) -> dict[str, object]:
+    trajectories = (
+        tuple(turn_trace_reader(turn.request_digest))
+        if turn_trace_reader is not None
+        else ()
+    )
     return {
         "turn_id": turn.turn_id.value,
         "result_id": turn.result_id.value,
@@ -480,6 +508,7 @@ def _turn_view(turn: EngineeringConversationTurn) -> dict[str, object]:
         ),
         "provider_duplicate_cost_risk": turn.provider_duplicate_cost_risk,
         "retry_count": turn.retry_count,
+        "agent_trajectories": [dict(item) for item in trajectories],
         "quality_status": turn.quality_status,
         "production_activation": turn.production_activation,
         "created_at": _time(turn.created_at),
@@ -506,4 +535,5 @@ __all__ = [
     "ENGINEERING_CHAT_LOOPBACK_ORIGIN",
     "ENGINEERING_CHAT_MAXIMUM_REQUEST_BYTES",
     "EngineeringChatBrowserApplication",
+    "TurnTraceReader",
 ]
