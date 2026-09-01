@@ -511,6 +511,18 @@ class LocalGitConnector:
             raise DomainError(ErrorCode.SOURCE_TARGET_NOT_FOUND, "Git commit did not resolve exactly")
         return resolved
 
+    def resolve_tree(self, revision: str) -> str:
+        """Resolve the exact immutable tree owned by one exact commit."""
+
+        exact = self.resolve_revision(revision)
+        resolved = self._git("rev-parse", "--verify", f"{exact}^{{tree}}").strip()
+        if not _FULL_OID.fullmatch(resolved):
+            raise DomainError(
+                ErrorCode.SOURCE_TARGET_NOT_FOUND,
+                "Git tree did not resolve exactly",
+            )
+        return resolved
+
     def list_paths(self, revision: str) -> tuple[str, ...]:
         exact = self.resolve_revision(revision)
         payload = self._git_bytes("ls-tree", "-r", "--name-only", "-z", exact)

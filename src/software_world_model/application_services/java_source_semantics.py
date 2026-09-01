@@ -2160,6 +2160,12 @@ def _frozen_language() -> Language:
     return language
 
 
+def frozen_java_language() -> Language:
+    """Return the already-qualified Java frontend for deterministic projections."""
+
+    return _frozen_language()
+
+
 def _runtime_fileset_digest(name: str) -> str:
     package = distribution(name)
     entries: list[dict[str, object]] = []
@@ -2489,4 +2495,5 @@ __all__ = [
     "JavaSourceSemanticsEvaluator",
     "JavaSourceSemanticsInput",
     "evaluate_java_source_semantics",
+    "frozen_java_language",
 ]

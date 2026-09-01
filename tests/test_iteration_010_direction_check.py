@@ -133,6 +133,34 @@ class DirectionCheckTest(unittest.TestCase):
         self.assertEqual(report["progress_verdict"], "CAPABILITY_EVIDENCE_PRESENT")
         self.assertEqual(report["next_phase"], "PHASE_B_WORLD_MODEL_COGNITION")
 
+    def test_agent_and_knowledge_evidence_advance_to_integrated_alpha(self) -> None:
+        self._write(Path("src/software_world_model/new_agent.py"), "agent = True\n")
+        self._write(Path("src/software_world_model/new_cognition.py"), "cognition = True\n")
+        evidence = self.repository / "progress.json"
+        evidence.write_text(
+            json.dumps(
+                {
+                    "schema": direction_check.EVIDENCE_SCHEMA,
+                    "knowledge_evidence": ["cognition:five-tasks"],
+                    "agent_behavior_evidence": ["trajectory:source-only"],
+                    "browser_evidence": [],
+                    "trajectory_evidence": ["trajectory:source-only"],
+                    "replacement_experiment_evidence": [],
+                    "verification_cases": [
+                        "V-HARNESS-BASELINE-001",
+                        "V-WORLD-MODEL-COGNITION-001",
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        report = self._check(evidence)
+
+        self.assertEqual(report["direction_verdict"], "PASS")
+        self.assertEqual(report["progress_verdict"], "CAPABILITY_EVIDENCE_PRESENT")
+        self.assertEqual(report["next_phase"], "PHASE_C_INTEGRATED_BROWSER_ALPHA")
+
     def test_prompt_delta_requires_trajectory_and_replacement_experiment(self) -> None:
         self._write(MODEL_PATH, "replacement_prompt = True\n")
 

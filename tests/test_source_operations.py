@@ -378,6 +378,11 @@ public class OrderService {
             ErrorCode.SOURCE_TARGET_OUT_OF_SCOPE,
         )
 
+        self.assertEqual(
+            connector.resolve_tree(self.commit),
+            self._git("rev-parse", f"{self.commit}^{{tree}}").strip(),
+        )
+
         selector = (
             ("comparison_base", self.commit),
             ("comparison_head", target),

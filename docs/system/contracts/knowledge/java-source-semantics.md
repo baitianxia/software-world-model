@@ -5,9 +5,9 @@ status: current
 authority: normative
 owners: [knowledge]
 depends_on: [SYS-CONTRACT-KNOWLEDGE-ENTITY, SYS-CONTRACT-KNOWLEDGE-FACT, SYS-CONTRACT-KNOWLEDGE-SNAPSHOT-PUBLICATION, SYS-CONTRACT-KNOWLEDGE-JAVA-STATIC-CALL-MODEL, SYS-CONTRACT-SOURCE-ARTIFACT]
-derived_from: [FINDING-010-135]
-code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services]
-tests: [tests]
+derived_from: [FINDING-010-135, FINDING-010-261]
+code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services, src/software_world_model/infrastructure/file_capability_cognition.py, src/software_world_model/interface/java_capability_cognition_cli.py]
+tests: [tests/test_java_source_semantics.py, tests/test_capability_cognition.py, tests/test_source_operations.py]
 ---
 
 # Java Source Semantics
@@ -105,6 +105,22 @@ semantics facet 的 completeness。只有相应 facet 为 COMPLETE 才能支持�
 `CALLS` consistency Oracle 失败，都拒绝新 Snapshot 并保持旧 CURRENT。Snapshot committed 后，Bundle seal 对同一 normalized
 closure 再执行 consistency Oracle；此时失败不回滚 Snapshot，而是保持该 Snapshot `READ_BUNDLE_UNAVAILABLE`。两道 Gate 的输入
 与 failure 时序不得混用。
+
+## Capability-cognition query projection
+
+PDR-014 Alpha 可以在提问前从同一 exact Source、冻结 Java frontend 和明确选择的 `src/main/java` roots 构建一份不可变的
+`JAVA_CAPABILITY_COGNITION@1` 查询投影。它补齐 module/package/file/type/method 层级、contain/import/inherit/invoke 关系和 Source
+可直接观察的 condition/throw/catch/state read/state write/call/external call/return 行为；每项必须保留 exact revision、tree、path、line、
+content digest、Coverage、Conflict 与 Unknown。行为按方法内 Source ordinal 排序；外部或歧义目标不得伪造成内部实体。
+
+该投影复用本 Contract 的冻结 frontend 与 Source 语义边界，但不是第二套正式知识库：它没有 CURRENT pointer、跨 revision continuity、
+独立 publication/adoption 或闭世界负向权威，也不能替代上述正式 Snapshot、Coverage State 和 no-payload Bundle。其 canonical private artifact
+只按 exact digest/revision/tree 加载到一个 Alpha Session；任一绑定、canonical bytes、文件类型或 digest 不一致都失败关闭。投影中的
+Source statement 只作为已授权 Source read model 的紧凑 Observation，仍受 Source disclosure 和 Citation 约束，不能写回正式知识 State。
+
+Agent 只能通过有界、可分页的 search、typed/directional/depth-bounded traverse 和 detail 三类操作读取投影。每页返回同一 snapshot digest；
+实体、关系和行为使用稳定 opaque ID，调用方不能制造或猜测 ID。Phase B 只在五个以上独立 exact-source task 复用同一 artifact 并验证
+结构、关系、行为和认识论边界后取得 capability evidence；这不等于正式 Profile acceptance、通用问答质量或 MVP。
 
 ## No-payload Bundle boundary
 
