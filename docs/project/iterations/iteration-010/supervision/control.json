@@ -1,8 +1,11 @@
 {
-  "schema": "SWM_INDEPENDENT_SUPERVISION_CONTROL@2",
+  "schema": "SWM_INDEPENDENT_SUPERVISION_CONTROL@3",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
+  "candidate_repository": "/Users/baitianxia/project/software-world-model/var/workspaces/development",
   "supervision_branch": "codex/supervision",
+  "supervision_repository": "/Users/baitianxia/project/software-world-model/var/workspaces/supervision",
+  "source_repository": "/Users/baitianxia/project/software-world-model/validation-projects/mall",
   "trusted_product_baseline_commit": "268b4546a893ff346da34d4f4d06057d860e2aa3",
   "trusted_plan_commit": "e0a2d2fdd3e0f2b5d7fc4bf01dae0d1d7358d577",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",

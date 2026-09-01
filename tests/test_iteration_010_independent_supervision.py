@@ -7,6 +7,8 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
 
 from validation.iteration_010_mvp import independent_supervision as supervision
 
@@ -32,8 +34,10 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         root = Path(self.temporary.name)
         self.candidate = root / "candidate"
+        self.supervision_repository = root / "supervision"
         self.source = root / "source"
         self.candidate.mkdir()
+        self.supervision_repository.mkdir()
         self.source.mkdir()
         self._init_repository(self.candidate, "codex/development")
         self._init_repository(self.source, "source-main")
@@ -62,7 +66,10 @@ class IndependentSupervisionTest(unittest.TestCase):
             "schema": supervision.CONTROL_SCHEMA,
             "iteration": "ITER-010",
             "candidate_branch": "codex/development",
+            "candidate_repository": str(self.candidate.resolve()),
             "supervision_branch": "codex/supervision",
+            "supervision_repository": str(self.supervision_repository.resolve()),
+            "source_repository": str(self.source.resolve()),
             "trusted_product_baseline_commit": self.product_baseline,
             "trusted_plan_commit": self.plan_commit,
             "source_commit": self.source_commit,
@@ -161,6 +168,7 @@ class IndependentSupervisionTest(unittest.TestCase):
             assessment or self.assessment,
             self.candidate,
             self.source,
+            supervision_repository=self.supervision_repository,
             supervisor_branch=supervisor_branch,
             supervisor_commit="f" * 40,
         )
@@ -241,6 +249,31 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.assertFalse(report["task_should_stop"])
         self.assertFalse(report["authorization_required"])
 
+    def test_different_clone_cannot_replace_bound_candidate_workspace(self) -> None:
+        alternate = Path(self.temporary.name) / "alternate-candidate"
+        _run(
+            Path(self.temporary.name),
+            "git",
+            "clone",
+            "-q",
+            str(self.candidate),
+            str(alternate),
+        )
+
+        report = supervision.audit(
+            self.control,
+            self.assessment,
+            alternate,
+            self.source,
+            supervision_repository=self.supervision_repository,
+            supervisor_branch="codex/supervision",
+            supervisor_commit="f" * 40,
+        )
+
+        self.assertEqual(report["decision"], "RECOVER_SUPERVISION")
+        self.assertIn("candidate-repository-mismatch", report["binding_errors"])
+        self.assertFalse(report["task_should_stop"])
+
     def test_wrong_supervision_branch_recovers_supervision(self) -> None:
         report = self._audit(supervisor_branch="codex/old-supervision")
 
@@ -273,6 +306,28 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.assertEqual(value["candidate_worktree_digest"], self.state.worktree_digest)
         self.assertFalse(value["task_should_stop"])
         self.assertFalse(value["authorization_required"])
+
+    def test_watch_mode_rechecks_after_each_poll(self) -> None:
+        arguments = SimpleNamespace(watch=True, poll_seconds=3)
+        reports = [
+            ({"decision": "CORRECT"}, 0),
+            ({"decision": "CONTINUE"}, 0),
+        ]
+        emitted: list[str] = []
+        sleeps: list[int] = []
+
+        with mock.patch.object(supervision, "_run_once", side_effect=reports):
+            exit_code = supervision.run_supervision(
+                arguments,
+                maximum_cycles=2,
+                sleep=sleeps.append,
+                emit=emitted.append,
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(len(emitted), 2)
+        self.assertEqual(sleeps, [3])
+        self.assertTrue(json.loads(emitted[0])["watch_active"])
 
 
 if __name__ == "__main__":

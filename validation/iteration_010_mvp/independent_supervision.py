@@ -15,13 +15,14 @@ import hashlib
 import json
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 
-CONTROL_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_CONTROL@2"
+CONTROL_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_CONTROL@3"
 ASSESSMENT_SCHEMA = "SWM_INDEPENDENT_ASSESSMENT@2"
 REPORT_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_REPORT@2"
 HEARTBEAT_SCHEMA = "SWM_SUPERVISION_HEARTBEAT@1"
@@ -32,7 +33,10 @@ CONTROL_KEYS = {
     "schema",
     "iteration",
     "candidate_branch",
+    "candidate_repository",
     "supervision_branch",
+    "supervision_repository",
+    "source_repository",
     "trusted_product_baseline_commit",
     "trusted_plan_commit",
     "source_commit",
@@ -174,6 +178,17 @@ def _safe_relative_path(value: Any, label: str) -> str:
     return path.as_posix()
 
 
+def _canonical_absolute_path(value: Any, label: str) -> Path:
+    text = _string(value, label)
+    path = Path(text)
+    if not path.is_absolute():
+        raise SupervisionInputError(f"{label} must be an absolute path")
+    resolved = path.resolve()
+    if str(resolved) != text:
+        raise SupervisionInputError(f"{label} must be a canonical absolute path")
+    return resolved
+
+
 def _branch(repository: Path) -> str | None:
     completed = _git_result(repository, "symbolic-ref", "--quiet", "--short", "HEAD")
     if completed.returncode == 1:
@@ -214,6 +229,12 @@ def validate_control(value: Mapping[str, Any]) -> dict[str, Any]:
         "objective",
     ):
         _string(value.get(field), f"control {field}")
+    for field in (
+        "candidate_repository",
+        "supervision_repository",
+        "source_repository",
+    ):
+        _canonical_absolute_path(value.get(field), f"control {field}")
     for field in (
         "trusted_product_baseline_commit",
         "trusted_plan_commit",
@@ -428,11 +449,15 @@ def audit(
     candidate_repository: Path,
     source_repository: Path,
     *,
+    supervision_repository: Path,
     supervisor_branch: str | None,
     supervisor_commit: str | None = None,
 ) -> dict[str, Any]:
     control = validate_control(control)
     assessment = validate_assessment(assessment, control)
+    candidate_repository = candidate_repository.resolve()
+    supervision_repository = supervision_repository.resolve()
+    source_repository = source_repository.resolve()
     candidate = capture_candidate(candidate_repository, control)
     source_commit = _git(
         source_repository.resolve(), "rev-parse", "HEAD^{commit}"
@@ -443,6 +468,12 @@ def audit(
     evidence = check_evidence(assessment, candidate_repository, source_repository)
 
     binding_errors: list[str] = []
+    if candidate_repository != Path(control["candidate_repository"]):
+        binding_errors.append("candidate-repository-mismatch")
+    if supervision_repository != Path(control["supervision_repository"]):
+        binding_errors.append("supervision-repository-mismatch")
+    if source_repository != Path(control["source_repository"]):
+        binding_errors.append("source-repository-mismatch")
     if candidate.branch != control["candidate_branch"]:
         binding_errors.append("candidate-branch-mismatch")
     if supervisor_branch != control["supervision_branch"]:
@@ -469,6 +500,9 @@ def audit(
         "objective": control["objective"],
         "supervisor_branch": supervisor_branch,
         "supervisor_commit": supervisor_commit,
+        "supervision_repository": str(supervision_repository),
+        "candidate_repository": str(candidate_repository),
+        "source_repository": str(source_repository),
         "candidate_branch": candidate.branch,
         "candidate_commit": candidate.head,
         "candidate_tree": candidate.tree,
@@ -494,6 +528,7 @@ def audit(
         "authorization_required": False,
         "requires_result": False,
         "check_interval_minutes": control["check_interval_minutes"],
+        "attention_required": True,
     }
     if binding_errors:
         report["decision"] = "RECOVER_SUPERVISION"
@@ -522,6 +557,7 @@ def audit(
     report["decision"] = "ADVANCE"
     report["advance_to"] = control["next_phase"]
     report["phase_change_allowed"] = True
+    report["attention_required"] = False
     report["next_action"] = (
         f"独立证据允许从 Phase {control['active_phase']} 推进到 "
         f"{control['next_phase']}；开发继续。"
@@ -559,6 +595,7 @@ def write_heartbeat(path: Path, report: Mapping[str, Any]) -> None:
         "candidate_clean": report.get("candidate_clean"),
         "candidate_worktree_digest": report.get("candidate_worktree_digest"),
         "assessment_status": report.get("assessment_status"),
+        "attention_required": report.get("attention_required", True),
         "task_should_stop": False,
         "authorization_required": False,
     }
@@ -575,8 +612,8 @@ def build_parser() -> argparse.ArgumentParser:
     root = Path(__file__).resolve().parents[2]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--supervision-repository", type=Path, default=root)
-    parser.add_argument("--candidate-repository", type=Path, required=True)
-    parser.add_argument("--source-repository", type=Path, required=True)
+    parser.add_argument("--candidate-repository", type=Path)
+    parser.add_argument("--source-repository", type=Path)
     parser.add_argument(
         "--control",
         type=Path,
@@ -593,24 +630,47 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=root / "var/supervision/heartbeat.json",
     )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="continuously recheck the exact candidate and refresh the heartbeat",
+    )
+    parser.add_argument(
+        "--poll-seconds",
+        type=int,
+        default=30,
+        help="watch polling interval; must be positive and no longer than the control interval",
+    )
     return parser
 
 
-def main(argv: Sequence[str] | None = None) -> int:
-    arguments = build_parser().parse_args(argv)
+def _run_once(arguments: argparse.Namespace) -> tuple[dict[str, Any], int]:
     report: dict[str, Any]
     exit_code = 0
     try:
         supervision_repository = arguments.supervision_repository.resolve()
-        candidate_repository = arguments.candidate_repository.resolve()
-        source_repository = arguments.source_repository.resolve()
+        control = _read_trusted_json(
+            supervision_repository, arguments.control, "control file"
+        )
+        control = validate_control(control)
+        candidate_repository = (
+            arguments.candidate_repository
+            or Path(control["candidate_repository"])
+        ).resolve()
+        source_repository = (
+            arguments.source_repository
+            or Path(control["source_repository"])
+        ).resolve()
         if supervision_repository == candidate_repository:
             raise SupervisionInputError(
                 "supervision and candidate repositories must be independent"
             )
-        control = _read_trusted_json(
-            supervision_repository, arguments.control, "control file"
-        )
+        if arguments.poll_seconds <= 0:
+            raise SupervisionInputError("poll seconds must be positive")
+        if arguments.poll_seconds > control["check_interval_minutes"] * 60:
+            raise SupervisionInputError(
+                "poll seconds must not exceed the trusted control interval"
+            )
         assessment = _read_trusted_json(
             supervision_repository, arguments.assessment, "assessment file"
         )
@@ -619,6 +679,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             assessment,
             candidate_repository,
             source_repository,
+            supervision_repository=supervision_repository,
             supervisor_branch=_branch(supervision_repository),
             supervisor_commit=_git(
                 supervision_repository, "rev-parse", "HEAD^{commit}"
@@ -635,14 +696,53 @@ def main(argv: Sequence[str] | None = None) -> int:
             "task_should_stop": False,
             "authorization_required": False,
             "requires_result": False,
+            "attention_required": True,
         }
     try:
         write_heartbeat(arguments.heartbeat.resolve(), report)
     except OSError as exc:
         report["heartbeat_error"] = str(exc)
         exit_code = 2
-    print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
-    return exit_code
+    return report, exit_code
+
+
+def run_supervision(
+    arguments: argparse.Namespace,
+    *,
+    maximum_cycles: int | None = None,
+    sleep: Any = time.sleep,
+    emit: Any = print,
+) -> int:
+    """Run once or continuously; bounded cycles exist only for deterministic tests."""
+
+    cycle = 0
+    last_exit_code = 0
+    while True:
+        report, last_exit_code = _run_once(arguments)
+        report["watch_active"] = bool(arguments.watch)
+        report["poll_seconds"] = arguments.poll_seconds
+        emit(
+            json.dumps(
+                report,
+                ensure_ascii=False,
+                indent=None if arguments.watch else 2,
+                sort_keys=True,
+            )
+        )
+        cycle += 1
+        if not arguments.watch or (
+            maximum_cycles is not None and cycle >= maximum_cycles
+        ):
+            return last_exit_code
+        sleep(arguments.poll_seconds)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    arguments = build_parser().parse_args(argv)
+    try:
+        return run_supervision(arguments)
+    except KeyboardInterrupt:
+        return 0
 
 
 if __name__ == "__main__":
