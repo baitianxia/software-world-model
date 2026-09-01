@@ -2,60 +2,30 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "b3c19ff31fcc8e498bcbaf9c36f2434e86570e75",
-  "candidate_tree": "1b88ce849b3cbff0d55bf7a3286cdb73ecd82716",
-  "candidate_worktree_digest": "sha256:57ec485005e244a35cd82976d2945f9848c452dac91b0cef49ce9f1b7899d3be",
+  "candidate_commit": "1e07f7798dbf468d6078cef3b8a28dd596ae3281",
+  "candidate_tree": "b4747ab5658d4d9f770b47c5f199a8ff1d2f7e00",
+  "candidate_worktree_digest": "sha256:639cbad4f6ae94bc043cf1bbbb66fdb56dba15383e5edd5c190ee85f07a88dd5",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
-  "phase": "B",
-  "verdict": "PASS",
+  "phase": "C",
+  "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-01T23:45:20+08:00",
+  "assessed_at": "2026-09-01T23:54:38+08:00",
   "evidence": [
     {
-      "id": "phase-b-closure-finding",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-270.md",
-      "sha256": "sha256:d78ff6a9699d6c4b23d428181cfb42c39a5a85b13d7f4b55d0e99938b2459bd5"
-    },
-    {
-      "id": "java-contract-construction",
-      "scope": "candidate",
-      "path": "src/software_world_model/application_services/java_capability_cognition.py",
-      "sha256": "sha256:99de024e9a8f15b674e9821e7d79d7f59488778551e516ad5599f2a0ecc51d46"
-    },
-    {
-      "id": "bounded-cognition-retrieval",
+      "id": "phase-b-verified-cognition-baseline",
       "scope": "candidate",
       "path": "src/software_world_model/knowledge_engine/capability_cognition.py",
       "sha256": "sha256:c10d56a532c81382e3504c69fddf06127dd0ab33ffcd1081b7f12eafe4241ceb"
-    },
-    {
-      "id": "semantic-guard-tests",
-      "scope": "candidate",
-      "path": "tests/test_capability_cognition.py",
-      "sha256": "sha256:68f34ec55db44a1588af559daf6179b6e00e6349d9678e84aa02b4262fcd56be"
-    },
-    {
-      "id": "transaction-interface-source",
-      "scope": "source",
-      "path": "mall-admin/src/main/java/com/macro/mall/service/UmsAdminService.java",
-      "sha256": "sha256:f0c401f3284df35f7729e25e0ed3663e5c05a37fbc77c14e33d312578162406b"
-    },
-    {
-      "id": "transaction-implementation-source",
-      "scope": "source",
-      "path": "mall-admin/src/main/java/com/macro/mall/service/impl/UmsAdminServiceImpl.java",
-      "sha256": "sha256:8bda65edb039fa5314d2931774cad2182058a6396013c2f0c2aef89dc03f7436"
     }
   ],
-  "completed_requirements": [
-    "declaration-inheritance-annotation-implementation-closure",
-    "bounded-search-traverse-detail-retrieval",
-    "exact-source-coverage-conflict-and-unknown",
-    "five-independent-unseen-tasks-reuse-one-snapshot"
+  "completed_requirements": [],
+  "unresolved_requirements": [
+    "same-agent-cognition-and-source-gap-integration",
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
   ],
-  "unresolved_requirements": [],
   "defects": [],
-  "earliest_divergence": "none",
-  "next_action": "ADVANCE 到 Phase C：在同一 Agent 接入已验证的 cognition 工具并形成首个可操作浏览器链；继续遵守当前计划和后续独立质量门。"
+  "earliest_divergence": "integration-not-yet-evaluated",
+  "next_action": "继续 Phase C：在同一 Agent 接入已验证 cognition，先形成并启动首个可操作的 loopback 浏览器链，再用三个异质问题和一个语义追问独立取证。"
 }

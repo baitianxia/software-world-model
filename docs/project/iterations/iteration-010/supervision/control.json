@@ -9,15 +9,15 @@
   "trusted_product_baseline_commit": "268b4546a893ff346da34d4f4d06057d860e2aa3",
   "trusted_plan_commit": "e0a2d2fdd3e0f2b5d7fc4bf01dae0d1d7358d577",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
-  "active_phase": "B",
-  "next_phase": "C",
-  "phase_exit_case_id": "V-WORLD-MODEL-COGNITION-001",
+  "active_phase": "C",
+  "next_phase": "D",
+  "phase_exit_case_id": "V-INTEGRATED-ALPHA-001",
   "phase_exit_requirements": [
-    "declaration-inheritance-annotation-implementation-closure",
-    "bounded-search-traverse-detail-retrieval",
-    "exact-source-coverage-conflict-and-unknown",
-    "five-independent-unseen-tasks-reuse-one-snapshot"
+    "same-agent-cognition-and-source-gap-integration",
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
   ],
-  "objective": "先闭合可复用的软件世界模型认知，再进入浏览器集成；当前不开发 Reviewer、Provider recovery、回答协议或 Phase C/D。",
+  "objective": "把已独立验证的 cognition artifact 接入同一轻量 Agent，形成 cognition→Source Gap→Answer/Citation→fresh review→loopback Web 最小纵切；当前不开发 Provider recovery、回答 Prompt/Schema、Phase D 验收器或已知题专用规则。",
   "check_interval_minutes": 30
 }
