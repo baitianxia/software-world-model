@@ -136,7 +136,9 @@ Reviewer 在 fresh 上下文中读取原问题、相关 Conversation context、�
 | 答案有明确缺陷但 Reviewer 批准 | reviewer | 改独立审核策略或 Reviewer 能力，不增加 Application 正文规则 |
 | 内部结果正确但页面错误 | Web/presentation | 只修显示/会话绑定 |
 
-Provider/network failure 独立记录，不得被归为任何产品语义层，也不得触发答案逻辑改变。
+Provider/network failure 独立记录，不得被归为任何产品语义层，也不得触发答案逻辑改变。若受信 receipt 证明 HTTP/model dispatch 与
+post-dispatch outcome unknown 都为 0，则以新的 logical run/request identity 按 5 分钟、15 分钟、随后每 30 分钟自动重试；same-request
+retry/replay 始终为 0。重试计时不占用开发线程，本地工作继续；没有独立工作时任务仍以 `next_retry_at` 保持 active，不能结束或等待用户。
 
 ## Interfaces and affected code
 
@@ -152,6 +154,7 @@ Provider/network failure 独立记录，不得被归为任何产品语义层，�
 | V-HARNESS-BASELINE-001 | source-only 浏览器基线完成两个异质问题和一个追问，trajectory 证明观察驱动重规划 |
 | V-WORLD-MODEL-COGNITION-001 | 五个独立任务证明结构、关系、行为、来源和 Coverage/Unknown 可正确构建、检索和复用 |
 | V-INTEGRATED-ALPHA-001 | 三个异质问题和一个追问真实贯通，浏览器立即可体验，WM+Source 对 source-only 有非 locator 正增益 |
+| V-PROVIDER-RECOVERY-CONTINUITY-001 | pre-HTTP 临时失败创建 5/15/30 分钟 fresh successor；任务保持 active、授权请求和 same-request replay 为 0 |
 | V-BROWSER-CHAT-MVP-BUILD-001 | Phase D 五题、多轮、独立审核和 Codex Gate 全部通过后才取得 MVP 名称 |
 | V-PREVIEW-002 | 用户查看真实 Alpha/MVP、比较和已知限制后决定 CONTINUE / REWORK / REDIRECT / REJECT |
 
@@ -186,7 +189,8 @@ Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基�
 
 `FINDING-010-256` 保存投入结构和计划失效的 Git 证据；`FINDING-010-257` 保存成熟 harness、Agent 工具和图认知研究揭示的能力缺口；
 `FINDING-010-263—265` 保存 Phase C 首个真实 Browser 的事务漏判、cognition ranking 替换实验，以及 run-005 暴露的 source-native lexical
-query 工具契约缺口。后续实现若改变系统边界、认知模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
+query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口。后续实现若改变系统边界、认知
+模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 
 ## Authorization

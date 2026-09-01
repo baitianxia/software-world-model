@@ -105,7 +105,11 @@ harness 只有在阶段 A 的同一短 spike 内能使用现有模型网关、�
 4. 任何答案缺陷在改 Prompt/Schema 前必须有分层 trajectory 和最早偏差替换实验。没有该证据的 Prompt/Schema diff 不进入候选；
 5. 一个修复必须同时复验原失败和至少两个异质未参与问题。只改善原题时，下一变更必须换责任层或实现策略，不能叠加第二条题面规则；
 6. Provider、网络、成本和备用路线不计产品能力进展，也不改变开发顺序。首选路线成功时不运行备用；只有可信不可用结论才按既有透明配置
-   回退，调用次数不能降低回答或独立审核质量。
+   回退，调用次数不能降低回答或独立审核质量；
+7. 受信 transport receipt 证明 HTTP/model dispatch 为 0、post-dispatch outcome unknown 为 0 时，当前 logical run 诚实结束，但开发任务必须
+   自动创建 fresh successor schedule：5 分钟、15 分钟、随后每 30 分钟。每次使用新 run/request identity，same-request retry/replay 保持 0。
+   计时期间继续独立本地工作；本地工作穷尽时保持带 `next_retry_at` 的 active 状态，不能 Final、Pause 或等待用户。首选恢复即取消后续调度；
+   到达备用允许窗口后仍先尝试首选，只有本次可信不可用才透明回退。post-dispatch outcome unknown 不适用本条且始终禁止重放。
 
 这些规则只阻止错误的候选声明或旧路线增长；普通测试失败、模型失败、答案失败和时间上限不会撤销开发权限或让开发停下。
 

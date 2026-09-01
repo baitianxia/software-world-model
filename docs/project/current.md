@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
@@ -50,6 +50,10 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - C：复跑已修正 cognition ranking 与 source-native query 使用的浏览器 Alpha，并冻结 same-Agent source-only / World Model + source 消融；
 - D：用五个异质问题、多轮 Chat、same-Agent 消融和 current Codex 完成质量判断。
 
+run-006/007 的 Ark 失败均发生在 HTTP/model dispatch 前，不是等待条件。新的 successor 按 `5 分钟 → 15 分钟 → 每 30 分钟` 自动调度；每次
+使用新的 logical run/request identity，same-request retry 仍为 0。计时期间继续独立本地开发；本地工作穷尽时也保持带下次唤醒时间的活动
+重试状态，不结束任务。到达备用允许窗口后仍先执行首选路线，只有本次可信不可用才透明回退。
+
 时间上限只触发自动简化或换实现，不触发暂停、失败 Result、重复授权或质量降低。第一个可操作候选立即交付；full regression、hidden、
 跨工程、性能和工程化只在用户确认方向后开始。
 
@@ -60,6 +64,8 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - 知识、Agent、集成和最终答案分别出证据。只增加 Docs/Test/Prompt/Schema 时状态为 `NO_PRODUCT_PROGRESS`，开发自动回到最早缺失能力。
 - 每次通用修复同时复验原失败和两个异质未参与问题；只改善原题时必须换责任层或实现策略。
 - 普通答案、测试、Provider 或网络失败不停止开发。首选执行配置成功时不运行备用；只有可信不可用结论才透明回退。
+- 受信证据确认 HTTP/model dispatch 为 0 的临时 Provider 失败必须按 5/15/30 分钟 fresh logical-run cadence 自动重试；不等待用户、不重复
+  授权、不重放同一请求。post-dispatch outcome unknown 继续禁止 replay。
 
 ## 授权与边界
 

@@ -5254,6 +5254,20 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-265.md"
   },
   {
+    "id": "FINDING-010-266",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-266.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",

@@ -51,6 +51,10 @@ source-only 与 world-model-plus-source 消融，证明世界模型带来非定�
 harness、浏览器纵切、prompt/schema 四个维度核对 diff；只有最后一项增长时自动记为 `NO_PRODUCT_PROGRESS`，回到最早未证明的能力阶段继续，
 不得暂停、重授权或降低质量。详细证据见 `FINDING-010-256/257`。
 
+`FINDING-010-266` 进一步关闭 Provider 临时故障造成的假停工：受信 receipt 证明 HTTP/model dispatch 为 0 时，按 5/15/30 分钟调度新的
+logical run，计时期间继续独立开发；没有本地工作时仍保持带下次唤醒时间的 active 状态。它不放宽 same-request no-replay，也不改变透明
+首选/备用路线。
+
 ### PDR-013 historical record（已被 PDR-014 替换）
 
 以下运行记录只保存历史证据，不再定义 current 工作计划。PDR-012 以前的运行、Result 和协议 candidate 同样不撤销 PDR-008 的公开工程
