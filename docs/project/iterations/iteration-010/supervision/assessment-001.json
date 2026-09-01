@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "f859188d321654141103cedc73eca1e2d58d1a2f",
-  "candidate_tree": "462f25c155f67bfb363af8193d24897a37b5a5da",
-  "candidate_worktree_digest": "sha256:e22b619a525aa8942f131b6acc4f6c347d7e2a6bae29d188df9729ec3d09af45",
+  "candidate_commit": "4568fa9f2d5aaeac648262fabda96bffafd42c08",
+  "candidate_tree": "ca07872aa74104586b54399124e7a7df67dbe3ff",
+  "candidate_worktree_digest": "sha256:1fec23e5d02228d70f8e9c43526d2700fd97a51b7766de96192cfce9c56155bb",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T00:26:12+08:00",
+  "assessed_at": "2026-09-02T00:29:15+08:00",
   "evidence": [
     {
       "id": "phase-b-verified-cognition-baseline",
