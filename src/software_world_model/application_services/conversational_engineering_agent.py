@@ -13,7 +13,7 @@ from enum import Enum
 import json
 import re
 from threading import Lock
-from typing import Protocol, Sequence
+from typing import TYPE_CHECKING, Protocol, Sequence
 
 from software_world_model.cross_cutting import (
     Digest,
@@ -37,6 +37,11 @@ from .engineering_conversation import (
     EngineeringProviderFailureClassification,
     RuntimeCapabilityStatus,
 )
+
+if TYPE_CHECKING:
+    from software_world_model.knowledge_engine.capability_cognition import (
+        CognitionProvenance,
+    )
 
 
 _DEFAULT_MAXIMUM_TOOL_ACTIONS = 8
@@ -1475,6 +1480,12 @@ class EngineeringAgentToolPort(Protocol):
     def source_read_options(
         self, request: EngineeringTurnExecutionRequest
     ) -> tuple[EngineeringAgentSourceReadOption, ...]: ...
+
+    def cognition_source_read_options(
+        self,
+        request: EngineeringTurnExecutionRequest,
+        provenances: Sequence["CognitionProvenance"],
+    ) -> tuple[EngineeringAgentCitation, ...]: ...
 
     def execute(
         self, request: EngineeringAgentToolRequest

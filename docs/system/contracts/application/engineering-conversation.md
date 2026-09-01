@@ -93,6 +93,14 @@ Profile/class/path 重新签发 direct opaque locator。只有本 Turn 实际 RE
 形成新的 current-Turn SUPPORT、Ledger Result、Citation 与 Package closure；任一 identity/content mismatch 失败关闭。search line hit、
 World Model Citation、失败/未授权 Turn、不同 revision 或新 Conversation 不得生成该能力。
 
+对于 current exact `CapabilityCognitionIndex` 返回的 entity provenance，Application 可以把 provenance 的 canonical path 转换为同 Turn 的数字
+Source read candidate，但必须先重验 snapshot revision/tree 与 Turn Binding，并由 Source Broker 按 current Request/attempt/Profile/allowlist/
+evidence class 重新签发 opaque locator。provenance 只作为内部非版本化 navigation metadata；可以复用既有 Citation value object 向
+`read_candidates` 携带 opaque ref、line locator 与片段 digest，但不得进入 Cognition Observation Citation、最终 Citation selection、delivered
+Citation 或跨 Turn revalidation domain。模型选择该数字 candidate 后仍须执行既有 `SOURCE_READ`，只有 Worker 实际读取产生的 Observation 与
+Citation 才能支持答案；不得把 provenance 片段 digest 与整文件 read digest 混作 content revalidation。prior full-source candidate 已覆盖同 path
+时不得创建双 authority origin；cognition-derived catalog 按整个 Turn 累计有界，不能通过分页调用绕过上限。
+
 ## Conversation and turn invariants
 
 1. Conversation 在 listener/session 启动前固定产品版本、工程/Binding/exact revision、World Model Cognition Capability Manifest、Source

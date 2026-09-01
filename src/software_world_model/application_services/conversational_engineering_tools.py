@@ -23,6 +23,9 @@ from software_world_model.cross_cutting import (
     canonical_json_bytes,
     digest_of,
 )
+from software_world_model.knowledge_engine.capability_cognition import (
+    CognitionProvenance,
+)
 
 from .conversational_engineering_agent import (
     EngineeringAgentCitation,
@@ -74,6 +77,7 @@ from .engineering_question_answering import (
 _OBSERVATION_PAYLOAD_LIMIT = 240_000
 _MAXIMUM_PRIOR_SOURCE_REVALIDATION_OPTIONS = 16
 _MAXIMUM_COGNITION_SOURCE_SEARCH_TARGETS = 64
+_MAXIMUM_COGNITION_SOURCE_READ_OPTIONS = 64
 _SOURCE_LINE_LOCATOR = re.compile(
     r"^.+:L[1-9][0-9]*(?:-L?[1-9][0-9]*)?$"
 )
@@ -221,6 +225,12 @@ class _TurnToolState:
     revalidation_options_by_reference: dict[
         StableId, EngineeringAgentSourceReadOption
     ] = field(default_factory=dict)
+    cognition_source_read_bindings_by_path: dict[
+        str, tuple[StableId, CognitionProvenance]
+    ] = field(default_factory=dict)
+    cognition_source_read_provenance_by_reference: dict[
+        StableId, CognitionProvenance
+    ] = field(default_factory=dict)
     usage: EngineeringQuestionResourceUsage = field(
         default_factory=EngineeringQuestionResourceUsage
     )
@@ -283,6 +293,142 @@ class EngineeringAgentEvidenceToolAdapter:
 
         state = self._state_for_turn(request)
         return state.preissued_source_read_options
+
+    def cognition_source_read_options(
+        self,
+        request: EngineeringTurnExecutionRequest,
+        provenances: Sequence[CognitionProvenance],
+    ) -> tuple[EngineeringAgentCitation, ...]:
+        """Mint current-Turn opaque Source reads from trusted cognition paths.
+
+        Cognition provenance is navigation input only.  Every path is rebound
+        through the request's Source Broker/Profile before the model can select
+        it, and only the later Worker read can create deliverable evidence.
+        """
+
+        state = self._state_for_turn(request)
+        with state.lock:
+            unique: list[CognitionProvenance] = []
+            seen_paths: set[str] = set()
+            for provenance in provenances:
+                if not isinstance(provenance, CognitionProvenance):
+                    raise DomainError(
+                        ErrorCode.INVALID_ARGUMENT,
+                        "cognition Source read provenance is invalid",
+                    )
+                if provenance.source_revision != (
+                    request.binding.repository_revision
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "cognition Source read provenance binds another revision",
+                    )
+                if provenance.path not in seen_paths:
+                    unique.append(provenance)
+                    seen_paths.add(provenance.path)
+            new_paths = tuple(
+                item.path
+                for item in unique
+                if item.path
+                not in state.cognition_source_read_bindings_by_path
+                and not any(
+                    locator.path == item.path
+                    and locator.locator_reference
+                    in state.revalidation_options_by_reference
+                    for locator in state.required_path_locator_catalog.values()
+                )
+            )
+            if (
+                len(state.cognition_source_read_bindings_by_path)
+                + len(new_paths)
+                > _MAXIMUM_COGNITION_SOURCE_READ_OPTIONS
+            ):
+                raise DomainError(
+                    ErrorCode.BUDGET_EXHAUSTED,
+                    "cognition Source read option limit is exhausted",
+                )
+
+            output: list[EngineeringAgentCitation] = []
+            for provenance in unique:
+                existing = state.cognition_source_read_bindings_by_path.get(
+                    provenance.path
+                )
+                if existing is not None:
+                    locator_reference, existing_provenance = existing
+                    if (
+                        existing_provenance.source_revision
+                        != provenance.source_revision
+                        or existing_provenance.source_tree
+                        != provenance.source_tree
+                    ):
+                        raise DomainError(
+                            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                            "cognition Source read path has conflicting Source identity",
+                        )
+                    output.append(
+                        _cognition_navigation_citation(
+                            locator_reference=locator_reference,
+                            provenance=existing_provenance,
+                        )
+                    )
+                    continue
+
+                preissued = next(
+                    (
+                        locator
+                        for locator in state.required_path_locator_catalog.values()
+                        if locator.path == provenance.path
+                        and locator.locator_reference
+                        in state.revalidation_options_by_reference
+                    ),
+                    None,
+                )
+                if preissued is not None:
+                    # A prior delivered full Source already supplies the same
+                    # current-Turn path capability.  Do not create a second
+                    # navigation origin or weaken its exact revalidation.
+                    continue
+
+                (locator,) = self._source_broker.issue_required_path_locators(
+                    request=state.evidence_request,
+                    attempt_id=state.attempt_id,
+                    paths=(provenance.path,),
+                )
+                if (
+                    locator.path != provenance.path
+                    or locator.evidence_class
+                    is not EngineeringEvidenceClass.SOURCE
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "cognition navigation is not bound to exact Source authority",
+                    )
+                if (
+                    locator.locator_reference in state.locator_catalog
+                    or locator.locator_reference
+                    in state.required_path_locator_catalog
+                    or locator.locator_reference
+                    in state.cognition_source_read_provenance_by_reference
+                ):
+                    raise DomainError(
+                        ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                        "cognition Source read locator collides with existing authority",
+                    )
+                candidate = _cognition_navigation_citation(
+                    locator_reference=locator.locator_reference,
+                    provenance=provenance,
+                )
+                state.required_path_locator_catalog[
+                    locator.locator_reference
+                ] = locator
+                state.cognition_source_read_bindings_by_path[
+                    provenance.path
+                ] = (locator.locator_reference, provenance)
+                state.cognition_source_read_provenance_by_reference[
+                    locator.locator_reference
+                ] = provenance
+                output.append(candidate)
+            return tuple(output)
 
     def _validate_tool_request(self, request: EngineeringAgentToolRequest) -> None:
         action = request.action
@@ -822,6 +968,19 @@ class EngineeringAgentEvidenceToolAdapter:
             revalidation_option = state.revalidation_options_by_reference.get(
                 locator_reference
             )
+            cognition_provenance = (
+                state.cognition_source_read_provenance_by_reference.get(
+                    locator_reference
+                )
+            )
+            if (
+                revalidation_option is not None
+                and cognition_provenance is not None
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "Source read locator has conflicting navigation origins",
+                )
             if revalidation_option is not None:
                 proposal_details.update(
                     {
@@ -834,6 +993,23 @@ class EngineeringAgentEvidenceToolAdapter:
                         "origin_citation_digest": (
                             revalidation_option.origin_citation_digest.value
                         ),
+                    }
+                )
+            if cognition_provenance is not None:
+                proposal_details.update(
+                    {
+                        "locator_origin": (
+                            "CURRENT_TURN_CAPABILITY_COGNITION_PROVENANCE"
+                        ),
+                        "cognition_source_tree": (
+                            cognition_provenance.source_tree
+                        ),
+                        "cognition_provenance_digest": (
+                            digest_of(
+                                cognition_provenance.to_payload()
+                            ).value
+                        ),
+                        "cognition_provenance_grants_source_evidence": "false",
                     }
                 )
         state.ledger = state.ledger.append(
@@ -1552,6 +1728,23 @@ def _cognition_source_search_path_scopes(
             )
         scopes[literal] = canonical_paths
     return scopes
+
+
+def _cognition_navigation_citation(
+    *,
+    locator_reference: StableId,
+    provenance: CognitionProvenance,
+) -> EngineeringAgentCitation:
+    """Carry one opaque READ choice without granting deliverable evidence."""
+
+    return EngineeringAgentCitation.create(
+        citation_ref=locator_reference.value,
+        evidence_class=EngineeringEvidenceClass.SOURCE.value,
+        source_revision=provenance.source_revision,
+        locator=provenance.locator,
+        modality="JAVA_CAPABILITY_COGNITION_PROVENANCE_NAVIGATION",
+        content_digest=provenance.content_digest,
+    )
 
 
 def _payload(value: Mapping[str, object]) -> str | None:

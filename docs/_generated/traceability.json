@@ -4464,6 +4464,18 @@
       "tests/test_lightweight_engineering_model.py"
     ]
   },
+  "FINDING-010-273": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-273.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_tools.py",
+      "src/software_world_model/application_services/lightweight_engineering_agent.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_conversational_engineering_tools.py",
+      "tests/test_iteration_010_direction_check.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

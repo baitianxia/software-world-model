@@ -29,6 +29,7 @@ from software_world_model.knowledge_engine.capability_cognition import (
     CognitionDirection,
     CognitionEntityKind,
     CognitionPage,
+    CognitionProvenance,
     CognitionRelationKind,
 )
 
@@ -297,6 +298,7 @@ class LightweightReview:
 class LightweightReadCandidate:
     read_index: int
     citation: EngineeringAgentCitation
+    resource_locator: str
 
     def model_view(self) -> dict[str, object]:
         return {
@@ -316,7 +318,7 @@ class LightweightCognitionCandidate:
     qualified_name: str
     coverage: str
     unknowns: tuple[str, ...]
-    locator: str
+    provenance: CognitionProvenance
 
     def model_view(self) -> dict[str, object]:
         return {
@@ -326,7 +328,7 @@ class LightweightCognitionCandidate:
             "qualified_name": self.qualified_name,
             "coverage": self.coverage,
             "unknowns": list(self.unknowns),
-            "locator": self.locator,
+            "locator": self.provenance.locator,
         }
 
 
@@ -651,6 +653,12 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             or not callable(getattr(model, "review", None))
             or not callable(getattr(tool_port, "execute", None))
             or not callable(getattr(tool_port, "source_read_options", None))
+            or (
+                capability_cognition is not None
+                and not callable(
+                    getattr(tool_port, "cognition_source_read_options", None)
+                )
+            )
             or not callable(getattr(delivery_control, "authorize", None))
             or (
                 capability_cognition is not None
@@ -908,6 +916,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     modality=item.modality,
                     content_digest=item.content_digest,
                 ),
+                resource_locator=item.resource_locator,
             )
             for index, item in enumerate(
                 self._tool.source_read_options(request), 1
@@ -933,6 +942,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 request=request,
                 decision=decision,
                 observations=observations,
+                read_candidates=read_candidates,
                 cognition_candidates=cognition_candidates,
                 events=events,
             )
@@ -1045,6 +1055,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         LightweightReadCandidate(
                             read_index=len(read_candidates) + 1,
                             citation=citation,
+                            resource_locator=_citation_resource_locator(
+                                citation.locator
+                            ),
                         )
                     )
                     known.add(citation.citation_ref)
@@ -1062,6 +1075,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         request: EngineeringTurnExecutionRequest,
         decision: LightweightAgentDecision,
         observations: list[LightweightObservation],
+        read_candidates: list[LightweightReadCandidate],
         cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
     ) -> None:
@@ -1114,7 +1128,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     cursor=decision.cursor or 0,
                     limit=32,
                 )
+        first_new_candidate = len(cognition_candidates)
         self._register_cognition_candidates(page, cognition_candidates)
+        new_candidates = cognition_candidates[first_new_candidate:]
         index = len(observations) + 1
         content = canonical_json_bytes(page.to_payload()).decode("utf-8")
         page_digest = digest_of(page.to_payload())
@@ -1153,6 +1169,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 "observation_digest": observation.digest.value,
             }
         )
+        self._register_cognition_source_read_candidates(
+            request=request,
+            cognition=cognition,
+            candidates=new_candidates,
+            read_candidates=read_candidates,
+            events=events,
+            observation_index=index,
+        )
         if sum(len(item.content.encode("utf-8")) for item in observations) > (
             self._limits.maximum_evidence_package_bytes
         ):
@@ -1183,6 +1207,28 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     and isinstance(provenance, Mapping)
                     and isinstance(provenance.get("locator"), str)
                 ):
+                    parsed_provenance = CognitionProvenance.from_payload(
+                        provenance
+                    )
+                    if (
+                        set(provenance)
+                        != {
+                            "source_revision",
+                            "source_tree",
+                            "path",
+                            "start_line",
+                            "end_line",
+                            "content_digest",
+                            "evidence_kind",
+                            "locator",
+                        }
+                        or provenance["locator"]
+                        != parsed_provenance.locator
+                    ):
+                        raise DomainError(
+                            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                            "cognition candidate provenance is inconsistent",
+                        )
                     entity_id = StableId(raw_id)
                     if entity_id not in known:
                         candidates.append(
@@ -1198,7 +1244,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                                     for item in value["unknowns"]
                                     if isinstance(item, str)
                                 ),
-                                locator=provenance["locator"],
+                                provenance=parsed_provenance,
                             )
                         )
                         known.add(entity_id)
@@ -1209,6 +1255,116 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     visit(item)
 
         visit(page.items)
+
+    def _register_cognition_source_read_candidates(
+        self,
+        *,
+        request: EngineeringTurnExecutionRequest,
+        cognition: CapabilityCognitionIndex,
+        candidates: Sequence[LightweightCognitionCandidate],
+        read_candidates: list[LightweightReadCandidate],
+        events: list[Mapping[str, object]],
+        observation_index: int,
+    ) -> None:
+        known_paths = {item.resource_locator for item in read_candidates}
+        provenances: list[CognitionProvenance] = []
+        selected_paths: set[str] = set()
+        for candidate in candidates:
+            provenance = candidate.provenance
+            if (
+                provenance.source_revision != cognition.snapshot.source_revision
+                or provenance.source_tree != cognition.snapshot.source_tree
+                or provenance.source_revision
+                != request.binding.repository_revision
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition read candidate binds another Source snapshot",
+                )
+            if (
+                provenance.path not in known_paths
+                and provenance.path not in selected_paths
+            ):
+                provenances.append(provenance)
+                selected_paths.add(provenance.path)
+        if not provenances:
+            return
+
+        navigation_candidates = self._tool.cognition_source_read_options(
+            request,
+            tuple(provenances),
+        )
+        if len(navigation_candidates) != len(provenances):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "cognition Source read options do not cover the selected paths",
+            )
+        candidates_by_path = {
+            _citation_resource_locator(item.locator): item
+            for item in navigation_candidates
+        }
+        if len(candidates_by_path) != len(navigation_candidates):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "cognition Source read options contain duplicate paths",
+            )
+        known_references = {
+            item.citation.citation_ref for item in read_candidates
+        }
+        added_indexes: list[int] = []
+        candidate_digests: list[str] = []
+        for provenance in provenances:
+            candidate = candidates_by_path.get(provenance.path)
+            if candidate is None:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition Source read option binds another path",
+                )
+            expected = EngineeringAgentCitation.create(
+                citation_ref=candidate.citation_ref,
+                evidence_class=candidate.evidence_class,
+                source_revision=candidate.source_revision,
+                locator=candidate.locator,
+                modality=candidate.modality,
+                content_digest=candidate.content_digest,
+            )
+            if (
+                candidate != expected
+                or candidate.locator != provenance.locator
+                or candidate.evidence_class != "SOURCE"
+                or candidate.source_revision != provenance.source_revision
+                or candidate.modality
+                != "JAVA_CAPABILITY_COGNITION_PROVENANCE_NAVIGATION"
+                or candidate.content_digest != provenance.content_digest
+                or candidate.citation_ref in known_references
+            ):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition Source read option identity is invalid",
+                )
+            read_index = len(read_candidates) + 1
+            read_candidates.append(
+                LightweightReadCandidate(
+                    read_index=read_index,
+                    citation=candidate,
+                    resource_locator=provenance.path,
+                )
+            )
+            known_references.add(candidate.citation_ref)
+            added_indexes.append(read_index)
+            candidate_digests.append(candidate.digest.value)
+        events.append(
+            {
+                "kind": "COGNITION_SOURCE_READ_OPTIONS",
+                "observation_index": observation_index,
+                "read_indexes": tuple(added_indexes),
+                "option_count": len(added_indexes),
+                "source_revision": cognition.snapshot.source_revision,
+                "source_tree": cognition.snapshot.source_tree,
+                "navigation_candidate_digests": tuple(candidate_digests),
+                "cognition_provenance_grants_source_evidence": False,
+            }
+        )
 
     @staticmethod
     def _resolve_citations(
@@ -1435,6 +1591,13 @@ def _text(value: object, label: str) -> str:
 
 def _optional_text(value: object, label: str) -> str | None:
     return None if value is None else _text(value, label)
+
+
+def _citation_resource_locator(locator: str) -> str:
+    resource, separator, line_range = locator.rpartition(":L")
+    if separator == ":L" and resource and line_range:
+        return resource
+    return locator
 
 
 __all__ = [
