@@ -36,6 +36,12 @@ tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conforman
 rendering identity 或有效期变化会使旧 Conformance 失效；领域 Prompt、答案 Schema 或不改变上述 identity 的产品变化不得强制重复取得
 Conformance。
 
+当前 Ark `@13 / 1.13.0` identity 已在 clean
+`f859188d321654141103cedc73eca1e2d58d1a2f / 462f25c155f67bfb363af8193d24897a37b5a5da` 上通过 fresh live
+`ccrun_5599179543dc46409fb268ad937b8c0f`：13/13 case PASS，actual model `glm-5.3`，Usage 完整，TLS/credential/HTTP
+`2/2/2`、retry 与 post-dispatch unknown 均为 0，有效至 `2026-10-01T16:26:05.230095Z`。该资格只证明 current Ark wire 与 transport
+contract，不证明 Phase C 产品答案质量或 Production eligibility。
+
 ADR-017 的通用 route 在 Engineering Conversation 启动前只预封 `preferred → fallback` role 和两个 execution-profile ref/digest。产品、Agent 和 route branch
 不读取 Provider/model 名称；本文配置层才把它们解析为当前 `VOLCENGINE_ARK → DEEPSEEK` 实例，并绑定各自的 qualification、Adapter/plugin、
 credential reference 和 disclosure scope。只有首选 profile 登记的受信 availability owner 对 exact profile 和当前 receipts 密封
