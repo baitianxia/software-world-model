@@ -43,6 +43,17 @@ class IndependentSupervisionTest(unittest.TestCase):
         self._init_repository(self.source, "source-main")
 
         self._write(self.candidate, "README.md", "product baseline\n")
+        self._write(
+            self.candidate,
+            "src/software_world_model/ai_infrastructure/"
+            "conversational_engineering_model.py",
+            "legacy = True\n",
+        )
+        self._write(
+            self.candidate,
+            "tests/test_conversational_engineering_model.py",
+            "legacy_test = True\n",
+        )
         self._commit(self.candidate, "product baseline")
         self.product_baseline = _run(self.candidate, "git", "rev-parse", "HEAD")
 
@@ -162,6 +173,7 @@ class IndependentSupervisionTest(unittest.TestCase):
         assessment: dict[str, object] | None = None,
         *,
         supervisor_branch: str | None = "codex/supervision",
+        direction_report: dict[str, object] | None = None,
     ) -> dict[str, object]:
         return supervision.audit(
             self.control,
@@ -171,7 +183,21 @@ class IndependentSupervisionTest(unittest.TestCase):
             supervision_repository=self.supervision_repository,
             supervisor_branch=supervisor_branch,
             supervisor_commit="f" * 40,
+            direction_report=direction_report,
         )
+
+    def _direction_report(
+        self, *violations: dict[str, str]
+    ) -> dict[str, object]:
+        return {
+            "schema": supervision.direction_check.REPORT_SCHEMA,
+            "repository": str(self.candidate.resolve()),
+            "head": _run(self.candidate, "git", "rev-parse", "HEAD"),
+            "direction_verdict": "FAIL" if violations else "PASS",
+            "progress_verdict": "CAPABILITY_EVIDENCE_PENDING",
+            "next_phase": "PHASE_C_INTEGRATED_BROWSER_ALPHA",
+            "violations": list(violations),
+        }
 
     def _passing_assessment(self) -> dict[str, object]:
         assessment = copy.deepcopy(self.assessment)
@@ -221,7 +247,53 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.assertNotEqual(current.worktree_digest, self.state.worktree_digest)
         self.assertEqual(report["decision"], "CONTINUE")
         self.assertIn("candidate-worktree-changed", report["stale_reasons"])
+        self.assertTrue(report["semantic_assessment_required"])
         self.assertFalse(report["task_should_stop"])
+
+    def test_hard_direction_violation_corrects_before_stale_assessment(self) -> None:
+        self._write(
+            self.candidate,
+            "src/software_world_model/application_services/new_agent.py",
+            "protocol = 'ENGINEERING_AGENT_NEW_PROTOCOL@1'\n",
+        )
+        direction_report = supervision.direction_check.check_repository(
+            self.candidate,
+            base=self.product_baseline,
+        )
+
+        report = self._audit(direction_report=direction_report)
+
+        self.assertEqual(report["decision"], "CORRECT")
+        self.assertEqual(report["direction_check_status"], "CORRECT")
+        self.assertEqual(
+            report["correction"]["earliest_divergence"], "plan-direction"
+        )
+        self.assertFalse(report["task_should_stop"])
+        self.assertFalse(report["authorization_required"])
+
+    def test_non_hard_direction_advisory_requests_semantic_assessment(self) -> None:
+        self._write(
+            self.candidate,
+            "src/software_world_model/application_services/new_agent.py",
+            "agent = True\n",
+        )
+        direction_report = self._direction_report(
+            {
+                "code": "PROMPT_SCHEMA_WITHOUT_LAYER_EVIDENCE",
+                "path": "docs/system/example.md",
+                "detail": "trajectory required",
+            }
+        )
+
+        report = self._audit(direction_report=direction_report)
+
+        self.assertEqual(report["decision"], "CONTINUE")
+        self.assertEqual(report["direction_check_status"], "PASS")
+        self.assertTrue(report["semantic_assessment_required"])
+        self.assertEqual(
+            report["direction_advisories"],
+            ["PROMPT_SCHEMA_WITHOUT_LAYER_EVIDENCE"],
+        )
 
     def test_even_fresh_pass_for_dirty_worktree_cannot_advance(self) -> None:
         self._write(
@@ -294,7 +366,15 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.assertFalse(report["phase_change_allowed"])
 
     def test_heartbeat_records_exact_observed_state(self) -> None:
-        report = self._audit()
+        report = self._audit(direction_report=self._direction_report())
+        report.update(
+            {
+                "monitor_started_at": "2026-09-02T01:00:00+08:00",
+                "monitor_loaded_code_digests": {"monitor": "sha256:loaded"},
+                "monitor_head_code_digests": {"monitor": "sha256:head"},
+                "monitor_code_matches_head": True,
+            }
+        )
         heartbeat = Path(self.temporary.name) / "heartbeat.json"
 
         supervision.write_heartbeat(heartbeat, report)
@@ -304,8 +384,61 @@ class IndependentSupervisionTest(unittest.TestCase):
         self.assertEqual(value["candidate_branch"], "codex/development")
         self.assertEqual(value["candidate_commit"], self.state.head)
         self.assertEqual(value["candidate_worktree_digest"], self.state.worktree_digest)
+        self.assertEqual(value["direction_check_status"], "PASS")
+        self.assertTrue(value["monitor_code_matches_head"])
         self.assertFalse(value["task_should_stop"])
         self.assertFalse(value["authorization_required"])
+
+    def test_directive_exposes_correction_to_development_task(self) -> None:
+        self._write(
+            self.candidate,
+            "src/software_world_model/application_services/new_agent.py",
+            "protocol = 'ENGINEERING_AGENT_NEW_PROTOCOL@1'\n",
+        )
+        report = self._audit(
+            direction_report=self._direction_report(
+                {
+                    "code": "NEW_LEGACY_PROTOCOL_VERSION",
+                    "path": (
+                        "src/software_world_model/application_services/new_agent.py"
+                    ),
+                    "detail": "ENGINEERING_AGENT_NEW_PROTOCOL@1",
+                }
+            )
+        )
+        directive = Path(self.temporary.name) / "directive.json"
+
+        supervision.write_directive(directive, report)
+        value = json.loads(directive.read_text(encoding="utf-8"))
+
+        self.assertEqual(value["schema"], supervision.DIRECTIVE_SCHEMA)
+        self.assertEqual(value["decision"], "CORRECT")
+        self.assertEqual(
+            value["correction"]["violation_codes"],
+            ["NEW_LEGACY_PROTOCOL_VERSION"],
+        )
+        self.assertFalse(value["task_should_stop"])
+        self.assertFalse(value["authorization_required"])
+
+    def test_monitor_outputs_cannot_escape_supervision_worktree(self) -> None:
+        inside = self.supervision_repository / "var/supervision/directive.json"
+
+        resolved = supervision._supervision_output_path(
+            self.supervision_repository,
+            inside,
+            "directive path",
+        )
+
+        self.assertEqual(resolved, inside.resolve())
+        with self.assertRaisesRegex(
+            supervision.SupervisionInputError,
+            "must be inside supervision repository",
+        ):
+            supervision._supervision_output_path(
+                self.supervision_repository,
+                self.candidate / "var/supervision/directive.json",
+                "directive path",
+            )
 
     def test_watch_mode_rechecks_after_each_poll(self) -> None:
         arguments = SimpleNamespace(watch=True, poll_seconds=3)

@@ -21,13 +21,58 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
+from validation.iteration_010_mvp import direction_check
+
 
 CONTROL_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_CONTROL@3"
 ASSESSMENT_SCHEMA = "SWM_INDEPENDENT_ASSESSMENT@2"
-REPORT_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_REPORT@2"
-HEARTBEAT_SCHEMA = "SWM_SUPERVISION_HEARTBEAT@1"
+REPORT_SCHEMA = "SWM_INDEPENDENT_SUPERVISION_REPORT@3"
+HEARTBEAT_SCHEMA = "SWM_SUPERVISION_HEARTBEAT@2"
+DIRECTIVE_SCHEMA = "SWM_SUPERVISION_DIRECTIVE@1"
 VERDICTS = {"PASS", "REWORK", "NOT_RUN"}
 SHA1_LENGTH = 40
+
+HARD_DIRECTION_VIOLATION_CODES = frozenset(
+    {
+        "LEGACY_PROTOCOL_NET_GROWTH",
+        "NEW_LEGACY_PROTOCOL_VERSION",
+        "ANSWER_TEXT_SEMANTIC_RULE",
+        "EVALUATION_SPECIFIC_PRODUCT_LITERAL",
+    }
+)
+SEMANTIC_SUPERVISION_FOCUS = (
+    "目标一致：当前改动直接推进 active phase 的唯一产品目标，未改写目标。",
+    "实现方式：能力增长发生在世界模型认知、同一主 Agent 的观察重规划或完整浏览器纵切，而非提示词、协议、题面规则或测试计数。",
+    "体验进展：当前改动缩短到首个可操作 cognition→Source Gap→Answer/Citation→fresh review→Web 链的距离。",
+    "根因与通用性：失败定位到最早责任层，修复不针对单题且至少能解释两个异质邻近任务。",
+)
+_DIRECTION_ACTIONS = {
+    "LEGACY_PROTOCOL_NET_GROWTH": (
+        "撤销旧回答协议表面的净增长，只保留删除、简化或薄适配。"
+    ),
+    "NEW_LEGACY_PROTOCOL_VERSION": (
+        "移除新增版本化回答/Agent 协议；把本阶段能力实现为现有同一 Agent 的内部状态和工具循环。"
+    ),
+    "ANSWER_TEXT_SEMANTIC_RULE": (
+        "移除针对答案正文形式或词法的判定规则，回到可观察的 Agent 能力和证据链实现。"
+    ),
+    "EVALUATION_SPECIFIC_PRODUCT_LITERAL": (
+        "移除工程、题面或已知样例专用分支，以通用能力实现当前阶段目标。"
+    ),
+}
+_SUPERVISION_MODULE_PATHS = {
+    "independent_supervision": (
+        "validation/iteration_010_mvp/independent_supervision.py",
+        Path(__file__).read_bytes(),
+    ),
+    "direction_check": (
+        "validation/iteration_010_mvp/direction_check.py",
+        Path(direction_check.__file__).read_bytes(),
+    ),
+}
+_MONITOR_STARTED_AT = datetime.now(timezone.utc).astimezone().isoformat(
+    timespec="seconds"
+)
 
 CONTROL_KEYS = {
     "schema",
@@ -126,6 +171,80 @@ def _canonical_digest(value: object) -> str:
         value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
     return _sha256_bytes(encoded)
+
+
+def capture_monitor_identity(repository: Path) -> dict[str, Any]:
+    """Bind the running Python code, not merely the repository's current HEAD."""
+
+    loaded: dict[str, str] = {}
+    committed: dict[str, str] = {}
+    matches = True
+    for name, (relative, loaded_bytes) in _SUPERVISION_MODULE_PATHS.items():
+        committed_bytes = _git(repository, "show", f"HEAD:{relative}")
+        loaded[name] = _sha256_bytes(loaded_bytes)
+        committed[name] = _sha256_bytes(committed_bytes)
+        if loaded_bytes != committed_bytes:
+            matches = False
+    return {
+        "monitor_started_at": _MONITOR_STARTED_AT,
+        "monitor_loaded_code_digests": loaded,
+        "monitor_head_code_digests": committed,
+        "monitor_code_matches_head": matches,
+    }
+
+
+def _direction_findings(
+    report: Mapping[str, Any] | None,
+) -> tuple[tuple[dict[str, str], ...], tuple[str, ...], str | None]:
+    if report is None:
+        return (), (), None
+    if report.get("schema") != direction_check.REPORT_SCHEMA:
+        raise SupervisionInputError("direction report schema is invalid")
+    violations = report.get("violations")
+    if type(violations) is not list:
+        raise SupervisionInputError("direction report violations must be an array")
+    hard: list[dict[str, str]] = []
+    advisories: list[str] = []
+    for index, item in enumerate(violations):
+        if type(item) is not dict:
+            raise SupervisionInputError(
+                f"direction report violations[{index}] must be an object"
+            )
+        code = _string(item.get("code"), f"direction violation[{index}].code")
+        path = _string(item.get("path"), f"direction violation[{index}].path")
+        detail = _string(item.get("detail"), f"direction violation[{index}].detail")
+        if code in HARD_DIRECTION_VIOLATION_CODES:
+            hard.append({"code": code, "path": path, "detail": detail})
+        else:
+            advisories.append(code)
+    return tuple(hard), tuple(sorted(set(advisories))), _canonical_digest(report)
+
+
+def _build_correction(
+    control: Mapping[str, Any],
+    candidate: CandidateState,
+    violations: Sequence[Mapping[str, str]],
+) -> dict[str, Any]:
+    actions = tuple(
+        dict.fromkeys(_DIRECTION_ACTIONS[item["code"]] for item in violations)
+    )
+    identity = {
+        "iteration": control["iteration"],
+        "phase": control["active_phase"],
+        "candidate_commit": candidate.head,
+        "candidate_worktree_digest": candidate.worktree_digest,
+        "violations": list(violations),
+    }
+    return {
+        "correction_id": _canonical_digest(identity),
+        "earliest_divergence": "plan-direction",
+        "required_actions": list(actions),
+        "violation_codes": sorted({item["code"] for item in violations}),
+        "evidence": list(violations),
+        "continue_objective": control["objective"],
+        "task_should_stop": False,
+        "authorization_required": False,
+    }
 
 
 def _file_digest(path: Path) -> str:
@@ -452,6 +571,7 @@ def audit(
     supervision_repository: Path,
     supervisor_branch: str | None,
     supervisor_commit: str | None = None,
+    direction_report: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     control = validate_control(control)
     assessment = validate_assessment(assessment, control)
@@ -466,6 +586,9 @@ def audit(
         _git(source_repository.resolve(), "status", "--porcelain", "--untracked-files=all")
     )
     evidence = check_evidence(assessment, candidate_repository, source_repository)
+    direction_violations, direction_advisories, direction_report_digest = (
+        _direction_findings(direction_report)
+    )
 
     binding_errors: list[str] = []
     if candidate_repository != Path(control["candidate_repository"]):
@@ -482,6 +605,11 @@ def audit(
         binding_errors.append("source-commit-mismatch")
     if not source_clean:
         binding_errors.append("source-worktree-not-clean")
+    if direction_report is not None:
+        if direction_report.get("repository") != str(candidate_repository):
+            binding_errors.append("direction-report-repository-mismatch")
+        if direction_report.get("head") != candidate.head:
+            binding_errors.append("direction-report-head-mismatch")
 
     stale_reasons: list[str] = []
     if assessment["candidate_commit"] != candidate.head:
@@ -518,6 +646,27 @@ def audit(
         "stale_reasons": stale_reasons,
         "evidence_missing": list(evidence.missing),
         "evidence_mismatched": list(evidence.mismatched),
+        "direction_check_status": (
+            "CORRECT" if direction_violations else "PASS"
+        )
+        if direction_report is not None
+        else "NOT_RUN",
+        "direction_report_digest": direction_report_digest,
+        "direction_violations": list(direction_violations),
+        "direction_advisories": list(direction_advisories),
+        "direction_progress_verdict": (
+            direction_report.get("progress_verdict")
+            if direction_report is not None
+            else None
+        ),
+        "direction_next_phase": (
+            direction_report.get("next_phase")
+            if direction_report is not None
+            else None
+        ),
+        "semantic_assessment_required": False,
+        "semantic_supervision_focus": list(SEMANTIC_SUPERVISION_FOCUS),
+        "correction": None,
         "defects": assessment["defects"],
         "unresolved_requirements": assessment["unresolved_requirements"],
         "decision": "CONTINUE",
@@ -536,9 +685,17 @@ def audit(
             "修复监督对唯一开发分支、监督分支或 exact Source 的绑定；开发继续当前阶段。"
         )
         return report
+    if direction_violations:
+        correction = _build_correction(control, candidate, direction_violations)
+        report["decision"] = "CORRECT"
+        report["correction"] = correction
+        report["next_action"] = " ".join(correction["required_actions"])
+        return report
     if stale_reasons:
+        report["semantic_assessment_required"] = True
         report["next_action"] = (
-            "立即对当前 HEAD 和工作树重新独立取证；开发继续，候选自报不能晋级。"
+            "立即按目标一致、实现方式、体验进展和通用根因四项复核当前 HEAD/工作树；"
+            "若任一项偏离则直接 CORRECT，开发继续且候选自报不能晋级。"
         )
         return report
     if assessment["verdict"] == "REWORK":
@@ -582,6 +739,22 @@ def _read_trusted_json(repository: Path, path: Path, label: str) -> dict[str, An
     return load_json(resolved)
 
 
+def _supervision_output_path(repository: Path, path: Path, label: str) -> Path:
+    """Keep every monitor-owned record inside the supervision worktree."""
+
+    repository = repository.resolve()
+    resolved = path.resolve()
+    try:
+        resolved.relative_to(repository)
+    except ValueError as exc:
+        raise SupervisionInputError(
+            f"{label} must be inside supervision repository"
+        ) from exc
+    if resolved.is_symlink():
+        raise SupervisionInputError(f"{label} must not be a symlink")
+    return resolved
+
+
 def write_heartbeat(path: Path, report: Mapping[str, Any]) -> None:
     payload = {
         "schema": HEARTBEAT_SCHEMA,
@@ -595,7 +768,61 @@ def write_heartbeat(path: Path, report: Mapping[str, Any]) -> None:
         "candidate_clean": report.get("candidate_clean"),
         "candidate_worktree_digest": report.get("candidate_worktree_digest"),
         "assessment_status": report.get("assessment_status"),
+        "direction_check_status": report.get("direction_check_status"),
+        "direction_report_digest": report.get("direction_report_digest"),
+        "direction_violations": report.get("direction_violations", []),
+        "semantic_assessment_required": report.get(
+            "semantic_assessment_required", False
+        ),
+        "correction_id": (
+            report.get("correction", {}).get("correction_id")
+            if isinstance(report.get("correction"), dict)
+            else None
+        ),
+        "directive_path": report.get("directive_path"),
+        "monitor_started_at": report.get("monitor_started_at"),
+        "monitor_loaded_code_digests": report.get(
+            "monitor_loaded_code_digests", {}
+        ),
+        "monitor_head_code_digests": report.get("monitor_head_code_digests", {}),
+        "monitor_code_matches_head": report.get("monitor_code_matches_head"),
         "attention_required": report.get("attention_required", True),
+        "task_should_stop": False,
+        "authorization_required": False,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(path.name + ".tmp")
+    temporary.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+
+
+def write_directive(path: Path, report: Mapping[str, Any]) -> None:
+    correction = report.get("correction")
+    if not isinstance(correction, dict):
+        correction = None
+    payload = {
+        "schema": DIRECTIVE_SCHEMA,
+        "observed_at": report.get("observed_at", _now()),
+        "decision": report.get("decision", "RECOVER_SUPERVISION"),
+        "objective": report.get("objective"),
+        "active_phase": report.get("active_phase"),
+        "candidate_branch": report.get("candidate_branch"),
+        "candidate_commit": report.get("candidate_commit"),
+        "candidate_worktree_digest": report.get("candidate_worktree_digest"),
+        "direction_check_status": report.get("direction_check_status"),
+        "direction_violations": report.get("direction_violations", []),
+        "semantic_assessment_required": report.get(
+            "semantic_assessment_required", False
+        ),
+        "semantic_supervision_focus": report.get(
+            "semantic_supervision_focus", list(SEMANTIC_SUPERVISION_FOCUS)
+        ),
+        "correction": correction,
+        "next_action": report.get("next_action"),
+        "monitor_code_matches_head": report.get("monitor_code_matches_head"),
         "task_should_stop": False,
         "authorization_required": False,
     }
@@ -631,6 +858,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=root / "var/supervision/heartbeat.json",
     )
     parser.add_argument(
+        "--directive",
+        type=Path,
+        help=(
+            "current machine-readable instruction for the development task; "
+            "defaults to <supervision>/var/supervision/directive.json and "
+            "must remain inside the supervision repository"
+        ),
+    )
+    parser.add_argument(
         "--watch",
         action="store_true",
         help="continuously recheck the exact candidate and refresh the heartbeat",
@@ -647,6 +883,8 @@ def build_parser() -> argparse.ArgumentParser:
 def _run_once(arguments: argparse.Namespace) -> tuple[dict[str, Any], int]:
     report: dict[str, Any]
     exit_code = 0
+    supervision_repository: Path | None = None
+    candidate_repository: Path | None = None
     try:
         supervision_repository = arguments.supervision_repository.resolve()
         control = _read_trusted_json(
@@ -674,6 +912,7 @@ def _run_once(arguments: argparse.Namespace) -> tuple[dict[str, Any], int]:
         assessment = _read_trusted_json(
             supervision_repository, arguments.assessment, "assessment file"
         )
+        direction_report = direction_check.check_repository(candidate_repository)
         report = audit(
             control,
             assessment,
@@ -684,8 +923,24 @@ def _run_once(arguments: argparse.Namespace) -> tuple[dict[str, Any], int]:
             supervisor_commit=_git(
                 supervision_repository, "rev-parse", "HEAD^{commit}"
             ).decode("ascii").strip(),
+            direction_report=direction_report,
         )
-    except (OSError, UnicodeError, SupervisionInputError) as exc:
+        monitor_identity = capture_monitor_identity(supervision_repository)
+        report.update(monitor_identity)
+        if not monitor_identity["monitor_code_matches_head"]:
+            report["decision"] = "RECOVER_SUPERVISION"
+            report["correction"] = None
+            report["attention_required"] = True
+            report["next_action"] = (
+                "监督进程加载的代码与监督 HEAD 不一致；立即重启 watcher，开发继续。"
+            )
+            exit_code = 2
+    except (
+        OSError,
+        UnicodeError,
+        SupervisionInputError,
+        direction_check.DirectionCheckError,
+    ) as exc:
         exit_code = 2
         report = {
             "schema": REPORT_SCHEMA,
@@ -698,11 +953,41 @@ def _run_once(arguments: argparse.Namespace) -> tuple[dict[str, Any], int]:
             "requires_result": False,
             "attention_required": True,
         }
-    try:
-        write_heartbeat(arguments.heartbeat.resolve(), report)
-    except OSError as exc:
-        report["heartbeat_error"] = str(exc)
-        exit_code = 2
+    if supervision_repository is not None:
+        requested_directive_path = (
+            arguments.directive
+            if getattr(arguments, "directive", None) is not None
+            else supervision_repository / "var/supervision/directive.json"
+        )
+        try:
+            directive_path = _supervision_output_path(
+                supervision_repository,
+                requested_directive_path,
+                "directive path",
+            )
+            report["directive_path"] = str(directive_path)
+            write_directive(directive_path, report)
+        except (OSError, SupervisionInputError) as exc:
+            report["directive_error"] = str(exc)
+            report["decision"] = "RECOVER_SUPERVISION"
+            report["next_action"] = (
+                "修复监督分支内的指令记录写入；开发继续当前阶段。"
+            )
+            exit_code = 2
+        try:
+            heartbeat_path = _supervision_output_path(
+                supervision_repository,
+                arguments.heartbeat,
+                "heartbeat path",
+            )
+            write_heartbeat(heartbeat_path, report)
+        except (OSError, SupervisionInputError) as exc:
+            report["heartbeat_error"] = str(exc)
+            report["decision"] = "RECOVER_SUPERVISION"
+            report["next_action"] = (
+                "修复监督分支内的 heartbeat 记录写入；开发继续当前阶段。"
+            )
+            exit_code = 2
     return report, exit_code
 
 
