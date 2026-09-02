@@ -4,42 +4,36 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:978fc6f537dffad58930c2487ca34603f42c3cbdd907672643cd1ff62f9d28ba",
+  "candidate_worktree_digest": "sha256:205716ed79e1c4030e9d243e4218039155d6737b815650649474835ff6f04478",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T11:12:37+08:00",
+  "assessed_at": "2026-09-02T11:15:30+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:86f579dd17930d4a25731a7252774f8847fdef0bdbebba8a5d73c2f7ce1b0f0f"
+      "sha256": "sha256:d06b8fea13cbe3fd4b6cf28560c62df0a554f4a7c68e6bfd3c57c8f636fddb79"
     },
     {
       "id": "phase-c-design-and-failure-policy",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
-      "sha256": "sha256:64c8ec10a90aa6dfad50a7e105072618a4ca6d62d63dfa1a6eb355f970af2117"
+      "sha256": "sha256:2784b3667c2096b253be29daffa5c1ee67d1de04938d4ba3494396c459cf9502"
     },
     {
       "id": "dirty-candidate-priority-contract",
       "scope": "candidate",
       "path": "docs/system/contracts/application/engineering-conversation.md",
-      "sha256": "sha256:dd57a4362fb6c82061c3190084df0e3a5984ba70bfa64ba5987139286ba84063"
-    },
-    {
-      "id": "dirty-candidate-knowledge-closure-contract",
-      "scope": "candidate",
-      "path": "docs/system/contracts/knowledge/java-source-semantics.md",
-      "sha256": "sha256:8ed74edbc5c067d3ceb5b1526a87e9f53b55c0e4551e7d0d539f122cf5bf5973"
+      "sha256": "sha256:2fa38d06f5de8bf7021129d934d0b79e0682cc6261548297f1d8c9d92f43a5ac"
     },
     {
       "id": "dirty-candidate-finding-277",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
-      "sha256": "sha256:01e742ca4e0b774a33d1bae5a3a18c64c36bc51d0d6de44dda67f44874fc5bd4"
+      "sha256": "sha256:7e3f9261ab5015f0158bcf1f808997133df6caa8c109eaf319f476a90400915f"
     },
     {
       "id": "model-boundary-recovery-classification",
@@ -87,7 +81,6 @@
       "summary": "当前 dirty 增量只改 Docs/Finding，将 run156 q5 误归因为 cognition direct-closure 与 candidate 不够紧凑。实际 sealed 第二次 SEARCH_COGNITION 已将 updateRole controller/implementation/interface 以同分前三项紧邻返回，read indexes 4/5/6 可直接执行；Primary 读了 4/5 却跳过 6，后续也已拥有 UmsResourceServiceImpl 11/12 与 JwtAuthenticationTokenFilter 20。因此新增 knowledge direct closure 不是这次失败的因果修复，且当前尚无任何 product code/test 增量。",
       "evidence_ids": [
         "dirty-candidate-priority-contract",
-        "dirty-candidate-knowledge-closure-contract",
         "dirty-candidate-finding-277"
       ]
     }
