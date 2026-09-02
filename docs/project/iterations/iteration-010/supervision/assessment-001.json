@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T13:21:00+08:00",
+  "assessed_at": "2026-09-02T13:22:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -24,7 +24,7 @@
       "sha256": "sha256:7359dcf9045e7ec8e19b08adc1b9a3c3e6ec6a6f21c45ef4427a883cb9653a42"
     },
     {
-      "id": "candidate-priority-contract",
+      "id": "candidate-citation-binding-contract",
       "scope": "candidate",
       "path": "docs/system/contracts/application/engineering-conversation.md",
       "sha256": "sha256:d90777b7c8bae0fc5271700f49d97aefbd7022616115341428249a8cd72264d3"
@@ -64,5 +64,5 @@
   ],
   "defects": [],
   "earliest_divergence": "phase-c-evidence-pending",
-  "next_action": "方向正常，开发继续且不暂停、不重新授权。以该 clean candidate 建 fresh successor，先按固定 q1–q5 conversation/turn scope 核对同一 Agent 的 cognition→Source Gap→Answer/Citation→fresh Review→Delivery→Web 链，再做 source-only 对照验证世界模型的非 locator 增益；普通运行失败按最早责任层继续修复，只有全部独立 Phase C requirements 满足才允许 ADVANCE。"
+  "next_action": "方向正常，开发继续且不暂停、不重新授权。以该 clean candidate 建 fresh successor，严格按 sealed q1+q2 同会话、q3 独立零 dispatch clarification、q4/q5 独立会话，核对真实 Citation identity、fresh Reviewer、Delivery 与 loopback Web；再以 source-only 对照验证世界模型的非 locator 增益。普通运行失败按最早责任层继续修复；只有全部独立 Phase C requirements 满足才允许 ADVANCE。"
 }
