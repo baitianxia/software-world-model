@@ -1,0 +1,73 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "candidate_worktree_digest": "sha256:334b59a1165a8e29d14a81a713cbccae16db9f150795933103934b4612fa17cc",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T09:34:00+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:0d010ed1bd13210a09a4e243e144841c628877e05db9cdf40d3cacb643f8171f"
+    },
+    {
+      "id": "phase-c-design-and-failure-policy",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:5aa037f82fd569f25157d17124c76c47f8d047358f13e9f51fb40385736c28a1"
+    },
+    {
+      "id": "primary-reviewer-model-boundary",
+      "scope": "candidate",
+      "path": "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "sha256": "sha256:bcc85b0c676dd3dd65c2701ea76457b00d40e25224903a52deec65585acc1f41"
+    },
+    {
+      "id": "turn-failure-recovery-owner",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:07f82b32f9e13a7aedecf47db78d78d937346cc0cacd4c8bf03b7bb8c0486ac7"
+    },
+    {
+      "id": "existing-generic-citation-repair-boundary",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-275.md",
+      "sha256": "sha256:4eb0791b5b7a23ebab94ae99a5a068824bf5984192f9e5cb2000d1ac70d62f6d"
+    },
+    {
+      "id": "exact-source-behavior-reference",
+      "scope": "source",
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
+      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "generic-model-boundary-and-turn-recovery",
+      "summary": "独立运行证据显示同一 Ark route 在 Primary 和 fresh Reviewer 两个角色都重复产生 schema-invalid 输出：run-150 的 READ_SOURCE 携带非空 cognition_index，run-149 与 run-151 的 APPROVED Reviewer 将合法 verdict/findings 嵌套成 answer 字符串。当前 executor 将这类已发出但不可解析的结果直接终止当前 Turn，未提供同角色 bounded retry 或其他通用恢复，因此即使源码证据与答案已正确形成也不能交付完整 Web Chat。该偏差位于模型边界/失败恢复层，不是世界模型内容、单题答案或工程特判。",
+      "evidence_ids": [
+        "primary-reviewer-model-boundary",
+        "turn-failure-recovery-owner",
+        "phase-c-design-and-failure-policy"
+      ]
+    }
+  ],
+  "earliest_divergence": "provider-model-output-boundary-and-ordinary-failure-recovery",
+  "next_action": "开发继续且不暂停、不申请授权：先用 run-149/run-150/run-151 的原始 receipts 做一次通用边界实验，分别确认 role input/rendering、Provider schema 能力和 transient output failure 的责任层；随后只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案（保留严格 decoder、Citation authority、独立 Reviewer 与失败收据），再在同一 Ark route 运行 fresh successor，贯通五个交互。不得用重写答案、增加 Prompt/Schema 版本、切 DeepSeek 或 mall 特判掩盖该问题。"
+}
