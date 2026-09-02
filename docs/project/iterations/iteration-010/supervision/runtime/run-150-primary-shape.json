@@ -1,0 +1,32 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-150-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:f2c31e688c86f57ae22b4fd52e5411dcffc4e3606b8d3a90149607e95771426c",
+  "turn_scope_sha256": "sha256:6ab0addbabad05c00c731d552cdcaf7af89781c6ceb4e96179f0c569ec458212",
+  "terminal_sha256": "sha256:9c7122cff272e46913314f2a84d7d2aa70032906284ba33b2580b570b8c4b357",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 2,
+  "request_retry_count": 0,
+  "failure_stage": "PRIMARY_AGENT",
+  "failure_code": "STRUCTURED_OUTPUT_INVALID",
+  "valid_first_call": {
+    "model_call_id": "model_call_8b5b51a52a19445589aec1e9bcaca9a5",
+    "output_digest": "sha256:435a4ebaf9e0a1c81687c756630a3e11853294fcf83527d40bfdfe38463bb30f",
+    "action": "SEARCH_COGNITION"
+  },
+  "invalid_second_call": {
+    "model_call_id": "model_call_044e577ffb39432cae24fe5bf08c7e0f",
+    "output_digest": "sha256:14b35da04892632e12ebbf4c46e7455d98342f5766833edaeafe665e857b1e62",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"action\":\"READ_SOURCE\",\"answer\":null,\"citations\":[],\"cognition_index\":1,\"cursor\":null,\"direction\":null,\"goal\":\"mall-portal 使用优惠券创建普通订单时，库存锁定、订单与订单项写入、优惠券状态更新、购物车清理和延迟取消消息按什么顺序发生？请区分数据库写入、消息副作用与当前源码无法确认的外部一致性保证。\",\"maximum_depth\":null,\"plan\":\"已定位 generateOrder(L93-L250)。读取实现源码确认操作顺序与事务边界，再读 sendDelayMessageCancelOrder 确认消息发送方式。\",\"query\":null,\"read_index\":1,\"relation_kind\":null,\"response_kind\":null}",
+    "action": "READ_SOURCE",
+    "non_null_action_incompatible_fields": ["cognition_index", "read_index"],
+    "decoder_disposition": "REJECT"
+  },
+  "assessment": "Strict action-specific decoding rejects a READ_SOURCE decision carrying cognition_index. No Source citation or Reviewer was reached; this run is not acceptance evidence."
+}
