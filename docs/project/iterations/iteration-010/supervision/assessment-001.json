@@ -4,24 +4,42 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:5dd410c24179db5f664b347e39b3c3ae069a27c08d1fca93b7125540c8773c7c",
+  "candidate_worktree_digest": "sha256:978fc6f537dffad58930c2487ca34603f42c3cbdd907672643cd1ff62f9d28ba",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T10:52:00+08:00",
+  "assessed_at": "2026-09-02T11:12:37+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:9aafd50591485feed4cadd84120220edadb6c0cc2461c21644f8308309ffdedc"
+      "sha256": "sha256:86f579dd17930d4a25731a7252774f8847fdef0bdbebba8a5d73c2f7ce1b0f0f"
     },
     {
       "id": "phase-c-design-and-failure-policy",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
-      "sha256": "sha256:0a6881a627e3b3a81eaedaf5812a85f2bdfb74f43a8ed094d30c0ff3a69bfc77"
+      "sha256": "sha256:64c8ec10a90aa6dfad50a7e105072618a4ca6d62d63dfa1a6eb355f970af2117"
+    },
+    {
+      "id": "dirty-candidate-priority-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/application/engineering-conversation.md",
+      "sha256": "sha256:dd57a4362fb6c82061c3190084df0e3a5984ba70bfa64ba5987139286ba84063"
+    },
+    {
+      "id": "dirty-candidate-knowledge-closure-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/knowledge/java-source-semantics.md",
+      "sha256": "sha256:8ed74edbc5c067d3ceb5b1526a87e9f53b55c0e4551e7d0d539f122cf5bf5973"
+    },
+    {
+      "id": "dirty-candidate-finding-277",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
+      "sha256": "sha256:01e742ca4e0b774a33d1bae5a3a18c64c36bc51d0d6de44dda67f44874fc5bd4"
     },
     {
       "id": "model-boundary-recovery-classification",
@@ -65,15 +83,15 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "primary-agent-evidence-planning-and-fixed-budget",
-      "summary": "run156 在 exact clean candidate 上证明 q1/q2/q4 可完成真实 Citation 与 fresh Reviewer，但 q5 的 Primary 在固定 tool budget 内未读取已提供的 UmsAdminService、UmsResourceServiceImpl 与 JwtAuthenticationTokenFilter 证据候选，随后 Reviewer 正确返回 MORE_EVIDENCE 并按现行契约以 BUDGET_EXHAUSTED fail-closed。该 clean candidate 仍缺 q5 APPROVED Delivery、q3 浏览器证据与完整 cognition→Source→Citation→fresh Reviewer→Web 纵切；不得通过 Reviewer retry 或恢复已耗尽预算掩盖此缺口。",
+      "owner_layer": "development-direction-and-root-cause-attribution",
+      "summary": "当前 dirty 增量只改 Docs/Finding，将 run156 q5 误归因为 cognition direct-closure 与 candidate 不够紧凑。实际 sealed 第二次 SEARCH_COGNITION 已将 updateRole controller/implementation/interface 以同分前三项紧邻返回，read indexes 4/5/6 可直接执行；Primary 读了 4/5 却跳过 6，后续也已拥有 UmsResourceServiceImpl 11/12 与 JwtAuthenticationTokenFilter 20。因此新增 knowledge direct closure 不是这次失败的因果修复，且当前尚无任何 product code/test 增量。",
       "evidence_ids": [
-        "model-boundary-recovery-classification",
-        "turn-failure-recovery-owner",
-        "action-shape-recovery-finding"
+        "dirty-candidate-priority-contract",
+        "dirty-candidate-knowledge-closure-contract",
+        "dirty-candidate-finding-277"
       ]
     }
   ],
-  "earliest_divergence": "primary-agent-evidence-planning-and-fixed-budget",
-  "next_action": "开发继续且不暂停、不申请授权：只在 Application-owned Primary Agent loop 与既定八个 tool-action 上限内，做一个通用的证据候选优先级/计划收敛改进，使 Reviewer 所需的 material declarations 在 FINISH 前被读取；不得在 remaining=0 后恢复工具、扩大预算、重试 Reviewer、放宽 decoder、增加 Prompt/Schema/协议版本或加入题面/路径特判。先以 q5 与至少两个异质问题定向复验，再建立 fresh Ark successor 贯通五个交互。"
+  "earliest_divergence": "development-direction-and-root-cause-attribution",
+  "next_action": "停止提交当前把 q5 归因为 knowledge direct-closure 缺失的 FINDING-010-277/Owner 文档；唯一下一开发动作是只在 Application-owned Primary input/loop 内，从已有未读 candidates、已读 observations 与 fixed remaining budget 机械生成通用计划收敛/候选优先级，不重绑已暴露 index、不新增 Prompt/Schema/协议、不恢复工具或扩大 8-action 上限；先以 run156 sealed payload 与两个异质 synthetic fixture 证明因果效果。"
 }
