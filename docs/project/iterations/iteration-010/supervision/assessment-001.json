@@ -7,7 +7,7 @@
   "candidate_worktree_digest": "sha256:278ee3f663f0e0308196766c68ef3cf0bac9c76923a7b534d10d324350246abd",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "NOT_RUN",
+  "verdict": "REWORK",
   "assessor": "independent-supervisor",
   "assessed_at": "2026-09-02T12:12:00+08:00",
   "evidence": [
