@@ -348,6 +348,219 @@ class LightweightCognitionCandidate:
         }
 
 
+_COGNITION_NAVIGATION_MODALITY = (
+    "JAVA_CAPABILITY_COGNITION_PROVENANCE_NAVIGATION"
+)
+_FULL_SOURCE_MODALITIES = frozenset({"EXACT_STATIC_SOURCE_TEXT", "SOURCE_TEXT"})
+
+
+@dataclass(frozen=True, slots=True)
+class _LightweightReadNavigationMetadata:
+    """Application-only ordering sidecar for an existing read option."""
+
+    origin_observation_index: int = 0
+    cognition_kind: CognitionEntityKind | None = None
+    cognition_attributes: tuple[tuple[str, str], ...] = ()
+    origin_cognition_index: int | None = None
+
+
+def _ordered_read_candidates(
+    candidates: Sequence[LightweightReadCandidate],
+    observations: Sequence[LightweightObservation],
+    *,
+    remaining_tool_actions: int | None = None,
+    metadata_by_read_index: Mapping[
+        int, _LightweightReadNavigationMetadata
+    ] | None = None,
+) -> tuple[LightweightReadCandidate, ...]:
+    """Present existing read options in a bounded, breadth-first order.
+
+    This is a presentation projection only.  Numeric indexes and citation
+    identities remain untouched, and every candidate remains visible.  A
+    resource is treated as covered for ordering once any option for that
+    resource has been fully read; this prevents a second line hit from
+    crowding out an unread resource while preserving the existing authority
+    checks in the executor.  When the fixed remaining Tool budget is smaller
+    than the number of distinct resources, budget pressure changes only the
+    presentation strategy: the strongest typed/source option is presented
+    first instead of spending the first positions on breadth.  It never
+    removes an option or authorizes an automatic read.
+    """
+
+    if not candidates:
+        return ()
+    if remaining_tool_actions is None:
+        # Direct unit fixtures predating the internal budget projection do not
+        # have a loop counter.  Permit one candidate per known resource so
+        # their historical breadth-first ordering remains deterministic;
+        # production dispatches always pass the exact Application-computed
+        # value below.
+        remaining = len(
+            {
+                item.resource_locator or item.citation.citation_ref
+                for item in candidates
+            }
+        )
+    elif type(remaining_tool_actions) is int and remaining_tool_actions >= 0:
+        remaining = remaining_tool_actions
+    else:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "lightweight Agent remaining Tool budget is invalid",
+        )
+    navigation_metadata = metadata_by_read_index or {}
+    read_citation_refs = {
+        citation.citation_ref
+        for observation in observations
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for citation in observation.citations
+    }
+    # A cognition navigation option carries a RequiredPathLocator reference,
+    # while the subsequent SOURCE_READ observation carries the Source Broker's
+    # retrieval citation reference.  Those opaque references are intentionally
+    # different capabilities.  Coverage therefore binds on the trusted
+    # citation's exact source revision plus canonical resource locator, not on
+    # an equality that can never hold across the navigation/read boundary.
+    read_resources = {
+        (citation.source_revision, _citation_resource_locator(citation.locator))
+        for observation in observations
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for citation in observation.citations
+    }
+
+    def candidate_key(candidate: LightweightReadCandidate) -> tuple[int, ...]:
+        metadata = navigation_metadata.get(candidate.read_index)
+        candidate_resources = {
+            (
+                candidate.citation.source_revision,
+                _citation_resource_locator(candidate.resource_locator),
+            ),
+            (
+                candidate.citation.source_revision,
+                _citation_resource_locator(candidate.citation.locator),
+            ),
+        }
+        resource_read = int(bool(candidate_resources & read_resources))
+        citation_read = int(
+            candidate.citation.citation_ref in read_citation_refs
+        )
+        modality = candidate.citation.modality
+        modality_rank = (
+            0
+            if modality in _FULL_SOURCE_MODALITIES
+            else 1
+            if modality == "LITERAL_TEXT_SEARCH_HIT"
+            else 2
+            if modality == _COGNITION_NAVIGATION_MODALITY
+            else 3
+        )
+        typed_origin = int(
+            metadata is None or metadata.cognition_kind is None
+        )
+        role_rank = (
+            _cognition_entity_role_rank(
+                metadata.cognition_kind,
+                metadata.cognition_attributes,
+            )
+            if metadata is not None and metadata.cognition_kind is not None
+            else 3
+        )
+        return (
+            resource_read,
+            citation_read,
+            # A cognition-issued typed origin is the Application's strongest
+            # generic signal for a known declaration/effect gap.  Keep that
+            # signal ahead of broad literal/search noise; modality remains a
+            # tie-breaker within each origin class.
+            typed_origin,
+            role_rank,
+            modality_rank,
+            -metadata.origin_observation_index
+            if metadata is not None
+            else 0,
+            metadata.origin_cognition_index
+            if metadata is not None
+            else 1_000_000,
+            candidate.read_index,
+        )
+
+    groups: dict[str, list[LightweightReadCandidate]] = {}
+    for candidate in candidates:
+        # resource_locator is an authority-owned canonical resource identity;
+        # it is used only to interleave duplicate line options, never for
+        # lexical relevance or path matching.
+        groups.setdefault(
+            candidate.resource_locator or candidate.citation.citation_ref,
+            [],
+        ).append(candidate)
+    ordered_groups = sorted(
+        groups.values(),
+        key=lambda group: min(candidate_key(item) for item in group),
+    )
+    for group in ordered_groups:
+        group.sort(key=candidate_key)
+    if remaining < len(ordered_groups):
+        # With fewer remaining actions than resource groups, a breadth-first
+        # presentation would spend the scarce prefix on arbitrary siblings.
+        # Use the same typed key globally so the prefix is deterministic while
+        # retaining every candidate in the model input.
+        return tuple(sorted(candidates, key=candidate_key))
+    ordered: list[LightweightReadCandidate] = []
+    maximum = max(len(group) for group in ordered_groups)
+    for ordinal in range(maximum):
+        for group in ordered_groups:
+            if ordinal < len(group):
+                ordered.append(group[ordinal])
+    return tuple(ordered)
+
+
+def _cognition_entity_role_rank(
+    kind: CognitionEntityKind | None,
+    attributes: Sequence[tuple[str, str]],
+) -> int:
+    if kind is None:
+        return 1_000_000
+    if kind is CognitionEntityKind.METHOD:
+        values = dict(attributes)
+        if (
+            values.get("owner_declaration_kind") == "INTERFACE"
+            or values.get("has_body") == "false"
+        ):
+            return 0
+        if (
+            values.get("owner_declaration_kind") == "CLASS"
+            and values.get("has_body") == "true"
+        ):
+            return 1
+        if values.get("has_body") == "true":
+            return 2
+        return 3
+    return {
+        CognitionEntityKind.TYPE: 4,
+        CognitionEntityKind.FILE: 5,
+        CognitionEntityKind.PACKAGE: 6,
+        CognitionEntityKind.MODULE: 7,
+    }[kind]
+
+
+def _navigation_metadata_key(
+    metadata: _LightweightReadNavigationMetadata,
+) -> tuple[int, int]:
+    return (
+        (
+            _cognition_entity_role_rank(
+                metadata.cognition_kind,
+                metadata.cognition_attributes,
+            )
+            if metadata.cognition_kind is not None
+            else 1_000_000
+        ),
+        metadata.origin_cognition_index
+        if metadata.origin_cognition_index is not None
+        else 1_000_000,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class LightweightObservation:
     observation_index: int
@@ -390,6 +603,12 @@ class LightweightAgentStepRequest:
     cognition_enabled: bool = False
     rejected_answer: str | None = None
     review_findings: tuple[str, ...] = ()
+    # Application-owned bookkeeping only.  It is intentionally omitted from
+    # model_view and therefore does not add an Agent protocol/schema field.
+    remaining_tool_actions: int | None = None
+    read_candidate_metadata: tuple[
+        tuple[int, _LightweightReadNavigationMetadata], ...
+    ] = ()
 
     def model_view(self) -> dict[str, object]:
         return {
@@ -429,7 +648,15 @@ class LightweightAgentStepRequest:
                 if self.tools_enabled
                 else ["FINISH"]
             ),
-            "read_candidates": [item.model_view() for item in self.read_candidates],
+            "read_candidates": [
+                item.model_view()
+                for item in _ordered_read_candidates(
+                    self.read_candidates,
+                    self.observations,
+                    remaining_tool_actions=self.remaining_tool_actions,
+                    metadata_by_read_index=dict(self.read_candidate_metadata),
+                )
+            ],
             "cognition_candidates": [
                 item.model_view() for item in self.cognition_candidates
             ],
@@ -727,6 +954,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         plan = "Investigate the exact request and stop when the evidence is sufficient."
         observations: list[LightweightObservation] = []
         read_candidates: list[LightweightReadCandidate] = []
+        read_candidate_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ] = {}
         cognition_candidates: list[LightweightCognitionCandidate] = []
         receipts: list[EngineeringAgentModelCallReceipt] = []
         events: list[Mapping[str, object]] = []
@@ -741,6 +971,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
+            for candidate in read_candidates:
+                read_candidate_metadata.setdefault(
+                    candidate.read_index,
+                    _LightweightReadNavigationMetadata(),
+                )
             for step in range(1, self._limits.maximum_agent_steps + 1):
                 tools_enabled = tool_actions < self._limits.maximum_tool_actions
                 try:
@@ -757,6 +992,12 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             tools_enabled=tools_enabled,
                             rejected_answer=rejected_answer,
                             review_findings=review_findings,
+                            remaining_tool_actions=(
+                                self._limits.maximum_tool_actions - tool_actions
+                            ),
+                            read_candidate_metadata=tuple(
+                                sorted(read_candidate_metadata.items())
+                            ),
                         )
                     )
                 except LightweightModelCallFailure as exc:
@@ -833,6 +1074,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         decision=decision,
                         observations=observations,
                         read_candidates=read_candidates,
+                        read_candidate_metadata=read_candidate_metadata,
                         cognition_candidates=cognition_candidates,
                         events=events,
                     )
@@ -1049,6 +1291,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         decision: LightweightAgentDecision,
         observations: list[LightweightObservation],
         read_candidates: list[LightweightReadCandidate],
+        read_candidate_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ],
         cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
     ) -> None:
@@ -1062,6 +1307,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 decision=decision,
                 observations=observations,
                 read_candidates=read_candidates,
+                read_candidate_metadata=read_candidate_metadata,
                 cognition_candidates=cognition_candidates,
                 events=events,
             )
@@ -1170,13 +1416,19 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             known = {item.citation.citation_ref for item in read_candidates}
             for citation in citations:
                 if citation.citation_ref not in known:
+                    read_index = len(read_candidates) + 1
                     read_candidates.append(
                         LightweightReadCandidate(
-                            read_index=len(read_candidates) + 1,
+                            read_index=read_index,
                             citation=citation,
                             resource_locator=_citation_resource_locator(
                                 citation.locator
                             ),
+                        )
+                    )
+                    read_candidate_metadata[read_index] = (
+                        _LightweightReadNavigationMetadata(
+                            origin_observation_index=index,
                         )
                     )
                     known.add(citation.citation_ref)
@@ -1195,6 +1447,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         decision: LightweightAgentDecision,
         observations: list[LightweightObservation],
         read_candidates: list[LightweightReadCandidate],
+        read_candidate_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ],
         cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
     ) -> None:
@@ -1248,7 +1503,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     limit=32,
                 )
         first_new_candidate = len(cognition_candidates)
-        self._register_cognition_candidates(page, cognition_candidates)
+        cognition_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ] = {}
+        self._register_cognition_candidates(
+            page,
+            cognition_candidates,
+            cognition_metadata,
+        )
         new_candidates = cognition_candidates[first_new_candidate:]
         index = len(observations) + 1
         content = canonical_json_bytes(page.to_payload()).decode("utf-8")
@@ -1293,6 +1555,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             cognition=cognition,
             candidates=new_candidates,
             read_candidates=read_candidates,
+            read_candidate_metadata=read_candidate_metadata,
+            cognition_metadata=cognition_metadata,
             events=events,
             observation_index=index,
         )
@@ -1308,8 +1572,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
     def _register_cognition_candidates(
         page: CognitionPage,
         candidates: list[LightweightCognitionCandidate],
+        cognition_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ] | None = None,
     ) -> None:
-        known = {item.entity_id for item in candidates}
+        known_indexes = {
+            item.entity_id: item.cognition_index for item in candidates
+        }
+        metadata = cognition_metadata if cognition_metadata is not None else {}
 
         def visit(value: object) -> None:
             if isinstance(value, Mapping):
@@ -1349,12 +1619,18 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "cognition candidate provenance is inconsistent",
                         )
                     entity_id = StableId(raw_id)
-                    if entity_id not in known:
+                    parsed_kind = CognitionEntityKind(raw_kind)
+                    parsed_attributes = _cognition_attributes_from_payload(
+                        value.get("attributes", ())
+                    )
+                    cognition_index = known_indexes.get(entity_id)
+                    if cognition_index is None:
+                        cognition_index = len(candidates) + 1
                         candidates.append(
                             LightweightCognitionCandidate(
-                                cognition_index=len(candidates) + 1,
+                                cognition_index=cognition_index,
                                 entity_id=entity_id,
-                                kind=CognitionEntityKind(raw_kind),
+                                kind=parsed_kind,
                                 name=value["name"],
                                 qualified_name=value["qualified_name"],
                                 coverage=value["coverage"],
@@ -1366,7 +1642,19 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                                 provenance=parsed_provenance,
                             )
                         )
-                        known.add(entity_id)
+                        known_indexes[entity_id] = cognition_index
+                    candidate_metadata = _LightweightReadNavigationMetadata(
+                        cognition_kind=parsed_kind,
+                        cognition_attributes=parsed_attributes,
+                        origin_cognition_index=cognition_index,
+                    )
+                    current_metadata = metadata.get(cognition_index)
+                    if (
+                        current_metadata is None
+                        or _navigation_metadata_key(candidate_metadata)
+                        < _navigation_metadata_key(current_metadata)
+                    ):
+                        metadata[cognition_index] = candidate_metadata
                 for item in value.values():
                     visit(item)
             elif isinstance(value, (list, tuple)):
@@ -1384,10 +1672,56 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         read_candidates: list[LightweightReadCandidate],
         events: list[Mapping[str, object]],
         observation_index: int,
+        read_candidate_metadata: dict[
+            int, _LightweightReadNavigationMetadata
+        ] | None = None,
+        cognition_metadata: Mapping[
+            int, _LightweightReadNavigationMetadata
+        ] | None = None,
     ) -> None:
-        known_paths = {item.resource_locator for item in read_candidates}
+        navigation_metadata = (
+            read_candidate_metadata
+            if read_candidate_metadata is not None
+            else {}
+        )
+        # Only a prior full-resource Source read covers a path.  A line hit,
+        # literal hit, or navigation option in the same file is a different
+        # evidence identity and must not suppress the exact cognition locator
+        # that still needs a controlled Source read.
+        known_full_source_paths = {
+            (
+                item.citation.source_revision,
+                _citation_resource_locator(item.resource_locator),
+            )
+            for item in read_candidates
+            if _is_full_source_read_candidate(item)
+        }
+        # A cognition navigation option is already a controlled, current-Turn
+        # path capability.  The Source adapter intentionally keys that
+        # capability by canonical path and returns the same opaque binding
+        # when a later cognition page discovers another entity in the file.
+        # Keep this suppression domain separate from full-resource coverage:
+        # a line/literal/search candidate for the same path is not a
+        # navigation capability and must still be bridged below.
+        existing_navigation_paths: set[tuple[str, str]] = {
+            (
+                item.citation.source_revision,
+                _citation_resource_locator(item.resource_locator),
+            )
+            for item in read_candidates
+            if (
+                item.citation.evidence_class == "SOURCE"
+                and item.citation.modality == _COGNITION_NAVIGATION_MODALITY
+            )
+        }
         provenances: list[CognitionProvenance] = []
         selected_paths: set[str] = set()
+        metadata_by_locator: dict[
+            str, _LightweightReadNavigationMetadata
+        ] = {}
+        metadata_by_path: dict[
+            tuple[str, str], _LightweightReadNavigationMetadata
+        ] = {}
         for candidate in candidates:
             provenance = candidate.provenance
             if (
@@ -1400,12 +1734,79 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "cognition read candidate binds another Source snapshot",
                 )
+            provenance_key = (provenance.source_revision, provenance.path)
             if (
-                provenance.path not in known_paths
+                provenance_key not in known_full_source_paths
+                and provenance_key not in existing_navigation_paths
                 and provenance.path not in selected_paths
             ):
                 provenances.append(provenance)
                 selected_paths.add(provenance.path)
+            candidate_metadata = (cognition_metadata or {}).get(
+                candidate.cognition_index
+            )
+            if candidate_metadata is None:
+                candidate_metadata = _LightweightReadNavigationMetadata(
+                    cognition_kind=candidate.kind,
+                    origin_cognition_index=candidate.cognition_index,
+                )
+            current_locator = metadata_by_locator.get(provenance.locator)
+            if (
+                current_locator is None
+                or _navigation_metadata_key(candidate_metadata)
+                < _navigation_metadata_key(current_locator)
+            ):
+                metadata_by_locator[provenance.locator] = candidate_metadata
+            current_path = metadata_by_path.get(provenance_key)
+            if (
+                current_path is None
+                or _navigation_metadata_key(candidate_metadata)
+                < _navigation_metadata_key(current_path)
+            ):
+                metadata_by_path[provenance_key] = candidate_metadata
+
+        # A Source search may have issued an option before cognition discovers
+        # the same exact locator.  Keep the existing candidate object and its
+        # equality/value contract untouched; only record an Application-owned
+        # sidecar priority keyed by the stable read_index.  Path-only matches
+        # are intentionally ignored because one file can contain many
+        # declarations.  If a prior cognition navigation capability already
+        # represents this path, however, its opaque binding is reusable for a
+        # later entity/detail even when that entity has a different exact
+        # locator.  Attach the strongest typed metadata to that existing
+        # candidate without changing its citation value or authority.
+        for existing in read_candidates:
+            metadata = metadata_by_locator.get(existing.citation.locator)
+            if (
+                metadata is None
+                and existing.citation.evidence_class == "SOURCE"
+                and existing.citation.modality == _COGNITION_NAVIGATION_MODALITY
+            ):
+                existing_key = (
+                    existing.citation.source_revision,
+                    _citation_resource_locator(existing.resource_locator),
+                )
+                metadata = metadata_by_path.get(existing_key)
+            if metadata is None:
+                continue
+            current = navigation_metadata.get(existing.read_index)
+            if (
+                current is None
+                or _navigation_metadata_key(metadata)
+                < _navigation_metadata_key(current)
+            ):
+                navigation_metadata[existing.read_index] = (
+                    _LightweightReadNavigationMetadata(
+                        origin_observation_index=(
+                            current.origin_observation_index
+                            if current is not None
+                            else 0
+                        ),
+                        cognition_kind=metadata.cognition_kind,
+                        cognition_attributes=metadata.cognition_attributes,
+                        origin_cognition_index=metadata.origin_cognition_index,
+                    )
+                )
         if not provenances:
             return
 
@@ -1487,6 +1888,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     resource_locator=provenance.path,
                 )
             )
+            metadata = metadata_by_locator.get(provenance.locator)
+            if metadata is not None:
+                navigation_metadata[read_index] = _LightweightReadNavigationMetadata(
+                    origin_observation_index=observation_index,
+                    cognition_kind=metadata.cognition_kind,
+                    cognition_attributes=metadata.cognition_attributes,
+                    origin_cognition_index=metadata.origin_cognition_index,
+                )
             known_references.add(candidate.citation_ref)
             added_indexes.append(read_index)
             candidate_digests.append(candidate.digest.value)
@@ -1746,6 +2155,74 @@ def _citation_resource_locator(locator: str) -> str:
     if separator == ":L" and resource and line_range:
         return resource
     return locator
+
+
+def _is_full_source_read_candidate(candidate: LightweightReadCandidate) -> bool:
+    """Return whether an existing candidate is a complete Source resource.
+
+    Modality alone is insufficient: a SOURCE_TEXT line/fragment candidate is
+    still an unresolved declaration gap.  The authority-owned resource and
+    citation locator must both identify the same canonical, line-free path.
+    """
+
+    if (
+        candidate.citation.evidence_class != "SOURCE"
+        or candidate.citation.modality not in _FULL_SOURCE_MODALITIES
+    ):
+        return False
+    resource = _citation_resource_locator(candidate.resource_locator)
+    locator = _citation_resource_locator(candidate.citation.locator)
+    return (
+        resource == candidate.resource_locator
+        and locator == candidate.resource_locator
+        and candidate.citation.locator == candidate.resource_locator
+    )
+
+
+def _cognition_attributes_from_payload(
+    value: object,
+) -> tuple[tuple[str, str], ...]:
+    """Normalize existing cognition attributes for internal navigation only."""
+
+    if value in (None, (), []):
+        return ()
+    pairs: list[tuple[str, str]] = []
+    if isinstance(value, Mapping):
+        entries = value.items()
+        for key, item in entries:
+            if not isinstance(key, str) or not isinstance(item, str):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition candidate attributes are malformed",
+                )
+            pairs.append((key, item))
+    elif isinstance(value, (list, tuple)):
+        for item in value:
+            if not isinstance(item, Mapping):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition candidate attributes are malformed",
+                )
+            key = item.get("name")
+            attribute_value = item.get("value")
+            if not isinstance(key, str) or not isinstance(attribute_value, str):
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition candidate attributes are malformed",
+                )
+            pairs.append((key, attribute_value))
+    else:
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "cognition candidate attributes are malformed",
+        )
+    normalized = tuple(sorted(pairs))
+    if len({key for key, _ in normalized}) != len(normalized):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "cognition candidate attributes are duplicated",
+        )
+    return normalized
 
 
 __all__ = [

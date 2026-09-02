@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
@@ -51,6 +51,10 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - Phase B 已由监督方在 clean exact commit 上独立 `ADVANCE`；该结论不由开发分支修改或重新解释。
 - 当前唯一产品任务是 Phase C：把同一份已验证 cognition artifact 接入 Phase A 的同一个轻量 Agent，让 cognition→按 Gap 读 Source→自然
   Answer/Citation→fresh review→loopback Web 形成最小完整链。用三个异质问题和一个语义追问验证，首次可操作时立即交付地址。
+- `run-156` 的 q5 已证明固定 8-action fuse 与耗尽后 fail-closed 正常；当前最早偏差是 Application cognition→Source candidate construction
+  的同路径重复幂等和同一预算内已有 cognition/Source candidate 的 Primary evidence planning/selection。`FINDING-010-277` 只复用既有
+  path capability、内部 sidecar 和通用呈现收敛，不恢复工具、不扩大预算、不重试 Reviewer、不新增 Agent 协议；历史 raw citation receipt
+  缺失时只记录机器可读 `NOT_RUN`。
 - Phase D、完整质量 Gate、Provider recovery 和归档协议扩张仍禁止；Phase C 若失败，按最早 knowledge/integration/Agent/review/Web 层做通用
   修复，不回写题面规则。
 

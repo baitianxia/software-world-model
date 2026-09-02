@@ -12,6 +12,10 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-277](FINDING-010-277.md)：run-156 q5 在固定 8 个合法工具动作后按契约 `MORE_EVIDENCE → BUDGET_EXHAUSTED` fail-closed；最早偏差是
+  Application cognition→Source candidate 的同路径幂等与已有未读 cognition/Source candidates 的证据规划呈现。修复只复用既有
+  index/capability、内部 sidecar、Observation 和 remaining budget，不重绑 index、不自动 READ、不恢复预算、不重试 Reviewer，也不扩展
+  Agent 协议；历史 raw receipt 缺失时明确记录机器可读 `NOT_RUN`。
 - [FINDING-010-276](FINDING-010-276.md)：run-150/run-155 重现可解析但 action-specific 字段混用的 Primary 决策；strict decoder 保持拒绝，
   current Agent executor 仅保留 rejected receipt 并给同一主 Agent 一次机械重规划，第二次仍 fail-closed，不扩展协议、Prompt、Provider 或题目规则。
 - [FINDING-010-275](FINDING-010-275.md)：run-145 暴露 Primary `FINISH` 把无 Citation 的 cognition Observation 与真实 Source

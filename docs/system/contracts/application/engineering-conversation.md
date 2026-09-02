@@ -5,7 +5,7 @@ status: current
 authority: normative
 owners: [application, source, quality, security]
 depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-CONTRACT-APPLICATION-AGENTIC-TASK, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING, SYS-CONTRACT-APPLICATION-KNOWLEDGE-USE, SYS-CONTRACT-APPLICATION-RESPONSE-CONTROL, SYS-CONTRACT-SOURCE-ARTIFACT, SYS-CONTRACT-AI-MODEL-GATEWAY]
-derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258, FINDING-010-259, FINDING-010-262, FINDING-010-275, FINDING-010-276]
+derived_from: [FINDING-010-097, FINDING-010-098, FINDING-010-099, FINDING-010-100, FINDING-010-101, FINDING-010-102, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-109, FINDING-010-113, FINDING-010-116, FINDING-010-117, FINDING-010-120, FINDING-010-121, FINDING-010-125, FINDING-010-128, FINDING-010-132, FINDING-010-133, FINDING-010-136, FINDING-010-138, FINDING-010-139, FINDING-010-154, FINDING-010-156, FINDING-010-159, FINDING-010-160, FINDING-010-169, FINDING-010-170, FINDING-010-172, FINDING-010-176, FINDING-010-177, FINDING-010-183, FINDING-010-191, FINDING-010-192, FINDING-010-193, FINDING-010-194, FINDING-010-195, FINDING-010-196, FINDING-010-197, FINDING-010-198, FINDING-010-199, FINDING-010-200, FINDING-010-201, FINDING-010-203, FINDING-010-204, FINDING-010-208, FINDING-010-209, FINDING-010-210, FINDING-010-211, FINDING-010-212, FINDING-010-213, FINDING-010-214, FINDING-010-215, FINDING-010-216, FINDING-010-217, FINDING-010-218, FINDING-010-220, FINDING-010-221, FINDING-010-222, FINDING-010-224, FINDING-010-225, FINDING-010-226, FINDING-010-229, FINDING-010-230, FINDING-010-232, FINDING-010-233, FINDING-010-249, FINDING-010-250, FINDING-010-258, FINDING-010-259, FINDING-010-262, FINDING-010-275, FINDING-010-276, FINDING-010-277]
 code: [src/software_world_model/application_services, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/lightweight_engineering_model.py, src/software_world_model/interface]
 tests: [tests]
 ---
@@ -101,7 +101,10 @@ evidence class 重新签发 opaque locator。只有 Broker 将 path 绑定为 `S
 `read_candidates` 携带 opaque ref、line locator 与片段 digest，但不得进入 Cognition Observation Citation、最终 Citation selection、delivered
 Citation 或跨 Turn revalidation domain。模型选择该数字 candidate 后仍须执行既有 `SOURCE_READ`，只有 Worker 实际读取产生的 Observation 与
 Citation 才能支持答案；不得把 provenance 片段 digest 与整文件 read digest 混作 content revalidation。prior full-source candidate 已覆盖同 path
-时不得创建双 authority origin；cognition-derived catalog 按整个 Turn 累计有界，不能通过分页调用绕过上限。
+时不得创建双 authority origin；已有 cognition-navigation candidate 也按 exact source revision + canonical path 在同一 Turn 内幂等复用，
+即使后续 cognition page 提供同一文件的不同 exact locator，也只能更新 Application 内部 sidecar，不得重新签发或改写既有 opaque identity。
+line/literal/search candidate 不属于 full-resource 或 cognition-navigation coverage，不能因此抑制尚未建立的 cognition path capability；
+cognition-derived catalog 按整个 Turn 累计有界，不能通过分页调用绕过上限。
 
 ## Conversation and turn invariants
 
@@ -198,6 +201,14 @@ relation 投影。该 direct graph closure 只使用 Snapshot 已有 evidence；
 词法尾部猜 Entity。endpoint 的 verified declaring type/source path 可以进入既有 cognition→Source navigation projection，但不改变
 Snapshot、Read Authority、Coverage、Citation、Broker 重验或 Source authority。
 
+在同一 current-Turn cognition/read candidate catalog 内，Application 必须在每次 Primary dispatch 前，从已经签发且尚未 READ 的候选、当前有序
+Observation、受信 cognition origin/typed attributes 与 `tool_action_budget.remaining` 机械构造稳定的呈现顺序。该投影只调整 model input
+中已有 candidate entry 的排列；首次签发后 `read_index`、opaque capability identity 和候选可见性不得重绑、删除或改写，Primary 仍须显式
+选择既有 `SOURCE_READ` 才能取得 Citation。排序可优先直接声明/实现关系和当前未解决的 typed gap，但不得读取题面业务词、工程/类/方法名
+或 path substring，不得自动读取、隐藏候选或新增 action、字段、协议版本或 authority；provenance 仍不是 Evidence。candidate construction
+必须区分 full-resource Source coverage、已有 path-keyed cognition-navigation capability 与 line/literal/search hit；只有前两者可抑制
+同一 path 的重复 cognition bridge，且重复 bridge 只能保留既有 candidate identity 并更新内部 typed-origin sidecar。
+
 当 immutable original User Message 精确点名 sealed Source allowlist 中一个或多个 top-level Source scope 时，Application 必须在
 multi-Profile relevance ranking 前把该 scope 集与每个 Profile 的 formal Coverage root scope 比较。具有 non-repository-wide root 且与
 显式 scope 完全不相交的 Profile 不得贡献 affirmative item 或 Profile gap；repository-wide root 仍可贡献相容的 partial cognition，并如实
@@ -210,6 +221,9 @@ Primary input 还必须从 Application-owned loop limit 和 exact current action
 `tool_action_budget = {maximum, used, remaining}`；`remaining` 是最多仍可执行的 action 数，不是消费目标。current maximum 保持 8。
 `remaining=0` 时 effective tool catalog 机械变空，普通 successor 的 completion policy 必须要求基于 current SUPPORT/BOUNDARY 的 Draft；
 若 Review Finding 要求新 Evidence 而已经没有合法 action，则当前 Turn 失败关闭，不能恢复工具、扩大预算或以 Draft 绕过 Finding。
+
+该投影不得被用来规避 fuse：Reviewer 返回 `MORE_EVIDENCE` 且 `remaining=0` 时，Application 仍按上述规则失败关闭，不得恢复工具、扩大预算、
+重试 Reviewer 或把 cognition provenance 提升为答案 Citation。
 
 没有 current observation/action history 且没有 prior exact-source revalidation candidate 的 fresh investigation，只要 effective catalog 含
 World Model，第一步必须为 `WORLD_MODEL_QUERY`；decoder 从原 invocation 重算并拒绝先行 Source proposal。这个稳定认知起点用于取得
