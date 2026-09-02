@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T10:35:30+08:00",
+  "assessed_at": "2026-09-02T10:37:10+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -65,8 +65,8 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "generic-model-boundary-and-turn-recovery",
-      "summary": "当前候选把 run-150/run-155 的 Primary action-specific 字段混用归类为同一 Agent 可受控恢复，并保留 rejected receipt；但 run-149/run-151 的 Reviewer nested answer malformed output 仍未在同一责任层完成通用恢复实验。候选仍为 dirty，尚无 fresh successor 证明完整 cognition→Source→Citation→fresh Reviewer→Web 纵切。",
+      "owner_layer": "generic-model-boundary-and-review-recovery",
+      "summary": "Primary action-specific 字段混用已由同一 Agent 一次受控重规划处理，严格 decoder、rejected receipt 与定向测试均保留；但 run-149/run-151 的 Reviewer nested answer malformed output 仍未完成同责任层的通用恢复实验。候选当前 clean，但尚无 fresh successor 证明完整 cognition→Source→Citation→fresh Reviewer→Web 纵切。",
       "evidence_ids": [
         "model-boundary-recovery-classification",
         "turn-failure-recovery-owner",
@@ -75,5 +75,5 @@
     }
   ],
   "earliest_divergence": "generic-model-output-boundary-and-ordinary-turn-recovery",
-  "next_action": "开发继续且不暂停、不申请授权：完成并提交当前通用 Primary action-shape recovery 后，基于 run-149/run-151 原始 receipts 做同责任层 Reviewer malformed-output 实验；只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案，保留严格 decoder、独立 Reviewer、Citation authority 与失败收据，再用 fresh Ark logical successor 先验证原题及两个异质问题后贯通五个交互。不得切 DeepSeek、增加 Prompt/Schema 版本或题面特判。"
+  "next_action": "开发继续且不暂停、不申请授权：基于 run-149/run-151 原始 receipts 做同责任层 Reviewer malformed-output 实验；只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案，保留严格 decoder、独立 Reviewer、Citation authority 与失败收据，再用 fresh Ark logical successor 先验证原题及两个异质问题后贯通五个交互。不得切 DeepSeek、增加 Prompt/Schema 版本或题面特判。"
 }
