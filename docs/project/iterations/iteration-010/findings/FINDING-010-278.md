@@ -31,7 +31,7 @@ Turn 计数，会把新增 Observation 后的合法修复机会错误地耗尽�
   的 33 次 dispatch 在非法局部 binding 前停止。
 - 监督 lane 的
   `run-158-primary-citation-binding.json`（file SHA-256
-  `sha256:dd910908c52e41d523e03a61b2ee830b7ba3d65aebafd280673a649153380081`）记录 q5 的 selected pairs
+  `sha256:87095371e919527eed49b1aa2f90af7ba78826197c67812636da5f7cd80e7760`）记录 q5 的 selected pairs
   `obs4/1, obs3/2, obs5/3`，而 observations 3、4、5 的实际 Citation domain 均为 `[1]`，并确认没有重试、过滤、重编号或合成
   Citation；最早责任层是 Application Agent citation binding。
 - `tests.test_lightweight_engineering_agent` 新增异质夹具覆盖：多个 Source Observation 各自从局部 index `1` 开始、第一次全局式
