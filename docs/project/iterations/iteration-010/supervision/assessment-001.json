@@ -2,62 +2,56 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "a2ee36b1f56cea7005c0af02dedf43d0ee388da9",
-  "candidate_tree": "7a822a3380b7b4c7331ce6d1c1ee9ca90845f47d",
-  "candidate_worktree_digest": "sha256:040160677b5c372f0ad1e85d6f0b98cae6313a7a2429ec2a21324b879c1041e0",
+  "candidate_commit": "c6982c4671ab5bf7543812798d3330ef264282b4",
+  "candidate_tree": "e2d8c8f742eabdeddabcbaec39f4fc58ae4c9c4f",
+  "candidate_worktree_digest": "sha256:971c0df49cd447d63dff64c35b27f2fdfa1ac52b57a5b2809b19417362d5b9fb",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T13:02:00+08:00",
+  "assessed_at": "2026-09-02T13:10:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:b81148b2611fd619845bf74d3424bf03e7c76eca19408e0335f309d1d30fd7ca"
+      "sha256": "sha256:b39984243ee7455555e9aa13fe5e620d1e514f55267519d473a5a249149b32e7"
     },
     {
       "id": "phase-c-design-and-failure-policy",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
-      "sha256": "sha256:9694a61521f89187bd234a80761f290a43af187fded3749f76a28e382cb54a15"
+      "sha256": "sha256:7359dcf9045e7ec8e19b08adc1b9a3c3e6ec6a6f21c45ef4427a883cb9653a42"
     },
     {
-      "id": "candidate-priority-contract",
+      "id": "candidate-citation-binding-contract",
       "scope": "candidate",
       "path": "docs/system/contracts/application/engineering-conversation.md",
-      "sha256": "sha256:32c38e968c8fad50aabb62016d764666a2e00215599b77b35a29752630d8a282"
+      "sha256": "sha256:d90777b7c8bae0fc5271700f49d97aefbd7022616115341428249a8cd72264d3"
     },
     {
-      "id": "candidate-finding-277",
+      "id": "candidate-citation-repair-finding",
       "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
-      "sha256": "sha256:0e3f09602fe4035387c69b86ab06b12e2ec3326bd0fa87e07d99df6cb1c0e1bc"
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-278.md",
+      "sha256": "sha256:ed01609a6aaf7402434c837d65f4e48d2ee59428582c96a48ac89a2008d2ac27"
     },
     {
       "id": "candidate-findings-index",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/README.md",
-      "sha256": "sha256:b969ad53cf1c41b314c001b329987de42965fcea4aae90d8a80b0015ec7a3aac"
+      "sha256": "sha256:3b0ae1a5e9f54f18f2c749bbb173d826cf00fb4bbad996bac5a3362cf8c9f2d5"
     },
     {
-      "id": "finding-275-one-turn-binding-fuse",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-275.md",
-      "sha256": "sha256:4eb0791b5b7a23ebab94ae99a5a068824bf5984192f9e5cb2000d1ac70d62f6d"
-    },
-    {
-      "id": "finding-277-fixed-tool-budget",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
-      "sha256": "sha256:0e3f09602fe4035387c69b86ab06b12e2ec3326bd0fa87e07d99df6cb1c0e1bc"
-    },
-    {
-      "id": "candidate-agent-working-tree",
+      "id": "candidate-agent-source",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
       "sha256": "sha256:26a8e9686551acc718b49d0e71722d32946a50e04289bb3a84973e93c377b074"
+    },
+    {
+      "id": "candidate-agent-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:74b0e4af3d5514949604192f7aa65cb44d402bad0dc152abe5cad7b7a0aa52d3"
     }
   ],
   "completed_requirements": [
@@ -71,19 +65,18 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "application-agent-citation-binding",
-      "summary": "run-158 的 q5 在首次 Reviewer 返回 MORE_EVIDENCE 后，Primary 读取接口源码并提交 FINISH，但引用选择没有遵守每个 Observation 的本地 citation ordinal：call33 选择 obs4/citation1、obs3/citation2、obs5/citation3，而 call33 输入中 obs3、obs4、obs5 各自仅有 citation_index=1。Application 在 fresh Reviewer 前以 CONTROL_STATE_DENIED 正确拒绝，33 次 dispatch 后未产生新的 Reviewer/Delivery。terminal.json 文件 SHA-256 为 sha256:5c9bc0da0d83e61fc4c1224a5a8de6c8253b1864740644e61f3b1c74cf63cf14，terminal digest 为 sha256:74a060cdb6a0defd60545695649cd0d582153fee54833f0fd6c7a59adefab1ae。该偏差最早发生在通用 Application Agent citation-binding/action planning 边界，不是 cognition construction、Source Broker/Worker、Provider transport 或 Reviewer；run-158 必须按 REWORK/NOT_RUN 处理。",
+      "owner_layer": "phase-c-independent-validation",
+      "summary": "clean candidate c6982c4 contains the generic observation-prefix Citation repair, but no fresh Phase C run has exercised this exact commit. The only sealed end-to-end evidence (run-158) predates the repair and ended before fresh Reviewer/Delivery because of the local Citation ordinal failure. Therefore the three remaining Phase C requirements are not independently established and this candidate cannot advance.",
       "evidence_ids": [
         "phase-c-objective-and-boundary",
         "phase-c-design-and-failure-policy",
-        "candidate-priority-contract",
-        "finding-275-one-turn-binding-fuse",
-        "finding-277-fixed-tool-budget",
-        "candidate-agent-working-tree",
-        "candidate-agent-tests-working-tree"
+        "candidate-citation-binding-contract",
+        "candidate-citation-repair-finding",
+        "candidate-agent-source",
+        "candidate-agent-tests"
       ]
     }
   ],
-  "earliest_divergence": "application-agent-citation-binding",
-  "next_action": "开发继续，不暂停、不重新授权：保留同一 Agent 在 MORE_EVIDENCE/形状失败后追加既有反馈的修复；将 Citation binding repair 恢复为同一 Turn 全局最多一次，移除或改写允许第二次 prefix repair 的测试，不增加协议、Prompt、Schema、Reviewer retry 或预算。整理为 clean commit 后，建立 fresh successor，按固定 q1–q5 conversation/turn scope 重跑并检查每个本地 Citation ordinal、fresh Review、Delivery 与 Web 投影。"
+  "earliest_divergence": "phase-c-independent-validation",
+  "next_action": "保持产品 clean candidate 不变，建立全新 validated successor（不复用旧 session/DB/receipt），按 sealed scope 执行 q1+q2 同会话、q3 独立零 dispatch clarification、q4 独立会话、q5 独立会话；逐项核验真实 Citation identity、fresh Reviewer、Delivery 与 loopback Web。若 fresh run 暴露最早通用偏差，再只修复该层并重建 assessment；当前不得 ADVANCE。"
 }
