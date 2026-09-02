@@ -4,42 +4,42 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
   "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
-  "candidate_worktree_digest": "sha256:334b59a1165a8e29d14a81a713cbccae16db9f150795933103934b4612fa17cc",
+  "candidate_worktree_digest": "sha256:5d87139774bfefa6efc5ad5c54d509fc653d9c0e249f5895c7ad996a2b4071a3",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T09:41:00+08:00",
+  "assessed_at": "2026-09-02T10:18:48+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:0d010ed1bd13210a09a4e243e144841c628877e05db9cdf40d3cacb643f8171f"
+      "sha256": "sha256:9aafd50591485feed4cadd84120220edadb6c0cc2461c21644f8308309ffdedc"
     },
     {
       "id": "phase-c-design-and-failure-policy",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
-      "sha256": "sha256:5aa037f82fd569f25157d17124c76c47f8d047358f13e9f51fb40385736c28a1"
+      "sha256": "sha256:0a6881a627e3b3a81eaedaf5812a85f2bdfb74f43a8ed094d30c0ff3a69bfc77"
     },
     {
-      "id": "primary-reviewer-model-boundary",
+      "id": "model-boundary-recovery-classification",
       "scope": "candidate",
       "path": "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
-      "sha256": "sha256:bcc85b0c676dd3dd65c2701ea76457b00d40e25224903a52deec65585acc1f41"
+      "sha256": "sha256:a9929a73a7cc66adbf60245afa48b26dcb17281a5461bf09f2023bd8a9f2bf51"
     },
     {
       "id": "turn-failure-recovery-owner",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:07f82b32f9e13a7aedecf47db78d78d937346cc0cacd4c8bf03b7bb8c0486ac7"
+      "sha256": "sha256:05d2a9c9943540da42cde279591d6b513fa600f2fc5dd49e017765bb5bf32c14"
     },
     {
-      "id": "existing-generic-citation-repair-boundary",
+      "id": "action-shape-recovery-finding",
       "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-275.md",
-      "sha256": "sha256:4eb0791b5b7a23ebab94ae99a5a068824bf5984192f9e5cb2000d1ac70d62f6d"
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-276.md",
+      "sha256": "sha256:6e663c40f2101494d879f97917887aafd64414f5d6cbc37a4d4906bec7a14abe"
     },
     {
       "id": "exact-source-behavior-reference",
@@ -60,14 +60,14 @@
     {
       "severity": "MAJOR",
       "owner_layer": "generic-model-boundary-and-turn-recovery",
-      "summary": "独立运行证据显示同一 Ark route 在 Primary 和 fresh Reviewer 两个角色都重复产生 schema-invalid 输出：run-150 的 READ_SOURCE 携带非空 cognition_index，run-149 与 run-151 的 APPROVED Reviewer 将合法 verdict/findings 嵌套成 answer 字符串。当前 executor 将这类已发出但不可解析的结果直接终止当前 Turn，未提供同角色 bounded retry 或其他通用恢复，因此即使源码证据与答案已正确形成也不能交付完整 Web Chat。该偏差位于模型边界/失败恢复层，不是世界模型内容、单题答案或工程特判。",
+      "summary": "run-150/run-155 的 Primary action-specific 字段混用已定位并已有一次同一 Agent 受控重规划实现，但 run-149/run-151 的 Reviewer nested answer 仍未得到同层通用恢复；当前候选尚未 clean，不能证明完整 Web 纵切。",
       "evidence_ids": [
-        "primary-reviewer-model-boundary",
+        "model-boundary-recovery-classification",
         "turn-failure-recovery-owner",
-        "phase-c-design-and-failure-policy"
+        "action-shape-recovery-finding"
       ]
     }
   ],
-  "earliest_divergence": "provider-model-output-boundary-and-ordinary-failure-recovery",
-  "next_action": "开发继续且不暂停、不申请授权：先用 run-149/run-150/run-151 的原始 receipts 做一次通用边界实验，分别确认 role input/rendering、Provider schema 能力和 transient output failure 的责任层；随后只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案（保留严格 decoder、Citation authority、独立 Reviewer 与失败收据），再在同一 Ark route 运行 fresh successor，贯通五个交互。不得用重写答案、增加 Prompt/Schema 版本、切 DeepSeek 或 mall 特判掩盖该问题。"
+  "earliest_divergence": "generic-model-output-boundary-and-ordinary-turn-recovery",
+  "next_action": "开发继续且不暂停、不申请授权：完成并提交当前通用 Primary action-shape recovery 后，基于 run-149/run-151 原始 receipts 做同责任层 Reviewer malformed-output 实验；只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案，保留严格 decoder、独立 Reviewer、Citation authority 与失败收据，再用 fresh Ark logical successor 先验证原题及两个异质问题后贯通五个交互。不得切 DeepSeek、增加 Prompt/Schema 版本或题面特判。"
 }
