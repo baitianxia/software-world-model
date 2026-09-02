@@ -1,0 +1,79 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "candidate_worktree_digest": "sha256:5c8590c1aad9938f7af7086eb9bb6cd538d5866987c78809e45856c9bd00b219",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T10:29:14+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:9aafd50591485feed4cadd84120220edadb6c0cc2461c21644f8308309ffdedc"
+    },
+    {
+      "id": "phase-c-design-and-failure-policy",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:0a6881a627e3b3a81eaedaf5812a85f2bdfb74f43a8ed094d30c0ff3a69bfc77"
+    },
+    {
+      "id": "model-boundary-recovery-classification",
+      "scope": "candidate",
+      "path": "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "sha256": "sha256:a9929a73a7cc66adbf60245afa48b26dcb17281a5461bf09f2023bd8a9f2bf51"
+    },
+    {
+      "id": "turn-failure-recovery-owner",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:e237e2668636e98037bc13059e29ae3d84dde36c3b6ca03eed16bf52575a0454"
+    },
+    {
+      "id": "action-shape-recovery-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-276.md",
+      "sha256": "sha256:8380bda7d4fed4e899ea81c0bf077a69a96b2ee56e986e2b91e82b9f476e7317"
+    },
+    {
+      "id": "action-shape-recovery-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
+    },
+    {
+      "id": "exact-source-behavior-reference",
+      "scope": "source",
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
+      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "generic-model-boundary-and-turn-recovery",
+      "summary": "当前候选把 run-150/run-155 的 Primary action-specific 字段混用归类为同一 Agent 可受控恢复，并保留 rejected receipt；但 run-149/run-151 的 Reviewer nested answer malformed output 仍未在同一责任层完成通用恢复实验。候选仍为 dirty，尚无 fresh successor 证明完整 cognition→Source→Citation→fresh Reviewer→Web 纵切。",
+      "evidence_ids": [
+        "model-boundary-recovery-classification",
+        "turn-failure-recovery-owner",
+        "action-shape-recovery-finding"
+      ]
+    }
+  ],
+  "earliest_divergence": "generic-model-output-boundary-and-ordinary-turn-recovery",
+  "next_action": "开发继续且不暂停、不申请授权：完成并提交当前通用 Primary action-shape recovery 后，基于 run-149/run-151 原始 receipts 做同责任层 Reviewer malformed-output 实验；只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案，保留严格 decoder、独立 Reviewer、Citation authority 与失败收据，再用 fresh Ark logical successor 先验证原题及两个异质问题后贯通五个交互。不得切 DeepSeek、增加 Prompt/Schema 版本或题面特判。"
+}
