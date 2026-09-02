@@ -1,0 +1,74 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "candidate_worktree_digest": "sha256:9218b44170bf7aecde8a473978f87265e370dd72206a9679b1830a79e772b39b",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "NOT_RUN",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T12:24:00+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:d06b8fea13cbe3fd4b6cf28560c62df0a554f4a7c68e6bfd3c57c8f636fddb79"
+    },
+    {
+      "id": "phase-c-design-and-failure-policy",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:2784b3667c2096b253be29daffa5c1ee67d1de04938d4ba3494396c459cf9502"
+    },
+    {
+      "id": "candidate-priority-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/application/engineering-conversation.md",
+      "sha256": "sha256:32c38e968c8fad50aabb62016d764666a2e00215599b77b35a29752630d8a282"
+    },
+    {
+      "id": "candidate-finding-277",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
+      "sha256": "sha256:0e3f09602fe4035387c69b86ab06b12e2ec3326bd0fa87e07d99df6cb1c0e1bc"
+    },
+    {
+      "id": "candidate-findings-index",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/README.md",
+      "sha256": "sha256:f387844ef234e4ed45aaa447019e2f6901230823a32897f32ee32850ef3e53b1"
+    },
+    {
+      "id": "candidate-agent-ordering",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:67c32a2946e3a03baa5c982c933cf92fa2569cdcdd708cc033598850a15904c2"
+    },
+    {
+      "id": "candidate-agent-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:261dd394014eb30d648a9b0b9e29637bbd4a53acc2a5c0ed04741e225f155856"
+    },
+    {
+      "id": "exact-source-behavior-reference",
+      "scope": "source",
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
+      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [],
+  "earliest_divergence": "phase-c-evidence-pending",
+  "next_action": "开发继续提交当前 Application-owned 通用 cognition/source candidate projection；保持 docs.py check、定向回归和 plan gate 通过。下一步必须在真实 Browser 链上运行至少两个未参与实现的异质问题及一段语义追问，取得 fresh Reviewer、引用和 loopback 证据，并做 source-only 对照证明世界模型的非 locator 增益。不得新增 Agent 协议、Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse；普通失败按最早通用责任层继续修复，不能暂停、重新授权或自行晋级。"
+}
