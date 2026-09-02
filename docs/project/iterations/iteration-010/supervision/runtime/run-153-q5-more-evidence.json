@@ -1,0 +1,40 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-153-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:805006007a39808f1f2ba55f1b326eb50dff4f383069c31f0907868c60ba4c8b",
+  "turn_scope_sha256": "sha256:4c560aae575e9a622e4afcdcc65c21969fcb26e79a69fb6dbbc18cf2945e8543",
+  "terminal_sha256": "sha256:926fc524834065d3355e1b07e63d358eb598a108b2be992e61831d836a4cf97d",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 5,
+  "conversation_count": 4,
+  "provider_dispatch_count": 23,
+  "request_retry_count": 0,
+  "q1_status": "APPROVED",
+  "q2_status": "APPROVED",
+  "q3_status": "NO_MODEL_CALLS_REQUIRES_BROWSER_CLARIFICATION_EVIDENCE",
+  "q4_status": "APPROVED",
+  "q5_status": "MORE_EVIDENCE_WITHOUT_COMPLETING_REVIEW_LOOP",
+  "q5_primary_call": {
+    "model_call_id": "model_call_715bef08ba6d49cdac5251026e293580",
+    "output_digest": "sha256:28c715f44287c6e713eacbf0f5b85d51c99aa2dc00223bfdc56299060fdb04a8",
+    "action": "FINISH",
+    "citation_count": 2
+  },
+  "q5_reviewer_call": {
+    "model_call_id": "model_call_9ddfe9da259f4b138560a4a16bc7d710",
+    "output_digest": "sha256:787abd78f60305f23ee7a6d5e1c9f0a8bbd8c585bdafe5ece96b7abbb64e244e",
+    "output_normalization": "IDENTITY",
+    "top_level_shape": "{verdict,findings}",
+    "verdict": "MORE_EVIDENCE",
+    "finding_summary": "Reviewer requires direct UmsAdminService.java @Transactional evidence, verifiable source locations, and cache/JWT implementation evidence before accepting the q5 claims."
+  },
+  "q5_continuation": {
+    "second_primary_dispatched": false,
+    "second_reviewer_dispatched": false,
+    "approved_delivery": false
+  },
+  "assessment": "q1, q2, and q4 each reached fresh Reviewer APPROVED with real source citations. q3 produced no model calls and needs independent browser/trajectory clarification evidence. q5 reached a valid FINISH and a strict, parseable Reviewer MORE_EVIDENCE, but no bounded evidence-retrieval/review continuation or APPROVED delivery occurred before sealing. This run is incomplete and is not acceptance or ADVANCE evidence."
+}
