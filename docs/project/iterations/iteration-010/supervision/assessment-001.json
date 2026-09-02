@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
-  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
-  "candidate_worktree_digest": "sha256:5c8590c1aad9938f7af7086eb9bb6cd538d5866987c78809e45856c9bd00b219",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "candidate_worktree_digest": "sha256:5dd410c24179db5f664b347e39b3c3ae069a27c08d1fca93b7125540c8773c7c",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T10:29:14+08:00",
+  "assessed_at": "2026-09-02T10:35:30+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
