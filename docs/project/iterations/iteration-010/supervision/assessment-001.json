@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:6feadabcb826cfcdc204f51eacfc9c9c6bc28214e41e27092bce9f14f9e70473",
+  "candidate_worktree_digest": "sha256:744fb323baf413e13a8ca9981be238d9d13de549257e7c18568c7995f11418d4",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T12:03:00+08:00",
+  "assessed_at": "2026-09-02T12:08:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -45,7 +45,7 @@
       "id": "candidate-agent-tests",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:ea51d2cce3485979af330ff0abeaf8aba180209610e8386b6fd821124fed7a81"
+      "sha256": "sha256:b4b52e6e6e902b7ee3ba56a3eb24c24ecd495b5af662cffdb0d68ee463ca3f9d"
     },
     {
       "id": "candidate-findings-index",
@@ -70,5 +70,5 @@
   ],
   "defects": [],
   "earliest_divergence": "phase-c-evidence-pending",
-  "next_action": "开发继续完成并提交当前 Application-owned 通用 candidate-ordering sidecar；先同步 iteration manifest 的 system_contract_set_digest，使 docs.py check 与 plan gate 通过，再以 run-156 sealed payload 证明固定 8-action 内未读 declaration/effect candidate 被保留并稳定前置。随后用至少两个未参与实现的异质问题和一段语义追问贯通真实 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web，并记录世界模型消融结果。不得新增 Agent 协议、Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse；普通失败继续在当前阶段按最早通用责任层修复，不能暂停、重新授权或自行晋级。"
+  "next_action": "开发继续完成并提交当前 Application-owned 通用 candidate-ordering sidecar；当前 docs.py check 已通过，提交前保持 generated manifest 一致并运行 plan gate。随后以 run-156 sealed payload 证明固定 8-action 内未读 declaration/effect candidate 被保留并稳定前置，再用至少两个未参与实现的异质问题和一段语义追问贯通真实 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web，并记录世界模型消融结果。不得新增 Agent 协议、Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse；普通失败继续在当前阶段按最早通用责任层修复，不能暂停、重新授权或自行晋级。"
 }
