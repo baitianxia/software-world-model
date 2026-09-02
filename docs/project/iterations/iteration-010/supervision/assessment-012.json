@@ -1,0 +1,79 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "candidate_worktree_digest": "sha256:5dd410c24179db5f664b347e39b3c3ae069a27c08d1fca93b7125540c8773c7c",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T10:56:30+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:9aafd50591485feed4cadd84120220edadb6c0cc2461c21644f8308309ffdedc"
+    },
+    {
+      "id": "phase-c-design-and-failure-policy",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:0a6881a627e3b3a81eaedaf5812a85f2bdfb74f43a8ed094d30c0ff3a69bfc77"
+    },
+    {
+      "id": "model-boundary-recovery-classification",
+      "scope": "candidate",
+      "path": "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py",
+      "sha256": "sha256:a9929a73a7cc66adbf60245afa48b26dcb17281a5461bf09f2023bd8a9f2bf51"
+    },
+    {
+      "id": "turn-failure-recovery-owner",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:e237e2668636e98037bc13059e29ae3d84dde36c3b6ca03eed16bf52575a0454"
+    },
+    {
+      "id": "action-shape-recovery-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-276.md",
+      "sha256": "sha256:8380bda7d4fed4e899ea81c0bf077a69a96b2ee56e986e2b91e82b9f476e7317"
+    },
+    {
+      "id": "agent-loop-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
+    },
+    {
+      "id": "exact-source-behavior-reference",
+      "scope": "source",
+      "path": "mall-admin/src/main/java/com/macro/mall/service/UmsAdminService.java",
+      "sha256": "sha256:f0c401f3284df35f7729e25e0ed3663e5c05a37fbc77c14e33d312578162406b"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "agent-evidence-planning-and-review-loopback",
+      "summary": "run-156 的 q5 在已成功调用 World Model 后消耗 8 个 tool actions 才 FINISH；fresh Reviewer 正确返回 MORE_EVIDENCE，指出接口事务注解、可验证源码定位、JWT/filter 与资源缓存路径均未直接证实。由于 executor 在 tool_actions 达到 8 时对 MORE_EVIDENCE 直接 BUDGET_EXHAUSTED，未形成证据补全 loopback。最早偏差是通用 Agent 的认知命中/Source 选择与完成判断，不能以 q5 特判或简单抬高预算掩盖。历史 run-149/run-151 的 Reviewer malformed output 仍需在同一模型边界独立处理。",
+      "evidence_ids": [
+        "phase-c-design-and-failure-policy",
+        "turn-failure-recovery-owner",
+        "agent-loop-tests"
+      ]
+    }
+  ],
+  "earliest_divergence": "agent-evidence-planning-and-review-loopback",
+  "next_action": "开发继续且不暂停、不申请授权：基于 run-156 q5 的真实轨迹先做通用根因分析，改进 Agent 对 Reviewer MORE_EVIDENCE 的证据缺口回填和 Source/World Model 选择，使其在同一会话中继续调查并复审；不得增加 q5 题面分支、简单提高 tool/dispatch 上限、增加 Prompt/Schema 版本或切换 Provider。用原 q5 及至少两个异质问题验证完整 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web，并保留严格失败关闭与收据。"
+}
