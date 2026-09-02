@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:278ee3f663f0e0308196766c68ef3cf0bac9c76923a7b534d10d324350246abd",
+  "candidate_worktree_digest": "sha256:d7d100f18200fd65db33d542012a98481af216f4d598dc06bdaf4f36c7e011af",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "REWORK",
+  "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T12:12:00+08:00",
+  "assessed_at": "2026-09-02T12:18:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -45,7 +45,7 @@
       "id": "candidate-agent-tests",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:59cc0d30213169d8e0d5c84ec217545ef6b265a2908d5476ac200075e95bb93c"
+      "sha256": "sha256:261dd394014eb30d648a9b0b9e29637bbd4a53acc2a5c0ed04741e225f155856"
     },
     {
       "id": "candidate-findings-index",
@@ -68,18 +68,7 @@
     "three-heterogeneous-tasks-and-semantic-followup",
     "world-model-material-gain-without-material-regression"
   ],
-  "defects": [
-    {
-      "severity": "MAJOR",
-      "owner_layer": "agent-cognition-source-candidate-dedup",
-      "summary": "最新通用 candidate projection 将已存在的 cognition navigation locator 在第二次 cognition observation 中重复向 Source Broker 签发；Broker 返回既有 opaque identity 后被 known_references 判为不一致，导致 unrelated repository 的既有 cognition→Source 回归 34 项中 1 项失败并 fail-closed。",
-      "evidence_ids": [
-        "candidate-agent-ordering",
-        "candidate-agent-tests",
-        "candidate-priority-contract"
-      ]
-    }
-  ],
-  "earliest_divergence": "agent-cognition-source-candidate-dedup",
-  "next_action": "开发继续做一个通用修复：在 `_register_cognition_source_read_candidates` 中按 exact `(source_revision, provenance.locator)` 识别已经存在且可用的 cognition-navigation candidate 并跳过重复 Broker 签发；同时保留同文件 line/literal hit 不等于 exact cognition locator 的语义，仍为其签发新的 exact candidate。不得放宽 authority identity 校验、改测试掩盖、引入题面/工程特判或新增协议/Prompt/Schema；重跑失败测试及 lightweight agent/model/cognition 定向套件，随后再绑定新 candidate digest。CORRECT 不暂停开发、不重新授权，task_should_stop=false。"
+  "defects": [],
+  "earliest_divergence": "phase-c-evidence-pending",
+  "next_action": "开发继续提交当前 Application-owned 通用 cognition/source candidate projection；保持 docs.py check、定向回归和 plan gate 通过。下一步必须在真实 Browser 链上运行至少两个未参与实现的异质问题及一段语义追问，取得 fresh Reviewer、引用和 loopback 证据，并做 source-only 对照证明世界模型的非 locator 增益。不得新增 Agent 协议、Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse；普通失败按最早通用责任层继续修复，不能暂停、重新授权或自行晋级。"
 }
