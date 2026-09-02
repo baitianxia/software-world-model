@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T12:38:00+08:00",
+  "assessed_at": "2026-09-02T12:50:14+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -71,15 +71,17 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "browser-turn-scope-orchestration",
-      "summary": "run-157 的 sealed turn-scope 要求 ordinal 3 为独立 context_isolation_probe、ordinal 4 才为 search_document_lifecycle；但 terminal/Ark DB 记录在 q1/q2 后直接执行 q4（calls 15-25），形成两 conversation、四 turns、25 dispatch，未产生 ordinal 3 的新 conversation/clarification 证据，随后按 CORRECT 停止且 q5 未执行。该偏差是 Browser/turn 编排，不是 knowledge、Source bridge、Agent 认知、Reviewer 或 provider；当前 run 不能用于 Phase C 验收，不能通过重标或复用旧页面补齐。",
+      "owner_layer": "application-agent-citation-binding",
+      "summary": "run-158 的 q5 在首次 Reviewer 返回 MORE_EVIDENCE 后，Primary 读取接口源码并提交 FINISH，但引用选择没有遵守每个 Observation 的本地 citation ordinal：call33 选择 obs4/citation1、obs3/citation2、obs5/citation3，而 call33 输入中 obs3、obs4、obs5 各自仅有 citation_index=1。Application 在 fresh Reviewer 前以 CONTROL_STATE_DENIED 正确拒绝，33 次 dispatch 后未产生新的 Reviewer/Delivery。terminal.json 文件 SHA-256 为 sha256:5c9bc0da0d83e61fc4c1224a5a8de6c8253b1864740644e61f3b1c74cf63cf14，terminal digest 为 sha256:74a060cdb6a0defd60545695649cd0d582153fee54833f0fd6c7a59adefab1ae。该偏差最早发生在通用 Application Agent citation-binding/action planning 边界，不是 cognition construction、Source Broker/Worker、Provider transport 或 Reviewer；run-158 必须按 REWORK/NOT_RUN 处理。",
       "evidence_ids": [
         "phase-c-objective-and-boundary",
         "phase-c-design-and-failure-policy",
-        "candidate-priority-contract"
+        "candidate-priority-contract",
+        "candidate-agent-ordering",
+        "candidate-agent-tests"
       ]
     }
   ],
-  "earliest_divergence": "browser-turn-scope-orchestration",
-  "next_action": "封存 run-157 的真实 terminal/DB 为 REWORK/NOT_RUN；不得重标、复用或继续其会话。按同一 clean candidate 建 fresh successor 并在每一步核对 conversation ID 与空上下文：q1+q2 同一会话，q3 新会话且只提交零上下文 clarification，q4 新会话，q5 新会话；loader/turn-scope/refs 通过后再启动固定 launcher。保持当前产品代码、Prompt/Schema、Reviewer、预算和 Source scope 不变，普通失败仍按最早责任层处理。"
+  "earliest_divergence": "application-agent-citation-binding",
+  "next_action": "封存 run-158 的真实 terminal/DB 与 q5 call33 原始证据为 REWORK/NOT_RUN；不得重试、重标或复用其会话。仅修复通用 Application Agent 的本地 Observation→Citation 绑定恢复：严格保留每个 observation 的局部 ordinal 与 opaque identity，在 rejected receipt 上向同一 Primary 追加一次机械诊断/重规划；不自动 renumber、过滤、替换或合成 Citation，不改 Prompt/Schema/Provider/Reviewer、预算或题面规则。以至少两个异质 fixture 覆盖首次错误后合法本地索引可进入 fresh Reviewer、再次错误仍 fail-closed，以及新 Source Observation 形成新 prefix 时的有界计数；clean commit 后建立 fresh successor，重新取得完整 q1–q5 loopback 证据。"
 }
