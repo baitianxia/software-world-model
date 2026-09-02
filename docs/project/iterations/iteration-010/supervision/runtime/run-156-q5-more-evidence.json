@@ -1,0 +1,67 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-156-phase-c-loopback",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:708eff583a289f9cf505055155f304bceca8d9339092b63418c336837d524c3f",
+  "turn_scope_sha256": "sha256:158f3f0720190d44011b8a2fdac77aee74909bae1ef347135051771552e5d40d",
+  "launch_file_sha256": "sha256:43bcba7369d90f51fa1eeba11306d4887602a6032a2567144bc909abc97db37d",
+  "terminal_file_sha256": "sha256:624efc0af86d0592d3adbd20a1a614525cbb609c11861e3a4cc4a1e927e83d9b",
+  "terminal_digest": "sha256:e5adc144fffaaee6ba41c19f612877f7deccd261dd687393414b3bec707ae9a3",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 5,
+  "conversation_count": 4,
+  "provider_dispatch_count": 29,
+  "request_retry_count": 0,
+  "q1_status": "APPROVED",
+  "q2_status": "APPROVED",
+  "q3_status": "NO_MODEL_CALLS_REQUIRES_BROWSER_CLARIFICATION_EVIDENCE",
+  "q4_status": "APPROVED",
+  "q5_status": "MORE_EVIDENCE_WITHOUT_COMPLETING_REVIEW_LOOP",
+  "q1": {
+    "primary_call_id": "model_call_fc872294b1374133b6ade0e2c8aa7eed",
+    "primary_output_digest": "sha256:174b94df625668da2cd7448ee874bd903aba9b55269b60032d7712f6dbc0970d",
+    "primary_citations": 2,
+    "reviewer_call_id": "model_call_a6fcffc3edd4474e999c1398fe90a4ae",
+    "reviewer_output_digest": "sha256:474f09b16a6c8a6a2e886f647d49e2372e7eb305d1118f3f34909459df57ae5f",
+    "reviewer_verdict": "APPROVED"
+  },
+  "q2": {
+    "primary_call_id": "model_call_e8314367cc8d4602949e5d32e18fe57a",
+    "primary_output_digest": "sha256:771d21068576b8f1890c039794d010dcfc89a0013561991333ca7d0aea6b195f",
+    "primary_citations": 1,
+    "reviewer_call_id": "model_call_e605d4ece09a40de9de48b14659315bc",
+    "reviewer_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb",
+    "reviewer_verdict": "APPROVED"
+  },
+  "q4": {
+    "primary_call_id": "model_call_f7e4b3a0e5b44426873c6a4b600aa999",
+    "primary_output_digest": "sha256:89cf332aad57cda155e031a29f8aa018b3ea96cef0153673f43d636b14da4230",
+    "primary_citations": 4,
+    "reviewer_call_id": "model_call_aa19d82a2ec34134b4657fea026925a6",
+    "reviewer_output_digest": "sha256:474f09b16a6c8a6a2e886f647d49e2372e7eb305d1118f3f34909459df57ae5f",
+    "reviewer_verdict": "APPROVED"
+  },
+  "q5": {
+    "primary_call_id": "model_call_0741d131396b44bd9deb9da59c3f531e",
+    "primary_output_digest": "sha256:80159d31b2fe89a88051ff1fcdefa71af008d239738c7c15545db83e6085923d",
+    "primary_citations": 4,
+    "reviewer_call_id": "model_call_0aeb77eefe374645a163da556289be4a",
+    "reviewer_output_digest": "sha256:bfd5bd29cec57b2e31a1706883da7916873a8741540379b3fb803491edd3d607",
+    "reviewer_verdict": "MORE_EVIDENCE",
+    "reviewer_finding_count": 4,
+    "earliest_failure_layer": "PRIMARY_AGENT_EVIDENCE_PLANNING_AND_FIXED_BUDGET",
+    "evidence": "The Primary had read_candidates for UmsAdminService.java:L65-L66, UmsResourceServiceImpl.java:L36/L48, and JwtAuthenticationTokenFilter.java:L36-L56, plus cognition candidates for the interface and filter, but did not read them before asserting transaction, cache, and JWT timing claims. The fresh Reviewer correctly requested those missing supports. At step 10 the effective tool catalog was empty, so Application closed with BUDGET_EXHAUSTED; no Reviewer retry or fabricated Citation occurred."
+  },
+  "q5_continuation": {
+    "second_primary_dispatched": false,
+    "second_reviewer_dispatched": false,
+    "approved_delivery": false
+  },
+  "browser_evidence": {
+    "artifact_present": false,
+    "note": "No browser-evidence.json or Delivery receipt was present in the run directory at seal; q3 clarification therefore remains dependent on independent browser/DOM evidence."
+  },
+  "assessment": "q1, q2, and q4 each reached fresh Reviewer APPROVED with real SOURCE_READ citations. q3 was isolated as a clarification turn with no model calls. q5 reached a valid FINISH with real citations, but the independent Reviewer returned MORE_EVIDENCE for four unsupported claims and the fixed tool budget then closed the turn. This run is incomplete and is not acceptance or ADVANCE evidence."
+}

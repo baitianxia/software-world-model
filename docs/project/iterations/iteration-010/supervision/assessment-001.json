@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T10:37:10+08:00",
+  "assessed_at": "2026-09-02T10:52:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -65,8 +65,8 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "generic-model-boundary-and-review-recovery",
-      "summary": "Primary action-specific 字段混用已由同一 Agent 一次受控重规划处理，严格 decoder、rejected receipt 与定向测试均保留；但 run-149/run-151 的 Reviewer nested answer malformed output 仍未完成同责任层的通用恢复实验。候选当前 clean，但尚无 fresh successor 证明完整 cognition→Source→Citation→fresh Reviewer→Web 纵切。",
+      "owner_layer": "primary-agent-evidence-planning-and-fixed-budget",
+      "summary": "run156 在 exact clean candidate 上证明 q1/q2/q4 可完成真实 Citation 与 fresh Reviewer，但 q5 的 Primary 在固定 tool budget 内未读取已提供的 UmsAdminService、UmsResourceServiceImpl 与 JwtAuthenticationTokenFilter 证据候选，随后 Reviewer 正确返回 MORE_EVIDENCE 并按现行契约以 BUDGET_EXHAUSTED fail-closed。该 clean candidate 仍缺 q5 APPROVED Delivery、q3 浏览器证据与完整 cognition→Source→Citation→fresh Reviewer→Web 纵切；不得通过 Reviewer retry 或恢复已耗尽预算掩盖此缺口。",
       "evidence_ids": [
         "model-boundary-recovery-classification",
         "turn-failure-recovery-owner",
@@ -74,6 +74,6 @@
       ]
     }
   ],
-  "earliest_divergence": "generic-model-output-boundary-and-ordinary-turn-recovery",
-  "next_action": "开发继续且不暂停、不申请授权：基于 run-149/run-151 原始 receipts 做同责任层 Reviewer malformed-output 实验；只采用一个不改变答案语义、世界模型、Agent 协议版本或题面规则的通用恢复方案，保留严格 decoder、独立 Reviewer、Citation authority 与失败收据，再用 fresh Ark logical successor 先验证原题及两个异质问题后贯通五个交互。不得切 DeepSeek、增加 Prompt/Schema 版本或题面特判。"
+  "earliest_divergence": "primary-agent-evidence-planning-and-fixed-budget",
+  "next_action": "开发继续且不暂停、不申请授权：只在 Application-owned Primary Agent loop 与既定八个 tool-action 上限内，做一个通用的证据候选优先级/计划收敛改进，使 Reviewer 所需的 material declarations 在 FINISH 前被读取；不得在 remaining=0 后恢复工具、扩大预算、重试 Reviewer、放宽 decoder、增加 Prompt/Schema/协议版本或加入题面/路径特判。先以 q5 与至少两个异质问题定向复验，再建立 fresh Ark successor 贯通五个交互。"
 }
