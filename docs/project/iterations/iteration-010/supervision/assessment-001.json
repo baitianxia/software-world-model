@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
   "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
-  "candidate_worktree_digest": "sha256:5d87139774bfefa6efc5ad5c54d509fc653d9c0e249f5895c7ad996a2b4071a3",
+  "candidate_worktree_digest": "sha256:5c8590c1aad9938f7af7086eb9bb6cd538d5866987c78809e45856c9bd00b219",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T10:18:48+08:00",
+  "assessed_at": "2026-09-02T10:29:14+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -33,13 +33,19 @@
       "id": "turn-failure-recovery-owner",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:05d2a9c9943540da42cde279591d6b513fa600f2fc5dd49e017765bb5bf32c14"
+      "sha256": "sha256:e237e2668636e98037bc13059e29ae3d84dde36c3b6ca03eed16bf52575a0454"
     },
     {
       "id": "action-shape-recovery-finding",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-276.md",
-      "sha256": "sha256:6e663c40f2101494d879f97917887aafd64414f5d6cbc37a4d4906bec7a14abe"
+      "sha256": "sha256:8380bda7d4fed4e899ea81c0bf077a69a96b2ee56e986e2b91e82b9f476e7317"
+    },
+    {
+      "id": "action-shape-recovery-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
     },
     {
       "id": "exact-source-behavior-reference",
@@ -60,7 +66,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "generic-model-boundary-and-turn-recovery",
-      "summary": "run-150/run-155 的 Primary action-specific 字段混用已定位并已有一次同一 Agent 受控重规划实现，但 run-149/run-151 的 Reviewer nested answer 仍未得到同层通用恢复；当前候选尚未 clean，不能证明完整 Web 纵切。",
+      "summary": "当前候选把 run-150/run-155 的 Primary action-specific 字段混用归类为同一 Agent 可受控恢复，并保留 rejected receipt；但 run-149/run-151 的 Reviewer nested answer malformed output 仍未在同一责任层完成通用恢复实验。候选仍为 dirty，尚无 fresh successor 证明完整 cognition→Source→Citation→fresh Reviewer→Web 纵切。",
       "evidence_ids": [
         "model-boundary-recovery-classification",
         "turn-failure-recovery-owner",
