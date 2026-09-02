@@ -4,7 +4,7 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:0bb0f832ed3b5f8ffcce63e3f07292eed2336ce2d79d7fbf042823549949d79f",
+  "candidate_worktree_digest": "sha256:cade2d5c8dc90e90dce4b3b9a4a7644eb6ef7c49f59723b1e13b32ea4b32ee9d",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
@@ -45,13 +45,13 @@
       "id": "candidate-agent-ordering",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:5564942e2be49192c149275a6bf403de1c9ce50d53a6a0dfb26914d74e682bc2"
+      "sha256": "sha256:7177650f2818e3d336e8a00105d5fc99d92c17412030d2eb7603af8b3e1419d7"
     },
     {
       "id": "candidate-agent-tests",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
+      "sha256": "sha256:8e9814c80fb06a3604d5cd369873be6b85369769003b9b34aadc93387191c557"
     },
     {
       "id": "candidate-priority-contract",
