@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:a10d7c0793d3a38b00edabdf294f79e14a6dabbc066c9d3eba8a6376a166e18b",
+  "candidate_worktree_digest": "sha256:0bb0f832ed3b5f8ffcce63e3f07292eed2336ce2d79d7fbf042823549949d79f",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "NOT_RUN",
+  "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T11:24:00+08:00",
+  "assessed_at": "2026-09-02T11:29:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -45,7 +45,19 @@
       "id": "candidate-agent-ordering",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:12347d0e4b216f339dd6465a10f4ada4c72700764d26499b8a346f5de1e22b51"
+      "sha256": "sha256:5564942e2be49192c149275a6bf403de1c9ce50d53a6a0dfb26914d74e682bc2"
+    },
+    {
+      "id": "candidate-agent-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
+    },
+    {
+      "id": "candidate-priority-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/application/engineering-conversation.md",
+      "sha256": "sha256:2fa38d06f5de8bf7021129d934d0b79e0682cc6261548297f1d8c9d92f43a5ac"
     },
     {
       "id": "action-shape-recovery-finding",
@@ -74,7 +86,18 @@
     "three-heterogeneous-tasks-and-semantic-followup",
     "world-model-material-gain-without-material-regression"
   ],
-  "defects": [],
-  "earliest_divergence": "phase-c-evidence-pending",
-  "next_action": "开发继续完成当前 Application-owned 通用 candidate 呈现排序并补行为测试；先用 run-156 sealed payload 证明已有未读 declaration/effect candidate 在固定 8-action 内被保留并前置，再用至少两个未参与实现的异质问题验证 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web。不得新增 Agent 协议/Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse。"
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "agent-candidate-projection-compatibility",
+      "summary": "当前通用 cognition candidate ordering 增量在 cognition 重访时用 dataclasses.replace 将 typed navigation metadata 写回既有 LightweightReadCandidate；这改变了 candidate 的值相等性并破坏现有 unrelated-repository 回归（test_cognition_provenance_becomes_brokered_source_read_in_unrelated_repo，11项中1项失败）。opaque identity/index 未变但既有对象契约已回归，不能提交。",
+      "evidence_ids": [
+        "candidate-agent-ordering",
+        "candidate-agent-tests",
+        "candidate-priority-contract"
+      ]
+    }
+  ],
+  "earliest_divergence": "agent-candidate-projection-compatibility",
+  "next_action": "开发继续在同一 Application-owned 通用层修复 metadata enrichment 的兼容性：保持既有 LightweightReadCandidate 值/公开语义与 read_index/opaque identity 不变，同时以旁路或可证明不影响 equality 的内部索引承载 typed priority；不得只改测试掩盖回归，不得新增协议/Prompt/Schema、题面特判、Reviewer retry、预算恢复或扩大 fuse。修复后先重跑 lightweight agent 全部回归，再以 run-156 sealed payload 和至少两个异质 fixture 验证 candidate 前置确实节省固定预算。"
 }
