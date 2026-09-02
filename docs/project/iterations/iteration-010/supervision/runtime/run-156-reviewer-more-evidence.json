@@ -1,0 +1,48 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-156-phase-c-loopback",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:708eff583a289f9cf505055155f304bceca8d9339092b63418c336837d524c3f",
+  "turn_scope_sha256": "sha256:158f3f0720190d44011b8a2fdac77aee74909bae1ef347135051771552e5d40d",
+  "terminal_file_sha256": "sha256:624efc0af86d0592d3adbd20a1a614525cbb609c11861e3a4cc4a1e927e83d9b",
+  "terminal_digest": "sha256:e5adc144fffaaee6ba41c19f612877f7deccd261dd687393414b3bec707ae9a3",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 5,
+  "conversation_count": 4,
+  "provider_dispatch_count": 29,
+  "request_retry_count": 0,
+  "completed_interactions": {
+    "q1": "FRESH_REVIEW_APPROVED_AND_DELIVERED",
+    "q2": "FRESH_REVIEW_APPROVED_AND_DELIVERED",
+    "q3": "APPLICATION_CLARIFICATION_WITH_ZERO_MODEL_CALLS",
+    "q4": "FRESH_REVIEW_APPROVED_AND_DELIVERED",
+    "q5": "FRESH_REVIEW_MORE_EVIDENCE_NOT_DELIVERED"
+  },
+  "reviewer_evidence": {
+    "reviewer_call_count": 4,
+    "approved_count": 3,
+    "more_evidence_count": 1,
+    "q5_verdict": "MORE_EVIDENCE",
+    "q5_model_call_id": "model_call_0aeb77eefe374645a163da556289be4a",
+    "q5_output_digest": "sha256:bfd5bd29cec57b2e31a1706883da7916873a8741540379b3fb803491edd3d607",
+    "q5_finding_summary": "Reviewer identified unsupported interface transaction annotation, unverifiable line-range locators, and unverified JWT/security and resource-cache permission-refresh claims; it correctly withheld delivery."
+  },
+  "transport": {
+    "provider": "VOLCENGINE_ARK",
+    "tls_handshake_attempt_count": 29,
+    "tls_handshake_success_count": 29,
+    "http_dispatch_count": 29,
+    "pre_dispatch_tls_failure_count": 0,
+    "post_dispatch_outcome_unknown_count": 0,
+    "request_retry_count": 0,
+    "actual_model_fingerprint": "glm-5.3"
+  },
+  "deepseek": {
+    "provider_dispatch_count": 0,
+    "dispatch_admission_decision": "DENIED_PRICING_CHECK",
+    "same_request_retry_count": 0
+  },
+  "assessment": "q1, q2, and q4 each completed the cognition/source/answer/citation/fresh-review path with APPROVED delivery; q3 correctly used an isolated zero-dispatch clarification. q5 reached a valid FINISH, then the independent Reviewer returned MORE_EVIDENCE with concrete evidence gaps and no delivery. This demonstrates Reviewer rejection of unsupported claims, but does not satisfy Phase C acceptance because q5 lacks evidence-retrieval/review loopback and the run has no independent current-Codex comparison or proof of material world-model gain. It is not ADVANCE evidence."
+}
