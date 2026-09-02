@@ -1,0 +1,61 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "candidate_worktree_digest": "sha256:334b59a1165a8e29d14a81a713cbccae16db9f150795933103934b4612fa17cc",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T09:11:21+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:0d010ed1bd13210a09a4e243e144841c628877e05db9cdf40d3cacb643f8171f"
+    },
+    {
+      "id": "agent-source-gap-loop-owner",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:07f82b32f9e13a7aedecf47db78d78d937346cc0cacd4c8bf03b7bb8c0486ac7"
+    },
+    {
+      "id": "declaration-evidence-available-at-exact-source",
+      "scope": "source",
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
+      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
+    },
+    {
+      "id": "citation-replan-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-275.md",
+      "sha256": "sha256:4eb0791b5b7a23ebab94ae99a5a068824bf5984192f9e5cb2000d1ac70d62f6d"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration",
+    "answer-citation-fresh-review-loopback-web"
+  ],
+  "unresolved_requirements": [
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "agent-source-gap-and-review-loop",
+      "summary": "认知结果已经包含声明与实现的 exact provenance，但答案路径未把声明候选纳入 Source Gap 补证；审核后又将可补证结论降为 Unknown，导致世界模型集成产生物质质量退步。",
+      "evidence_ids": [
+        "agent-source-gap-loop-owner",
+        "declaration-evidence-available-at-exact-source",
+        "citation-replan-finding"
+      ]
+    }
+  ],
+  "earliest_divergence": "agent-source-gap-selection-and-review-loopback",
+  "next_action": "让同一 Agent 在发现声明/实现闭包或 Reviewer 证据缺口时回到现有 cognition/source 调查动作，读取缺失 exact source 后再生成并 fresh review；以订单问题和两个陌生异质问题验证，保持通用实现，不增加 Prompt/Schema/协议或题面特判。"
+}
