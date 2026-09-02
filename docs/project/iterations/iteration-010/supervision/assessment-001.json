@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
   "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
-  "candidate_worktree_digest": "sha256:1b8579bb850d867c73c6a5e84fcf4c866619493452cbcb54d4e154d1c706589c",
+  "candidate_worktree_digest": "sha256:a10d7c0793d3a38b00edabdf294f79e14a6dabbc066c9d3eba8a6376a166e18b",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "REWORK",
+  "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T11:17:00+08:00",
+  "assessed_at": "2026-09-02T11:24:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -74,17 +74,7 @@
     "three-heterogeneous-tasks-and-semantic-followup",
     "world-model-material-gain-without-material-regression"
   ],
-  "defects": [
-    {
-      "severity": "MAJOR",
-      "owner_layer": "development-direction-and-root-cause-attribution",
-      "summary": "当前 dirty 增量只改 Docs/Finding，将 run156 q5 误归因为 cognition direct-closure 与 candidate 不够紧凑。实际 sealed 第二次 SEARCH_COGNITION 已将 updateRole controller/implementation/interface 以同分前三项紧邻返回，read indexes 4/5/6 可直接执行；Primary 读了 4/5 却跳过 6，后续也已拥有 UmsResourceServiceImpl 11/12 与 JwtAuthenticationTokenFilter 20。因此新增 knowledge direct closure 不是这次失败的因果修复，且当前尚无任何 product code/test 增量。",
-      "evidence_ids": [
-        "dirty-candidate-priority-contract",
-        "dirty-candidate-finding-277"
-      ]
-    }
-  ],
-  "earliest_divergence": "development-direction-and-root-cause-attribution",
-  "next_action": "停止提交当前把 q5 归因为 knowledge direct-closure 缺失的 FINDING-010-277/Owner 文档；唯一下一开发动作是只在 Application-owned Primary input/loop 内，从已有未读 candidates、已读 observations 与 fixed remaining budget 机械生成通用计划收敛/候选优先级，不重绑已暴露 index、不新增 Prompt/Schema/协议、不恢复工具或扩大 8-action 上限；先以 run156 sealed payload 与两个异质 synthetic fixture 证明因果效果。"
+  "defects": [],
+  "earliest_divergence": "phase-c-evidence-pending",
+  "next_action": "开发继续完成当前 Application-owned 通用 candidate 呈现排序并补行为测试；先用 run-156 sealed payload 证明已有未读 declaration/effect candidate 在固定 8-action 内被保留并前置，再用至少两个未参与实现的异质问题验证 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web。不得新增 Agent 协议/Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse。"
 }
