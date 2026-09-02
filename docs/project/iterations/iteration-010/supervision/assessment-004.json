@@ -1,0 +1,62 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "candidate_worktree_digest": "sha256:334b59a1165a8e29d14a81a713cbccae16db9f150795933103934b4612fa17cc",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "NOT_RUN",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T08:54:00+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:0d010ed1bd13210a09a4e243e144841c628877e05db9cdf40d3cacb643f8171f"
+    },
+    {
+      "id": "citation-replan-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/application/engineering-conversation.md",
+      "sha256": "sha256:5edfa4afb15c1922b00ee37817fcca46ae91c7e39db7e21279e1408e4a2cb4f6"
+    },
+    {
+      "id": "same-agent-citation-replan-implementation",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:07f82b32f9e13a7aedecf47db78d78d937346cc0cacd4c8bf03b7bb8c0486ac7"
+    },
+    {
+      "id": "citation-domain-heterogeneous-regression-fixtures",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:a19cae749c7abf306649b321c9190f2cc8c9ad36b708ae8284fb9b4778a359d8"
+    },
+    {
+      "id": "earliest-citation-selection-divergence",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-275.md",
+      "sha256": "sha256:4eb0791b5b7a23ebab94ae99a5a068824bf5984192f9e5cb2000d1ac70d62f6d"
+    },
+    {
+      "id": "exact-mall-source-revision",
+      "scope": "source",
+      "path": "mall-portal/pom.xml",
+      "sha256": "sha256:3e69329efddee8e48788acdcb866e9192bc678c8f1b97a44b73fce74e6733407"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [],
+  "earliest_divergence": "fresh-review-loopback-and-heterogeneous-evaluation-not-yet-executed",
+  "next_action": "在 exact clean candidate 7ad0839 上立即重放 run-145 的 q4，确认一次 citation-domain replan 后进入 fresh Reviewer，再完成其余四个交互和一个追问的浏览器链；将真实 Citation、审查和 loopback 证据写回后继续 Phase C，不新增 Prompt/Schema/协议或题面规则。"
+}
