@@ -7,9 +7,9 @@
   "candidate_worktree_digest": "sha256:cade2d5c8dc90e90dce4b3b9a4a7644eb6ef7c49f59723b1e13b32ea4b32ee9d",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "REWORK",
+  "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T11:29:00+08:00",
+  "assessed_at": "2026-09-02T11:47:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -80,18 +80,7 @@
     "three-heterogeneous-tasks-and-semantic-followup",
     "world-model-material-gain-without-material-regression"
   ],
-  "defects": [
-    {
-      "severity": "MAJOR",
-      "owner_layer": "agent-candidate-projection-compatibility",
-      "summary": "当前通用 cognition candidate ordering 增量在 cognition 重访时用 dataclasses.replace 将 typed navigation metadata 写回既有 LightweightReadCandidate；这改变了 candidate 的值相等性并破坏现有 unrelated-repository 回归（test_cognition_provenance_becomes_brokered_source_read_in_unrelated_repo，11项中1项失败）。opaque identity/index 未变但既有对象契约已回归，不能提交。",
-      "evidence_ids": [
-        "candidate-agent-ordering",
-        "candidate-agent-tests",
-        "candidate-priority-contract"
-      ]
-    }
-  ],
-  "earliest_divergence": "agent-candidate-projection-compatibility",
-  "next_action": "开发继续在同一 Application-owned 通用层修复 metadata enrichment 的兼容性：保持既有 LightweightReadCandidate 值/公开语义与 read_index/opaque identity 不变，同时以旁路或可证明不影响 equality 的内部索引承载 typed priority；不得只改测试掩盖回归，不得新增协议/Prompt/Schema、题面特判、Reviewer retry、预算恢复或扩大 fuse。修复后先重跑 lightweight agent 全部回归，再以 run-156 sealed payload 和至少两个异质 fixture 验证 candidate 前置确实节省固定预算。"
+  "defects": [],
+  "earliest_divergence": "phase-c-evidence-pending",
+  "next_action": "开发继续提交当前 sidecar candidate-ordering 实现并保持现有回归全通过；随后用 run-156 sealed payload 复放/等价验证证明固定 8-action 内未读 declaration/effect candidate 被稳定前置，再用至少两个未参与实现的异质问题和语义追问验证完整 cognition→Source→Answer/Citation→fresh Reviewer→loopback Web。不得新增 Agent 协议/Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse；只有独立阶段退出证据才可 ADVANCE。"
 }
