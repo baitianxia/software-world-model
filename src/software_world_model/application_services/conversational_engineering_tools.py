@@ -303,7 +303,9 @@ class EngineeringAgentEvidenceToolAdapter:
 
         Cognition provenance is navigation input only.  Every path is rebound
         through the request's Source Broker/Profile before the model can select
-        it, and only the later Worker read can create deliverable evidence.
+        it.  Only paths classified as SOURCE produce a navigation carrier;
+        other registered evidence classes produce no Source option, and only
+        the later Worker read can create deliverable evidence.
         """
 
         state = self._state_for_turn(request)
@@ -326,9 +328,25 @@ class EngineeringAgentEvidenceToolAdapter:
                 if provenance.path not in seen_paths:
                     unique.append(provenance)
                     seen_paths.add(provenance.path)
+
+            # Cognition can describe more than source text (for example a
+            # module descriptor).  Rebind every path through the current
+            # Source Profile before deciding whether it can become a source
+            # navigation capability.  An unbound or ambiguous path remains a
+            # hard authority failure; a bound non-SOURCE path simply has no
+            # source-read capability and stays in the cognition observation.
+            source_provenances: tuple[CognitionProvenance, ...] = tuple(
+                provenance
+                for provenance in unique
+                if self._source_broker.evidence_class_for_path(
+                    request=state.evidence_request,
+                    path=provenance.path,
+                )
+                is EngineeringEvidenceClass.SOURCE
+            )
             new_paths = tuple(
                 item.path
-                for item in unique
+                for item in source_provenances
                 if item.path
                 not in state.cognition_source_read_bindings_by_path
                 and not any(
@@ -349,7 +367,7 @@ class EngineeringAgentEvidenceToolAdapter:
                 )
 
             output: list[EngineeringAgentCitation] = []
-            for provenance in unique:
+            for provenance in source_provenances:
                 existing = state.cognition_source_read_bindings_by_path.get(
                     provenance.path
                 )

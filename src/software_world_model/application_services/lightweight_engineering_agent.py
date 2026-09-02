@@ -1290,24 +1290,45 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         if not provenances:
             return
 
-        navigation_candidates = self._tool.cognition_source_read_options(
-            request,
-            tuple(provenances),
-        )
-        if len(navigation_candidates) != len(provenances):
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "cognition Source read options do not cover the selected paths",
+        # The existing bridge may return no option for a provenance that the
+        # bound Source Profile classifies as a non-SOURCE resource.  Ask one
+        # path at a time so that this controlled omission is distinguishable
+        # from an option that binds the wrong path; the full cognition page is
+        # still retained in its cognition Observation.
+        candidates_by_path: dict[str, EngineeringAgentCitation] = {}
+        skipped_non_source_paths: list[str] = []
+        skipped_non_source_kinds: list[str] = []
+        skipped_non_source_digests: list[str] = []
+        for provenance in provenances:
+            navigation_candidates = self._tool.cognition_source_read_options(
+                request,
+                (provenance,),
             )
-        candidates_by_path = {
-            _citation_resource_locator(item.locator): item
-            for item in navigation_candidates
-        }
-        if len(candidates_by_path) != len(navigation_candidates):
-            raise DomainError(
-                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "cognition Source read options contain duplicate paths",
-            )
+            if not navigation_candidates:
+                skipped_non_source_paths.append(provenance.path)
+                skipped_non_source_kinds.append(provenance.evidence_kind)
+                skipped_non_source_digests.append(
+                    digest_of(provenance.to_payload()).value
+                )
+                continue
+            if len(navigation_candidates) != 1:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition Source read options do not bind one path",
+                )
+            candidate = navigation_candidates[0]
+            candidate_path = _citation_resource_locator(candidate.locator)
+            if candidate_path in candidates_by_path:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition Source read options contain duplicate paths",
+                )
+            if candidate_path != provenance.path:
+                raise DomainError(
+                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                    "cognition Source read option binds another path",
+                )
+            candidates_by_path[candidate_path] = candidate
         known_references = {
             item.citation.citation_ref for item in read_candidates
         }
@@ -1316,10 +1337,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         for provenance in provenances:
             candidate = candidates_by_path.get(provenance.path)
             if candidate is None:
-                raise DomainError(
-                    ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                    "cognition Source read option binds another path",
-                )
+                continue
             expected = EngineeringAgentCitation.create(
                 citation_ref=candidate.citation_ref,
                 evidence_class=candidate.evidence_class,
@@ -1359,6 +1377,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 "observation_index": observation_index,
                 "read_indexes": tuple(added_indexes),
                 "option_count": len(added_indexes),
+                "skipped_non_source_count": len(skipped_non_source_paths),
+                "skipped_non_source_paths": tuple(skipped_non_source_paths),
+                "skipped_non_source_evidence_kinds": tuple(
+                    skipped_non_source_kinds
+                ),
+                "skipped_non_source_provenance_digests": tuple(
+                    skipped_non_source_digests
+                ),
                 "source_revision": cognition.snapshot.source_revision,
                 "source_tree": cognition.snapshot.source_tree,
                 "navigation_candidate_digests": tuple(candidate_digests),

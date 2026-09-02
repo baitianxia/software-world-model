@@ -44,6 +44,7 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     LightweightAgentResponseKind,
     LightweightAgentTraceStore,
     LightweightCitationSelection,
+    LightweightCognitionCandidate,
     LightweightDecisionResult,
     LightweightReview,
     LightweightReviewResult,
@@ -60,6 +61,7 @@ from software_world_model.knowledge_engine.capability_cognition import (
     CapabilityCognitionIndex,
     CognitionDirection,
     CognitionEntityKind,
+    CognitionProvenance,
     CognitionRelationKind,
 )
 from software_world_model.interface.engineering_qa_source import (
@@ -577,6 +579,9 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                     EngineeringEvidenceClass.SOURCE: (
                         "app/src/main/java",
                     ),
+                    EngineeringEvidenceClass.BUILD_CONFIGURATION: (
+                        "app/pom.xml",
+                    ),
                 },
             )
             configuration = EngineeringAgentEvidenceToolConfiguration.create(
@@ -588,7 +593,7 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 source_profile_ref=profile.profile_ref,
                 source_profile_digest=profile.profile_digest,
                 world_model_read_authority_digest=world_authority,
-                source_allowlist=("app/src/main/java",),
+                source_allowlist=("app/src/main/java", "app/pom.xml"),
             )
             tool = EngineeringAgentEvidenceToolAdapter(
                 configuration=configuration,
@@ -666,6 +671,104 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 ],
             )
             self.assertNotIn("SEARCH_SOURCE", actions)
+
+            # A cognition page can contain a module descriptor next to Java
+            # entities.  The descriptor remains cognition context, while the
+            # existing bridge exposes only the Java Source capability.
+            module = next(
+                entity
+                for entity in cognition.snapshot.entities
+                if entity.kind is CognitionEntityKind.MODULE
+            )
+            implementation = next(
+                entity
+                for entity in cognition.snapshot.entities
+                if entity.kind is CognitionEntityKind.TYPE
+                and entity.qualified_name
+                == "com.example.CheckoutServiceImpl"
+            )
+            module_provenance = module.provenance
+            implementation_provenance = implementation.provenance
+            mixed_options = tool.cognition_source_read_options(
+                model.steps[0].turn_request,
+                (module_provenance, implementation_provenance),
+            )
+            self.assertEqual(len(mixed_options), 1)
+            self.assertEqual(
+                mixed_options[0].locator,
+                implementation_provenance.locator,
+            )
+            bridged_reads = []
+            bridge_events = []
+            bridge_executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                model=_ImmediateLimitationModel(),
+                tool_port=tool,
+                delivery_control=SealedLightweightDeliveryControl(),
+                trace_store=LightweightAgentTraceStore(),
+                attempt_ref="mixed-cognition-real-bridge",
+            )
+            bridge_executor._register_cognition_source_read_candidates(
+                request=model.steps[0].turn_request,
+                cognition=cognition,
+                candidates=(
+                    LightweightCognitionCandidate(
+                        cognition_index=1,
+                        entity_id=module.entity_id,
+                        kind=module.kind,
+                        name=module.name,
+                        qualified_name=module.qualified_name,
+                        coverage=module.epistemics.coverage.value,
+                        unknowns=module.epistemics.unknowns,
+                        provenance=module.provenance,
+                    ),
+                    LightweightCognitionCandidate(
+                        cognition_index=2,
+                        entity_id=implementation.entity_id,
+                        kind=implementation.kind,
+                        name=implementation.name,
+                        qualified_name=implementation.qualified_name,
+                        coverage=implementation.epistemics.coverage.value,
+                        unknowns=implementation.epistemics.unknowns,
+                        provenance=implementation.provenance,
+                    ),
+                ),
+                read_candidates=bridged_reads,
+                events=bridge_events,
+                observation_index=1,
+            )
+            self.assertEqual(
+                [item.resource_locator for item in bridged_reads],
+                [implementation.provenance.path],
+            )
+            self.assertEqual(
+                bridge_events[0]["skipped_non_source_count"],
+                1,
+            )
+            self.assertEqual(
+                bridge_events[0]["skipped_non_source_paths"],
+                (module.provenance.path,),
+            )
+            self.assertEqual(
+                bridge_events[0]["skipped_non_source_evidence_kinds"],
+                ("MAVEN_MODULE_DESCRIPTOR",),
+            )
+            unbound = CognitionProvenance(
+                source_revision=revision,
+                source_tree=source_tree,
+                path="app/not-authorized.xml",
+                start_line=1,
+                end_line=1,
+                content_digest=module_provenance.content_digest,
+                evidence_kind=module_provenance.evidence_kind,
+            )
+            with self.assertRaisesRegex(
+                DomainError,
+                "AUTHORITY_RECORD_INCONSISTENT.*required evidence path",
+            ):
+                tool.cognition_source_read_options(
+                    model.steps[0].turn_request,
+                    (unbound,),
+                )
 
             followup = service.submit_turn(
                 conversation_id=submission.snapshot.conversation.conversation_id,

@@ -12,6 +12,9 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-274](FINDING-010-274.md)：run-141 暴露 cognition detail 同时含 Java `SOURCE` 与 Maven module
+  `BUILD_CONFIGURATION` provenance；current bridge 先由绑定 SourceBroker 分类，只为 SOURCE 建立既有 navigation carrier，非 SOURCE 保留
+  cognition Observation，未绑定/越权仍 fail-closed。
 - [FINDING-010-273](FINDING-010-273.md)：run-130 最早偏差是 cognition provenance 无法进入既有 opaque Source read；current 修复只用内部
   非版本化 provenance map 与既有 Citation carrier，经 Broker/Worker 实际 READ 后才形成可交付 Citation。曾新增的版本化 Agent option 已因
   direction FAIL 全部删除；同 path 追问去重与 Turn 级 64 项累计 fuse 已由异质 real-Git fixture 覆盖。
