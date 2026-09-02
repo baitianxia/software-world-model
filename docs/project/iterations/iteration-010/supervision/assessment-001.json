@@ -66,12 +66,6 @@
       "sha256": "sha256:8380bda7d4fed4e899ea81c0bf077a69a96b2ee56e986e2b91e82b9f476e7317"
     },
     {
-      "id": "action-shape-recovery-tests",
-      "scope": "candidate",
-      "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:36f69204730ff1e67e19cbe1d3fa3cfdcda36fc40b0db1a97a8f876a961db32f"
-    },
-    {
       "id": "exact-source-behavior-reference",
       "scope": "source",
       "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
