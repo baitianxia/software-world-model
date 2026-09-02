@@ -1,0 +1,35 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-151-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:44eaa04fe2146610235dce7b1398c25708cd4e3097ca22688e555fb15383fa38",
+  "turn_scope_sha256": "sha256:3968d3b54f97bd03c711949a7559d807667886e4e81edc9ce6ece50b539b4eda",
+  "terminal_sha256": "sha256:5c88023840e8c180e8f93f59e8d3b32c261428b5a1f5975eeaf57795f26cfecf",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 2,
+  "conversation_count": 1,
+  "provider_dispatch_count": 10,
+  "request_retry_count": 0,
+  "q1_status": "APPROVED_AFTER_REWRITE",
+  "q2_status": "FAILED_BEFORE_DELIVERY",
+  "failure_stage": "INDEPENDENT_REVIEWER",
+  "failure_code": "STRUCTURED_OUTPUT_INVALID",
+  "q2_primary_call": {
+    "model_call_id": "model_call_9e2c99725a424307b092890939562d9e",
+    "action": "FINISH",
+    "output_digest": "sha256:fb93c6d9957f8b2f8439c5cb572dc691b75e0359a7d279555fb1e17e8a121e28",
+    "citation_count": 1
+  },
+  "q2_reviewer_call": {
+    "model_call_id": "model_call_b49843a0bb5f43c0bcd716dbb0dfb459",
+    "output_digest": "sha256:abf94e89f06fc700e3dde97e61e33558dcb4fa39bf5686af337bd035906330a4",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"answer\":\"{\\\"findings\\\":[],\\\"verdict\\\":\\\"APPROVED\\\"}\"}",
+    "top_level_shape": "{answer}",
+    "top_level_verdict_present": false,
+    "decoder_disposition": "REJECT"
+  },
+  "assessment": "q1 completed with a valid fresh Reviewer; q2 selected a valid Source citation but its Reviewer emitted a nested answer string. The strict decoder correctly rejects it; q3-q5 were not dispatched and this run is not acceptance evidence."
+}
