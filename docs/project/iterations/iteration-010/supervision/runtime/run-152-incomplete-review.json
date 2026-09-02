@@ -1,0 +1,28 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-152-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:f763bc4f035ea5f262063cc74e34cec2be584328e7ce8e6f6d5dc201b03d39f5",
+  "turn_scope_sha256": "sha256:1d2ea2bf7e6586a334c23e04190df73efa433b76d2c4e83dc74424ed41af9047",
+  "terminal_sha256": "sha256:6361d26b34633a0e624c6fb9ca2a580c645e63471c3c635498ffe0299ef61911",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 6,
+  "request_retry_count": 0,
+  "failure_stage": "POST_REWRITE_REVIEW_ADMISSION",
+  "q1_first_reviewer": {
+    "model_call_id": "model_call_6a43dd26bed4466ba9c64c22b22d81ea",
+    "output_digest": "sha256:513e74f8420fa8f45212946b82c87ddf754219079a93e5c8da001de2127d8fc8",
+    "verdict": "REWRITE"
+  },
+  "q1_rewrite_primary": {
+    "model_call_id": "model_call_4bdea901098d46108e44a06181613c13",
+    "output_digest": "sha256:1cc62512f076d6398dd9f9352b52d2e257c5153d918a3f7215c13e199459e18e",
+    "action": "FINISH",
+    "citation_count": 2
+  },
+  "assessment": "The first Reviewer validly requested rewrite and the Primary produced a valid revised FINISH, but the run stopped before a second Reviewer dispatch/output. No q2-q5 were dispatched; this run is incomplete and cannot support acceptance or ADVANCE."
+}
