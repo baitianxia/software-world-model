@@ -12,6 +12,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentLoopLimits,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
+    EngineeringAgentModelFailureKind,
     EngineeringAgentModelRole,
     EngineeringAgentToolAuthorityKind,
     EngineeringAgentToolAuthorityReceipt,
@@ -46,6 +47,7 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     LightweightCitationSelection,
     LightweightCognitionCandidate,
     LightweightDecisionResult,
+    LightweightModelCallFailure,
     LightweightReview,
     LightweightReviewResult,
     LightweightReviewVerdict,
@@ -53,6 +55,7 @@ from software_world_model.application_services.lightweight_engineering_agent imp
 )
 from software_world_model.cross_cutting import (
     DomainError,
+    ErrorCode,
     Revision,
     StableId,
     digest_of,
@@ -565,6 +568,91 @@ class _CitationBindingModel(_Model):
             receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
             disclosure_record_ref=f"disclosure-{self._calls}",
         )
+
+
+def _shape_failure(model):
+    receipt = EngineeringAgentModelCallReceipt.create(
+        model_call_ref=_id("modelcall", model._calls + 1).value,
+        gateway_call_ref=_id("gateway", model._calls + 1).value,
+        role=EngineeringAgentModelRole.PRIMARY_AGENT,
+        state=EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+        failure_kind=EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        failure_code=ErrorCode.STRUCTURED_OUTPUT_INVALID.value,
+    )
+    model._calls += 1
+    model.rejected_receipts.append(receipt)
+    return LightweightModelCallFailure(
+        receipt=receipt,
+        code=ErrorCode.STRUCTURED_OUTPUT_INVALID,
+        message="lightweight Agent decision branches are inconsistent",
+        disclosure_record_ref="shape-rejection",
+        bounded_replan_allowed=True,
+    )
+
+
+class _ShapeRepairModel(_Model):
+    """Emit one typed action-shape rejection, then resume the same loop."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.shape_failures = 0
+        self.rejected_receipts = []
+
+    def _shape_failure(self):
+        return _shape_failure(self)
+
+    def decide(self, request):
+        if self.shape_failures == 0:
+            self.steps.append(request)
+            self.shape_failures += 1
+            raise self._shape_failure()
+        return super().decide(request)
+
+
+class _RewriteThenShapeModel(_ShapeRepairModel):
+    """Exercise shape recovery after an independent rewrite finding."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._inject_after_feedback = True
+
+    def decide(self, request):
+        if self._inject_after_feedback and request.review_findings:
+            self.steps.append(request)
+            self.shape_failures += 1
+            self._inject_after_feedback = False
+            raise self._shape_failure()
+        return _Model.decide(self, request)
+
+    def review(self, request):
+        self.reviews.append(request)
+        if len(self.reviews) == 1:
+            verdict = LightweightReviewVerdict.REWRITE
+            findings = ("审核要求保留答案中的条件分支。",)
+        else:
+            verdict = LightweightReviewVerdict.APPROVED
+            findings = ()
+        return LightweightReviewResult(
+            review=LightweightReview(verdict=verdict, findings=findings),
+            receipt=self._receipt(EngineeringAgentModelRole.INDEPENDENT_REVIEWER),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
+class _CitationThenShapeModel(_CitationBindingModel):
+    """Exercise shape recovery after Application Citation rejection."""
+
+    def __init__(self) -> None:
+        super().__init__(cognition=False)
+        self.shape_failures = 0
+        self.rejected_receipts = []
+
+    def decide(self, request):
+        if self.shape_failures == 0 and request.review_findings:
+            self.steps.append(request)
+            self.shape_failures += 1
+            raise _shape_failure(self)
+        return super().decide(request)
 
 
 def _cognition(
@@ -1145,6 +1233,205 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             ),
             1,
         )
+
+    def test_action_shape_rejection_replans_once_without_dropping_receipt(self) -> None:
+        model = _ShapeRepairModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-action-shape-repair",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(submission.turn.provider_dispatch_count, 5)
+        self.assertEqual(submission.turn.retry_count, 0)
+        self.assertEqual(len(submission.turn.model_dispatch_receipt_refs), 5)
+        self.assertEqual(
+            submission.turn.model_dispatch_receipt_refs[0],
+            model.rejected_receipts[0].digest.value,
+        )
+        self.assertIs(
+            model.rejected_receipts[0].state,
+            EngineeringAgentModelDispatchState.DISPATCHED_REJECTED,
+        )
+        self.assertIs(
+            model.rejected_receipts[0].failure_kind,
+            EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
+        )
+        self.assertEqual(len(model.reviews), 1)
+        self.assertEqual(model.shape_failures, 1)
+        self.assertEqual(
+            model.steps[1].review_findings,
+            (
+                "Application rejected the previous Agent decision because fields "
+                "unused by its selected action were not null. Replan with the same "
+                "observations and set every field not used by the selected action "
+                "to null; do not alter evidence or answer semantics.",
+            ),
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        shape_events = [
+            item
+            for item in trace.events
+            if item["kind"] == "MODEL_DECISION_SHAPE_REJECTION"
+        ]
+        self.assertEqual(len(shape_events), 1)
+        self.assertEqual(shape_events[0]["repair_ordinal"], 1)
+        self.assertEqual(
+            [
+                item["action"]
+                for item in trace.events
+                if item["kind"] == "MODEL_DECISION"
+            ],
+            ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"],
+        )
+
+    def test_second_action_shape_rejection_remains_fail_closed(self) -> None:
+        class RepeatShapeFailureModel(_ShapeRepairModel):
+            def decide(self, request):
+                self.steps.append(request)
+                self.shape_failures += 1
+                raise self._shape_failure()
+
+        model = RepeatShapeFailureModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-action-shape-second-rejection",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "NOT_ACCEPTED")
+        self.assertEqual(
+            submission.turn.failure_code, "STRUCTURED_OUTPUT_INVALID"
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "MODEL_DECISION_SHAPE_REJECTION"
+            ),
+            1,
+        )
+
+    def test_action_shape_repair_merges_prior_reviewer_feedback(self) -> None:
+        model = _RewriteThenShapeModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-action-shape-after-review",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(submission.turn.provider_dispatch_count, 7)
+        feedback_requests = [
+            item for item in model.steps if item.review_findings
+        ]
+        self.assertEqual(len(feedback_requests), 2)
+        rejected_answer = feedback_requests[0].rejected_answer
+        self.assertTrue(rejected_answer)
+        self.assertEqual(
+            feedback_requests[0].review_findings,
+            ("审核要求保留答案中的条件分支。",),
+        )
+        self.assertEqual(feedback_requests[1].rejected_answer, rejected_answer)
+        self.assertEqual(
+            feedback_requests[1].review_findings[0],
+            "审核要求保留答案中的条件分支。",
+        )
+        self.assertIn(
+            "fields unused by its selected action",
+            feedback_requests[1].review_findings[-1],
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "MODEL_DECISION_SHAPE_REJECTION"
+            ),
+            1,
+        )
+
+    def test_action_shape_repair_merges_prior_citation_feedback(self) -> None:
+        model = _CitationThenShapeModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-action-shape-after-citation",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(submission.turn.provider_dispatch_count, 6)
+        feedback_requests = [
+            item for item in model.steps if item.review_findings
+        ]
+        self.assertEqual(len(feedback_requests), 2)
+        rejected_answer = feedback_requests[0].rejected_answer
+        self.assertTrue(rejected_answer)
+        self.assertIn(
+            "citation selection",
+            feedback_requests[0].review_findings[0],
+        )
+        self.assertEqual(feedback_requests[1].rejected_answer, rejected_answer)
+        self.assertIn(
+            "citation selection",
+            feedback_requests[1].review_findings[0],
+        )
+        self.assertIn(
+            "fields unused by its selected action",
+            feedback_requests[1].review_findings[-1],
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        kinds = [item["kind"] for item in trace.events]
+        self.assertIn("CITATION_BINDING_REJECTION", kinds)
+        self.assertIn("MODEL_DECISION_SHAPE_REJECTION", kinds)
+
     def test_citation_binding_replans_after_cognition_and_multiple_source_reads(
         self,
     ) -> None:

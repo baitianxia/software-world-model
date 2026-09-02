@@ -15,6 +15,7 @@ from software_world_model.application_services.conversational_engineering_agent 
 )
 from software_world_model.application_services.lightweight_engineering_agent import (
     LightweightAgentDecision,
+    LightweightAgentDecisionBranchError,
     LightweightAgentStepRequest,
     LightweightDecisionResult,
     LightweightModelCallFailure,
@@ -486,6 +487,9 @@ class ModelBackedLightweightEngineeringAgent:
                 code=exc.code,
                 message=exc.message,
                 disclosure_record_ref=authorization.digest.value,
+                bounded_replan_allowed=isinstance(
+                    exc, LightweightAgentDecisionBranchError
+                ),
             ) from exc
         return LightweightDecisionResult(
             decision=decision,

@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -210,7 +210,8 @@ query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失
 增殖、监督目标错绑和开发自报晋级的系统性执行缺口；`FINDING-010-270` 保存显式 Source-bound declaration/implementation 认知闭包及其
 dirty candidate 独立证据；其 clean commit 已由监督分支独立 `ADVANCE`，从而激活 Phase C。`FINDING-010-273—275` 分别保存 cognition
 provenance 的既有 Source bridge、非 SOURCE provenance 分类和 FINISH Citation binding 的一次有界 Agent replan。后续实现若改变系统边界、认知
-模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
+模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；`FINDING-010-276` 记录可解析但 action-specific 字段冲突的
+Primary 决策、strict decoder 拒绝以及一次同一主 Agent 机械重规划的边界，尚未形成 Phase C 完成证据。普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 
 ## Authorization

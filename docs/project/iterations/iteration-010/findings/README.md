@@ -12,6 +12,8 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-276](FINDING-010-276.md)：run-150/run-155 重现可解析但 action-specific 字段混用的 Primary 决策；strict decoder 保持拒绝，
+  current Agent executor 仅保留 rejected receipt 并给同一主 Agent 一次机械重规划，第二次仍 fail-closed，不扩展协议、Prompt、Provider 或题目规则。
 - [FINDING-010-275](FINDING-010-275.md)：run-145 暴露 Primary `FINISH` 把无 Citation 的 cognition Observation 与真实 Source
   Observation 一起选择；current lightweight Application 保留原 selection 并给同一 Agent 一次有界机械 replan，二次非法仍
   `CONTROL_STATE_DENIED`，不进入 Reviewer 或 Delivery。

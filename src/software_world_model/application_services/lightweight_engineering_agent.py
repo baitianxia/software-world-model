@@ -245,7 +245,7 @@ class LightweightAgentDecision:
                 )
             )
         if not valid:
-            _invalid("lightweight Agent decision branches are inconsistent")
+            raise LightweightAgentDecisionBranchError()
         return cls(
             goal=goal,
             plan=plan,
@@ -264,6 +264,22 @@ class LightweightAgentDecision:
             response_kind=response_kind,
             answer=answer,
             citations=tuple(citations),
+        )
+
+
+class LightweightAgentDecisionBranchError(DomainError):
+    """A parseable decision whose fields do not match its selected action.
+
+    The typed decoder remains strict. The executor may use this classification
+    to give the same primary Agent one bounded next-step opportunity while
+    retaining the rejected Provider receipt and raw output. Other structured
+    output failures stay fail-closed.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            ErrorCode.STRUCTURED_OUTPUT_INVALID,
+            "lightweight Agent decision branches are inconsistent",
         )
 
 
@@ -480,10 +496,12 @@ class LightweightModelCallFailure(DomainError):
         code: ErrorCode,
         message: str,
         disclosure_record_ref: str,
+        bounded_replan_allowed: bool = False,
     ) -> None:
         super().__init__(code, message)
         self.receipt = receipt
         self.disclosure_record_ref = disclosure_record_ref
+        self.bounded_replan_allowed = bounded_replan_allowed
 
 
 class _CitationBindingRejection(DomainError):
@@ -718,27 +736,61 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         reviews = 0
         rewrites = 0
         citation_binding_repairs = 0
+        decision_shape_repairs = 0
         consecutive_no_progress = 0
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
             for step in range(1, self._limits.maximum_agent_steps + 1):
                 tools_enabled = tool_actions < self._limits.maximum_tool_actions
-                result = self._model.decide(
-                    LightweightAgentStepRequest(
-                        turn_request=request,
-                        step=step,
-                        goal=goal,
-                        plan=plan,
-                        observations=tuple(observations),
-                        read_candidates=tuple(read_candidates),
-                        cognition_candidates=tuple(cognition_candidates),
-                        cognition_enabled=self._cognition is not None,
-                        tools_enabled=tools_enabled,
-                        rejected_answer=rejected_answer,
-                        review_findings=review_findings,
+                try:
+                    result = self._model.decide(
+                        LightweightAgentStepRequest(
+                            turn_request=request,
+                            step=step,
+                            goal=goal,
+                            plan=plan,
+                            observations=tuple(observations),
+                            read_candidates=tuple(read_candidates),
+                            cognition_candidates=tuple(cognition_candidates),
+                            cognition_enabled=self._cognition is not None,
+                            tools_enabled=tools_enabled,
+                            rejected_answer=rejected_answer,
+                            review_findings=review_findings,
+                        )
                     )
-                )
+                except LightweightModelCallFailure as exc:
+                    if (
+                        exc.bounded_replan_allowed
+                        and decision_shape_repairs < 1
+                    ):
+                        self._record_receipt(receipts, exc.receipt)
+                        decision_shape_repairs += 1
+                        events.append(
+                            {
+                                "kind": "MODEL_DECISION_SHAPE_REJECTION",
+                                "step": step,
+                                "failure_code": exc.code.value,
+                                "model_call_receipt_ref": exc.receipt.digest.value,
+                                "disclosure_record_ref": exc.disclosure_record_ref,
+                                "repair_ordinal": decision_shape_repairs,
+                            }
+                        )
+                        # Preserve any answer and findings already rejected by
+                        # Citation binding or an independent review.  The
+                        # shape diagnosis is mechanical and is appended to
+                        # that existing feedback so the next request can
+                        # address every known defect in one pass.
+                        review_findings = (
+                            *review_findings,
+                            "Application rejected the previous Agent decision "
+                            "because fields unused by its selected action were "
+                            "not null. Replan with the same observations and "
+                            "set every field not used by the selected action to "
+                            "null; do not alter evidence or answer semantics.",
+                        )
+                        continue
+                    raise
                 self._record_receipt(receipts, result.receipt)
                 decision = result.decision
                 if not tools_enabled and decision.action is not LightweightAgentAction.FINISH:
@@ -1700,6 +1752,7 @@ __all__ = [
     "ApplicationOwnedLightweightAgentTurnExecutor",
     "LightweightAgentAction",
     "LightweightAgentDecision",
+    "LightweightAgentDecisionBranchError",
     "LightweightAgentResponseKind",
     "LightweightAgentStepRequest",
     "LightweightAgentTraceStore",

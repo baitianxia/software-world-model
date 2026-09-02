@@ -4495,6 +4495,17 @@
       "tests/test_lightweight_engineering_agent.py"
     ]
   },
+  "FINDING-010-276": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-276.md",
+    "code": [
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

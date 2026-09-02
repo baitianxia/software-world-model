@@ -41,7 +41,7 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     LightweightModelCallFailure,
     LightweightReviewRequest,
 )
-from software_world_model.cross_cutting import StableId, digest_of
+from software_world_model.cross_cutting import ErrorCode, StableId, digest_of
 from software_world_model.knowledge_engine.capability_cognition import (
     CognitionRelationKind,
 )
@@ -367,11 +367,42 @@ class LightweightEngineeringModelTest(unittest.TestCase):
         self.assertEqual(len(adapter.requests), 1)
         self.assertEqual(len(budget.authorizations), 1)
         self.assertEqual(raised.exception.receipt.provider_dispatch_count, 1)
+        self.assertTrue(raised.exception.bounded_replan_allowed)
         self.assertIs(
             raised.exception.receipt.failure_kind,
             EngineeringAgentModelFailureKind.PROVIDER_OUTPUT_INVALID,
         )
         self.assertEqual(model.audits[-1].receipt, raised.exception.receipt)
+
+    def test_finish_with_cognition_field_is_repairable_but_still_rejected(self) -> None:
+        model, _, adapter, request, _, _ = self._runtime(
+            [
+                {
+                    "goal": "Find the selection behavior.",
+                    "plan": "Use the supplied evidence and finish.",
+                    "action": "FINISH",
+                    "query": None,
+                    "read_index": None,
+                    "cognition_index": 1,
+                    "relation_kind": None,
+                    "direction": None,
+                    "maximum_depth": None,
+                    "cursor": None,
+                    "response_kind": "LIMITATION",
+                    "answer": "当前证据不足。",
+                    "citations": [],
+                }
+            ]
+        )
+
+        with self.assertRaises(LightweightModelCallFailure) as raised:
+            model.decide(self._step(request))
+
+        self.assertEqual(len(adapter.requests), 1)
+        self.assertTrue(raised.exception.bounded_replan_allowed)
+        self.assertEqual(
+            raised.exception.code, ErrorCode.STRUCTURED_OUTPUT_INVALID
+        )
 
     def test_cognition_action_schema_uses_application_numeric_identity(self) -> None:
         model, _, adapter, request, _, _ = self._runtime(
