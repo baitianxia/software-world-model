@@ -672,6 +672,116 @@ class _CitationBindingModel(_Model):
         )
 
 
+class _MultiSourceCitationShapeModel(_Model):
+    """Exercise local Citation ordinals across several Source observations."""
+
+    def __init__(
+        self,
+        *,
+        repeat_invalid: bool = False,
+        reviewer_more_evidence: bool = False,
+    ) -> None:
+        super().__init__()
+        self.repeat_invalid = repeat_invalid
+        self.reviewer_more_evidence = reviewer_more_evidence
+        self.invalid_submissions = 0
+        self._invalid_source_counts = set()
+
+    def decide(self, request):
+        self.steps.append(request)
+        source_observations = [
+            item
+            for item in request.observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        ]
+        common = {
+            "goal": request.turn_request.user_message.content,
+            "response_kind": None,
+            "answer": None,
+            "citations": (),
+        }
+        needs_third_read = (
+            self.reviewer_more_evidence
+            and len(self.reviews) == 1
+            and len(source_observations) == 2
+        )
+        if len(source_observations) < 2 or needs_third_read:
+            if not request.read_candidates:
+                decision = LightweightAgentDecision(
+                    **common,
+                    plan="Locate the first exact Source candidate.",
+                    action=LightweightAgentAction.SEARCH_SOURCE,
+                    query="Entry",
+                    read_index=None,
+                )
+            else:
+                # The fixture's Source tool appends one candidate after each
+                # search/read.  read_index identity is preserved even though
+                # the model-facing presentation may reorder candidates.
+                read_index = request.read_candidates[
+                    len(source_observations)
+                ].read_index
+                decision = LightweightAgentDecision(
+                    **common,
+                    plan="Read the next distinct exact Source candidate.",
+                    action=LightweightAgentAction.READ_SOURCE,
+                    query=None,
+                    read_index=read_index,
+                )
+        else:
+            source_count = len(source_observations)
+            if (
+                source_count not in self._invalid_source_counts
+                or self.repeat_invalid
+            ):
+                self.invalid_submissions += 1
+                self._invalid_source_counts.add(source_count)
+                # Deliberately use a global-looking 2/3/... sequence.  The
+                # Application must reject it because each Observation owns a
+                # fresh local Citation domain.
+                citation_indexes = range(2, 2 + len(source_observations))
+            else:
+                citation_indexes = (1,) * len(source_observations)
+            selections = tuple(
+                LightweightCitationSelection(
+                    observation.observation_index,
+                    citation_index,
+                )
+                for observation, citation_index in zip(
+                    source_observations, citation_indexes
+                )
+            )
+            decision = LightweightAgentDecision(
+                goal=request.turn_request.user_message.content,
+                plan="Answer only from the exact Source observations.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.ANSWER,
+                answer="多个独立 Source observation 各自支持该局部行为。",
+                citations=selections,
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+    def review(self, request):
+        self.reviews.append(request)
+        if self.reviewer_more_evidence and len(self.reviews) == 1:
+            verdict = LightweightReviewVerdict.MORE_EVIDENCE
+            findings = ("需要一个不同 Source observation。",)
+        else:
+            verdict = LightweightReviewVerdict.APPROVED
+            findings = ()
+        return LightweightReviewResult(
+            review=LightweightReview(verdict=verdict, findings=findings),
+            receipt=self._receipt(EngineeringAgentModelRole.INDEPENDENT_REVIEWER),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 def _shape_failure(model):
     receipt = EngineeringAgentModelCallReceipt.create(
         model_call_ref=_id("modelcall", model._calls + 1).value,
@@ -2449,7 +2559,9 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             (
                 "Application rejected the previous FINISH citation selection at "
                 "observation index 1, citation index 1; the selected observation "
-                "has 0 delivered Citation(s). Replan and submit FINISH using only "
+                "has 0 delivered Citation(s). Citation indexes are 1-based within "
+                "each selected Observation and are not global. Replan and submit "
+                "FINISH using only "
                 "observation/citation pairs present in the current observations; "
                 "do not invent evidence or alter the observations.",
             ),
@@ -2561,6 +2673,213 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             ],
             ["SEARCH_SOURCE", "READ_SOURCE", "FINISH", "FINISH"],
         )
+
+    def test_citation_binding_replans_global_indexes_per_observation(self) -> None:
+        model = _MultiSourceCitationShapeModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-local-domains",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="两个不同源码文件分别支持哪些步骤？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(submission.turn.citations), 2)
+        self.assertEqual(model.invalid_submissions, 1)
+        self.assertEqual(len(model.reviews), 1)
+        source_observations = [
+            item
+            for item in model.steps[-1].observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        ]
+        self.assertEqual(len(source_observations), 2)
+        self.assertEqual([len(item.citations) for item in source_observations], [1, 1])
+        delivered_refs = [item.citation_ref for item in submission.turn.citations]
+        source_refs = [
+            citation.citation_ref
+            for observation in source_observations
+            for citation in observation.citations
+        ]
+        self.assertEqual(delivered_refs, source_refs)
+        self.assertEqual(
+            [
+                (
+                    item.citation_ref,
+                    item.evidence_class,
+                    item.source_revision,
+                    item.locator,
+                    item.modality,
+                    item.content_digest.value,
+                    item.digest.value,
+                )
+                for item in submission.turn.citations
+            ],
+            [
+                (
+                    citation.citation_ref,
+                    citation.evidence_class,
+                    citation.source_revision,
+                    citation.locator,
+                    citation.modality,
+                    citation.content_digest.value,
+                    citation.digest.value,
+                )
+                for observation in source_observations
+                for citation in observation.citations
+            ],
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        rejection = next(
+            item
+            for item in trace.events
+            if item["kind"] == "CITATION_BINDING_REJECTION"
+        )
+        self.assertEqual(
+            rejection["selected_pairs"],
+            (
+                {
+                    "observation_index": source_observations[0].observation_index,
+                    "citation_index": 2,
+                },
+                {
+                    "observation_index": source_observations[1].observation_index,
+                    "citation_index": 3,
+                },
+            ),
+        )
+        self.assertEqual(rejection["repair_ordinal"], 1)
+        self.assertIn("not global", model.steps[-1].review_findings[0])
+        self.assertEqual(
+            model.steps[-1].rejected_answer,
+            "多个独立 Source observation 各自支持该局部行为。",
+        )
+        rejected_finish = next(
+            item
+            for item in trace.events
+            if item["kind"] == "MODEL_DECISION"
+            and item["action"] == "FINISH"
+            and item["step"] == 4
+        )
+        self.assertIn(
+            rejected_finish["model_call_receipt_ref"],
+            submission.turn.model_dispatch_receipt_refs,
+        )
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count("INDEPENDENT_REVIEW"),
+            1,
+        )
+
+    def test_multi_observation_second_invalid_global_index_fails_closed(self) -> None:
+        model = _MultiSourceCitationShapeModel(repeat_invalid=True)
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-local-domains-second-invalid",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="两个源码文件的调用顺序是什么？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "NOT_ACCEPTED")
+        self.assertEqual(submission.turn.failure_code, "CONTROL_STATE_DENIED")
+        self.assertEqual(len(model.reviews), 0)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "CITATION_BINDING_REJECTION"
+            ),
+            1,
+        )
+        self.assertEqual(
+            next(
+                item
+                for item in trace.events
+                if item["kind"] == "CITATION_BINDING_REJECTION"
+            )["repair_ordinal"],
+            1,
+        )
+        self.assertEqual(
+            model.steps[-1].rejected_answer,
+            "多个独立 Source observation 各自支持该局部行为。",
+        )
+        self.assertIn("not global", model.steps[-1].review_findings[0])
+
+    def test_citation_binding_gets_one_new_replan_after_more_evidence(self) -> None:
+        model = _MultiSourceCitationShapeModel(reviewer_more_evidence=True)
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-new-prefix",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="补充一个独立源码观察后，哪些证据共同支持结论？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(submission.turn.citations), 3)
+        self.assertEqual(len(model.reviews), 2)
+        self.assertEqual(model.invalid_submissions, 2)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        rejections = [
+            item
+            for item in trace.events
+            if item["kind"] == "CITATION_BINDING_REJECTION"
+        ]
+        self.assertEqual(len(rejections), 2)
+        self.assertEqual(
+            [item["repair_ordinal"] for item in rejections],
+            [1, 2],
+        )
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "INDEPENDENT_REVIEW"
+            ),
+            2,
+        )
+        evidence_replan = model.steps[5]
+        self.assertEqual(
+            evidence_replan.rejected_answer,
+            "多个独立 Source observation 各自支持该局部行为。",
+        )
+        self.assertIn("not global", evidence_replan.review_findings[0])
+        self.assertIn("不同 Source observation", evidence_replan.review_findings[-1])
+        finish_steps = [
+            item
+            for item in trace.events
+            if item["kind"] == "MODEL_DECISION"
+            and item["action"] == "FINISH"
+        ]
+        self.assertEqual(len(finish_steps), 4)
 
     def test_second_invalid_citation_selection_remains_fail_closed(self) -> None:
         model = _CitationBindingModel(cognition=False, repeat_invalid=True)

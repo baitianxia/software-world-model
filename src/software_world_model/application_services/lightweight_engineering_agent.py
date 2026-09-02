@@ -965,7 +965,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         tool_actions = 0
         reviews = 0
         rewrites = 0
-        citation_binding_repairs = 0
+        # Citation selections are local to an immutable Observation prefix.
+        # Keep the prefixes that have already received the one bounded
+        # Application-owned binding replan.  A later Reviewer-driven Source
+        # read creates a new prefix and therefore gets its own single repair;
+        # repeating an invalid selection against the same prefix remains
+        # fail-closed.
+        citation_binding_repair_prefixes: set[tuple[tuple[int, str], ...]] = set()
+        citation_binding_repair_count = 0
         decision_shape_repairs = 0
         consecutive_no_progress = 0
         terminal = "FAILED"
@@ -1089,8 +1096,10 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         >= self._limits.maximum_consecutive_no_progress
                     ):
                         tool_actions = self._limits.maximum_tool_actions
-                    rejected_answer = None
-                    review_findings = ()
+                    # Keep any mechanical Citation/reviewer/shape feedback
+                    # while the same Agent gathers the evidence it was asked
+                    # to obtain.  Ordinary investigation starts with empty
+                    # feedback, so this does not alter the normal path.
                     continue
 
                 assert decision.answer is not None
@@ -1098,9 +1107,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 try:
                     selected = self._resolve_citations(decision, observations)
                 except _CitationBindingRejection as exc:
-                    if citation_binding_repairs >= 1:
+                    observation_prefix = tuple(
+                        (item.observation_index, item.digest.value)
+                        for item in observations
+                    )
+                    if observation_prefix in citation_binding_repair_prefixes:
                         raise
-                    citation_binding_repairs += 1
+                    citation_binding_repair_prefixes.add(observation_prefix)
+                    citation_binding_repair_count += 1
                     # Keep the rejected selection intact in the trajectory and
                     # give the same primary Agent one bounded replan.  The
                     # feedback is deliberately mechanical: all actual evidence
@@ -1122,17 +1136,20 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                                 }
                                 for item in decision.citations
                             ),
-                            "repair_ordinal": citation_binding_repairs,
+                            "repair_ordinal": citation_binding_repair_count,
                         }
                     )
                     rejected_answer = decision.answer
                     review_findings = (
+                        *review_findings,
                         "Application rejected the previous FINISH citation "
                         "selection at observation index "
                         f"{exc.observation_index}, citation index "
                         f"{exc.citation_index}; the selected observation has "
                         f"{exc.available_citation_count} delivered Citation(s). "
-                        "Replan and submit FINISH using only "
+                        "Citation indexes are 1-based within each selected "
+                        "Observation and are not global. Replan and submit "
+                        "FINISH using only "
                         "observation/citation pairs present in the current "
                         "observations; do not invent evidence or alter the "
                         "observations.",
@@ -1190,7 +1207,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         "fresh review requested evidence after the read-only tool budget closed",
                     )
                 rejected_answer = decision.answer
-                review_findings = review.findings
+                review_findings = (*review_findings, *review.findings)
                 if review.verdict is LightweightReviewVerdict.REWRITE:
                     rewrites += 1
                     if rewrites > 1:
@@ -1199,8 +1216,6 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "lightweight Agent permits at most one complete rewrite",
                         )
                     tool_actions = self._limits.maximum_tool_actions
-                else:
-                    rejected_answer = None
             raise DomainError(
                 ErrorCode.BUDGET_EXHAUSTED,
                 "lightweight Agent step budget is exhausted",

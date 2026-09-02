@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -214,6 +214,9 @@ provenance 的既有 Source bridge、非 SOURCE provenance 分类和 FINISH Cita
 Primary 决策、strict decoder 拒绝以及一次同一主 Agent 机械重规划的边界；`FINDING-010-277` 记录 run-156 在固定 8-action fuse 内已有
 cognition/Source candidate 的同路径幂等与 Primary evidence planning/selection 缺口，并明确禁止耗尽后恢复工具、扩大预算或重试 Reviewer；历史
 raw receipt 缺失时只能输出机器可读 `NOT_RUN`。两者均尚未形成 Phase C 完成证据。普通答案失败只形成最早偏差证据，不形成停工 PDR。
+`FINDING-010-278` 记录多 Observation Citation ordinal 的局部域与 prefix-scoped bounded replan：Application 保持 strict binding，保留 rejected
+receipt/answer/findings；只有实际新增 Observation 才形成新的同范围机会，同一 prefix 第二次非法继续 fail-closed。该实现不扩展 Agent 协议、Prompt、
+Provider、Reviewer 或预算；fresh successor 仍需验证 q5 补证后进入 Reviewer。
 
 ## Authorization
 

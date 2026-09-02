@@ -4,7 +4,7 @@ kind: project-current
 status: current
 authority: current-development
 owners: [project]
-depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, SYS-ADR-018]
+depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, SYS-ADR-018]
 code: []
 tests: []
 as_of: 2026-09-01
@@ -55,6 +55,9 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
   的同路径重复幂等和同一预算内已有 cognition/Source candidate 的 Primary evidence planning/selection。`FINDING-010-277` 只复用既有
   path capability、内部 sidecar 和通用呈现收敛，不恢复工具、不扩大预算、不重试 Reviewer、不新增 Agent 协议；历史 raw citation receipt
   缺失时只记录机器可读 `NOT_RUN`。
+- `run-158` 的 q5 暴露多个 Source Observation 的 Citation ordinal 是局部域；`FINDING-010-278` 的 Application 修复按不可变
+  Observation prefix 允许一次同一主 Agent 机械 replan，新增 Observation 才形成新的同范围机会，严格保留 rejected receipt/answer/findings，
+  不自动映射、重编号或合成 Citation。fresh successor 仍需证明 q5 补证后进入 Reviewer。
 - Phase D、完整质量 Gate、Provider recovery 和归档协议扩张仍禁止；Phase C 若失败，按最早 knowledge/integration/Agent/review/Web 层做通用
   修复，不回写题面规则。
 
