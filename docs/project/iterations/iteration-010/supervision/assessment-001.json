@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "c6982c4671ab5bf7543812798d3330ef264282b4",
-  "candidate_tree": "e2d8c8f742eabdeddabcbaec39f4fc58ae4c9c4f",
-  "candidate_worktree_digest": "sha256:971c0df49cd447d63dff64c35b27f2fdfa1ac52b57a5b2809b19417362d5b9fb",
+  "candidate_commit": "f88d0b76910b2b5cab38634a3ff8029ff298af2b",
+  "candidate_tree": "9dca22d6f7b1b8b73017cec39d2f855ea565aa97",
+  "candidate_worktree_digest": "sha256:7fad40136c78a83c35a3ea69a7f9967f4e13ac3dfa000353de50f3de519d7299",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T13:22:00+08:00",
+  "assessed_at": "2026-09-02T13:27:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -33,7 +33,7 @@
       "id": "finding-278-local-citation-domain",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-278.md",
-      "sha256": "sha256:ed01609a6aaf7402434c837d65f4e48d2ee59428582c96a48ac89a2008d2ac27"
+      "sha256": "sha256:86afbca44f71ba86d9708536378d66aacf6f34e18fc9ff736f96240504d55c46"
     },
     {
       "id": "candidate-agent-implementation",
