@@ -4,12 +4,12 @@
   "candidate_branch": "codex/development",
   "candidate_commit": "011f804ace29db2a149bff0947895bd833db92d2",
   "candidate_tree": "7967248abc53dcdc669cf87375acf4bd97f3f279",
-  "candidate_worktree_digest": "sha256:ffd54ac1b248e711ed0d33867a276d035bb4c2ed58fc64d86c300b80b0ca075d",
+  "candidate_worktree_digest": "sha256:f91a7205f4947ba37dcfb1b220261d547fa770dc0a4424f5be4112921376022c",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "NOT_RUN",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T08:38:00+08:00",
+  "assessed_at": "2026-09-02T08:43:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -27,13 +27,13 @@
       "id": "same-agent-source-gap-registration",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:6356c694674af7e3efa456f2764cb6e6713fa5eb14dbd0df76cad57339960008"
+      "sha256": "sha256:34d5d21e5f2fa3c203ea44a8d137d9ffa0647b959dcc6f049800b655d05f7e28"
     },
     {
       "id": "heterogeneous-bridge-regression-test",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:61c7812befbc507c8a2f11e7102ff32efce3b8fa28137f6caf91717a2cbafcb7"
+      "sha256": "sha256:3985f94928af3b10751fe2dc42a0f74656904de30867a87453eac8372e5d9f28"
     }
   ],
   "completed_requirements": [
@@ -46,5 +46,5 @@
   ],
   "defects": [],
   "earliest_divergence": "fresh-review-loopback-and-heterogeneous-evaluation-not-yet-executed",
-  "next_action": "在 exact clean candidate 011f804 上立即贯通首个浏览器 Chat：重放原始 cognition→Source Gap 问题，再用两个异质问题和一个语义追问验证真实 Source Citation、fresh review 与 loopback；将运行证据回写后继续同一阶段开发。"
+  "next_action": "保持同一主 Agent 的最小 citation-domain replan 修复，补齐其通用定向证据后立即在当前候选贯通首个浏览器 Chat；重放原始问题、两个异质问题和一个语义追问，验证真实 Source Citation、fresh review 与 loopback，不扩张 Prompt/Schema/协议。"
 }
