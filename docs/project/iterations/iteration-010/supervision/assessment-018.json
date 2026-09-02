@@ -1,0 +1,79 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "dd4d1e701a62d0d08f16579467dce546a72a8d75",
+  "candidate_tree": "019238a5cfd94e12f1db060b153d173741341ba9",
+  "candidate_worktree_digest": "sha256:278ee3f663f0e0308196766c68ef3cf0bac9c76923a7b534d10d324350246abd",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-02T12:12:00+08:00",
+  "evidence": [
+    {
+      "id": "phase-c-objective-and-boundary",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:d06b8fea13cbe3fd4b6cf28560c62df0a554f4a7c68e6bfd3c57c8f636fddb79"
+    },
+    {
+      "id": "phase-c-design-and-failure-policy",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:2784b3667c2096b253be29daffa5c1ee67d1de04938d4ba3494396c459cf9502"
+    },
+    {
+      "id": "candidate-priority-contract",
+      "scope": "candidate",
+      "path": "docs/system/contracts/application/engineering-conversation.md",
+      "sha256": "sha256:2fa38d06f5de8bf7021129d934d0b79e0682cc6261548297f1d8c9d92f43a5ac"
+    },
+    {
+      "id": "candidate-finding-277",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-277.md",
+      "sha256": "sha256:7e3f9261ab5015f0158bcf1f808997133df6caa8c109eaf319f476a90400915f"
+    },
+    {
+      "id": "candidate-agent-ordering",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:38285814f418a0344640ffefe4d418a9ad3d2a478bc69586466bb66c3a57c818"
+    },
+    {
+      "id": "candidate-agent-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:59cc0d30213169d8e0d5c84ec217545ef6b265a2908d5476ac200075e95bb93c"
+    },
+    {
+      "id": "exact-source-behavior-reference",
+      "scope": "source",
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
+      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
+    }
+  ],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "agent-cognition-source-candidate-dedup",
+      "summary": "最新通用 candidate projection 将已存在的 cognition navigation locator 在第二次 cognition observation 中重复向 Source Broker 签发；Broker 返回既有 opaque identity 后被 known_references 判为不一致，导致 unrelated repository 的既有 cognition→Source 回归 34 项中 1 项失败并 fail-closed。",
+      "evidence_ids": [
+        "candidate-agent-ordering",
+        "candidate-agent-tests",
+        "candidate-priority-contract"
+      ]
+    }
+  ],
+  "earliest_divergence": "agent-cognition-source-candidate-dedup",
+  "next_action": "开发继续做一个通用修复：在 `_register_cognition_source_read_candidates` 中按 exact `(source_revision, provenance.locator)` 识别已经存在且可用的 cognition-navigation candidate 并跳过重复 Broker 签发；同时保留同文件 line/literal hit 不等于 exact cognition locator 的语义，仍为其签发新的 exact candidate。不得放宽 authority identity 校验、改测试掩盖、引入题面/工程特判或新增协议/Prompt/Schema；重跑失败测试及 lightweight agent/model/cognition 定向套件，随后再绑定新 candidate digest。CORRECT 不暂停开发、不重新授权，task_should_stop=false。"
+}
