@@ -20,11 +20,7 @@
   "q5_status": "CONTROL_STATE_DENIED_BEFORE_FRESH_REVIEWER",
   "transport": {
     "provider": "VOLCENGINE_ARK",
-    "tls_handshake_attempt_count": 33,
-    "tls_handshake_success_count": 33,
-    "http_dispatch_count": 33,
-    "pre_dispatch_tls_failure_count": 0,
-    "post_dispatch_outcome_unknown_count": 0,
+    "provider_dispatch_count": 33,
     "request_retry_count": 0
   },
   "q5": {
