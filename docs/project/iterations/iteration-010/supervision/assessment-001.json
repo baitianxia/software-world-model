@@ -42,10 +42,10 @@
       "sha256": "sha256:a9929a73a7cc66adbf60245afa48b26dcb17281a5461bf09f2023bd8a9f2bf51"
     },
     {
-      "id": "turn-failure-recovery-owner",
+      "id": "candidate-agent-ordering",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:e237e2668636e98037bc13059e29ae3d84dde36c3b6ca03eed16bf52575a0454"
+      "sha256": "sha256:12347d0e4b216f339dd6465a10f4ada4c72700764d26499b8a346f5de1e22b51"
     },
     {
       "id": "action-shape-recovery-finding",
