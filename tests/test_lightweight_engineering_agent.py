@@ -452,6 +452,121 @@ class _CognitionFirstModel(_Model):
         )
 
 
+class _CitationBindingModel(_Model):
+    """Deterministic fixture for the Application citation-binding boundary."""
+
+    def __init__(self, *, cognition: bool, repeat_invalid: bool = False) -> None:
+        super().__init__()
+        self.cognition = cognition
+        self.repeat_invalid = repeat_invalid
+        self.invalid_submissions = 0
+
+    def decide(self, request):
+        self.steps.append(request)
+        question = request.turn_request.user_message.content
+        cognition_observations = [
+            item
+            for item in request.observations
+            if isinstance(item.operation, LightweightAgentAction)
+        ]
+        source_observations = [
+            item
+            for item in request.observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        ]
+        common = {
+            "goal": question,
+            "response_kind": None,
+            "answer": None,
+            "citations": (),
+        }
+        if self.cognition and not cognition_observations:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Establish reusable cognition before reading exact Source.",
+                action=LightweightAgentAction.SEARCH_COGNITION,
+                query="CheckoutServiceImpl",
+                read_index=None,
+                cursor=None,
+            )
+        elif self.cognition and len(cognition_observations) == 1:
+            decision = LightweightAgentDecision(
+                **common,
+                plan="Check the implementation relation in the cognition snapshot.",
+                action=LightweightAgentAction.TRAVERSE_RELATIONS,
+                query=None,
+                read_index=None,
+                cognition_index=request.cognition_candidates[0].cognition_index,
+                relation_kind=CognitionRelationKind.IMPLEMENTS,
+                direction=CognitionDirection.OUTGOING,
+                maximum_depth=1,
+                cursor=None,
+            )
+        elif len(source_observations) < (2 if self.cognition else 1):
+            # Cognition pages issue at least two distinct Source navigation
+            # candidates in this fixture.  A source-only run gets its single
+            # candidate from SEARCH_SOURCE.
+            if not request.read_candidates:
+                decision = LightweightAgentDecision(
+                    **common,
+                    plan="Locate a source candidate before reading it.",
+                    action=LightweightAgentAction.SEARCH_SOURCE,
+                    query="Entry",
+                    read_index=None,
+                )
+            else:
+                read_index = request.read_candidates[
+                    len(source_observations)
+                ].read_index
+                decision = LightweightAgentDecision(
+                    **common,
+                    plan="Read the next exact Source candidate.",
+                    action=LightweightAgentAction.READ_SOURCE,
+                    query=None,
+                    read_index=read_index,
+                )
+        else:
+            source_selections = tuple(
+                LightweightCitationSelection(item.observation_index, 1)
+                for item in source_observations
+            )
+            if self.invalid_submissions == 0 or self.repeat_invalid:
+                self.invalid_submissions += 1
+                if self.cognition:
+                    cognition_observation = cognition_observations[0]
+                    citations = (
+                        LightweightCitationSelection(
+                            cognition_observation.observation_index,
+                            1,
+                        ),
+                        source_selections[-1],
+                    )
+                else:
+                    citations = (
+                        LightweightCitationSelection(
+                            source_observations[-1].observation_index,
+                            2,
+                        ),
+                    )
+            else:
+                citations = source_selections
+            decision = LightweightAgentDecision(
+                goal=question,
+                plan="Answer from the exact Source observations.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.ANSWER,
+                answer="当前 Source 观察支持该实现行为。",
+                citations=citations,
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 def _cognition(
     *,
     source_revision: str = REVISION,
@@ -1029,6 +1144,190 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 "INDEPENDENT_REVIEW"
             ),
             1,
+        )
+    def test_citation_binding_replans_after_cognition_and_multiple_source_reads(
+        self,
+    ) -> None:
+        model = _CitationBindingModel(cognition=True)
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-cognition",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="实现如何履行接口契约？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(submission.turn.citations), 2)
+        self.assertEqual(len(model.reviews), 1)
+        self.assertEqual(model.invalid_submissions, 1)
+        self.assertEqual(
+            model.steps[-1].review_findings,
+            (
+                "Application rejected the previous FINISH citation selection at "
+                "observation index 1, citation index 1; the selected observation "
+                "has 0 delivered Citation(s). Replan and submit FINISH using only "
+                "observation/citation pairs present in the current observations; "
+                "do not invent evidence or alter the observations.",
+            ),
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        rejection_events = [
+            item
+            for item in trace.events
+            if item["kind"] == "CITATION_BINDING_REJECTION"
+        ]
+        self.assertEqual(
+            rejection_events,
+            [
+                {
+                    "kind": "CITATION_BINDING_REJECTION",
+                    "step": 5,
+                    "observation_index": 1,
+                    "citation_index": 1,
+                    "available_citation_count": 0,
+                    "selected_pairs": (
+                        {"observation_index": 1, "citation_index": 1},
+                        {"observation_index": 4, "citation_index": 1},
+                    ),
+                    "repair_ordinal": 1,
+                }
+            ],
+        )
+        self.assertEqual(
+            [
+                item["action"]
+                for item in trace.events
+                if item["kind"] == "MODEL_DECISION"
+            ],
+            [
+                "SEARCH_COGNITION",
+                "TRAVERSE_RELATIONS",
+                "READ_SOURCE",
+                "READ_SOURCE",
+                "FINISH",
+                "FINISH",
+            ],
+        )
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "INDEPENDENT_REVIEW"
+            ),
+            1,
+        )
+        self.assertEqual(
+            trace.digest,
+            digest_of(
+                {
+                    "schema": "SWM-LIGHTWEIGHT-AGENT-TRAJECTORY@1",
+                    "attempt_ref": "attempt-citation-binding-cognition",
+                    "turn_request_digest": submission.turn.request_digest.value,
+                    "mode": "WORLD_MODEL_PLUS_SOURCE",
+                    "events": tuple(trace.events),
+                    "terminal_status": "SUCCEEDED",
+                }
+            ),
+        )
+
+    def test_source_only_out_of_range_citation_replans_once(self) -> None:
+        model = _CitationBindingModel(cognition=False)
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-source-only",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(model.reviews), 1)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [
+                item["kind"]
+                for item in trace.events
+                if item["kind"] == "CITATION_BINDING_REJECTION"
+            ],
+            ["CITATION_BINDING_REJECTION"],
+        )
+        rejection = next(
+            item
+            for item in trace.events
+            if item["kind"] == "CITATION_BINDING_REJECTION"
+        )
+        self.assertEqual(rejection["observation_index"], 2)
+        self.assertEqual(rejection["citation_index"], 2)
+        self.assertEqual(rejection["available_citation_count"], 1)
+        self.assertEqual(rejection["repair_ordinal"], 1)
+        self.assertEqual(
+            [
+                item["action"]
+                for item in trace.events
+                if item["kind"] == "MODEL_DECISION"
+            ],
+            ["SEARCH_SOURCE", "READ_SOURCE", "FINISH", "FINISH"],
+        )
+
+    def test_second_invalid_citation_selection_remains_fail_closed(self) -> None:
+        model = _CitationBindingModel(cognition=False, repeat_invalid=True)
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-citation-binding-second-invalid",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="入口如何处理输入？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "NOT_ACCEPTED")
+        self.assertEqual(submission.turn.failure_code, "CONTROL_STATE_DENIED")
+        self.assertEqual(len(model.reviews), 0)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "CITATION_BINDING_REJECTION"
+            ),
+            1,
+        )
+        self.assertEqual(
+            [item["kind"] for item in trace.events].count(
+                "INDEPENDENT_REVIEW"
+            ),
+            0,
         )
 
 

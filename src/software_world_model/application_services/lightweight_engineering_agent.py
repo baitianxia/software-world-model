@@ -486,6 +486,30 @@ class LightweightModelCallFailure(DomainError):
         self.disclosure_record_ref = disclosure_record_ref
 
 
+class _CitationBindingRejection(DomainError):
+    """A mechanical FINISH selection that is not in the current evidence domain.
+
+    This remains an Application-owned rejection.  It carries only the selected
+    ordinals and the size of the sealed observation domain so the primary Agent
+    can replan once without turning a cognition observation into a Citation.
+    """
+
+    def __init__(
+        self,
+        *,
+        observation_index: int,
+        citation_index: int,
+        available_citation_count: int,
+    ) -> None:
+        super().__init__(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "response selected a Citation outside delivered evidence",
+        )
+        self.observation_index = observation_index
+        self.citation_index = citation_index
+        self.available_citation_count = available_citation_count
+
+
 class LightweightEngineeringModel(Protocol):
     @property
     def instance_ref(self) -> str: ...
@@ -693,6 +717,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         tool_actions = 0
         reviews = 0
         rewrites = 0
+        citation_binding_repairs = 0
         consecutive_no_progress = 0
         terminal = "FAILED"
         try:
@@ -776,7 +801,49 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
 
                 assert decision.answer is not None
                 assert decision.response_kind is not None
-                selected = self._resolve_citations(decision, observations)
+                try:
+                    selected = self._resolve_citations(decision, observations)
+                except _CitationBindingRejection as exc:
+                    if citation_binding_repairs >= 1:
+                        raise
+                    citation_binding_repairs += 1
+                    # Keep the rejected selection intact in the trajectory and
+                    # give the same primary Agent one bounded replan.  The
+                    # feedback is deliberately mechanical: all actual evidence
+                    # remains in the sealed observations and no Citation is
+                    # synthesized or silently removed.
+                    events.append(
+                        {
+                            "kind": "CITATION_BINDING_REJECTION",
+                            "step": step,
+                            "observation_index": exc.observation_index,
+                            "citation_index": exc.citation_index,
+                            "available_citation_count": (
+                                exc.available_citation_count
+                            ),
+                            "selected_pairs": tuple(
+                                {
+                                    "observation_index": item.observation_index,
+                                    "citation_index": item.citation_index,
+                                }
+                                for item in decision.citations
+                            ),
+                            "repair_ordinal": citation_binding_repairs,
+                        }
+                    )
+                    rejected_answer = decision.answer
+                    review_findings = (
+                        "Application rejected the previous FINISH citation "
+                        "selection at observation index "
+                        f"{exc.observation_index}, citation index "
+                        f"{exc.citation_index}; the selected observation has "
+                        f"{exc.available_citation_count} delivered Citation(s). "
+                        "Replan and submit FINISH using only "
+                        "observation/citation pairs present in the current "
+                        "observations; do not invent evidence or alter the "
+                        "observations.",
+                    )
+                    continue
                 reviews += 1
                 reviewed = self._model.review(
                     LightweightReviewRequest(
@@ -1401,12 +1468,15 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         selected: list[EngineeringAgentCitation] = []
         for choice in decision.citations:
             observation = by_index.get(choice.observation_index)
-            if observation is None or choice.citation_index > len(
-                observation.citations
+            if observation is None or not (
+                1 <= choice.citation_index <= len(observation.citations)
             ):
-                raise DomainError(
-                    ErrorCode.CONTROL_STATE_DENIED,
-                    "response selected a Citation outside delivered evidence",
+                raise _CitationBindingRejection(
+                    observation_index=choice.observation_index,
+                    citation_index=choice.citation_index,
+                    available_citation_count=(
+                        len(observation.citations) if observation is not None else 0
+                    ),
                 )
             citation = observation.citations[choice.citation_index - 1]
             if citation.citation_ref not in {

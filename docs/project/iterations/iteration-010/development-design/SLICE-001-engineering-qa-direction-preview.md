@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -208,7 +208,8 @@ Phase D 再判断总体质量是否严格超过 current Codex；Codex 是强基�
 `FINDING-010-263—265` 保存 Phase C 首个真实 Browser 的事务漏判、cognition ranking 替换实验，以及 run-005 暴露的 source-native lexical
 query 工具契约缺口；`FINDING-010-266` 保存 run-006/007 pre-HTTP TLS 失败后错误结束任务的执行连续性缺口；`FINDING-010-269` 保存分支
 增殖、监督目标错绑和开发自报晋级的系统性执行缺口；`FINDING-010-270` 保存显式 Source-bound declaration/implementation 认知闭包及其
-dirty candidate 独立证据；其 clean commit 已由监督分支独立 `ADVANCE`，从而激活 Phase C。后续实现若改变系统边界、认知
+dirty candidate 独立证据；其 clean commit 已由监督分支独立 `ADVANCE`，从而激活 Phase C。`FINDING-010-273—275` 分别保存 cognition
+provenance 的既有 Source bridge、非 SOURCE provenance 分类和 FINISH Citation binding 的一次有界 Agent replan。后续实现若改变系统边界、认知
 模型、Agent 工具职责或质量口径，按 implementation feedback policy 写入新的 Finding 并同步唯一 Owner；普通答案失败只形成
 最早偏差证据，不形成停工 PDR。
 
