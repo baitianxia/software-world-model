@@ -1,0 +1,44 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-154-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:a6caa5bd7612f0e1d42fbdd58df4c50dd54c41a01ce0b58f65c8d2aecb5d63f7",
+  "turn_scope_sha256": "sha256:af979ba0dfacad505e81d2419b32f58518e4d1062898a26a25f06e7a0a2da221",
+  "terminal_file_sha256": "sha256:d6d06e9d81dcd348b84dee3bc3134c00e11966bf94a33131028122bfb810e116",
+  "terminal_digest": "sha256:44165f51de481259b2690070a0fee9b82ff472b6ebe616bb6639d083fcabce5e",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 5,
+  "conversation_count": 4,
+  "provider_dispatch_count": 21,
+  "request_retry_count": 0,
+  "completed_interactions": {
+    "q1": "FRESH_REVIEW_APPROVED_AND_DELIVERED",
+    "q2": "FRESH_REVIEW_APPROVED_AND_DELIVERED",
+    "q3": "APPLICATION_CLARIFICATION_WITH_ZERO_MODEL_CALLS",
+    "q4": "FRESH_REVIEW_APPROVED_AND_DELIVERED"
+  },
+  "q5": {
+    "status": "PROVIDER_UNAVAILABLE_PRE_DISPATCH",
+    "model_call_id": "model_call_6b749b3182d94e0ba69c3fe182f25ff6",
+    "failure_code": "PROVIDER_UNAVAILABLE",
+    "provider": "VOLCENGINE_ARK",
+    "model_call_receipt_digest": "sha256:bf37819b85a1bad9ebd7aa25b7e58ad3e70dadeb52623392b22e88f54eda5449",
+    "transport": {
+      "tls_handshake_attempt_count": 21,
+      "tls_handshake_success_count": 20,
+      "pre_dispatch_tls_failure_count": 1,
+      "pre_dispatch_tls_failure_codes": ["TLS_FAILURE"],
+      "http_dispatch_count": 20,
+      "post_dispatch_outcome_unknown_count": 0,
+      "request_retry_count": 0
+    }
+  },
+  "deepseek": {
+    "provider_dispatch_count": 0,
+    "dispatch_admission_decision": "DENIED_PRICING_CHECK",
+    "same_request_retry_count": 0
+  },
+  "assessment": "q1, q2, and q4 completed on the exact clean candidate with real Source citations and fresh Reviewer APPROVED; q3 was an isolated zero-dispatch clarification. q5's first call failed before HTTP dispatch at the Ark TLS boundary after prior calls had completed. No product semantic failure is attributable to this run; per standing policy this is a provider-unavailable run requiring a fresh logical successor after the prescribed delay. It is not Phase C acceptance or ADVANCE evidence."
+}
