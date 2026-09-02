@@ -7,9 +7,9 @@
   "candidate_worktree_digest": "sha256:edee5c0b2ed272d764a93946c053e16ccba3d4b72593964f0ae59bf201bcfa1b",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
-  "verdict": "NOT_RUN",
+  "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-02T12:31:00+08:00",
+  "assessed_at": "2026-09-02T12:38:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -68,7 +68,18 @@
     "three-heterogeneous-tasks-and-semantic-followup",
     "world-model-material-gain-without-material-regression"
   ],
-  "defects": [],
-  "earliest_divergence": "phase-c-evidence-pending",
-  "next_action": "开发继续推进唯一 Phase C 产品目标：在当前 clean candidate 上启动真实 loopback Browser 纵切，至少运行两个未参与实现的异质问题和一段语义追问，取得同一 Agent 的 cognition→Source Gap→Answer/Citation→fresh Reviewer 证据，并做 source-only 对照确认世界模型的非 locator 增益。保持 docs.py check、定向回归和 plan gate 通过；不得新增 Agent 协议、Prompt/Schema 版本、题面或工程特判、Reviewer 重试、预算恢复或扩大 fuse。普通失败按最早通用责任层继续修复，不能暂停、重新授权或自行晋级。"
+  "defects": [
+    {
+      "severity": "MAJOR",
+      "owner_layer": "browser-turn-scope-orchestration",
+      "summary": "run-157 的 sealed turn-scope 要求 ordinal 3 为独立 context_isolation_probe、ordinal 4 才为 search_document_lifecycle；但 terminal/Ark DB 记录在 q1/q2 后直接执行 q4（calls 15-25），形成两 conversation、四 turns、25 dispatch，未产生 ordinal 3 的新 conversation/clarification 证据，随后按 CORRECT 停止且 q5 未执行。该偏差是 Browser/turn 编排，不是 knowledge、Source bridge、Agent 认知、Reviewer 或 provider；当前 run 不能用于 Phase C 验收，不能通过重标或复用旧页面补齐。",
+      "evidence_ids": [
+        "phase-c-objective-and-boundary",
+        "phase-c-design-and-failure-policy",
+        "candidate-priority-contract"
+      ]
+    }
+  ],
+  "earliest_divergence": "browser-turn-scope-orchestration",
+  "next_action": "封存 run-157 的真实 terminal/DB 为 REWORK/NOT_RUN；不得重标、复用或继续其会话。按同一 clean candidate 建 fresh successor 并在每一步核对 conversation ID 与空上下文：q1+q2 同一会话，q3 新会话且只提交零上下文 clarification，q4 新会话，q5 新会话；loader/turn-scope/refs 通过后再启动固定 launcher。保持当前产品代码、Prompt/Schema、Reviewer、预算和 Source scope 不变，普通失败仍按最早责任层处理。"
 }
