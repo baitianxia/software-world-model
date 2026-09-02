@@ -1,0 +1,51 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-155-phase-c-loopback",
+  "candidate_commit": "7ad08398c7f537f50a726064cc0e2b8b639ad999",
+  "candidate_tree": "45ad664dac64cac289a42c43869841c086153951",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:26563be2d6b2b3ccda4a735d0501f6912953fa5d714334b4e9939c204d012f88",
+  "turn_scope_sha256": "sha256:bc8bdd3fb04df381fa602f4c76dc544e772f5a0174b6b007733f8e996e929982",
+  "terminal_file_sha256": "sha256:b3d04f85bb5a93b80f3ccd534059edd35ac0651b74b994517d0a53a1915d15c8",
+  "terminal_digest": "sha256:af7421087d6dee67ce4e4a46e0abf4e84dd867292b1ca30a219bf6da96719444",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 3,
+  "request_retry_count": 0,
+  "failure_stage": "PRIMARY_AGENT",
+  "failure_code": "STRUCTURED_OUTPUT_INVALID",
+  "transport": {
+    "provider": "VOLCENGINE_ARK",
+    "tls_handshake_attempt_count": 3,
+    "tls_handshake_success_count": 3,
+    "http_dispatch_count": 3,
+    "pre_dispatch_tls_failure_count": 0,
+    "post_dispatch_outcome_unknown_count": 0,
+    "request_retry_count": 0
+  },
+  "valid_calls": [
+    {
+      "model_call_id": "model_call_3b0196dcc98f41fc81effafcf23b1947",
+      "action": "SEARCH_COGNITION",
+      "output_digest": "sha256:a6343f6ee19be2abb9a0b545e8fdb5635611852145f94f053906433af9edde90"
+    },
+    {
+      "model_call_id": "model_call_8dfe731072114fd6b8811c93fef0a8e1",
+      "action": "READ_SOURCE",
+      "read_index": 1,
+      "output_digest": "sha256:77b1491ff58bc4db8779ae76a07749ab343401368d968a24d28ce95cf82b567c"
+    }
+  ],
+  "invalid_call": {
+    "model_call_id": "model_call_1bf26701c6e34ab2bd29c7c737b55355",
+    "action": "FINISH",
+    "output_digest": "sha256:bc85118aa1f9f65e348fe4ee0fdf9a1d970a72d17ad4982abf1570a6aa5e61be",
+    "output_normalization": "IDENTITY",
+    "citation_count": 1,
+    "non_null_action_incompatible_fields": ["cognition_index"],
+    "cognition_index": 1,
+    "decoder_disposition": "REJECT"
+  },
+  "assessment": "The third Primary output selected FINISH with a real-looking Source citation but also set cognition_index=1, a field incompatible with FINISH under the existing closed action contract. Strict rejection occurred before any Reviewer dispatch; no q2-q5 calls occurred. This is generic Primary model-boundary evidence matching run150, not a provider transport or cognition construction failure, and this run is not acceptance or ADVANCE evidence."
+}
