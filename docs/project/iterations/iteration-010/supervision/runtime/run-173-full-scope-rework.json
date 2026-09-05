@@ -1,0 +1,50 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-173-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:0f4360ed9431318b6870d20eda4978f51ee1879361690c1368d6ae33e520d223",
+  "turn_scope_sha256": "sha256:762ad18172abef7c9aee7f14e36982d39e04b412818e283e7dbcfcb8bb527b8e",
+  "launch_file_sha256": "sha256:69ad211dc7367d4020df04746e30b73ad7a057fc7811ebca68bb5ff49f1a2d62",
+  "terminal_file_sha256": "sha256:839c90df987c333caf811f4b1ff32ae8acc75d1bf445c851fd6199f77555b242",
+  "terminal_digest": "sha256:5ce49689366e159c31cbd00bc7f2d90870d9efd40c9590024930832010991533",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 5,
+  "conversation_count": 4,
+  "provider_dispatch_count": 27,
+  "request_retry_count": 0,
+  "q1_status": "SUCCEEDED_DELIVERED_AFTER_REWRITE",
+  "q1_review": {
+    "rewrite_call_id": "model_call_09d5d3e860f845af845176a4175efa2e",
+    "rewrite_output_digest": "sha256:1ecd9b82f4a3d4c99da2659e9950f61234e769f267a3a5df1d0d0f9ffd428e4f",
+    "approved_call_id": "model_call_f38f9ae25c9041c49df6c0e4ed7f27f6",
+    "approved_output_digest": "sha256:c234e780f82c1053b8d1f224074a7e022e57c987c69e974e70550a7d21876571"
+  },
+  "q2_status": "SUCCEEDED_DELIVERED",
+  "q2_approved_call": {
+    "model_call_id": "model_call_c2202524d2cc428c849a40be5855d345",
+    "output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb"
+  },
+  "q3_status": "APPLICATION_INPUT_CLARIFICATION_ZERO_PROVIDER_DISPATCH",
+  "q4_status": "SUCCEEDED_DELIVERED_AFTER_REWRITE",
+  "q4_review": {
+    "rewrite_call_id": "model_call_75f17044483149dc8e9900a682f1f5bf",
+    "rewrite_output_digest": "sha256:30d1ef344e6731599f1b272d39bad6dcfe8ffa2ffa45aa70628ddeaa49d83efb",
+    "approved_call_id": "model_call_8040a80bd2b24a27a00c5292d5ebadc7",
+    "approved_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb"
+  },
+  "q5_status": "FAILED_BEFORE_REVIEW",
+  "q5_malformed_primary_call": {
+    "model_call_id": "model_call_9c73c6932ee44cf5929f9863dd64c271",
+    "output_digest": "sha256:8746473f75ede23a9e636f93f8af602a28d2f74d903d362f6ca0f63bb339c0a6",
+    "output_normalization": "IDENTITY",
+    "raw_output_length": 2095,
+    "literal_control_character_offsets": [102, 103, 310, 311, 424, 425, 534, 669, 794, 902, 903, 1226, 1227, 1244, 1363, 1477],
+    "decoder_disposition": "REJECT",
+    "failure_stage": "PRIMARY_AGENT",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID",
+    "note": "The apparent FINISH object contains literal LF bytes inside the answer JSON string; strict JSON decoding raises Invalid control character. No Reviewer was dispatched for q5."
+  },
+  "assessment": "q1 and q4 each completed a valid Reviewer REWRITE followed by a bounded Primary rewrite and fresh Reviewer APPROVED; q2 completed with fresh Reviewer APPROVED in the q1/q2 conversation; q3 was an isolated zero-provider-dispatch clarification. q5 reached SEARCH/READ and then a Primary FINISH output with literal control characters inside the answer string, which the strict decoder rejected before Reviewer or Delivery. This is a complete-scope REWORK/NOT_RUN result: three useful deliveries and the semantic clarification succeeded, but q5 did not complete and the Phase C acceptance/ADVANCE conditions remain unmet."
+}
