@@ -1,0 +1,43 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-167-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:02450f0e7ab30578bed4a65da9ed1b274133e4ad22a7b12b9d0a19f983cafe80",
+  "turn_scope_sha256": "sha256:4e4221933e35c5430c8a8acafd20f9de27119478571022c39056e37e63d2be4a",
+  "launch_file_sha256": "sha256:26c9fff505609d5b43f0dc0df2c8d324259dc3ef2c0249b3726459751683291c",
+  "terminal_file_sha256": "sha256:dca22737d2354934bd368ad1fcec17580d0a7bc0af40193282b72b422533c4a9",
+  "terminal_digest": "sha256:c109e95ff0260352f8b0ba23fc45d5c8011db589544d4f0ae2c13e69a7608b4b",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 8,
+  "request_retry_count": 0,
+  "q1_status": "FAILED_BEFORE_DELIVERY",
+  "first_reviewer_call": {
+    "model_call_id": "model_call_977df3de30d14eab88eb79f768ac756c",
+    "output_digest": "sha256:aa966af8ed993b31ad4d71d23e985cc423369fbe8175fbe487a9c39d4db7f028",
+    "verdict": "MORE_EVIDENCE",
+    "finding_count": 2
+  },
+  "bounded_replan": {
+    "read_call_id": "model_call_318e5657c879461988e3373ba868f6ae",
+    "read_output_digest": "sha256:3976005009828e30809d46ff17673cc6686721f735042cd0f7217f103c81aeb1",
+    "finish_call_id": "model_call_e112b88d51f54810a351d7ca1e9a4b1c",
+    "finish_output_digest": "sha256:1f454609e0783977df0c4fa2d82cd4c6d02561f6d9d5802f07c6431d26f07cc7",
+    "new_source_observation": true
+  },
+  "malformed_reviewer_call": {
+    "model_call_id": "model_call_77cb5f0abb6040b799428badfa8d6561",
+    "output_digest": "sha256:dc683f93951adfa041d5819b3be9eeee674dd4d55bcb1797856f6daa717416a3",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"answer\": \"{\\\"verdict\\\": \\\"APPROVED\\\", \\\"findings\\\": []}\"}",
+    "top_level_shape": "{answer}",
+    "top_level_verdict_present": false,
+    "decoder_disposition": "REJECT",
+    "failure_stage": "INDEPENDENT_REVIEWER",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "The first Reviewer returned a valid MORE_EVIDENCE request and the same Primary performed the bounded read/FINISH continuation, demonstrating the generic evidence-planning path. The subsequent fresh Reviewer emitted a nested answer string; the strict decoder correctly rejected it before delivery. q2-q5 were not dispatched, so this run is REWORK/NOT_RUN and not Phase C acceptance or ADVANCE evidence."
+}
