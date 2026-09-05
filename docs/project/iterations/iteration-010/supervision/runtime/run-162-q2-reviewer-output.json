@@ -1,0 +1,35 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-162-phase-c-loopback",
+  "candidate_commit": "f88d0b76910b2b5cab38634a3ff8029ff298af2b",
+  "candidate_tree": "9dca22d6f7b1b8b73017cec39d2f855ea565aa97",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:90811109ada70dda7d515fe7e22b67e334bba01a571c6a0d0fda2d438778235b",
+  "turn_scope_sha256": "sha256:c46ead7e4dcdae3e205d113e541c94af0b3cd9308336a45923a3c5f28d6a056d",
+  "terminal_file_sha256": "sha256:41410f4283ac0f54b13f297c16d5088c55a6584156f6a740462cb501f63d6060",
+  "terminal_digest": "sha256:395eed79b5168ce85fac1b5b2cec35d17743eddf74b4d113216afc5bc0170ea2",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 2,
+  "conversation_count": 1,
+  "provider_dispatch_count": 10,
+  "request_retry_count": 0,
+  "q1_status": "APPROVED_AFTER_REWRITE",
+  "q2_status": "FAILED_BEFORE_DELIVERY",
+  "q2_primary_call": {
+    "model_call_id": "model_call_10839ad5a1494538b4c151219866aef9",
+    "action": "FINISH",
+    "output_digest": "sha256:7dc72fdffba15621bba8998e5dd50ed8b8ac8d7da6eb53d49e9a120bad620345",
+    "citation_count": 1
+  },
+  "q2_reviewer_call": {
+    "model_call_id": "model_call_8551073498674a8ba9279d38ea975d7c",
+    "output_digest": "sha256:38aedb180e3bbb93261dc2b1312c150993d9aa22fb94cf2cc27f6d65cd5f562c",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"answer\":\"\\n{\\\"findings\\\":[],\\\"verdict\\\":\\\"APPROVED\\\"}\\n\"}",
+    "top_level_shape": "{answer}",
+    "top_level_verdict_present": false,
+    "decoder_disposition": "REJECT",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "q1 completed with a valid fresh Reviewer after rewrite. q2 reached a valid Primary FINISH with a Source citation, but the independent Reviewer returned a nested answer string instead of the closed reviewer object. The strict decoder correctly rejected it; q3-q5 were not dispatched and this run is not acceptance or ADVANCE evidence."
+}
