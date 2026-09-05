@@ -85,5 +85,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "开发继续，不暂停、不重新授权：基于 run-160 的完整轨迹修复同一 Agent 的通用 evidence planning/duplicate-action recovery，使 Reviewer MORE_EVIDENCE 后优先使用已存在且未读的 direct declaration/effect candidate，遇到重复或无进展立即更新计划并选择不同合法动作；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema 和 Provider 不变。以原 q5 及至少两个异质陌生问题和一个语义追问做 targeted trajectory，随后用 fresh full q1–q5 Web successor 验证 Reviewer/Delivery 与 source-only 非 locator 增益；不得用增加预算、题面规则或再次重试同一会话掩盖。"
+  "next_action": "开发继续，不暂停、不重新授权：398a974 的通用 evidence planning/duplicate-action recovery 已通过定向测试并在 run166/run167 的 MORE_EVIDENCE→新 Source READ→FINISH 轨迹中实际执行；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema 和 Provider 不变。run166/run167 后续 Reviewer 的嵌套 answer 输出均由严格 decoder 正确拒绝，不能放宽解析、增加 retry/alias 或改 Provider。封存两次真实失败为 REWORK/NOT_RUN，按同一 clean candidate 建 fresh successor，严格重取 q1–q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话），再验证 Reviewer/Delivery/Web 与 source-only 非 locator 增益；不得把部分成功计为 ADVANCE。"
 }
