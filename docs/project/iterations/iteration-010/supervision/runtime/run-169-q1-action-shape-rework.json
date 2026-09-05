@@ -1,0 +1,40 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-169-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:f403a2f5a53a69aba813aade9ca1997256cb66c6a56a69b3a10f96e9c2db5a81",
+  "turn_scope_sha256": "sha256:9a630b8ec0e2850b02bc4e77dd1b262a7532d50ab2598414f49c64a48a2f8f69",
+  "launch_file_sha256": "sha256:7dea2d347d11b2eca6db5ac046bf90b6c104493d6858dc0f63c2cbdf6cba8a80",
+  "terminal_file_sha256": "sha256:cdb1d699dcea70836034e671bc2fff5846a712d86bf27a82ec53f1b714b832cb",
+  "terminal_digest": "sha256:f82f62fa3b117c434a4754ffdf36cfde8588edf3c287cb4b90c937a4cc4c9068",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 6,
+  "request_retry_count": 0,
+  "first_reviewer_call": {
+    "model_call_id": "model_call_1faab6e3252c41f6886bf872b8babba7",
+    "output_digest": "sha256:d3e1a4fec5ed74770c89fc2dd552edf03da09ad3247768650c12f78902fd50fa",
+    "verdict": "MORE_EVIDENCE",
+    "finding_count": 1
+  },
+  "primary_repair_attempt": {
+    "model_call_id": "model_call_cd72bee18bc04860bbf9ac07ffe28872",
+    "output_digest": "sha256:bf508df64913a0498843cde492c874e69a4988927b8f4059717baac44f7c3b2b",
+    "action": "READ_SOURCE",
+    "cognition_index": 2,
+    "read_index": 2,
+    "boundary_disposition": "MODEL_DECISION_SHAPE_REJECTION"
+  },
+  "malformed_repair_output": {
+    "model_call_id": "model_call_7e0bd95cbe8e447a942f8bdf9d09a532",
+    "output_digest": "sha256:cfe70e2806ae793d828b6880fae7accbb3fe7c56f7a4de062b829ea5ad850527",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"action\": \"READ_SOURCE\", \"answer\": null, \"citations\": null, \"cognition_index\": null, \"cursor\": null, \"direction\": null, \"goal\": \"mall-portal 使用优惠券创建普通订单时，库存锁定、订单与订单项写入、优惠券状态更新、购物车清理和延迟取消消息按什么顺序发生？请区分数据库写入、消息副作用与当前源码无法确认的外部一致性保证。\", \"maximum_depth\": null, \"plan\": \"补充读取 OmsPortalOrderService 接口以确认 @Transactional 事务边界证据\", \"query\": null, \"read_index\": 2, \"relation_kind\": null, \"response_kind\": null}",
+    "failure_stage": "PRIMARY_AGENT",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "The first Reviewer returned a valid MORE_EVIDENCE request. The Primary's next READ_SOURCE decision contained both cognition_index and read_index and was rejected by the existing action-shape boundary; the bounded repair then returned citations:null and was strictly rejected. No second Reviewer or Delivery occurred, and q2-q5 were not dispatched. This run is REWORK/NOT_RUN and is not Phase C acceptance or ADVANCE evidence."
+}
