@@ -22,12 +22,16 @@ run-160-phase-c-loopback 的 q5 在同一调查中重复了相同的 Source 搜�
 该偏差发生在 Application Agent 的 action history 与 candidate presentation，而不是 cognition provenance、Source Broker、Provider 或 Reviewer
 职责。
 
+run-181-phase-c-loopback 进一步显示，详情页命中已经注册的 cognition entity 时，候选去重会让该页的 provenance 不再进入下一次 Source bridge；同一路径上的接口/实现声明因此只能保留初始命中，不能刷新当前 gap 的 typed-origin sidecar。该偏差同样属于 Application candidate construction，不改变同一路径的 opaque Source capability。
+
 ## Evidence
 
 - run-160-phase-c-loopback 的 sealed q5 轨迹记录相同搜索、相同读取和 Reviewer MORE_EVIDENCE 后仍存在的未读候选；监督 directive
   指定最早责任层为通用 evidence planning/duplicate-action recovery。
-- tests.test_lightweight_engineering_agent 的 21 项定向测试通过，新增夹具验证重复 READ_SOURCE 不产生第二次 Tool dispatch、同一主
+- tests.test_lightweight_engineering_agent 的 41 项定向测试通过，新增夹具验证重复 READ_SOURCE 不产生第二次 Tool dispatch、同一主
   Agent 收到 bounded feedback 后完成合法 FINISH，以及无进展 Observation 形成 replan feedback。
+- 同一异质 Java 文件中的接口/实现方法 detail 夹具验证：详情页遇到已注册 entity 后仍刷新 typed-origin sidecar，既有 read candidate 的
+  citation/ref/content_digest/resource identity 不变，且 model-facing projection 仍把该受控 Source candidate 放在可读前缀。
 - _ordered_read_candidates 仍保留全部 authority-owned candidates 和原始 Citation identity；只将同角色候选的排序稳定为较早的未读认知来源
   优先，不解析答案正文或题目内容。
 
@@ -38,3 +42,6 @@ run-160-phase-c-loopback 的 q5 在同一调查中重复了相同的 Source 搜�
 “优先已有未读 Source candidate、避免已完成动作”反馈，并按内部 sidecar 的既有来源顺序呈现候选。该修复不增加预算、不修改
 model-facing 字段、Prompt、Provider、Reviewer 或 Citation/Source identity，也不包含工程、类名、方法名或题目规则。System contract 已有的
 duplicate/no-progress fuse 继续作为跨实现不变量；本 Finding 仅记录本实现的闭合，不宣告 Phase C 完成或 ADVANCE。
+每次 cognition search/traverse/detail 返回的当前页面都会重新投影其中已注册 entity 的 provenance 到同一既有 bridge；path/revision
+幂等、非 SOURCE provenance 过滤、opaque locator 与 Source READ authority 仍由原有 adapter/bridge 负责，Application 不合成新的
+Citation 或 Agent 字段。

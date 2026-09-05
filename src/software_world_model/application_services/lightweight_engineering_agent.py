@@ -1607,16 +1607,16 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     cursor=decision.cursor or 0,
                     limit=32,
                 )
-        first_new_candidate = len(cognition_candidates)
         cognition_metadata: dict[
             int, _LightweightReadNavigationMetadata
         ] = {}
+        page_entity_ids: set[StableId] = set()
         self._register_cognition_candidates(
             page,
             cognition_candidates,
             cognition_metadata,
+            encountered_entity_ids=page_entity_ids,
         )
-        new_candidates = cognition_candidates[first_new_candidate:]
         index = len(observations) + 1
         content = canonical_json_bytes(page.to_payload()).decode("utf-8")
         page_digest = digest_of(page.to_payload())
@@ -1658,7 +1658,19 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         self._register_cognition_source_read_candidates(
             request=request,
             cognition=cognition,
-            candidates=new_candidates,
+            # A detail/traversal page can revisit an already registered
+            # cognition entity.  Its provenance still represents a newly
+            # relevant evidence gap even though candidate de-duplication
+            # means it is not newly appended to the registry.  Bridge every
+            # candidate
+            # encountered on this page through the existing Source adapter;
+            # the adapter and bridge retain their path/revision caps and
+            # opaque identity checks.
+            candidates=tuple(
+                item
+                for item in cognition_candidates
+                if item.entity_id in page_entity_ids
+            ),
             read_candidates=read_candidates,
             read_candidate_metadata=read_candidate_metadata,
             cognition_metadata=cognition_metadata,
@@ -1680,6 +1692,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         cognition_metadata: dict[
             int, _LightweightReadNavigationMetadata
         ] | None = None,
+        encountered_entity_ids: set[StableId] | None = None,
     ) -> None:
         known_indexes = {
             item.entity_id: item.cognition_index for item in candidates
@@ -1724,6 +1737,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "cognition candidate provenance is inconsistent",
                         )
                     entity_id = StableId(raw_id)
+                    if encountered_entity_ids is not None:
+                        encountered_entity_ids.add(entity_id)
                     parsed_kind = CognitionEntityKind(raw_kind)
                     parsed_attributes = _cognition_attributes_from_payload(
                         value.get("attributes", ())

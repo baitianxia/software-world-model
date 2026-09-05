@@ -1619,6 +1619,157 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             submission.turn.citations[0].locator,
         )
 
+    def test_detail_rebridges_registered_same_path_entity_metadata(self) -> None:
+        """A detail page must refresh bridge metadata after candidate de-duplication."""
+
+        source_files = {
+            **SOURCE_FILES,
+            "app/src/main/java/com/example/MultiMethod.java": b"""package com.example;
+interface MultiContract {
+    String contract(String input);
+}
+class MultiMethod implements MultiContract {
+    public String first(String input) { return input; }
+    @Override
+    public String contract(String input) { return input.trim(); }
+}
+""",
+        }
+        cognition = _cognition(source_files=source_files)
+        target = next(
+            item
+            for item in cognition.snapshot.entities
+            if item.kind is CognitionEntityKind.METHOD
+            and item.name == "contract"
+            and dict(item.attributes).get("owner_declaration_kind") == "CLASS"
+        )
+        earlier = next(
+            item
+            for item in cognition.snapshot.entities
+            if item.kind is CognitionEntityKind.METHOD
+            and item.name == "contract"
+            and dict(item.attributes).get("owner_declaration_kind") == "INTERFACE"
+        )
+        self.assertEqual(target.provenance.path, earlier.provenance.path)
+        self.assertNotEqual(target.provenance.locator, earlier.provenance.locator)
+
+        model = _ImmediateLimitationModel()
+        tool = _SourceTool()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=cognition,
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=LightweightAgentTraceStore(),
+            attempt_ref="detail-rebridge-same-path",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="验证同文件的第二个方法导航。",
+        )
+        request = model.steps[0].turn_request
+
+        cognition_candidates = [
+            LightweightCognitionCandidate(
+                cognition_index=1,
+                entity_id=target.entity_id,
+                kind=target.kind,
+                name=target.name,
+                qualified_name=target.qualified_name,
+                coverage=target.epistemics.coverage.value,
+                unknowns=target.epistemics.unknowns,
+                provenance=target.provenance,
+            ),
+            LightweightCognitionCandidate(
+                cognition_index=2,
+                entity_id=earlier.entity_id,
+                kind=earlier.kind,
+                name=earlier.name,
+                qualified_name=earlier.qualified_name,
+                coverage=earlier.epistemics.coverage.value,
+                unknowns=earlier.epistemics.unknowns,
+                provenance=earlier.provenance,
+            ),
+        ]
+        existing = [
+            _navigation_candidate(
+                1,
+                resource=target.provenance.path,
+                locator=earlier.provenance.locator,
+            )
+        ]
+        existing_identity = _citation_identity(existing[0])
+        metadata: dict[int, _LightweightReadNavigationMetadata] = {}
+        observations: list[LightweightObservation] = []
+        events: list[dict[str, object]] = []
+        decision = LightweightAgentDecision(
+            goal=request.user_message.content,
+            plan="读取当前详情关联的源码路径。",
+            action=LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
+            query=None,
+            read_index=None,
+            cognition_index=1,
+            relation_kind=None,
+            direction=None,
+            maximum_depth=None,
+            cursor=None,
+            response_kind=None,
+            answer=None,
+            citations=(),
+        )
+        executor._execute_cognition_action(
+            request=request,
+            decision=decision,
+            observations=observations,
+            read_candidates=existing,
+            read_candidate_metadata=metadata,
+            cognition_candidates=cognition_candidates,
+            events=events,
+        )
+
+        self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
+        self.assertGreaterEqual(len(existing), 1)
+        self.assertEqual(
+            existing[0].citation.citation_ref,
+            _navigation_candidate(
+                1,
+                resource=target.provenance.path,
+                locator=earlier.provenance.locator,
+            ).citation.citation_ref,
+        )
+        self.assertEqual(_citation_identity(existing[0]), existing_identity)
+        # The opaque path capability is reused, while the current detail page
+        # still contributes the strongest typed declaration origin to ordering.
+        self.assertEqual(metadata[1].cognition_kind, CognitionEntityKind.METHOD)
+        self.assertEqual(metadata[1].origin_cognition_index, 2)
+        self.assertEqual(
+            dict(metadata[1].cognition_attributes)["owner_declaration_kind"],
+            "INTERFACE",
+        )
+        projected = LightweightAgentStepRequest(
+            turn_request=request,
+            step=2,
+            goal=request.user_message.content,
+            plan="按当前详情重用同路径 Source capability。",
+            observations=tuple(observations),
+            read_candidates=tuple(existing),
+            tools_enabled=True,
+            cognition_candidates=tuple(cognition_candidates),
+            cognition_enabled=True,
+            remaining_tool_actions=1,
+            read_candidate_metadata=tuple(sorted(metadata.items())),
+        ).model_view()
+        self.assertEqual(projected["read_candidates"][0]["read_index"], 1)
+        self.assertEqual(
+            projected["read_candidates"][0]["locator"],
+            earlier.provenance.locator,
+        )
+
     def test_budget_pressure_orders_typed_gap_before_broad_hits(self) -> None:
         """Budget pressure changes presentation, never the candidate domain."""
 
