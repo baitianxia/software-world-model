@@ -1,0 +1,59 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-179-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:96a256ad624f096d0f0c06417a2c6cdcae187a67ca48d98e199b45993d37b755",
+  "turn_scope_sha256": "sha256:fcad0eb71b1b1cfe2114a8c683f6daeb18e8c60184b5bfc58b6414d8a668c137",
+  "launch_file_sha256": "sha256:e05e9dbe9f0152a9934497eb8aef81adee153738ab46908d278f890ee45f1092",
+  "terminal_file_sha256": "sha256:5988a170b32bbd98828b6e665f048671c754bf40176fe37b8046eeecf2fe0545",
+  "terminal_digest": "sha256:e1cd74cc22f7ad8b76dae00ac14f210191ab472203b03e8bc4cbebb8cf68f0c7",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 6,
+  "conversation_count": 5,
+  "provider_dispatch_count": 41,
+  "request_retry_count": 0,
+  "q1_status": "SUCCEEDED_DELIVERED_AFTER_REWRITE",
+  "q1_review": {
+    "rewrite_call_id": "model_call_6f9c0cbc3f814eb18d0b2a55e15d3cc5",
+    "rewrite_output_digest": "sha256:65e56b4e69670845dd2fd977e21fa7943a8fb44ffc4214fa80846712157a74f5",
+    "approved_call_id": "model_call_eef49dd980ae45f199c688c4b04f0b4d",
+    "approved_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb"
+  },
+  "q2_status": "SUCCEEDED_DELIVERED",
+  "q2_approved_call": {
+    "model_call_id": "model_call_01f50261a06f423b99928e4217312f21",
+    "output_digest": "sha256:c234e780f82c1053b8d1f224074a7e022e57c987c69e974e70550a7d21876571"
+  },
+  "q3_status": "APPLICATION_INPUT_CLARIFICATION_ZERO_PROVIDER_DISPATCH",
+  "q4_status": "SUCCEEDED_DELIVERED",
+  "q4_approved_call": {
+    "model_call_id": "model_call_0171738983b845c885b7c7c57c243bf9",
+    "output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb"
+  },
+  "q5_first_attempt": {
+    "reviewer_call_id": "model_call_8fbb75e6f7c042cc9184dd11e7ef7c62",
+    "reviewer_output_digest": "sha256:860a9f29cf342cecea3d31204ac51fe124ddad055d42f2dacd14e63759e89529",
+    "reviewer_verdict": "MORE_EVIDENCE",
+    "outcome": "BROWSER_DISCONNECT_BEFORE_LOOPBACK_COMPLETION"
+  },
+  "q5_second_attempt": {
+    "primary_finish_call_id": "model_call_6dc4eaaa7a91416ebd736c75513fea59",
+    "primary_finish_output_digest": "sha256:5f66eac47a9e3c6156b35fad57bf3fd26856aaf2dfa6d728cb07fdc49d7de03f",
+    "reviewer_call_id": "model_call_fa7d31afccf84d7f94160b3f4461bd87",
+    "reviewer_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb",
+    "reviewer_verdict": "APPROVED",
+    "citation_count": 3,
+    "outcome": "SUCCEEDED_DELIVERED"
+  },
+  "scope_assessment": {
+    "expected_turn_count": 5,
+    "expected_conversation_count": 4,
+    "observed_turn_count": 6,
+    "observed_conversation_count": 5,
+    "status": "SCOPE_INVALID_DUPLICATE_Q5",
+    "reason": "The fixed five-ordinal scope permits one isolated q5 conversation; the first q5 attempt was followed by a second q5 conversation in the same run. The successful second attempt is useful progress but cannot be credited as exact-scope acceptance evidence."
+  },
+  "assessment": "q1, q2 and q4 delivered with real citations and fresh Reviewer APPROVED; q3 was an isolated zero-provider-dispatch clarification. q5 first reached valid MORE_EVIDENCE, then a second fresh q5 conversation completed with three citations, fresh Reviewer APPROVED and Delivery. However terminal turn_count=6/conversation_count=5 violates the fixed five-ordinal scope (expected five turns/four conversations), so this run is REWORK/NOT_RUN for acceptance and is not ADVANCE evidence."
+}

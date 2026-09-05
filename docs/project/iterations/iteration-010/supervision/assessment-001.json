@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-05T16:22:00+08:00",
+  "assessed_at": "2026-09-05T16:50:00+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -82,8 +82,16 @@
         "candidate-agent-tests",
         "finding-279-bounded-action-replan"
       ]
+    },
+    {
+      "severity": "MAJOR",
+      "owner_layer": "browser/turn-scope-orchestration",
+      "summary": "run-179 的 q1/q2/q3/q4 均按固定编排完成，q5 首次在 Reviewer MORE_EVIDENCE 后因浏览器断开未闭合，随后同一 run 又启动第二个独立 q5 会话并成功交付。终端实际 turn_count=6、conversation_count=5，而 sealed five-ordinal scope 只允许五次 turn、四个会话（q1+q2 同会话，q3/q4/q5 各一个新会话）；第二次 q5 的成功不能冒充 exact-scope 第五项，因此该 run 只能记为 REWORK/NOT_RUN，不能用于 ADVANCE。",
+      "evidence_ids": [
+        "phase-c-design-and-failure-policy"
+      ]
     }
   ],
   "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "开发继续，不暂停、不重新授权：398a974 的通用 evidence planning/duplicate-action recovery 已通过定向测试与真实轨迹；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema、Provider 和严格 decoder 不变。run-173 的 q1/q2/q4 fresh Reviewer/Delivery 与 q3 zero-dispatch clarification 均为有效进展，但 q5 malformed Primary JSON 被严格 decoder 正确拒绝；run-174 q1 fresh Reviewer nested answer、run-175 q2 fresh Reviewer nested answer、run-176 q2 fresh Reviewer nested answer plus schema metadata 亦被严格拒绝。封存 run-173/run-174/run-175/run-176 为 REWORK/NOT_RUN，不修 Provider、不放宽 decoder、不把部分成功计为通过。按同一 clean candidate 建 fresh successor，严格重取完整 q1-q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话），再验证 Reviewer/Delivery/Web 与 source-only 非 locator 增益。"
+  "next_action": "开发继续，不暂停、不重新授权：398a974 的通用 evidence planning/duplicate-action recovery 已通过定向测试与真实轨迹；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema、Provider 和严格 decoder 不变。run-173 的 q1/q2/q4 fresh Reviewer/Delivery 与 q3 zero-dispatch clarification 均为有效进展，但 q5 malformed Primary JSON 被严格 decoder 正确拒绝；run-174 q1 fresh Reviewer nested answer、run-175 q2 fresh Reviewer nested answer、run-176 q2 fresh Reviewer nested answer plus schema metadata 亦被严格拒绝；run-179 q1/q2/q4/q5 semantic deliveries are useful, but its duplicated q5 makes the sealed five-ordinal scope invalid. 封存 run-173/run-174/run-175/run-176/run-179 为 REWORK/NOT_RUN，不修 Provider、不放宽 decoder、不把部分成功或重复 q5 计为通过。按同一 clean candidate 建 fresh successor，严格只执行一次完整 q1-q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话；不得在同一 run 重复 ordinal），再验证 Reviewer/Delivery/Web 与 source-only 非 locator 增益。"
 }
