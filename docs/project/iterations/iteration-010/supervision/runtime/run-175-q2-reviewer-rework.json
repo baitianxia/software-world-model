@@ -1,0 +1,39 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-175-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:1ef0583b3a8ca5a2f1f2a2c41842136a02cb0517a99104b888d9cf24629dd8c9",
+  "turn_scope_sha256": "sha256:2e2d73642d26370f97a39d5bf6baa57eb6172dff40650b9a4d05e4a0758769e5",
+  "launch_file_sha256": "sha256:ef9a82aef7afd0c33da24790d1882fbba4cece8d0730fdb069d93a054ecdeaf5",
+  "terminal_file_sha256": "sha256:4e9d0e304ca436d3092262b3e329a4c3eabe2a454348f82cf08064af03db5553",
+  "terminal_digest": "sha256:1175038b83474e8151d58d90051c3693cc84bb8ae42371aefd093a45f337e4d6",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 2,
+  "conversation_count": 1,
+  "provider_dispatch_count": 11,
+  "request_retry_count": 0,
+  "q1": {
+    "status": "ACCEPTED",
+    "first_reviewer_call_id": "model_call_32472f3a025e4c67894a89d95e49541c",
+    "first_reviewer_verdict": "MORE_EVIDENCE",
+    "bounded_finish_call_id": "model_call_a4f6d20dbd494ff395df33b3e3f477a1",
+    "fresh_reviewer_call_id": "model_call_c5d207f620a5406ab0b6ed275beb1461",
+    "fresh_reviewer_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb",
+    "fresh_reviewer_verdict": "APPROVED"
+  },
+  "q2": {
+    "primary_finish_call_id": "model_call_6e4340f45bf44d5eb2f9ffccff6dc87d",
+    "reviewer_call_id": "model_call_2a7bc45aeea54f95acbe13f569f4306d",
+    "reviewer_output_digest": "sha256:abf94e89f06fc700e3dde97e61e33558dcb4fa39bf5686af337bd035906330a4",
+    "reviewer_output_normalization": "IDENTITY",
+    "reviewer_raw_output": "\\n{\"answer\":\"{\\\"findings\\\":[],\\\"verdict\\\":\\\"APPROVED\\\"}\"}\\n",
+    "reviewer_top_level_shape": "{answer}",
+    "reviewer_nested_answer_type": "string",
+    "decoder_disposition": "REJECT",
+    "failure_stage": "INDEPENDENT_REVIEWER",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "q1 completed with real citations and fresh Reviewer APPROVED. q2 reached Primary FINISH, then the independent Reviewer returned a nested answer string rather than the strict reviewer object; the decoder correctly rejected it before Delivery. q3-q5 were not dispatched. This run is REWORK/NOT_RUN and is not Phase C acceptance or ADVANCE evidence."
+}

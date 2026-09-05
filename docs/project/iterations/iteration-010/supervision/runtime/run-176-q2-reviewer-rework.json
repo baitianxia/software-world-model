@@ -1,0 +1,36 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-176-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:fd94eacc954f14da7343cac803b8fe66494743fcb2c2abece59bfcfe7f1ee36c",
+  "turn_scope_sha256": "sha256:726f8a3d091025b01566a80663598fa7a07f990b9b481c205a2778de43808b70",
+  "launch_file_sha256": "sha256:bd78f1a6bfa606cb3b826e3e3d07bd052839fee8de50a0d3186eaf5b782a522d",
+  "terminal_file_sha256": "sha256:627169756ab9d03ef51ae1f711a3db20c6336f3fef377aa8b265bc3067f5c65e",
+  "terminal_digest": "sha256:0578872f12b90f033d3d2f36bec09846890585c623939da315e4da50a6c150e3",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 2,
+  "conversation_count": 1,
+  "provider_dispatch_count": 11,
+  "request_retry_count": 0,
+  "q1": {
+    "status": "ACCEPTED",
+    "fresh_reviewer_call_id": "model_call_419d1b3526a845eebd3d644bade7f8f8",
+    "fresh_reviewer_output_digest": "sha256:6f24c4b01eee5c9f34da3156c5a235e6a11cd0096923e21345eaa9600dcb9fdb",
+    "fresh_reviewer_verdict": "APPROVED"
+  },
+  "q2": {
+    "primary_finish_call_id": "model_call_74a0630289ac4ee381c80327d0fdec26",
+    "reviewer_call_id": "model_call_3c5cf0f4927a401a88d8fdd3a9593fb4",
+    "reviewer_output_digest": "sha256:277f8da29ba6ad72d48335c472ff7869d9c48e1293e0186172c20bfa8a3119db",
+    "reviewer_output_normalization": "IDENTITY",
+    "reviewer_raw_output": "\\n{\"answer\":\"{\\\"verdict\\\":\\\"APPROVED\\\",\\\"findings\\\":[]}\",\"schema\":\"source_agent_independent_review\"}\\n",
+    "reviewer_top_level_shape": "{answer,schema}",
+    "reviewer_nested_answer_type": "string",
+    "decoder_disposition": "REJECT",
+    "failure_stage": "INDEPENDENT_REVIEWER",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "q1 completed with real citations and fresh Reviewer APPROVED. q2 reached Primary FINISH, then the independent Reviewer returned a nested answer string plus schema metadata rather than the strict reviewer object; the decoder correctly rejected it before Delivery. q3-q5 were not dispatched. This run is REWORK/NOT_RUN and is not Phase C acceptance or ADVANCE evidence."
+}
