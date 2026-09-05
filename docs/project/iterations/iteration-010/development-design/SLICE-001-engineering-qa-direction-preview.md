@@ -10,7 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
-current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278]
+current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
 product_goal_cross_domain_case_ids: [V-CHAT-XD-001]
@@ -217,6 +217,9 @@ raw receipt 缺失时只能输出机器可读 `NOT_RUN`。两者均尚未形成 
 `FINDING-010-278` 记录多 Observation Citation ordinal 的局部域与 prefix-scoped bounded replan：Application 保持 strict binding，保留 rejected
 receipt/answer/findings；只有实际新增 Observation 才形成新的同范围机会，同一 prefix 第二次非法继续 fail-closed。该实现不扩展 Agent 协议、Prompt、
 Provider、Reviewer 或预算；fresh successor 仍需验证 q5 补证后进入 Reviewer。
+
+FINDING-010-279 记录 Application 对重复 action、无进展与 Reviewer MORE_EVIDENCE 后未读 candidate 的通用收敛；修复不扩展
+model-facing protocol、Prompt、Provider、Reviewer 或预算，fresh successor 仍需验证 q5 补证后进入 Reviewer。
 
 ## Authorization
 

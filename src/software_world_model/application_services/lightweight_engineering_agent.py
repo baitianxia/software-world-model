@@ -475,7 +475,13 @@ def _ordered_read_candidates(
             typed_origin,
             role_rank,
             modality_rank,
-            -metadata.origin_observation_index
+            # Keep the first trusted cognition page's candidate ahead of a
+            # later sibling page when roles are otherwise equal.  A later
+            # page often contributes a new, but less directly relevant,
+            # declaration/effect candidate; retaining the earlier unread
+            # option gives the same Agent a stable path to close the original
+            # evidence gap after a Reviewer asks for more evidence.
+            metadata.origin_observation_index
             if metadata is not None
             else 0,
             metadata.origin_cognition_index
@@ -541,6 +547,27 @@ def _cognition_entity_role_rank(
         CognitionEntityKind.PACKAGE: 6,
         CognitionEntityKind.MODULE: 7,
     }[kind]
+
+
+def _lightweight_action_fingerprint(
+    decision: LightweightAgentDecision,
+) -> tuple[object, ...]:
+    """Identify a repeated investigation action without inspecting content."""
+
+    return (
+        decision.action.value,
+        decision.query,
+        decision.read_index,
+        decision.cognition_index,
+        (
+            decision.relation_kind.value
+            if decision.relation_kind is not None
+            else None
+        ),
+        decision.direction.value if decision.direction is not None else None,
+        decision.maximum_depth,
+        decision.cursor,
+    )
 
 
 def _navigation_metadata_key(
@@ -975,6 +1002,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         citation_binding_repair_count = 0
         decision_shape_repairs = 0
         consecutive_no_progress = 0
+        executed_action_fingerprints: set[tuple[object, ...]] = set()
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
@@ -1074,6 +1102,40 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     }
                 )
                 if decision.action is not LightweightAgentAction.FINISH:
+                    action_fingerprint = _lightweight_action_fingerprint(decision)
+                    if action_fingerprint in executed_action_fingerprints:
+                        # A repeated proposal is a planning failure, not a
+                        # reason to dispatch the same read/search again. Keep
+                        # the fixed action fuse, record the bounded recovery,
+                        # and let the same Agent choose another legal action
+                        # from the unchanged trusted state.
+                        tool_actions += 1
+                        events.append(
+                            {
+                                "kind": "ACTION_REPLAN_REQUIRED",
+                                "step": step,
+                                "reason": "REPEATED_ACTION",
+                                "action": decision.action.value,
+                                "read_index": decision.read_index,
+                                "query": decision.query,
+                            }
+                        )
+                        review_findings = (
+                            *review_findings,
+                            "Application blocked the selected action because "
+                            "it repeats a completed investigation action. "
+                            "Update the plan and choose a different legal "
+                            "action that advances the evidence; do not "
+                            "repeat the same action.",
+                        )
+                        consecutive_no_progress += 1
+                        if (
+                            consecutive_no_progress
+                            >= self._limits.maximum_consecutive_no_progress
+                        ):
+                            tool_actions = self._limits.maximum_tool_actions
+                        continue
+                    executed_action_fingerprints.add(action_fingerprint)
                     tool_actions += 1
                     before_count = len(observations)
                     self._execute_action(
@@ -1091,6 +1153,24 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     consecutive_no_progress = (
                         0 if progress else consecutive_no_progress + 1
                     )
+                    if not progress:
+                        events.append(
+                            {
+                                "kind": "ACTION_REPLAN_REQUIRED",
+                                "step": step,
+                                "reason": "NO_PROGRESS",
+                                "action": decision.action.value,
+                                "read_index": decision.read_index,
+                                "query": decision.query,
+                            }
+                        )
+                        review_findings = (
+                            *review_findings,
+                            "Application observed that the selected action "
+                            "produced no new evidence. Update the plan and "
+                            "choose a different legal action; do not repeat "
+                            "an action that made no progress.",
+                        )
                     if (
                         consecutive_no_progress
                         >= self._limits.maximum_consecutive_no_progress
@@ -1207,7 +1287,17 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         "fresh review requested evidence after the read-only tool budget closed",
                     )
                 rejected_answer = decision.answer
-                review_findings = (*review_findings, *review.findings)
+                if review.verdict is LightweightReviewVerdict.MORE_EVIDENCE:
+                    review_findings = (
+                        *review_findings,
+                        "Independent review requested more evidence. Prefer "
+                        "an existing unread Source candidate that directly "
+                        "addresses the evidence gap before searching again; "
+                        "do not repeat a completed action.",
+                        *review.findings,
+                    )
+                else:
+                    review_findings = (*review_findings, *review.findings)
                 if review.verdict is LightweightReviewVerdict.REWRITE:
                     rewrites += 1
                     if rewrites > 1:

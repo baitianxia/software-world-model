@@ -457,6 +457,119 @@ class _NeedsMoreEvidenceModel(_Model):
         )
 
 
+class _DuplicateActionRecoveryModel(_Model):
+    """Repeat one read once, then follow the Application replan feedback."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._repeated = False
+
+    def decide(self, request):
+        self.steps.append(request)
+        if not request.observations:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Locate a source candidate before reading it.",
+                action=LightweightAgentAction.SEARCH_SOURCE,
+                query="Entry",
+                read_index=None,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        elif len(request.observations) == 1 and not self._repeated:
+            self._repeated = True
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Read the exact candidate.",
+                action=LightweightAgentAction.READ_SOURCE,
+                query=None,
+                read_index=request.read_candidates[0].read_index,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        elif len(request.observations) == 2 and self._repeated and not request.review_findings:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Repeat the same read to confirm it.",
+                action=LightweightAgentAction.READ_SOURCE,
+                query=None,
+                read_index=1,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="The existing Source observation is sufficient; stop.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.ANSWER,
+                answer="当前 Source observation 支持该实现行为。",
+                citations=(
+                    LightweightCitationSelection(
+                        request.observations[-1].observation_index,
+                        1,
+                    ),
+                ),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
+class _NoProgressTool(_SourceTool):
+    def execute(self, request):
+        result = super().execute(request)
+        evidence = result.evidence[0]
+        return EngineeringAgentToolResult.create(
+            tool_request_digest=request.digest,
+            result_ref=evidence.result_ref,
+            content=evidence.content,
+            disposition=evidence.disposition,
+            progress=False,
+            citation_refs=evidence.citation_refs,
+            authority_receipt=evidence.authority_receipt,
+        )
+
+
+class _NoProgressRecoveryModel(_Model):
+    def decide(self, request):
+        self.steps.append(request)
+        if not request.observations:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Try one source search.",
+                action=LightweightAgentAction.SEARCH_SOURCE,
+                query="Entry",
+                read_index=None,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="The search produced no new evidence; report the boundary.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.LIMITATION,
+                answer="当前观察没有形成可确认的实现结论。",
+                citations=(),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 class _ImmediateLimitationModel(_Model):
     def decide(self, request):
         self.steps.append(request)
@@ -2287,6 +2400,88 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 if item["kind"] == "MODEL_DECISION"
             ]
             self.assertEqual(len(set(plans)), 3)
+
+    def test_repeated_action_is_blocked_and_same_agent_replans(self) -> None:
+        model = _DuplicateActionRecoveryModel()
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-repeated-action-recovery",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="重复读取时应如何恢复？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        # The repeated READ_SOURCE was rejected before reaching the tool.
+        self.assertEqual(
+            [item.action.operation for item in tool.calls],
+            [
+                EngineeringAgentToolOperation.SOURCE_SEARCH,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ],
+        )
+        self.assertTrue(
+            any(
+                "repeats a completed investigation action" in finding
+                for step in model.steps
+                for finding in step.review_findings
+            )
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [
+                item["reason"]
+                for item in trace.events
+                if item["kind"] == "ACTION_REPLAN_REQUIRED"
+            ],
+            ["REPEATED_ACTION"],
+        )
+
+    def test_no_progress_adds_bounded_replan_feedback(self) -> None:
+        model = _NoProgressRecoveryModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_NoProgressTool(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-no-progress-recovery",
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="无新增证据时应如何收敛？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
+        self.assertIn(
+            "produced no new evidence",
+            model.steps[-1].review_findings[-1],
+        )
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [
+                item["reason"]
+                for item in trace.events
+                if item["kind"] == "ACTION_REPLAN_REQUIRED"
+            ],
+            ["NO_PROGRESS"],
+        )
 
     def test_more_evidence_after_tool_fuse_fails_without_repeated_reviews(self) -> None:
         model = _NeedsMoreEvidenceModel()
