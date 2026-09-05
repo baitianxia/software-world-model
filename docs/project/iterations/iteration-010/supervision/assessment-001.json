@@ -58,12 +58,6 @@
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-279.md",
       "sha256": "sha256:5e18b9a4214a15052697c58ae82c63b9bf540f651019e0e76905a7473c4b1539"
-    },
-    {
-      "id": "run-168-q2-reviewer-boundary",
-      "scope": "supervision",
-      "path": "docs/project/iterations/iteration-010/supervision/runtime/run-168-q2-reviewer-output.json",
-      "sha256": "sha256:a3862698c5106308f635abba8c750314b4b6259e8c6fc1879a665c2003ac1af4"
     }
   ],
   "completed_requirements": [
@@ -86,8 +80,7 @@
         "finding-278-local-citation-domain",
         "candidate-agent-implementation",
         "candidate-agent-tests",
-        "finding-279-bounded-action-replan",
-        "run-168-q2-reviewer-boundary"
+        "finding-279-bounded-action-replan"
       ]
     }
   ],
