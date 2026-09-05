@@ -1,0 +1,32 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-181-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:182ee14c71d632d3f3ff7c8f7f1b844232cc4b6efbc4e0706c4e11b51a20938c",
+  "turn_scope_sha256": "sha256:b4bdd5aa214cf24d5542565d278bff2f7a43e3614593129557c2985e2b180fa9",
+  "launch_file_sha256": "sha256:3093663767f7e89efe8766c2867d942ea4cc266c4541a45c2d0c2724b67f7fd2",
+  "terminal_file_sha256": "sha256:40e1c461b81f44d30982e3ea9e693422afb3cc11d935c3c57dd3d3a874c613ed",
+  "terminal_digest": "sha256:da4e15ff2232644ec57d90a1d445f941246e2603f6a26ad1d57a2bd873dd71db",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 1,
+  "conversation_count": 1,
+  "provider_dispatch_count": 11,
+  "request_retry_count": 0,
+  "q1_status": "FAILED_EVIDENCE_BUDGET_EXHAUSTED",
+  "first_reviewer_call_id": "model_call_c20a0cad589e4846bbc2b67939368809",
+  "first_reviewer_output_digest": "sha256:3029e7fa093a68ffaee64aca68d3b11c2ddebfd82037bb6df3c4b20c811e53c9",
+  "first_reviewer_verdict": "MORE_EVIDENCE",
+  "trajectory": {
+    "primary_calls_before_review": 10,
+    "repeated_searches": ["lockStock", "sendDelayMessageCancelOrder"],
+    "source_reads": ["OmsPortalOrderController"],
+    "missing_requested_source": ["OmsPortalOrderServiceImpl", "OmsPortalOrderService interface"],
+    "fresh_reviewer_dispatched": false,
+    "delivery": false
+  },
+  "failure_stage": "AGENT_EVIDENCE_PLANNING_AND_REVIEW_LOOPBACK",
+  "failure_code": "BUDGET_EXHAUSTED",
+  "assessment": "The Reviewer validly requested implementation/interface evidence. The same Agent then spent the bounded fuse on repeated source searches and a controller read without obtaining the requested implementation/interface evidence; no fresh Reviewer or Delivery occurred and q2-q5 were not dispatched. This is generic evidence-planning/replanning failure, not a Provider or decoder defect. The run is REWORK/NOT_RUN and is not Phase C acceptance or ADVANCE evidence."
+}
