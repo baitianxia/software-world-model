@@ -1,0 +1,43 @@
+{
+  "schema": "SWM_PHASE_C_RUNTIME_OBSERVATION@1",
+  "run_ref": "run-168-phase-c-loopback",
+  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
+  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:4f6aa8a31bea2e260b30e94bc725237ae7fb7dc7cc3d1ed61525e6019cc6bdfb",
+  "turn_scope_sha256": "sha256:8e0465daa715b6acd2144c256bbeb37b2c05430297bdb0b7fed1467a6e3aa954",
+  "launch_file_sha256": "sha256:2a0f9e9f1975a382be73532f0fa2e18367d4e0d730d5e9fb534ff82697cc9c3b",
+  "terminal_file_sha256": "sha256:9569a1cb0e5b9a34d7f2b728b212d80b5dddf9b49d937b9d51fe88926763b5ac",
+  "terminal_digest": "sha256:3bf547f25d9b31137b24493863101feb16b25ba88d3b7f6307920db93c0e0fed",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "turn_count": 2,
+  "conversation_count": 1,
+  "provider_dispatch_count": 9,
+  "request_retry_count": 0,
+  "q1_status": "SUCCEEDED_ACCEPTED",
+  "q1_reviewer_call": {
+    "model_call_id": "model_call_8b33bab46dde42d1b3bbee4d9cb03887",
+    "output_digest": "sha256:89e27a82f8a1dd9bbb09e5d59fdc82c93604bb91e83b6a6ea269419ce4311571",
+    "verdict": "APPROVED",
+    "finding_count": 0
+  },
+  "q2_primary": {
+    "read_call_id": "model_call_9e3167e373c043e8addfc1529f5d2667",
+    "read_output_digest": "sha256:0f8c488525b3723b5982e55a57d2a3e3d83151d6262d9d9ae6e15ca9a7cb1b7c",
+    "finish_call_id": "model_call_fc6f21e4907e43438d38ff620cd7b272",
+    "finish_output_digest": "sha256:2da6b27285fa7aa6ddae79b20fdafe119c287ff70627fe4bc462b6fe8b08c597"
+  },
+  "malformed_reviewer_call": {
+    "model_call_id": "model_call_89472f07179a415d9d2da499f09230c7",
+    "output_digest": "sha256:fed85cc402f77df2a31ba7c6b8ba4c6ead025e9a21af1a5dac1fc01603cd0034",
+    "output_normalization": "IDENTITY",
+    "raw_output": "{\"answer\": \"{\\\"verdict\\\":\\\"APPROVED\\\",\\\"findings\\\":[]}\", \"findings\": [], \"verdict\": \"APPROVED\"}",
+    "top_level_shape": "{answer,findings,verdict}",
+    "nested_answer_type": "string",
+    "top_level_verdict_present": true,
+    "decoder_disposition": "REJECT",
+    "failure_stage": "INDEPENDENT_REVIEWER",
+    "failure_code": "STRUCTURED_OUTPUT_INVALID"
+  },
+  "assessment": "q1 completed in the first conversation with a valid fresh Reviewer APPROVED result. q2 remained in that same conversation and reached a Primary READ_SOURCE/FINISH, but its fresh Reviewer returned a nested answer string; the strict decoder correctly rejected the output before delivery. q3-q5 were not dispatched. This run is REWORK/NOT_RUN and is not Phase C acceptance or ADVANCE evidence."
+}
