@@ -1,0 +1,26 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "210767677bc5cfedae0b079066778d95037953ca",
+  "candidate_tree": "27f6528c578c82d6f2d09631f8ed69f78ceffbdd",
+  "candidate_worktree_digest": "sha256:c51c222026b0ebeb078978003fcfce33d68ac9c1c6edb320415c1b3444571b84",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-06T14:13:00+08:00",
+  "evidence": [
+    {"id":"phase-c-current-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:abb76cfeb543ae78d05108ec7e58f6681c1e2e5beec7ccc0824696ae39245bbc"},
+    {"id":"phase-c-current-boundary","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:645124bc36b3ac1497fdee1abb0005bd78e942224a201b1ff2e432cb50592364"},
+    {"id":"candidate-agent-code","scope":"candidate","path":"src/software_world_model/application_services/lightweight_engineering_agent.py","sha256":"sha256:e41a5976927b1cd57ceab4eab1b008e402d68986043ef1bb221151b80b157eca"},
+    {"id":"candidate-agent-tests","scope":"candidate","path":"tests/test_lightweight_engineering_agent.py","sha256":"sha256:801aa80e3c761db6f658dca64042d0fc68fb750bd6afa4408aed4d866b4aad73"},
+    {"id":"latest-direction-evidence","scope":"candidate","path":"var/direction-phase-c-latest.json","sha256":"sha256:3fcf6d056368df4edd5e91ed709b196c714ece549c7e4e8e3a8854f1135a25f8"},
+    {"id":"run-160-agent-loopback-failure","scope":"runtime","path":"docs/project/iterations/iteration-010/findings/FINDING-010-279.md","sha256":"sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"}
+  ],
+  "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
+  "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
+  "defects": [{"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Fresh HEAD remains governed by the run-160 family of failures: after Reviewer MORE_EVIDENCE the Agent repeats search/read actions and exhausts its bounded fuse without fresh review and delivery; no current evidence closes the generic C1 loopback.","evidence_ids":["phase-c-current-plan","candidate-agent-code","candidate-agent-tests","run-160-agent-loopback-failure"]},{"severity":"MAJOR","owner_layer":"browser-turn-scope-orchestration","summary":"The available run evidence does not establish the sealed q1–q5 Web turn/conversation scope; prior run-179 exceeded it and remains invalid as exit evidence.","evidence_ids":["phase-c-current-plan","latest-direction-evidence"]}],
+  "earliest_divergence":"agent-evidence-planning-and-review-loopback",
+  "next_action":"唯一下一动作：基于 run-160 轨迹在同一 Agent 内修复通用 MORE_EVIDENCE 后证据规划与重复动作收敛，优先消费已有未读 direct declaration/effect candidate，保持预算、Citation identity、Reviewer 独立性、Prompt/Schema 和 Provider 不变；以原失败加两个异质任务和语义追问取得 fresh trajectory。修复未取得 fresh q1–q5 Web 证据前，不进入 C2 交付、C3 Alpha 或任何 MVP/C4 判定。"
+}
