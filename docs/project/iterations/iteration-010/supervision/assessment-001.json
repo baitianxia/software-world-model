@@ -58,12 +58,6 @@
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-279.md",
       "sha256": "sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"
-    },
-    {
-      "id": "run-185-q2-reviewer-rework",
-      "scope": "runtime",
-      "path": "docs/project/iterations/iteration-010/supervision/runtime/run-185-q2-reviewer-rework.json",
-      "sha256": "sha256:99c293608acd9fa5c12569f1e698a38e52ba34c5cb7dcc8ebb3dcdffd69556c7"
     }
   ],
   "completed_requirements": [
