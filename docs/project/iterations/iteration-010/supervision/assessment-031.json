@@ -11,7 +11,7 @@
   "assessor": "independent-supervisor",
   "assessed_at": "2026-09-06T15:00:00+08:00",
   "evidence": [
-    {"id":"current-execution-plan-c1.5","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ce388d81425f240acf6713a1d7b7d2326f68ae3d6f62da9466e64e4f8396477"},
+    {"id":"current-execution-plan-c1.5","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ce388d81425f240acf67113a1d7b7d2326f68ae3d6f62da9466e64e4f8396477"},
     {"id":"current-project-boundary","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:645124bc36b3ac1497fdee1abb0005bd78e942224a201b1ff2e432cb50592364"},
     {"id":"chat-alpha-launcher","scope":"candidate","path":"src/software_world_model/interface/engineering_chat_alpha_cli.py","sha256":"sha256:4e8236cc1bc6402e77f65d23cca6e1036ca0f9ac77403b48d98c08d7288a00f8"},
     {"id":"chat-session-runtime","scope":"candidate","path":"src/software_world_model/interface/engineering_chat_session_runtime.py","sha256":"sha256:67623b45a515ee6cf8c3df4927c934b873f47f96c86425dbfd53a845f13c2422"}
