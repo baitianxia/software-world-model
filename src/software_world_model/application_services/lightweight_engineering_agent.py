@@ -1109,7 +1109,13 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         # the fixed action fuse, record the bounded recovery,
                         # and let the same Agent choose another legal action
                         # from the unchanged trusted state.
-                        tool_actions += 1
+                        # A rejected duplicate never reached a Tool and must
+                        # not consume the fixed Tool budget.  Charging it
+                        # here lets an Agent exhaust the fuse on planning
+                        # mistakes, preventing the unread evidence candidate
+                        # requested by an independent Reviewer from being
+                        # consumed.  Keep the duplicate in the trajectory,
+                        # but reserve the budget for a distinct legal action.
                         events.append(
                             {
                                 "kind": "ACTION_REPLAN_REQUIRED",
