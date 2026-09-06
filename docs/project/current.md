@@ -7,7 +7,7 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279, SYS-ADR-018]
 code: []
 tests: []
-as_of: 2026-09-01
+as_of: 2026-09-06
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: single-development-and-independent-supervision-lanes
@@ -15,6 +15,7 @@ strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engin
 live_model_path: preferred-execution-profile-first-fallback-only-on-trusted-unavailability
 plan_revision_ref: ITER-010-PDR-012
 execution_decision_ref: ITER-010-PDR-014
+execution_plan_ref: ITER-010-EXECUTION-PLAN-CURRENT
 next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001
 next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 ---
@@ -45,6 +46,9 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
 
 ## 唯一开发入口与下一动作
+
+当前执行顺序唯一见 `ITER-010-EXECUTION-PLAN-CURRENT`。该执行卡把 C0 恢复绑定、C1 Agent 证据规划、C2 多轮浏览器、C3 Alpha 交付和 C4
+方向通过后的夯实分开；旧 Proposal/Readiness 中的 Phase B REWORK 文字只保留历史记录，不得作为开发任务输入。
 
 - 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。

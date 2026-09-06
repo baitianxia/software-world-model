@@ -7061,6 +7061,20 @@
     "path": "docs/project/iterations/iteration-010/development-design/README.md"
   },
   {
+    "id": "ITER-010-EXECUTION-PLAN-CURRENT",
+    "kind": "development-design",
+    "status": "current",
+    "authority": "current-development",
+    "owners": [
+      "project",
+      "engineering",
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md"
+  },
+  {
     "id": "ITER-010-FINDINGS",
     "kind": "iteration-findings-index",
     "status": "open",

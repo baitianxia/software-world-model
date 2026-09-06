@@ -10,6 +10,7 @@ tests: [tests, validation/iteration_010_mvp]
 iteration: ITER-010
 coding_input: true
 current_execution_decision_ref: ITER-010-PDR-014
+current_execution_plan_ref: ITER-010-EXECUTION-PLAN-CURRENT
 current_execution_finding_refs: [FINDING-010-256, FINDING-010-257, FINDING-010-258, FINDING-010-259, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279]
 product_goal_gate: V-000
 product_goal_accepted_capability_refs: [ITER-006-RESULT-ACCEPTANCE]
@@ -26,6 +27,9 @@ product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-AGENT-FIRST-C
 ## Status and dependencies
 
 `AUTHORIZED / PDR-014 CAPABILITY-SEPARATED RECOVERY / coding_input=true`。
+
+本 Slice 的当前执行顺序由 `ITER-010-EXECUTION-PLAN-CURRENT` 唯一拥有。本文后续的阶段、验收和历史 Finding 是架构与约束说明；若其中仍
+出现 Phase B REWORK 或 Reviewer 未激活的旧叙述，以当前执行卡和 `current.md` 的 Phase C ACTIVE 结论为准。
 
 本 Slice 继续使用 PDR-012 的 standing authority 和 Manifest action，但执行内容完全由 PDR-014 定义。PDR-013、run-127 以前的 Answer/Review/
 preflight 协议和未提交 `@40` candidate 只保留历史证据，不得继续开发或重新运行。

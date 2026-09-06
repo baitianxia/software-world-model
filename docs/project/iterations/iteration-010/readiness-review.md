@@ -26,14 +26,16 @@ current_scheduling_finding_ref: FINDING-010-179
 
 ## Reviewed exact inputs
 
-CURRENT READINESS ACCEPTED / PDR-014 CAPABILITY-SEPARATED RECOVERY / PHASE B REWORK。
+CURRENT READINESS ACCEPTED / PDR-014 CAPABILITY-SEPARATED RECOVERY / PHASE C ACTIVE。
 
-PDR-014 已把 run-127 后的旧协议路线冻结为历史证据，并把开发分为 Agent、世界模型、集成和质量四个可归因阶段。收敛后的当前状态只允许
-Phase B：修复声明/继承/注解/实现的通用认知检索闭包并完成五个独立任务。Phase C/D、Reviewer、Provider recovery 和回答协议工作均未激活；
-旧 Provider、只读 Source、loopback、授权、预算和失败真实性边界继续复用，full regression、hidden、跨工程和硬化不构成当前前置项。
+PDR-014 已把 run-127 后的旧协议路线冻结为历史证据，并把开发分为 Agent、世界模型、集成和质量四个可归因阶段。Phase B 的 clean cognition
+基线已由独立监督推进，当前激活的是 Phase C：以通用 Agent 证据规划为首，打通世界模型、Source、自然答案、Citation、fresh Reviewer 和
+真实多轮 Web。本文其余 Phase B REWORK、Reviewer 未激活和 Provider recovery 未激活的文字是当时的 readiness 记录，不是当前开发输入；
+当前顺序以 SLICE-001 和 `ITER-010-EXECUTION-PLAN-CURRENT` 为准。旧 Provider、只读 Source、loopback、授权、预算和失败真实性边界继续
+复用，full regression、hidden、跨工程和硬化仍不构成当前前置项。
 
 SLICE-001 是唯一 active coding input，`codex/development` 是唯一开发分支，`codex/supervision` 是唯一阶段监督分支。当前公开 mall exact
-revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效，因此当前 Phase B 产品代码和定向
+revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效，因此当前 Phase C 产品代码和定向
 验证可以直接继续。PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-014、run-052/053 及
 run-074/075/076/077/078 trace、当前 System Contracts 与公开 mall exact revision。
 
