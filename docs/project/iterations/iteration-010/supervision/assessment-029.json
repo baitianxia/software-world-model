@@ -16,7 +16,7 @@
     {"id":"candidate-agent-code","scope":"candidate","path":"src/software_world_model/application_services/lightweight_engineering_agent.py","sha256":"sha256:e41a5976927b1cd57ceab4eab1b008e402d68986043ef1bb221151b80b157eca"},
     {"id":"candidate-agent-tests","scope":"candidate","path":"tests/test_lightweight_engineering_agent.py","sha256":"sha256:801aa80e3c761db6f658dca64042d0fc68fb750bd6afa4408aed4d866b4aad73"},
     {"id":"latest-direction-evidence","scope":"candidate","path":"var/direction-phase-c-latest.json","sha256":"sha256:3fcf6d056368df4edd5e91ed709b196c714ece549c7e4e8e3a8854f1135a25f8"},
-    {"id":"run-160-agent-loopback-failure","scope":"runtime","path":"docs/project/iterations/iteration-010/findings/FINDING-010-279.md","sha256":"sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"}
+    {"id":"run-160-agent-loopback-failure","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-279.md","sha256":"sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"}
   ],
   "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
   "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
