@@ -49,15 +49,18 @@ HEAD；每次 HEAD/工作树/运行证据变化以及最长 30 分钟写 heartbe
 
 ### C1.5 — 准备可体验环境（启动前提，不是产品代码包）
 
-在 C1 的候选提交稳定后，必须使用现有 standing authority、公开 mall exact revision、当前 clean product commit 以及已经生成的 World Model
-artifact，准备并校验唯一的 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1`。配置必须通过当前 launcher 的字段、绝对路径、版本绑定、
-0600 权限、唯一键、互异且尚不存在的数据库/receipt 输出路径校验；不得写入 Secret value，不新增 Provider、模型、预算、授权或外部接收方。
-如果缺少配置，只能在本地补齐生成/校验步骤，不能把它当成“等待授权”的产品阻塞，也不能以无配置为理由结束本开发任务。此包完成的唯一可观察结果是
-launcher 能在监听前完成配置校验；它不等于 Alpha，也不允许开发任务在此返回“计划完成”。
+在 C1 的候选提交稳定后，必须使用现有 standing authority、公开 mall exact revision、当前 clean product commit/tree 以及已经生成的 World Model
+artifact，准备并校验当前多轮 Chat 入口 `engineering_chat_alpha_cli` 所需的
+`SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@4`（若当前 loader 明确要求已记录的兼容扩展，则按同一契约使用 `@5`）。禁止改用
+历史单路兼容入口 `engineering_qa_alpha_cli` 或 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1`，因为它不能证明当前双路 Provider、World Model
+和 Chat 目标。配置必须通过当前 Chat launcher 的字段、绝对路径、版本绑定、0600 权限、唯一键、双 Provider route、互异且尚不存在的数据库/
+receipt 输出路径校验；不得写入 Secret value，不新增 Provider、模型、预算、授权或外部接收方。每次产品或当前文档提交后都重新读取 clean HEAD/tree
+绑定配置，不能复制旧 commit/tree。缺少配置或 artifact 只能在本地补齐生成/校验步骤，不能当成“等待授权”的产品阻塞，也不能以无配置为理由
+结束本开发任务。此包完成的唯一可观察结果是 Chat launcher 能在监听前完成配置校验；它不等于 Alpha，也不允许开发任务在此返回“计划完成”。
 
 ### C2 — 打通真实多轮浏览器交互（第二个代码包）
 
-沿用同一个 Agent、Conversation 和 Web，完成一组固定但不写入产品逻辑的体验脚本：q1 与 q2 在同一 Conversation，q3 为上下文澄清并新建
+使用上述 artifact-backed Chat launcher，沿用同一个 Agent、Conversation 和 Web，完成一组固定但不写入产品逻辑的体验脚本：q1 与 q2 在同一 Conversation，q3 为上下文澄清并新建
 Turn，q4、q5 为新问题；不得产生重复 ordinal、额外隐式 Conversation 或重连造成的伪 Turn。每个 Turn 仍须有自然答案、真实 Citation、
 fresh 独立审核和可观察的失败关闭。
 
@@ -106,5 +109,5 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 ## 6. 当前唯一下一动作
 
 恢复“完善软件世界模型能力”开发任务，加载本执行卡，先完成 C0 绑定；随后从 C1 的 Reviewer MORE_EVIDENCE 真实轨迹开始做通用 Agent
-闭环修复，接着完成 C1.5 的本地 Session Config 准备和 launcher 预检，再立即推进 C2 的真实浏览器 Chat 与 C3 Alpha 交付。不要回到旧
-Phase B 文字表述，不要重开旧协议路线，也不要先做全量验证或在单个 commit 后结束本轮。
+闭环修复，接着完成 C1.5 的 Chat Artifact Session Config 和 launcher 预检，再立即推进 C2 的真实浏览器 Chat 与 C3 Alpha 交付。不要回到旧
+Phase B 文字表述或单路 QA 兼容入口，不要重开旧协议路线，也不要先做全量验证或在单个 commit 后结束本轮。
