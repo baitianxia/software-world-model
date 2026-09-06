@@ -26,11 +26,11 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 
 ## 2. 代码现状与已完成能力
 
-- 唯一产品基线是开发分支当前 clean HEAD `ba6cd61be1da78080ad0b897c0708d14ac9453f0`；来源是公开 mall exact revision
+- 唯一产品基线是开发分支当前 clean HEAD `e1b4e86a3b6f5b8f446c37a0a0d743dec647aa57`；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
 - 世界模型已有可供 Agent 使用的结构、关系和详情能力；最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
-- Agent 已有重复动作/无进展恢复和有限 replan 能力；这些是局部能力，不代表 Phase C 或 MVP 已完成。
+- Agent 已有重复动作/无进展恢复和有限 replan 能力；`e1b4e86` 修复了重复动作被应用层拒绝后错误消耗 Tool 预算的问题，但只完成了 C1 的一个局部闭环，尚无新的完整 Web 体验证据，不代表 Phase C 或 MVP 已完成。
 - 当前独立监督最近结论为 `REWORK`：最早未闭合层是 Agent 的证据规划/审核回路以及浏览器 Turn scope；还没有新的完整 Web 体验证据。
 
 ## 3. 只做以下四个开发包（顺序固定）
@@ -46,6 +46,14 @@ HEAD；每次 HEAD/工作树/运行证据变化以及最长 30 分钟写 heartbe
 以一个真实失败轨迹为依据，定位 `Reviewer → MORE_EVIDENCE → Agent` 的最早偏差。只允许通用修复：同一预算内选择尚未消费且与当前 Gap
 相关的 cognition/Source candidate，阻止重复搜索/读取和无进展循环，保留已有 Evidence/Citation identity；不能扩大预算、重试 Reviewer、
 增加答案协议、增加问题/工程/类名分支。用原失败轨迹和两个未参与修复的异质任务做定向验证。
+
+### C1.5 — 准备可体验环境（启动前提，不是产品代码包）
+
+在 C1 的候选提交稳定后，必须使用现有 standing authority、公开 mall exact revision、当前 clean product commit 以及已经生成的 World Model
+artifact，准备并校验唯一的 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1`。配置必须通过当前 launcher 的字段、绝对路径、版本绑定、
+0600 权限、唯一键、互异且尚不存在的数据库/receipt 输出路径校验；不得写入 Secret value，不新增 Provider、模型、预算、授权或外部接收方。
+如果缺少配置，只能在本地补齐生成/校验步骤，不能把它当成“等待授权”的产品阻塞，也不能以无配置为理由结束本开发任务。此包完成的唯一可观察结果是
+launcher 能在监听前完成配置校验；它不等于 Alpha，也不允许开发任务在此返回“计划完成”。
 
 ### C2 — 打通真实多轮浏览器交互（第二个代码包）
 
@@ -70,6 +78,9 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 
 - **可体验出口：** C2 后真实浏览器能持续提问、追问、纠正和新建对话；主链中的 cognition、Source、Answer、Citation、fresh Review 均有
   可观察证据。达到即交付，交付不是暂停点。
+- **单次开发任务边界：** 一个开发 turn 不以单个提交、定向测试或配置校验结束。开发任务必须沿 C1 → C1.5 → C2 → C3 连续推进；只有已经
+  交付 loopback 体验或确认了无法绕过的真实安全/范围阻塞，才可以汇报本轮结束。普通测试失败、缺少本地启动前提和实现错误都必须在当前任务内
+  修复或补齐，不能把“已完成一个局部 commit”描述为计划完成。
 - **MVP 出口：** C4 在用户确认 Alpha 方向继续后，完成五个异质问题、多轮 Chat、独立审核和 Codex 比较，达到既定质量且 World Model 有
   非 locator 增益；C3 Alpha 本身不得使用 “MVP” 名称。
 - **失败处理：** 只记录原始轨迹，按最早责任层提出可证伪根因；做最小通用修复并复验原问题加两个异质问题。失败不新建 PDR/Result、
@@ -95,4 +106,5 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 ## 6. 当前唯一下一动作
 
 恢复“完善软件世界模型能力”开发任务，加载本执行卡，先完成 C0 绑定；随后从 C1 的 Reviewer MORE_EVIDENCE 真实轨迹开始做通用 Agent
-闭环修复，完成后立即推进 C2 的真实浏览器 Chat。不要回到 Phase B 文字表述，不要重开旧协议路线，也不要先做全量验证。
+闭环修复，接着完成 C1.5 的本地 Session Config 准备和 launcher 预检，再立即推进 C2 的真实浏览器 Chat 与 C3 Alpha 交付。不要回到旧
+Phase B 文字表述，不要重开旧协议路线，也不要先做全量验证或在单个 commit 后结束本轮。
