@@ -70,8 +70,8 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 
 - **可体验出口：** C2 后真实浏览器能持续提问、追问、纠正和新建对话；主链中的 cognition、Source、Answer、Citation、fresh Review 均有
   可观察证据。达到即交付，交付不是暂停点。
-- **MVP 出口：** C3 后五个异质问题、多轮 Chat、独立审核和 Codex 比较全部达到既定质量，且 World Model 有非 locator 增益；此前不得
-  使用 “MVP” 名称。
+- **MVP 出口：** C4 在用户确认 Alpha 方向继续后，完成五个异质问题、多轮 Chat、独立审核和 Codex 比较，达到既定质量且 World Model 有
+  非 locator 增益；C3 Alpha 本身不得使用 “MVP” 名称。
 - **失败处理：** 只记录原始轨迹，按最早责任层提出可证伪根因；做最小通用修复并复验原问题加两个异质问题。失败不新建 PDR/Result、
   不重复授权、不改变模型透明路由、不停止开发。
 - **偏离处理：** 若提交只增加 Prompt/Schema/Reviewer/输出检查、只改善已知题、或没有 knowledge/Agent/Web 新证据，监督立即标记
