@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "398a974c0894c2e77afe76878260dad92afb0e15",
-  "candidate_tree": "88e3772963d27f88e3592fa5bd31e40629bf36f5",
-  "candidate_worktree_digest": "sha256:757ccf33c907255e5027312e7b56161bce57a3bcf78527608c80952e563c58e0",
+  "candidate_commit": "ba6cd61be1da78080ad0b897c0708d14ac9453f0",
+  "candidate_tree": "f9f8fe78f08b5e1a28a086ceae9df6efc84c21d4",
+  "candidate_worktree_digest": "sha256:94d6f2893f4cb33089c8a87cd5d69c2012e8ab1cd733d3909f54bd17ddf283bb",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-05T17:05:00+08:00",
+  "assessed_at": "2026-09-06T12:44:54+08:00",
   "evidence": [
     {
       "id": "phase-c-objective-and-boundary",
@@ -39,13 +39,13 @@
       "id": "candidate-agent-implementation",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:ee55e04800147dff3d64c34f00b95c8bee3c44e266542eb0855908a0ec3ef737"
+      "sha256": "sha256:e41a5976927b1cd57ceab4eab1b008e402d68986043ef1bb221151b80b157eca"
     },
     {
       "id": "candidate-agent-tests",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:6a0deef2d19da2ec912018a36b79a047807065984db8ce724bb3f353130cc5f5"
+      "sha256": "sha256:801aa80e3c761db6f658dca64042d0fc68fb750bd6afa4408aed4d866b4aad73"
     },
     {
       "id": "exact-source-behavior-reference",
@@ -57,7 +57,7 @@
       "id": "finding-279-bounded-action-replan",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-279.md",
-      "sha256": "sha256:5e18b9a4214a15052697c58ae82c63b9bf540f651019e0e76905a7473c4b1539"
+      "sha256": "sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"
     }
   ],
   "completed_requirements": [
@@ -93,5 +93,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "开发继续，不暂停、不重新授权：398a974 的通用 evidence planning/duplicate-action recovery 已通过定向测试与真实轨迹；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema、Provider 和严格 decoder 不变。run-173 的 q1/q2/q4 fresh Reviewer/Delivery 与 q3 zero-dispatch clarification 均为有效进展，但 q5 malformed Primary JSON 被严格 decoder 正确拒绝；run-174 q1 fresh Reviewer nested answer、run-175 q2 fresh Reviewer nested answer、run-176 q2 fresh Reviewer nested answer plus schema metadata、run-180 q2 Primary top-level array 亦被严格拒绝；run-179 q1/q2/q4/q5 semantic deliveries are useful, but its duplicated q5 makes the sealed five-ordinal scope invalid；run-181 q1 Reviewer MORE_EVIDENCE 后重复搜索/读取耗尽固定预算，未形成 fresh Reviewer/Delivery。封存 run-173/run-174/run-175/run-176/run-179/run-180/run-181 为 REWORK/NOT_RUN，不修 Provider、不放宽 decoder、不把部分成功、重复 q5 或预算耗尽计为通过。按同一 clean candidate 建 fresh successor，严格只执行一次完整 q1-q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话；不得在同一 run 重复 ordinal），再验证 Reviewer/Delivery/Web 与 source-only 非 locator 增益。"
+  "next_action": "开发继续，不暂停、不重新授权：ba6cd61 已以通用 Application cognition page provenance rebridge 修复 run-181 暴露的已注册 entity detail/traverse bridge 缺口；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema、Provider 和严格 decoder 不变。该修复虽已通过 41 项相关测试与文档检查，尚未由 fresh 浏览器闭环证明，因此不得把它视为 Phase C 完成。run-173 的 q1/q2/q4 fresh Reviewer/Delivery 与 q3 zero-dispatch clarification 均为有效进展，但 q5 malformed Primary JSON 被严格 decoder 正确拒绝；run-174 q1 fresh Reviewer nested answer、run-175 q2 fresh Reviewer nested answer、run-176 q2 fresh Reviewer nested answer plus schema metadata、run-180 q2 Primary top-level array 亦被严格拒绝；run-179 q1/q2/q4/q5 semantic deliveries are useful, but its duplicated q5 makes the sealed five-ordinal scope invalid；run-181 q1 Reviewer MORE_EVIDENCE 后重复搜索/读取耗尽固定预算，未形成 fresh Reviewer/Delivery。封存 run-173/run-174/run-175/run-176/run-179/run-180/run-181 为 REWORK/NOT_RUN，不修 Provider、不放宽 decoder、不把部分成功、重复 q5 或预算耗尽计为通过。基于 ba6cd61 建 fresh successor，严格只执行一次完整 q1-q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话；不得在同一 run 重复 ordinal），再验证 Reviewer/Delivery/Web、三异质题与语义追问及无回归的 source-only 增益。"
 }
