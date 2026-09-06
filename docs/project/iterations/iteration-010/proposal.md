@@ -252,10 +252,10 @@ Codex 是强基线，不是真值、Oracle、Reviewer 或裁判。完整四路�
 
 ## Authorization decision
 
-**ACCEPTED PROPOSAL / PDR-013 AGENT-FIRST PRODUCT CONVERGENCE ACTIVE。**
+**HISTORICAL PROPOSAL / PDR-013 AGENT-FIRST PRODUCT CONVERGENCE（已由 PDR-014 取代）。**
 
-当前 Manifest 工作计划是 `V-AGENT-FIRST-CONVERGENCE-001`，授权简化 Agent-first 产品开发、loopback Web、五题与 Codex 同步比较，以及
-standing scope 内的 Provider dispatch。
+本节记录 PDR-013 当时的 Manifest 工作计划和授权解释，不是当前开发任务的执行输入。当前顺序改由
+`ITER-010-EXECUTION-PLAN-CURRENT` 管理；它仍沿用 active Slice 和 standing scope，但先交付 C1/C2/C3 的可体验链，再做质量比较和夯实。
 只有真实 scope delta、用户明确停止/改向或不可绕过的安全禁止才停止相关工作；Production 始终未授权。
 
 run-101 的 Ark→DeepSeek fallback 正常完成，最新质量偏差由 `FINDING-010-229/230` 定位为 Review focus/uncertainty 收敛与跨 route logical
