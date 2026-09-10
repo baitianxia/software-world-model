@@ -1,0 +1,18 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-193-phase-c-loopback",
+  "observed_candidate_commit": "64d9529f36cf0ad74bc3c67b7a5b047cf92eafea",
+  "decision": "CORRECT_WITH_ACTION",
+  "earliest_layer": "browser/turn-scope-orchestration",
+  "evidence": [
+    "run-193 q1 and q2 use conversation_f904c0a3dc5644a6bdfaf9c3a14be4b2",
+    "run-193 q3 uses independent conversation_44798af011bf4b4a9e55a4fd9ff46cc6 and ends PRE_DISPATCH_CLARIFICATION_REQUIRED",
+    "run-193 q4 uses independent conversation_30cbdeb76421497fb4b1b34fd45f16c8",
+    "run-193 q5 uses independent conversation_76f981733e394f7cade0523887b4c6fc and ends LIGHTWEIGHT_AGENT_FAILED_CLOSED",
+    "run-193 launch receipt is ARTIFACT_SESSION_PREPARED_NOT_STARTED with listener_started_at_seal=false and provider_dispatch_count_at_seal=0",
+    "run-193 terminal receipt reports conversation_count=4 and production_activation=NOT_EXECUTED"
+  ],
+  "next_action": "Repeat the fixed C2 script on one artifact-backed Agent, Conversation, and Web: q1/q2 same conversation; q3 clarification as a new Turn in that conversation; q4/q5 fixed new questions under the sealed scope. Require natural answer, citations, fresh independent review, and observable failure closure per Turn before C3 Alpha delivery.",
+  "advance_allowed": false,
+  "source_of_truth": "var/iteration-010/slice-001/run-193-phase-c-loopback/{launch.json,terminal.json,q1-web-result.json,q2-web-result.json,q3-web-result.json,q4-web-result.json,q5-web-result.json}"
+}
