@@ -1,0 +1,16 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "candidate_commit": "8e9f1b6e149348379789583c209c37d0f29ed8df",
+  "decision": "CORRECT_WITH_ACTION",
+  "earliest_layer": "agent-evidence-planning-and-review-loopback",
+  "evidence": [
+    "The change is application-owned and uses trusted citation identity (source revision plus canonical locator) to detect unread existing Source candidates.",
+    "After a Reviewer MORE_EVIDENCE finding, it re-plans when the Agent proposes another search/cognition/non-target read, preserving the fixed tool budget and directing the same Agent to an unread cognition-origin candidate.",
+    "The change adds no prompt, schema, Reviewer, Provider, budget, or question-specific branch; it targets the repeated-search/read failure class described by the current execution plan.",
+    "Parent reports tests.test_lightweight_engineering_agent 22/22 PASS and direction check PASS; local pytest executable is unavailable, so those results are accepted as reported evidence only.",
+    "No new C1.5/C2/C3 Web evidence is present in this commit; run-193 remains out of scope for advancement."
+  ],
+  "next_action": "Keep 8e9f1b6 as the C1 candidate and run the original failing Reviewer MORE_EVIDENCE trajectory plus two heterogeneous tasks. Then rebind the current clean HEAD into C1.5 and repeat the exact C2 launcher/browser scope; do not claim Alpha or advance on unit tests alone.",
+  "advance_allowed": false,
+  "risk_note": "The guard's exact Reviewer finding prefix and cognition-origin metadata filter need coverage in the heterogeneous trajectory; if the original failure still repeats, return to this layer before Web work."
+}
