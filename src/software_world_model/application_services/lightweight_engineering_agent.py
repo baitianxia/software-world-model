@@ -520,6 +520,53 @@ def _ordered_read_candidates(
     return tuple(ordered)
 
 
+def _unread_read_candidates(
+    candidates: Sequence[LightweightReadCandidate],
+    observations: Sequence[LightweightObservation],
+) -> tuple[LightweightReadCandidate, ...]:
+    """Return existing Source candidates whose resource is not yet read.
+
+    This is an application-owned Gap check.  It deliberately compares only
+    trusted Source identity (revision plus canonical resource locator), never
+    query text or model output, so a Reviewer request can reserve the fixed
+    budget for an already available unread candidate without creating a new
+    Agent-facing protocol field.
+    """
+
+    if not candidates:
+        return ()
+    read_citation_refs = {
+        citation.citation_ref
+        for observation in observations
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for citation in observation.citations
+    }
+    read_resources = {
+        (citation.source_revision, _citation_resource_locator(citation.locator))
+        for observation in observations
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+        for citation in observation.citations
+    }
+    unread: list[LightweightReadCandidate] = []
+    for candidate in candidates:
+        if candidate.citation.citation_ref in read_citation_refs:
+            continue
+        resources = {
+            (
+                candidate.citation.source_revision,
+                _citation_resource_locator(candidate.resource_locator),
+            ),
+            (
+                candidate.citation.source_revision,
+                _citation_resource_locator(candidate.citation.locator),
+            ),
+        }
+        if resources & read_resources:
+            continue
+        unread.append(candidate)
+    return tuple(unread)
+
+
 def _cognition_entity_role_rank(
     kind: CognitionEntityKind | None,
     attributes: Sequence[tuple[str, str]],
@@ -1102,6 +1149,74 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     }
                 )
                 if decision.action is not LightweightAgentAction.FINISH:
+                    unread_after_review = _unread_read_candidates(
+                        read_candidates,
+                        observations,
+                    )
+                    unread_cognition_candidates = tuple(
+                        candidate
+                        for candidate in unread_after_review
+                        if (
+                            read_candidate_metadata.get(candidate.read_index)
+                            is not None
+                            and read_candidate_metadata[
+                                candidate.read_index
+                            ].cognition_kind
+                            is not None
+                        )
+                    )
+                    review_requested_unread_source = (
+                        bool(unread_cognition_candidates)
+                        and any(
+                            finding.startswith(
+                                "Independent review requested more evidence."
+                            )
+                            for finding in review_findings
+                        )
+                    )
+                    if review_requested_unread_source and (
+                        decision.action is not LightweightAgentAction.READ_SOURCE
+                        or decision.read_index
+                        not in {
+                            candidate.read_index
+                            for candidate in unread_cognition_candidates
+                        }
+                    ):
+                        # A Reviewer identified a gap while the trusted
+                        # Application already has an unread Source option.
+                        # Do not spend the fixed Tool budget on another search
+                        # or cognition detour; let the same Agent replan from
+                        # the existing candidate.  This is internal evidence
+                        # planning, not a new model-facing action/protocol.
+                        events.append(
+                            {
+                                "kind": "ACTION_REPLAN_REQUIRED",
+                                "step": step,
+                                "reason": "REVIEW_GAP_UNREAD_SOURCE",
+                                "action": decision.action.value,
+                                "read_index": decision.read_index,
+                                "query": decision.query,
+                                "candidate_read_indexes": tuple(
+                                    candidate.read_index
+                                    for candidate in unread_cognition_candidates
+                                ),
+                            }
+                        )
+                        review_findings = (
+                            *review_findings,
+                            "Application reserved the fixed Tool budget for an "
+                            "existing unread Source candidate required by the "
+                            "review gap. Choose READ_SOURCE for one of the "
+                            "presented unread candidates; do not search or "
+                            "navigate again.",
+                        )
+                        consecutive_no_progress += 1
+                        if (
+                            consecutive_no_progress
+                            >= self._limits.maximum_consecutive_no_progress
+                        ):
+                            tool_actions = self._limits.maximum_tool_actions
+                        continue
                     action_fingerprint = _lightweight_action_fingerprint(decision)
                     if action_fingerprint in executed_action_fingerprints:
                         # A repeated proposal is a planning failure, not a
