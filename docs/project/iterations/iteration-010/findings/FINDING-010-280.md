@@ -64,3 +64,7 @@ Citation，且轨迹均包含 `MORE_EVIDENCE → APPROVED` 的 fresh review 闭�
 同时为 `5498d0a` 的 cognition 重规划补充实际执行器测试：MORE_EVIDENCE 后分别执行 search、traverse、detail，随后读取另一份 Source，
 在固定 7 Agent steps、5 Tool actions 内进入第二次 fresh review；三条本地路径均通过，未新增接口字段或放大生产预算。run-207 的旧 listener
 已在确认 6 个调用全部 COMPLETED、1 个 Turn 完成后退出，生成真实 terminal receipt；没有在途调用或重放。
+
+`run-210-c1-inventory` 仅重试前一运行未完成的库存/缓存问题；该 Turn 在 exact 当前 product commit 上为 `ACCEPTED`，4 个 Citation，轨迹包含
+`SEARCH_COGNITION → SEARCH_SOURCE/READ_SOURCE → REWRITE → fresh REVIEW(APPROVED)`，11 次 Ark dispatch，listener 已实际启动并安全收尾。
+结合 run-209 的原问题和注册/关系问题，原问题加两个异质任务现均有独立 fresh-review 成功轨迹；这些运行证据仍须监督方按 N1 规则核验，不能由开发方自行宣布 ADVANCE。
