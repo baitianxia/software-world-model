@@ -1174,7 +1174,19 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             for finding in review_findings
                         )
                     )
-                    if review_requested_unread_source and (
+                    application_observed_unread_source = (
+                        bool(unread_cognition_candidates)
+                        and any(
+                            finding.startswith(
+                                "Application observed that the selected action produced no new evidence."
+                            )
+                            for finding in review_findings
+                        )
+                    )
+                    if (
+                        review_requested_unread_source
+                        or application_observed_unread_source
+                    ) and (
                         decision.action is not LightweightAgentAction.READ_SOURCE
                         or decision.read_index
                         not in {
