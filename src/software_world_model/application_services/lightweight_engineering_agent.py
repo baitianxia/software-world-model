@@ -710,6 +710,8 @@ class LightweightAgentStepRequest:
     read_candidate_metadata: tuple[
         tuple[int, _LightweightReadNavigationMetadata], ...
     ] = ()
+    # Application-owned planning feedback; omitted from model_view.
+    blocked_action_kinds: tuple[str, ...] = ()
 
     def model_view(self) -> dict[str, object]:
         reserved_reads = _reserved_unread_cognition_candidates(
@@ -718,6 +720,7 @@ class LightweightAgentStepRequest:
             dict(self.read_candidate_metadata),
             self.review_findings,
         )
+        blocked = set(self.blocked_action_kinds)
         return {
             "mode": (
                 "WORLD_MODEL_PLUS_SOURCE"
@@ -741,7 +744,9 @@ class LightweightAgentStepRequest:
             "goal": self.goal,
             "plan": self.plan,
             "tools_enabled": self.tools_enabled,
-            "available_actions": (
+            "available_actions": [
+                action
+                for action in (
                 [
                     "SEARCH_COGNITION",
                     "TRAVERSE_RELATIONS",
@@ -764,7 +769,9 @@ class LightweightAgentStepRequest:
                 else ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
                 if self.tools_enabled
                 else ["FINISH"]
-            ),
+                )
+                if action not in blocked
+            ],
             "read_candidates": [
                 item.model_view()
                 for item in _ordered_read_candidates(
@@ -1093,6 +1100,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         decision_shape_repairs = 0
         consecutive_no_progress = 0
         executed_action_fingerprints: set[tuple[object, ...]] = set()
+        blocked_action_kinds: set[str] = set()
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
@@ -1123,6 +1131,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             read_candidate_metadata=tuple(
                                 sorted(read_candidate_metadata.items())
                             ),
+                            blocked_action_kinds=tuple(sorted(blocked_action_kinds)),
                         )
                     )
                 except LightweightModelCallFailure as exc:
@@ -1243,6 +1252,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "navigate again.",
                         )
                         consecutive_no_progress += 1
+                        blocked_action_kinds.add(decision.action.value)
                         if (
                             consecutive_no_progress
                             >= self._limits.maximum_consecutive_no_progress
@@ -1289,6 +1299,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             tool_actions = self._limits.maximum_tool_actions
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
+                    blocked_action_kinds.discard(decision.action.value)
                     tool_actions += 1
                     before_count = len(observations)
                     self._execute_action(

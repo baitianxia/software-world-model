@@ -38,3 +38,8 @@ run-202 的第 9 步 fresh Review 返回 MORE_EVIDENCE，第 10 步 Primary 选�
 自身的查询/关系/详情动作，用于在 typed sidecar 不足时继续定位相关声明；执行端保留同一 guard。不新增字段、版本、
 提示词、答案检查、预算或源码规则，也不自动选择/读取候选。既有反馈标记只识别 Application 自己的状态，不解析问题或 Reviewer 正文语义。
 这是现有执行限制的本地一致性修复，不改变系统契约。run-202 及两个异质真实任务仍须 fresh 验证；本 Finding 不宣布 N1、Phase C 或 Alpha 完成。
+
+## Follow-up observation
+
+`run-207-c1-cognition-replan` 在该放宽后以 6 次 dispatch 失败，暴露重复 cognition 搜索仍会被再次呈现的同层问题。后续最小修复在
+同一 Application-owned 动作投影中暂时屏蔽已被 action-fingerprint 拒绝的动作类别；该内部集合不进入 Agent schema，且在成功执行其他动作后清除。
