@@ -28,6 +28,8 @@ run-202 的第 9 步 fresh Review 返回 MORE_EVIDENCE，第 10 步 Primary 选�
   typed Source candidate。相同状态下两者的可用动作不一致。
 - 新增 deterministic production-executor 测试在固定 6 Agent steps、4 Tool actions 内重现：修复前 `NOT_ACCEPTED`，修复后补读另一个 Source，
   第二次 fresh review 后 `ACCEPTED`，没有被拒绝的搜索或额外 Tool dispatch。它验证机械闭环，不替代三个真实问题的 N1 证据。
+- fresh `run-206-c1-action-projection` 在当前提交上实际启动 listener 并完成 1 个原始问题 Turn（12 次 Provider dispatch）；轨迹显示动作投影已收窄，
+  但 Agent 仍在补证阶段选择普通未读候选，最终 `BUDGET_EXHAUSTED`。因此该运行是当前最早 Agent 规划缺口的反证，不计入 N1 成功。
 - 测试保留普通 cognition/search、无候选、无 typed sidecar、全部已读、Tool fuse 关闭及 no-progress 状态；Candidate/Citation/Observation 不变。
 
 ## Disposition
