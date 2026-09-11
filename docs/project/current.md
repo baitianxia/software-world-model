@@ -7,7 +7,7 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279, SYS-ADR-018]
 code: []
 tests: []
-as_of: 2026-09-06
+as_of: 2026-09-11
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: single-development-and-independent-supervision-lanes
@@ -53,8 +53,10 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
 - Phase B 已由监督方在 clean exact commit 上独立 `ADVANCE`；该结论不由开发分支修改或重新解释。
-- 当前唯一产品任务是 Phase C：把同一份已验证 cognition artifact 接入 Phase A 的同一个轻量 Agent，让 cognition→按 Gap 读 Source→自然
-  Answer/Citation→fresh review→loopback Web 形成最小完整链。用三个异质问题和一个语义追问验证，首次可操作时立即交付地址。
+- 当前唯一产品任务是 Phase C：先闭合 C1 的通用 Agent 证据规划，再把同一份已验证 cognition artifact 接入 Phase A 的同一个轻量 Agent，让
+  cognition→按 Gap 读 Source→自然 Answer/Citation→fresh review→loopback Web 形成最小完整链。C1 当前候选为
+  `8e9f1b6e149348379789583c209c37d0f29ed8df`，但仍缺原始 MORE_EVIDENCE 轨迹和两个异质任务的运行证据；C2 的 `run-193` 还因 q3 错开新会话
+  而未通过。只有补齐 N1/N2 证据后，才运行三个异质问题和一个语义追问并立即交付地址。
 - `run-156` 的 q5 已证明固定 8-action fuse 与耗尽后 fail-closed 正常；当前最早偏差是 Application cognition→Source candidate construction
   的同路径重复幂等和同一预算内已有 cognition/Source candidate 的 Primary evidence planning/selection。`FINDING-010-277` 只复用既有
   path capability、内部 sidecar 和通用呈现收敛，不恢复工具、不扩大预算、不重试 Reviewer、不新增 Agent 协议；历史 raw citation receipt
@@ -93,4 +95,4 @@ baseline 不匹配时只修复监督绑定，不能把开发误判为完成、�
 Conversation、Turn、问题、候选、定向测试和外调不重复申请授权；每次外调仍自动生成 exact runtime record。只有私有/新 Source、新接收方
 或账户、扩大披露/预算、外部写入、非 loopback、Production 或破坏性操作才属于 scope delta。
 
-当前状态：`AUTHORIZED / PHASE C ACTIVE / PDR-014 INTEGRATED BROWSER ALPHA / NON-PRODUCTION`。
+当前状态：`AUTHORIZED / PHASE C ACTIVE / C1-C2 EVIDENCE INCOMPLETE / NON-PRODUCTION`。

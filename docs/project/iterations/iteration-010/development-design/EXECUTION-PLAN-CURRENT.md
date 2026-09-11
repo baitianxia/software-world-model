@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 slice: ITER-010-SLICE-001
 coding_input: true
-as_of: 2026-09-06
+as_of: 2026-09-11
 ---
 
 # ITER-010 当前执行计划
@@ -26,12 +26,14 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 
 ## 2. 代码现状与已完成能力
 
-- 唯一产品基线是开发分支当前 clean HEAD `e1b4e86a3b6f5b8f446c37a0a0d743dec647aa57`；来源是公开 mall exact revision
+- 最近产品候选是开发分支 clean HEAD `8e9f1b6e149348379789583c209c37d0f29ed8df`；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
 - 世界模型已有可供 Agent 使用的结构、关系和详情能力；最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
 - Agent 已有重复动作/无进展恢复和有限 replan 能力；`e1b4e86` 修复了重复动作被应用层拒绝后错误消耗 Tool 预算的问题，但只完成了 C1 的一个局部闭环，尚无新的完整 Web 体验证据，不代表 Phase C 或 MVP 已完成。
-- 当前独立监督最近结论为 `REWORK`：最早未闭合层是 Agent 的证据规划/审核回路以及浏览器 Turn scope；还没有新的完整 Web 体验证据。
+- 当前独立监督对 `8e9f1b6` 的结论为 `CORRECT_WITH_ACTION`，但明确禁止推进：C1 仍缺原失败轨迹和两个异质任务的运行证据。
+- 最近的 C2 运行 `run-193-phase-c-loopback` 也不能作为 Alpha：q1/q2 虽同一会话，q3 被错误地开成独立会话，启动收据仍是
+  `ARTIFACT_SESSION_PREPARED_NOT_STARTED`，终止收据显示只形成 4 个会话且生产未执行。
 
 ## 3. 只做以下四个开发包（顺序固定）
 
@@ -106,8 +108,43 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 监督不得把测试数量、文档数量、调用收据或“门禁通过”当作产品进展，不得自行修改产品代码，不得创建并行开发分支，不得要求逐次
 授权。父开发任务中断后，恢复时必须先重新创建/绑定这个监督子 Agent，再继续 C1/C2/C3。
 
-## 6. 当前唯一下一动作
+## 6. 当前下一轮执行包（顺序不可跳过）
 
-恢复“完善软件世界模型能力”开发任务，加载本执行卡，先完成 C0 绑定；随后从 C1 的 Reviewer MORE_EVIDENCE 真实轨迹开始做通用 Agent
-闭环修复，接着完成 C1.5 的 Chat Artifact Session Config 和 launcher 预检，再立即推进 C2 的真实浏览器 Chat 与 C3 Alpha 交付。不要回到旧
-Phase B 文字表述或单路 QA 兼容入口，不要重开旧协议路线，也不要先做全量验证或在单个 commit 后结束本轮。
+当前开发任务继续使用 `codex/development`，监督任务继续使用 `codex/supervision`。以下三个动作属于同一轮连续开发；完成一个局部提交、定向测试或配置
+校验都不能结束本轮。
+
+### N1 — 闭合 C1 的通用 Agent 证据规划
+
+以 `8e9f1b6` 为候选，不先改产品代码。先重放原始 Reviewer `MORE_EVIDENCE` 失败轨迹，再运行两个未参与修复的异质问题。每条轨迹必须
+证明：同一预算内选择了与 Gap 相关且尚未消费的 cognition/Source candidate；不重复搜索、读取或分派；保留原有 Source/Citation identity；补证后
+确实进入审核，而不是只返回测试通过。若原失败仍出现，按最早责任层做一次通用修复，再重放原轨迹加两个异质问题。不能用增加预算、题面分支、Prompt/Schema
+或 Reviewer 规则替代修复。
+
+N1 的完成条件是“运行轨迹证据齐全”，不是 `22/22` 之类的单元测试数量。监督在证据齐全前不得允许进入 C1.5。
+
+### N2 — 用当前 Chat 入口完成 C2 浏览器链
+
+N1 通过后，重新读取 clean HEAD/tree，生成当前 `engineering_chat_alpha_cli` 所需的 artifact-backed Chat 配置（当前 loader 接受的 `@4`/`@5`），
+  然后只运行一条固定脚本：
+
+1. q1、q2 使用同一个 Conversation；
+2. q3 是基于前文的澄清，必须作为同一 Conversation 的新 Turn，不能新建 Conversation；
+3. q4、q5 是封闭范围内的两个新问题，可使用新的 Conversation，但不得产生隐式会话或重复 ordinal。
+
+每个 Turn 都要有自然答案、真实 Citation、独立 fresh review，并在失败时留下可观察的 fail-closed 结果。必须记录 listener 已实际启动、Web
+请求已进入生产链、Conversation/Turn 数量与每个 Turn 的结果；仅有 `PREPARED_NOT_STARTED`、本地配置通过或终止收据不算完成。禁止使用旧
+`engineering_qa_alpha_cli`、旧单路配置、全量回归、Codex 等待比较或重新申请同范围授权。
+
+### N3 — 首次完整链形成后立即交付 Alpha
+
+N2 形成可重复的完整链后，立即给出 loopback 地址、启动方式、代码提交、已知限制和一组可复现问题；不等待 C4。随后只做三个异质问题和一个语义
+追问，用同一 Agent 分别记录 source-only 与 World Model + source 的结果，判断世界模型是否增加非 locator 正确结论或修复真实遗漏。若没有增益，
+回到最早的 knowledge/cognition/Agent 层定位，不增加题目特判。
+
+## 7. 本轮监督和停止条件
+
+- 监督在每次 HEAD、工作树、轨迹或收据变化以及最长 30 分钟时检查；必须输出 `decision`、`earliest_layer`、`evidence`、`next_action`。
+- 在 N1/N2 的运行证据齐全前，监督只能给 `CORRECT_WITH_ACTION` 或 `REWORK`，不得给 `ADVANCE`、不得宣布 Alpha/MVP。
+- 发现偏离时，监督直接向开发任务发送一个唯一纠偏动作，开发继续执行；不暂停、不重复授权、不新建 PDR，不把普通失败升级为阻塞。
+- 只有 scope/safety 真正变化、用户明确停止，或无法绕过的外部不可用才允许等待；普通模型、网络、配置和测试失败都在本轮内诊断和修复。
+- 本轮明确禁止：继续扩展旧回答协议、针对单题碰答案、用测试数量冒充产品进展、先做 C4 夯实、把监督收据当作用户体验。
