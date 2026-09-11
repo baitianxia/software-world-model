@@ -670,6 +670,78 @@ class _CognitionFirstModel(_Model):
         )
 
 
+class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
+    """Request more evidence, then briefly repeat search before reading it."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._repeated_search = False
+
+    def decide(self, request):
+        source_observations = [
+            item
+            for item in request.observations
+            if item.operation is EngineeringAgentToolOperation.SOURCE_READ
+        ]
+        if self.reviews and len(source_observations) == 1:
+            if not self._repeated_search:
+                self._repeated_search = True
+                self.steps.append(request)
+                return LightweightDecisionResult(
+                    decision=LightweightAgentDecision(
+                        goal=request.goal,
+                        plan="Search again despite the existing unread candidate.",
+                        action=LightweightAgentAction.SEARCH_SOURCE,
+                        query="unrelated retry",
+                        read_index=None,
+                        response_kind=None,
+                        answer=None,
+                        citations=(),
+                    ),
+                    receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+                    disclosure_record_ref=f"disclosure-{self._calls}",
+                )
+            unread = next(
+                item
+                for item in request.read_candidates
+                if item.read_index != 1
+            )
+            self.steps.append(request)
+            return LightweightDecisionResult(
+                decision=LightweightAgentDecision(
+                    goal=request.goal,
+                    plan="Read the existing unread Source candidate requested by review.",
+                    action=LightweightAgentAction.READ_SOURCE,
+                    query=None,
+                    read_index=unread.read_index,
+                    response_kind=None,
+                    answer=None,
+                    citations=(),
+                ),
+                receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+                disclosure_record_ref=f"disclosure-{self._calls}",
+            )
+        return super().decide(request)
+
+    def review(self, request):
+        self.reviews.append(request)
+        verdict = (
+            LightweightReviewVerdict.MORE_EVIDENCE
+            if len(self.reviews) == 1
+            else LightweightReviewVerdict.APPROVED
+        )
+        return LightweightReviewResult(
+            review=LightweightReview(
+                verdict=verdict,
+                findings=("需要一个不同 Source observation。",)
+                if verdict is LightweightReviewVerdict.MORE_EVIDENCE
+                else (),
+            ),
+            receipt=self._receipt(EngineeringAgentModelRole.INDEPENDENT_REVIEWER),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 class _CitationBindingModel(_Model):
     """Deterministic fixture for the Application citation-binding boundary."""
 
@@ -1618,6 +1690,50 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             "CheckoutServiceImpl.java",
             submission.turn.citations[0].locator,
         )
+
+    def test_more_evidence_reserves_unread_cognition_source_budget(self) -> None:
+        model = _MoreEvidenceUnreadCandidateModel()
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-more-evidence-unread-candidate",
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=12,
+                maximum_tool_actions=4,
+                maximum_reviews=3,
+            ),
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="接口实现与源码行为如何对应？",
+        )
+
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        reasons = [
+            item["reason"]
+            for item in trace.events
+            if item["kind"] == "ACTION_REPLAN_REQUIRED"
+        ]
+        self.assertIn("REVIEW_GAP_UNREAD_SOURCE", reasons)
+        self.assertEqual(
+            [item.action.operation for item in tool.calls],
+            [
+                EngineeringAgentToolOperation.SOURCE_READ,
+                EngineeringAgentToolOperation.SOURCE_READ,
+            ],
+        )
+        self.assertEqual(len(model.reviews), 2)
 
     def test_detail_rebridges_registered_same_path_entity_metadata(self) -> None:
         """A detail page must refresh bridge metadata after candidate de-duplication."""
