@@ -674,10 +674,16 @@ class _CognitionFirstModel(_Model):
 class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
     """Request more evidence, then briefly repeat search before reading it."""
 
-    def __init__(self, *, respect_available_actions: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        respect_available_actions: bool = False,
+        repeat_read: bool = False,
+    ) -> None:
         super().__init__()
         self._repeated_search = False
         self._respect_available_actions = respect_available_actions
+        self._repeat_read = repeat_read
 
     def decide(self, request):
         source_observations = [
@@ -696,9 +702,11 @@ class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
                     decision=LightweightAgentDecision(
                         goal=request.goal,
                         plan="Search again despite the existing unread candidate.",
-                        action=LightweightAgentAction.SEARCH_SOURCE,
-                        query="unrelated retry",
-                        read_index=None,
+                        action=(LightweightAgentAction.READ_SOURCE
+                                if self._repeat_read
+                                else LightweightAgentAction.SEARCH_SOURCE),
+                        query=None if self._repeat_read else "unrelated retry",
+                        read_index=1 if self._repeat_read else None,
                         response_kind=None,
                         answer=None,
                         citations=(),
@@ -745,6 +753,40 @@ class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
             receipt=self._receipt(EngineeringAgentModelRole.INDEPENDENT_REVIEWER),
             disclosure_record_ref=f"disclosure-{self._calls}",
         )
+
+
+class _GapCognitionRecoveryModel(_MoreEvidenceUnreadCandidateModel):
+    def __init__(self, action: LightweightAgentAction) -> None:
+        super().__init__(respect_available_actions=True)
+        self.gap_action = action
+        self.replanned = False
+
+    def decide(self, request):
+        if self.reviews and not self.replanned:
+            self.replanned = True
+            self.steps.append(request)
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Refine the cognition gap before selecting new Source evidence.",
+                action=self.gap_action,
+                query="CheckoutService" if self.gap_action is LightweightAgentAction.SEARCH_COGNITION else None,
+                read_index=None,
+                cognition_index=(request.cognition_candidates[-1].cognition_index
+                                 if self.gap_action is not LightweightAgentAction.SEARCH_COGNITION else None),
+                relation_kind=None,
+                direction=(CognitionDirection.BOTH
+                           if self.gap_action is LightweightAgentAction.TRAVERSE_RELATIONS else None),
+                maximum_depth=(1 if self.gap_action is LightweightAgentAction.TRAVERSE_RELATIONS else None),
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+            return LightweightDecisionResult(
+                decision=decision,
+                receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+                disclosure_record_ref=f"disclosure-{self._calls}",
+            )
+        return super().decide(request)
 
 
 class _CitationBindingModel(_Model):
@@ -1738,6 +1780,72 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 EngineeringAgentToolOperation.SOURCE_READ,
             ],
         )
+        self.assertEqual(len(model.reviews), 2)
+
+    def test_review_gap_allows_cognition_replan_then_source_and_fresh_review(self) -> None:
+        for action in (
+            LightweightAgentAction.SEARCH_COGNITION,
+            LightweightAgentAction.TRAVERSE_RELATIONS,
+            LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
+        ):
+            with self.subTest(action=action.value):
+                model = _GapCognitionRecoveryModel(action)
+                tool = _SourceTool()
+                traces = LightweightAgentTraceStore()
+                executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                    model=model,
+                    tool_port=tool,
+                    capability_cognition=_cognition(),
+                    delivery_control=SealedLightweightDeliveryControl(),
+                    trace_store=traces,
+                    attempt_ref=f"review-gap-{action.value}",
+                    limits=EngineeringAgentLoopLimits(
+                        maximum_agent_steps=7,
+                        maximum_tool_actions=5,
+                        maximum_reviews=2,
+                    ),
+                )
+                service = InMemoryEngineeringConversationService(_binding(), turn_executor=executor)
+                conversation = service.create_conversation()
+                submission = service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=conversation.conversation.revision,
+                    message="需要补充声明和实现证据。",
+                )
+                self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+                self.assertEqual(len(model.steps), 7)
+                self.assertEqual(len(model.reviews), 2)
+                self.assertEqual(len(tool.calls), 2)
+                self.assertIn(action.value, model.steps[4].model_view()["available_actions"])
+                events = traces.for_turn(submission.turn.request_digest)[0].events
+                self.assertTrue(any(e["kind"] == "COGNITION_OBSERVATION" and e["operation"] == action.value
+                                    for e in events))
+                self.assertFalse(any(e["kind"] == "ACTION_REPLAN_REQUIRED" for e in events))
+
+    def test_rejected_read_keeps_other_unread_source_actions_available(self) -> None:
+        model = _MoreEvidenceUnreadCandidateModel(repeat_read=True)
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="rejected-read-retains-distinct-candidate",
+        )
+        service = InMemoryEngineeringConversationService(_binding(), turn_executor=executor)
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="核对当前声明与实现证据。",
+        )
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        after_rejection = model.steps[5]
+        self.assertTrue(any("reserved the fixed Tool budget" in f for f in after_rejection.review_findings))
+        self.assertIn("READ_SOURCE", after_rejection.model_view()["available_actions"])
+        self.assertEqual(len(tool.calls), 2)
         self.assertEqual(len(model.reviews), 2)
 
     def test_unread_gap_projects_only_executable_actions_before_dispatch(self) -> None:

@@ -41,5 +41,14 @@ run-202 的第 9 步 fresh Review 返回 MORE_EVIDENCE，第 10 步 Primary 选�
 
 ## Follow-up observation
 
-`run-207-c1-cognition-replan` 在该放宽后以 6 次 dispatch 失败，暴露重复 cognition 搜索仍会被再次呈现的同层问题。后续最小修复在
-同一 Application-owned 动作投影中暂时屏蔽已被 action-fingerprint 拒绝的动作类别；该内部集合不进入 Agent schema，且在成功执行其他动作后清除。
+`run-207-c1-cognition-replan` 在 `5498d0a` 上以 6 次 dispatch 失败：两次重复 cognition 搜索被拒绝，后续 FINISH 经一次 Citation binding
+rejection 后进入 fresh Review，收到 MORE_EVIDENCE 时 Tool fuse 已关闭。它不是 `b13c046` 的验证证据。
+
+`b13c046` 的动作类别屏蔽实现和原说明不符：集合实际在 REVIEW_GAP_UNREAD_SOURCE 分支添加，而非 REPEATED_ACTION；移除发生于 Tool
+执行前且只针对同种动作，不是成功执行其他动作后恢复。新增回归测试证明：拒绝一个已读候选后，仍有真实未读候选，但 READ_SOURCE 整类
+从可用动作消失。因此撤销该类别屏蔽，只保留已有精确 action fingerprint 防重及候选排序；修复前该测试失败、撤销后通过。
+这是对错误实现和报告的纠正，不是 N1 闭合。原问题与两个异质 fresh 轨迹仍未齐全。
+
+同时为 `5498d0a` 的 cognition 重规划补充实际执行器测试：MORE_EVIDENCE 后分别执行 search、traverse、detail，随后读取另一份 Source，
+在固定 7 Agent steps、5 Tool actions 内进入第二次 fresh review；三条本地路径均通过，未新增接口字段或放大生产预算。run-207 的旧 listener
+已在确认 6 个调用全部 COMPLETED、1 个 Turn 完成后退出，生成真实 terminal receipt；没有在途调用或重放。
