@@ -68,3 +68,13 @@ Citation，且轨迹均包含 `MORE_EVIDENCE → APPROVED` 的 fresh review 闭�
 `run-210-c1-inventory` 仅重试前一运行未完成的库存/缓存问题；该 Turn 在 exact 当前 product commit 上为 `ACCEPTED`，4 个 Citation，轨迹包含
 `SEARCH_COGNITION → SEARCH_SOURCE/READ_SOURCE → REWRITE → fresh REVIEW(APPROVED)`，11 次 Ark dispatch，listener 已实际启动并安全收尾。
 结合 run-209 的原问题和注册/关系问题，原问题加两个异质任务现均有独立 fresh-review 成功轨迹；这些运行证据仍须监督方按 N1 规则核验，不能由开发方自行宣布 ADVANCE。
+## Run-211 C2 safety-boundary evidence (2026-09-12)
+
+The current exact-Source artifact-backed loopback listener was started with HEAD
+`aa902dc2ead63cadd981a5af498bbd1a9f2f51c0` and returned `/health` 200. A
+fresh first Turn was accepted by the loopback endpoint, then closed fail-closed
+before an answer or citation was authorized: Ark recorded
+`LIVE_INTEGRATION_HELD` and the fallback route recorded
+`CONTROL_STATE_DENIED`. The Conversation remained active for later turns.
+This is retained as external admission evidence, not replayed as a
+post-dispatch unknown and not treated as C2 completion.
