@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -673,9 +674,10 @@ class _CognitionFirstModel(_Model):
 class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
     """Request more evidence, then briefly repeat search before reading it."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, respect_available_actions: bool = False) -> None:
         super().__init__()
         self._repeated_search = False
+        self._respect_available_actions = respect_available_actions
 
     def decide(self, request):
         source_observations = [
@@ -684,7 +686,10 @@ class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
             if item.operation is EngineeringAgentToolOperation.SOURCE_READ
         ]
         if self.reviews and len(source_observations) == 1:
-            if not self._repeated_search:
+            if not self._repeated_search and (
+                not self._respect_available_actions
+                or "SEARCH_SOURCE" in request.model_view()["available_actions"]
+            ):
                 self._repeated_search = True
                 self.steps.append(request)
                 return LightweightDecisionResult(
@@ -1734,6 +1739,64 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             ],
         )
         self.assertEqual(len(model.reviews), 2)
+
+    def test_unread_gap_projects_only_executable_actions_before_dispatch(self) -> None:
+        model = _MoreEvidenceUnreadCandidateModel(respect_available_actions=True)
+        tool = _SourceTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-executable-gap-projection",
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=6,
+                maximum_tool_actions=4,
+                maximum_reviews=2,
+            ),
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="解释声明与实现之间的关系。",
+        )
+        self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+        self.assertEqual(len(model.steps), 6)
+        self.assertEqual(len(model.reviews), 2)
+        gap = model.steps[4]
+        self.assertEqual(gap.model_view()["available_actions"], ["READ_SOURCE", "FINISH"])
+        normal = replace(gap, review_findings=())
+        self.assertIn("SEARCH_SOURCE", normal.model_view()["available_actions"])
+        self.assertIn("TRAVERSE_RELATIONS", normal.model_view()["available_actions"])
+        for unrestricted in (
+            replace(gap, read_candidates=()),
+            replace(gap, read_candidate_metadata=()),
+            replace(gap, observations=model.steps[-1].observations),
+        ):
+            self.assertIn("SEARCH_SOURCE", unrestricted.model_view()["available_actions"])
+        no_progress = replace(gap, review_findings=(
+            "Application observed that the selected action produced no new evidence.",
+        ))
+        self.assertEqual(no_progress.model_view()["available_actions"], ["READ_SOURCE", "FINISH"])
+        self.assertEqual(
+            replace(gap, tools_enabled=False).model_view()["available_actions"],
+            ["FINISH"],
+        )
+        # Projection changes eligibility only, never candidate or evidence identity.
+        self.assertEqual(gap.model_view()["read_candidates"], normal.model_view()["read_candidates"])
+        self.assertEqual(gap.model_view()["observations"], normal.model_view()["observations"])
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertFalse(any(event["kind"] == "ACTION_REPLAN_REQUIRED" for event in trace.events))
+        self.assertEqual(
+            [call.action.operation for call in tool.calls],
+            [EngineeringAgentToolOperation.SOURCE_READ] * 2,
+        )
 
     def test_detail_rebridges_registered_same_path_entity_metadata(self) -> None:
         """A detail page must refresh bridge metadata after candidate de-duplication."""

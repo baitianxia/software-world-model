@@ -567,6 +567,33 @@ def _unread_read_candidates(
     return tuple(unread)
 
 
+def _reserved_unread_cognition_candidates(
+    candidates: Sequence[LightweightReadCandidate],
+    observations: Sequence[LightweightObservation],
+    metadata: Mapping[int, _LightweightReadNavigationMetadata],
+    findings: Sequence[str],
+) -> tuple[LightweightReadCandidate, ...]:
+    """Share the existing execution restriction with action presentation.
+
+    These are Application-owned feedback markers, not answer or question
+    semantics. Source eligibility still comes from trusted candidate identity.
+    """
+    if not any(
+        finding.startswith((
+            "Independent review requested more evidence.",
+            "Application observed that the selected action produced no new evidence.",
+        ))
+        for finding in findings
+    ):
+        return ()
+    return tuple(
+        candidate
+        for candidate in _unread_read_candidates(candidates, observations)
+        if candidate.read_index in metadata
+        and metadata[candidate.read_index].cognition_kind is not None
+    )
+
+
 def _cognition_entity_role_rank(
     kind: CognitionEntityKind | None,
     attributes: Sequence[tuple[str, str]],
@@ -685,6 +712,12 @@ class LightweightAgentStepRequest:
     ] = ()
 
     def model_view(self) -> dict[str, object]:
+        reserved_reads = _reserved_unread_cognition_candidates(
+            self.read_candidates,
+            self.observations,
+            dict(self.read_candidate_metadata),
+            self.review_findings,
+        )
         return {
             "mode": (
                 "WORLD_MODEL_PLUS_SOURCE"
@@ -709,7 +742,9 @@ class LightweightAgentStepRequest:
             "plan": self.plan,
             "tools_enabled": self.tools_enabled,
             "available_actions": (
-                [
+                ["READ_SOURCE", "FINISH"]
+                if self.tools_enabled and reserved_reads
+                else [
                     "SEARCH_COGNITION",
                     "TRAVERSE_RELATIONS",
                     "RETRIEVE_COGNITION_DETAIL",
@@ -1149,44 +1184,13 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     }
                 )
                 if decision.action is not LightweightAgentAction.FINISH:
-                    unread_after_review = _unread_read_candidates(
+                    unread_cognition_candidates = _reserved_unread_cognition_candidates(
                         read_candidates,
                         observations,
+                        read_candidate_metadata,
+                        review_findings,
                     )
-                    unread_cognition_candidates = tuple(
-                        candidate
-                        for candidate in unread_after_review
-                        if (
-                            read_candidate_metadata.get(candidate.read_index)
-                            is not None
-                            and read_candidate_metadata[
-                                candidate.read_index
-                            ].cognition_kind
-                            is not None
-                        )
-                    )
-                    review_requested_unread_source = (
-                        bool(unread_cognition_candidates)
-                        and any(
-                            finding.startswith(
-                                "Independent review requested more evidence."
-                            )
-                            for finding in review_findings
-                        )
-                    )
-                    application_observed_unread_source = (
-                        bool(unread_cognition_candidates)
-                        and any(
-                            finding.startswith(
-                                "Application observed that the selected action produced no new evidence."
-                            )
-                            for finding in review_findings
-                        )
-                    )
-                    if (
-                        review_requested_unread_source
-                        or application_observed_unread_source
-                    ) and (
+                    if unread_cognition_candidates and (
                         decision.action is not LightweightAgentAction.READ_SOURCE
                         or decision.read_index
                         not in {

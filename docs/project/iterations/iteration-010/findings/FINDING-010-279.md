@@ -37,7 +37,7 @@ run-181-phase-c-loopback 进一步显示，详情页命中已经注册的 cognit
 
 ## Disposition
 
-在现有 Application loop 内以 action fingerprint 记录已经执行的调查动作；重复动作消费既有 action fuse、写入审计事件并反馈同一主 Agent
+在现有 Application loop 内以 action fingerprint 记录已经执行的调查动作；重复提议消费正常 Agent step，但不消费尚未分派的 Tool action 预算，写入审计事件并反馈同一主 Agent
 选择不同的合法动作，不再次调用 Tool。progress=false 的唯一动作也写入 bounded replan feedback。Reviewer 要求更多证据时，只追加通用的
 “优先已有未读 Source candidate、避免已完成动作”反馈，并按内部 sidecar 的既有来源顺序呈现候选。该修复不增加预算、不修改
 model-facing 字段、Prompt、Provider、Reviewer 或 Citation/Source identity，也不包含工程、类名、方法名或题目规则。System contract 已有的
