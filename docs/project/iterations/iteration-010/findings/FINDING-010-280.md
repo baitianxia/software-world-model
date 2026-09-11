@@ -57,6 +57,10 @@ rejection 后进入 fresh Review，收到 MORE_EVIDENCE 时 Tool fuse 已关闭�
 DeepSeek admission 也被拒绝，Turn 为 `NOT_ACCEPTED`，无真实 Provider HTTP dispatch。该结果是外部准入失败，按既有 cadence 重试，不能作为
 Agent 能力或 N1 证据，也不重放该请求。
 
+`run-209-c1-provenance` 在同一快照上实际完成三个独立 Conversation：原始权限分配问题与注册/角色关系问题均为 `ACCEPTED`，各有 4 个真实
+Citation，且轨迹均包含 `MORE_EVIDENCE → APPROVED` 的 fresh review 闭环；库存/缓存异质问题完成 cognition 与 Source 读取后，在第 8 次
+调用前触发 DeepSeek 准入拒绝，未进入 fresh review。该运行使原问题加一个异质问题通过，但 N1 仍缺第二个异质 fresh-review 证据。
+
 同时为 `5498d0a` 的 cognition 重规划补充实际执行器测试：MORE_EVIDENCE 后分别执行 search、traverse、detail，随后读取另一份 Source，
 在固定 7 Agent steps、5 Tool actions 内进入第二次 fresh review；三条本地路径均通过，未新增接口字段或放大生产预算。run-207 的旧 listener
 已在确认 6 个调用全部 COMPLETED、1 个 Turn 完成后退出，生成真实 terminal receipt；没有在途调用或重放。
