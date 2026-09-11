@@ -49,6 +49,10 @@ rejection 后进入 fresh Review，收到 MORE_EVIDENCE 时 Tool fuse 已关闭�
 从可用动作消失。因此撤销该类别屏蔽，只保留已有精确 action fingerprint 防重及候选排序；修复前该测试失败、撤销后通过。
 这是对错误实现和报告的纠正，不是 N1 闭合。原问题与两个异质 fresh 轨迹仍未齐全。
 
+在 `96dd66d` 后续补丁中，现有 cognition Observation 内容现在携带本次已执行调用的
+`execution_provenance`（action、query/cursor 或 entity/relation/direction/depth）。该元数据不进入顶层 Agent schema、Evidence 或 Citation，
+并由确定性测试验证 search/traverse/detail 三类输入均可追溯。它针对的是 Agent 看不到自身调用参数的通用观察缺口，而不是提示词或答案规则。
+
 同时为 `5498d0a` 的 cognition 重规划补充实际执行器测试：MORE_EVIDENCE 后分别执行 search、traverse、detail，随后读取另一份 Source，
 在固定 7 Agent steps、5 Tool actions 内进入第二次 fresh review；三条本地路径均通过，未新增接口字段或放大生产预算。run-207 的旧 listener
 已在确认 6 个调用全部 COMPLETED、1 个 Turn 完成后退出，生成真实 terminal receipt；没有在途调用或重放。

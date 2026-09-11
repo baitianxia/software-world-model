@@ -1771,7 +1771,26 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             encountered_entity_ids=page_entity_ids,
         )
         index = len(observations) + 1
-        content = canonical_json_bytes(page.to_payload()).decode("utf-8")
+        # Keep the existing page payload (and its digest) intact, while making
+        # the Application-owned invocation provenance observable to the same
+        # Agent.  This is navigation metadata, not cognition evidence.
+        content_payload = page.to_payload()
+        content_payload["execution_provenance"] = {
+            "action": decision.action.value,
+            "query": decision.query,
+            "cursor": decision.cursor or 0,
+            "cognition_index": decision.cognition_index,
+            "relation_kind": (
+                decision.relation_kind.value
+                if decision.relation_kind is not None
+                else None
+            ),
+            "direction": (
+                decision.direction.value if decision.direction is not None else None
+            ),
+            "maximum_depth": decision.maximum_depth,
+        }
+        content = canonical_json_bytes(content_payload).decode("utf-8")
         page_digest = digest_of(page.to_payload())
         observation = LightweightObservation(
             observation_index=index,

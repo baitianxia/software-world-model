@@ -1821,6 +1821,18 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
                 self.assertTrue(any(e["kind"] == "COGNITION_OBSERVATION" and e["operation"] == action.value
                                     for e in events))
                 self.assertFalse(any(e["kind"] == "ACTION_REPLAN_REQUIRED" for e in events))
+                first_observation = next(
+                    item
+                    for step_request in model.steps
+                    for item in step_request.observations
+                    if item.operation is action
+                )
+                provenance = json.loads(first_observation.content)["execution_provenance"]
+                self.assertEqual(provenance["action"], action.value)
+                self.assertIn("query", provenance)
+                self.assertIn("cursor", provenance)
+                self.assertIn("cognition_index", provenance)
+                self.assertEqual(first_observation.citations, ())
 
     def test_rejected_read_keeps_other_unread_source_actions_available(self) -> None:
         model = _MoreEvidenceUnreadCandidateModel(repeat_read=True)
