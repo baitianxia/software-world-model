@@ -1,0 +1,15 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "candidate_commit": "72d9c60",
+  "decision": "CORRECT_WITH_ACTION",
+  "earliest_layer": "agent-evidence-planning-and-review-loopback",
+  "evidence": [
+    "Added deterministic end-to-end executor test for Reviewer MORE_EVIDENCE, repeated SEARCH interception, unread cognition-origin READ, second fresh review, and ACCEPTED quality status.",
+    "The test asserts the tool calls are exactly two SOURCE_READ operations and two reviews, with ACTION_REPLAN_REQUIRED reason REVIEW_GAP_UNREAD_SOURCE.",
+    "Parent reports tests.test_lightweight_engineering_agent 23/23 PASS; this is reported evidence because pytest is unavailable in the local shell.",
+    "The commit only changes tests and does not alter the already reviewed generic Application guard; no C1 original failure or two heterogeneous runtime trajectories are present yet."
+  ],
+  "next_action": "Continue N1: replay the original Reviewer MORE_EVIDENCE failure trajectory and run two heterogeneous tasks against 8e9f1b6/72d9c60, recording real cognition, Source, review, and budget behavior. Keep phase advancement disabled until those runtime artifacts exist.",
+  "advance_allowed": false,
+  "risk_note": "The deterministic fixture demonstrates the guard path but is not product runtime evidence; heterogeneous and original failure replays remain required."
+}
