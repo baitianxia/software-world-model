@@ -742,7 +742,15 @@ class LightweightAgentStepRequest:
             "plan": self.plan,
             "tools_enabled": self.tools_enabled,
             "available_actions": (
-                ["READ_SOURCE", "FINISH"]
+                [
+                    "SEARCH_COGNITION",
+                    "TRAVERSE_RELATIONS",
+                    "RETRIEVE_COGNITION_DETAIL",
+                    "READ_SOURCE",
+                    "FINISH",
+                ]
+                if self.tools_enabled and reserved_reads and self.cognition_enabled
+                else ["READ_SOURCE", "FINISH"]
                 if self.tools_enabled and reserved_reads
                 else [
                     "SEARCH_COGNITION",
@@ -1190,13 +1198,21 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         read_candidate_metadata,
                         review_findings,
                     )
-                    if unread_cognition_candidates and (
-                        decision.action is not LightweightAgentAction.READ_SOURCE
-                        or decision.read_index
-                        not in {
+                    cognition_replan_action = decision.action in {
+                        LightweightAgentAction.SEARCH_COGNITION,
+                        LightweightAgentAction.TRAVERSE_RELATIONS,
+                        LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
+                    }
+                    unread_read_selected = (
+                        decision.action is LightweightAgentAction.READ_SOURCE
+                        and decision.read_index
+                        in {
                             candidate.read_index
                             for candidate in unread_cognition_candidates
                         }
+                    )
+                    if unread_cognition_candidates and not (
+                        cognition_replan_action or unread_read_selected
                     ):
                         # A Reviewer identified a gap while the trusted
                         # Application already has an unread Source option.

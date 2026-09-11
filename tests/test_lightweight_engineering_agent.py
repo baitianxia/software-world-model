@@ -1770,7 +1770,16 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
         self.assertEqual(len(model.steps), 6)
         self.assertEqual(len(model.reviews), 2)
         gap = model.steps[4]
-        self.assertEqual(gap.model_view()["available_actions"], ["READ_SOURCE", "FINISH"])
+        self.assertEqual(
+            gap.model_view()["available_actions"],
+            [
+                "SEARCH_COGNITION",
+                "TRAVERSE_RELATIONS",
+                "RETRIEVE_COGNITION_DETAIL",
+                "READ_SOURCE",
+                "FINISH",
+            ],
+        )
         normal = replace(gap, review_findings=())
         self.assertIn("SEARCH_SOURCE", normal.model_view()["available_actions"])
         self.assertIn("TRAVERSE_RELATIONS", normal.model_view()["available_actions"])
@@ -1783,7 +1792,16 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
         no_progress = replace(gap, review_findings=(
             "Application observed that the selected action produced no new evidence.",
         ))
-        self.assertEqual(no_progress.model_view()["available_actions"], ["READ_SOURCE", "FINISH"])
+        self.assertEqual(
+            no_progress.model_view()["available_actions"],
+            [
+                "SEARCH_COGNITION",
+                "TRAVERSE_RELATIONS",
+                "RETRIEVE_COGNITION_DETAIL",
+                "READ_SOURCE",
+                "FINISH",
+            ],
+        )
         self.assertEqual(
             replace(gap, tools_enabled=False).model_view()["available_actions"],
             ["FINISH"],
