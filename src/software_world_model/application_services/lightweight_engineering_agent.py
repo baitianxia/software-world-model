@@ -1116,12 +1116,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     raise
                 self._record_receipt(receipts, result.receipt)
                 decision = result.decision
-                action_fingerprint = _lightweight_action_fingerprint(decision)
-                if (
-                    not tools_enabled
-                    and decision.action is not LightweightAgentAction.FINISH
-                    and action_fingerprint not in executed_action_fingerprints
-                ):
+                if not tools_enabled and decision.action is not LightweightAgentAction.FINISH:
                     raise DomainError(
                         ErrorCode.BUDGET_EXHAUSTED,
                         "lightweight Agent did not stop after its tool budget closed",
@@ -1234,6 +1229,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         ):
                             tool_actions = self._limits.maximum_tool_actions
                         continue
+                    action_fingerprint = _lightweight_action_fingerprint(decision)
                     if action_fingerprint in executed_action_fingerprints:
                         # A repeated proposal is a planning failure, not a
                         # reason to dispatch the same read/search again. Keep
