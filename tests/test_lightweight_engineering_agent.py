@@ -3038,6 +3038,37 @@ class MultiMethod implements MultiContract {
                     self.assertEqual(len(tool.calls), 2)
                     self.assertEqual(submission.turn.failure_code, "BUDGET_EXHAUSTED")
 
+    def test_read_broker_rejection_is_not_an_executed_no_progress_read(self) -> None:
+        # Both results are opaque boundary observations with no Citations.
+        # Only the current trusted Broker decision distinguishes a rejected
+        # READ from an authorized READ that returned no evidence.
+        for rejected in (True, False):
+            with self.subTest(rejected=rejected):
+                model = _Model()
+                tool = _CumulativeBrokerTool(rejected=rejected)
+                executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                    model=model, tool_port=tool,
+                    delivery_control=SealedLightweightDeliveryControl(),
+                    trace_store=LightweightAgentTraceStore(),
+                    attempt_ref="read-broker-boundary-accounting",
+                    limits=EngineeringAgentLoopLimits(maximum_tool_actions=2),
+                )
+                service = InMemoryEngineeringConversationService(
+                    _binding(), turn_executor=executor
+                )
+                conversation = service.create_conversation()
+                service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=conversation.conversation.revision,
+                    message="Explain the entry implementation.",
+                )
+                self.assertEqual(tool.calls[1].action.operation,
+                                 EngineeringAgentToolOperation.SOURCE_READ)
+                self.assertEqual(model.steps[2].remaining_tool_actions, int(rejected))
+                self.assertEqual(model.steps[2].tools_enabled, rejected)
+                self.assertEqual(model.steps[2].observations[-1].citations, ())
+                self.assertFalse(model.steps[2].observations[-1].progress)
+
     def test_no_progress_adds_bounded_replan_feedback(self) -> None:
         model = _NoProgressRecoveryModel()
         traces = LightweightAgentTraceStore()

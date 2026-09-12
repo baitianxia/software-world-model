@@ -1750,30 +1750,35 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 "lightweight Agent evidence byte budget is exhausted",
             )
         # The authority receipt retains the typed Broker decision ledger entry;
-        # use it to distinguish pre-dispatch rejection from an executed search
-        # that legitimately returned no matches.  No model-facing protocol or
+        # use it to distinguish pre-dispatch rejection from an executed Source
+        # action that legitimately returned no evidence. No model-facing protocol or
         # new versioned schema is introduced here.
-        if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
+        if operation in {
+            EngineeringAgentToolOperation.SOURCE_SEARCH,
+            EngineeringAgentToolOperation.SOURCE_READ,
+        }:
             # Receipts contain the cumulative Turn ledger.  Bind the decision
             # to this result's subject and evidence digest before inspecting
             # its typed status; historical authorized entries must not charge
             # or mask the current pre-dispatch rejection.
-            rejected = False
+            rejected = bool(result.evidence)
             for evidence in result.evidence:
                 receipt = evidence.authority_receipt
                 if receipt is None:
-                    continue
+                    rejected = False
+                    break
                 current = [
                     entry for entry in receipt.ledger_entries
                     if entry.kind == "BROKER_DECISION"
                     and entry.subject_ref == evidence.result_ref
                     and entry.subject_digest == receipt.evidence_digest
                 ]
-                if current and all(
+                if not (current and all(
                     dict(entry.details).get("status") == "REJECTED"
                     for entry in current
-                ):
-                    rejected = True
+                )):
+                    rejected = False
+                    break
             if rejected:
                 return False
         return True
