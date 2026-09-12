@@ -1933,6 +1933,21 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
         after_rejection = model.steps[5]
         self.assertTrue(any("reserved the fixed Tool budget" in f for f in after_rejection.review_findings))
         self.assertIn("READ_SOURCE", after_rejection.model_view()["available_actions"])
+        # The registry and Source observations retain consumed identities for
+        # provenance/Citation, but completed resources are no longer offered
+        # as executable read options (including fresh refs for the same file).
+        consumed = {
+            citation.locator
+            for observation in after_rejection.observations
+            if observation.operation is EngineeringAgentToolOperation.SOURCE_READ
+            for citation in observation.citations
+        }
+        visible = after_rejection.model_view()["read_candidates"]
+        self.assertTrue(visible)
+        retained = {item.read_index: item for item in after_rejection.read_candidates}
+        for item in visible:
+            self.assertNotIn(retained[item["read_index"]].resource_locator, consumed)
+            self.assertEqual(item, retained[item["read_index"]].model_view())
         self.assertEqual(len(tool.calls), 2)
         self.assertEqual(len(model.reviews), 2)
 
