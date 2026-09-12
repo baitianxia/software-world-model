@@ -1242,12 +1242,12 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "presented unread candidates; do not search or "
                             "navigate again.",
                         )
-                        consecutive_no_progress += 1
-                        if (
-                            consecutive_no_progress
-                            >= self._limits.maximum_consecutive_no_progress
-                        ):
-                            tool_actions = self._limits.maximum_tool_actions
+                        # This proposal was rejected before Tool execution;
+                        # it therefore produced neither a tool action nor a
+                        # no-progress observation. Do not let repeated
+                        # planning corrections close the execution fuse
+                        # needed to consume the remaining unread evidence.
+                        consecutive_no_progress = 0
                         continue
                     action_fingerprint = _lightweight_action_fingerprint(decision)
                     if action_fingerprint in executed_action_fingerprints:
