@@ -721,8 +721,19 @@ class LightweightAgentStepRequest:
     ] = ()
 
     def model_view(self) -> dict[str, object]:
+        # Keep the immutable candidate registry for provenance, while exposing
+        # only executable unread resources after a Source READ.  This prevents
+        # the Agent from selecting a consumed line/full-file candidate again.
+        visible_read_candidates = (
+            _unread_read_candidates(self.read_candidates, self.observations)
+            if any(
+                item.operation is EngineeringAgentToolOperation.SOURCE_READ
+                for item in self.observations
+            )
+            else self.read_candidates
+        )
         reserved_reads = _reserved_unread_cognition_candidates(
-            self.read_candidates,
+            visible_read_candidates,
             self.observations,
             dict(self.read_candidate_metadata),
             self.review_findings,
@@ -777,7 +788,7 @@ class LightweightAgentStepRequest:
             "read_candidates": [
                 item.model_view()
                 for item in _ordered_read_candidates(
-                    self.read_candidates,
+                    visible_read_candidates,
                     self.observations,
                     remaining_tool_actions=self.remaining_tool_actions,
                     metadata_by_read_index=dict(self.read_candidate_metadata),
