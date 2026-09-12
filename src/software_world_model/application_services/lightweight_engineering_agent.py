@@ -1208,7 +1208,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         and decision.read_index
                         in {
                             candidate.read_index
-                            for candidate in unread_cognition_candidates
+                            for candidate in _unread_read_candidates(
+                                read_candidates, observations
+                            )
                         }
                     )
                     if unread_cognition_candidates and not (
