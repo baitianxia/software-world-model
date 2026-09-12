@@ -1313,12 +1313,12 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                                 "presented unread candidates; do not search or "
                                 "navigate again.",
                             )
+                        # A proposal rejected before Tool dispatch did not
+                        # consume a Tool slot.  Keep the bounded planning
+                        # fuse in the Agent-step loop, but never manufacture
+                        # exhausted Tool budget from an application-side
+                        # duplicate; unread evidence must remain executable.
                         consecutive_no_progress += 1
-                        if (
-                            consecutive_no_progress
-                            >= self._limits.maximum_consecutive_no_progress
-                        ):
-                            tool_actions = self._limits.maximum_tool_actions
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
                     before_count = len(observations)
