@@ -578,18 +578,26 @@ def _reserved_unread_cognition_candidates(
     These are Application-owned feedback markers, not answer or question
     semantics. Source eligibility still comes from trusted candidate identity.
     """
-    if not any(
+    duplicate_feedback = any(
+        finding.startswith(
+            "Application blocked the selected action because it repeats a completed investigation action."
+        )
+        for finding in findings
+    )
+    if not duplicate_feedback and not any(
         finding.startswith((
             "Independent review requested more evidence.",
             "Application observed that the selected action produced no new evidence.",
-            "Application blocked the selected action because it repeats a completed investigation action.",
         ))
         for finding in findings
     ):
         return ()
+    unread = _unread_read_candidates(candidates, observations)
+    if duplicate_feedback:
+        return tuple(unread)
     return tuple(
         candidate
-        for candidate in _unread_read_candidates(candidates, observations)
+        for candidate in unread
         if candidate.read_index in metadata
         and metadata[candidate.read_index].cognition_kind is not None
     )
