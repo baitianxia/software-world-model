@@ -47,3 +47,11 @@ run-229 的 terminal receipt 为 `STOPPED_AFTER_DISPATCH`，3 Conversation / 3 T
 
 `test_read_broker_rejection_is_not_an_executed_no_progress_read` 在修复前失败（剩余工具预算 0，期望 1），修复后通过；同一测试的已授权空
 READ 分支仍消耗预算。整个轻量 Agent 定向集为 28 项通过。原问题与两个异质问题仍须在 clean 新候选上复验；不宣布 C1、C2 或 Alpha 完成。
+
+## Follow-up run-232
+
+修复提交 `dce438f`（拒绝 READ 记账）及 `1ebd53c`（重复提案不充满 Tool fuse）后的 clean candidate `1ebd53c90c94c76cc75128846bbbb328cc0c0fef`
+在 run-232 重新执行三题。原题 q1 在两次重复 `SEARCH_SOURCE` 被拒后继续读取 5 个候选，最后因真实 `MORE_EVIDENCE` 而在工具熔断处
+失败；这证明重复提案没有再伪造预算耗尽，但也暴露 Source candidate 排序/证据规划仍使预算被低价值读取消耗。q2 用户注册仍在两次
+`REWRITE` 后按既有上限关闭，q3 库存进入 `APPROVED`。该结果支持继续修复 Agent evidence planning，不支持放宽预算、rewrite 上限或
+Provider/Prompt/Schema。
