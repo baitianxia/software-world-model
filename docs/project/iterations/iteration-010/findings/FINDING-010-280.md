@@ -90,3 +90,16 @@ Turn therefore closed fail-closed without Answer/Citation. This identifies the
 current earliest live failure as Provider HTTP/output eligibility, not cognition,
 Source, or Web integration; no Provider or Prompt change is authorized by this
 evidence.
+
+## Run-214 C2 complete loopback evidence (2026-09-12)
+
+After a fresh pricing check and current exact product/tree binding, the listener
+served two Conversations and five real Turns (46 Provider dispatches). q1, q2,
+and q3 stayed in Conversation `conversation_4cc98d1d816f421696afd9e4d682b5ad`
+with revisions 2, 3, and 4; each completed successfully with 4, 4, and 2
+citations. q4 and q5 used the distinct Conversation
+`conversation_c6704d3507704756bac69e6218c00d5a`, revisions 2 and 3, with 2
+and 3 citations. The terminal receipt is `STOPPED_AFTER_DISPATCH` with no
+post-dispatch unknown outcomes. Independent supervision verified fresh review
+approval and citation identity for all five Turns; this is the C2 browser-chain
+exit evidence, not an Alpha or MVP declaration.
