@@ -582,6 +582,7 @@ def _reserved_unread_cognition_candidates(
         finding.startswith((
             "Independent review requested more evidence.",
             "Application observed that the selected action produced no new evidence.",
+            "Application blocked the selected action because it repeats a completed investigation action.",
         ))
         for finding in findings
     ):
