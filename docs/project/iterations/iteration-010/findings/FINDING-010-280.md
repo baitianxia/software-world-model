@@ -78,3 +78,15 @@ before an answer or citation was authorized: Ark recorded
 `CONTROL_STATE_DENIED`. The Conversation remained active for later turns.
 This is retained as external admission evidence, not replayed as a
 post-dispatch unknown and not treated as C2 completion.
+
+## Run-213 fresh pricing and Provider boundary evidence (2026-09-12)
+
+Run-213 used a fresh official pricing fetch at `2026-09-11T23:57:52Z`
+(content SHA256 `755aa9b488d1185cba016ca4de3b3b6b8f593f5e13e5f9f961305289a5c8d242`).
+The Ark-first attempt failed during TLS before HTTP; the fallback passed the
+fresh pricing gate and completed one verified HTTP request, which returned HTTP
+`402` (`invalid_request_error`) and produced no eligible model output. The
+Turn therefore closed fail-closed without Answer/Citation. This identifies the
+current earliest live failure as Provider HTTP/output eligibility, not cognition,
+Source, or Web integration; no Provider or Prompt change is authorized by this
+evidence.
