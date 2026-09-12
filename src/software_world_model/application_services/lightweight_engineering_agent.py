@@ -1289,9 +1289,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             tool_actions = self._limits.maximum_tool_actions
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
-                    tool_actions += 1
                     before_count = len(observations)
-                    self._execute_action(
+                    tool_executed = self._execute_action(
                         request=request,
                         decision=decision,
                         observations=observations,
@@ -1300,10 +1299,18 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         cognition_candidates=cognition_candidates,
                         events=events,
                     )
+                    # A Broker rejection is a trusted boundary observation,
+                    # not a consumed Source operation.  Keep the fixed tool
+                    # fuse aligned with actual execution so a reserved READ
+                    # slot remains available to the same Agent.
+                    if tool_executed:
+                        tool_actions += 1
                     progress = any(
                         item.progress for item in observations[before_count:]
                     )
                     if progress:
+                        consecutive_no_progress = 0
+                    elif not tool_executed:
                         consecutive_no_progress = 0
                     elif decision.action in {
                         LightweightAgentAction.SEARCH_COGNITION,
@@ -1567,7 +1574,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         ],
         cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
-    ) -> None:
+    ) -> bool:
         if decision.action in {
             LightweightAgentAction.SEARCH_COGNITION,
             LightweightAgentAction.TRAVERSE_RELATIONS,
@@ -1582,7 +1589,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 cognition_candidates=cognition_candidates,
                 events=events,
             )
-            return
+            return True
         if decision.action is LightweightAgentAction.SEARCH_SOURCE:
             assert decision.query is not None
             operation = EngineeringAgentToolOperation.SOURCE_SEARCH
@@ -1710,6 +1717,23 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 ErrorCode.BUDGET_EXHAUSTED,
                 "lightweight Agent evidence byte budget is exhausted",
             )
+        # The authority receipt retains the typed Broker decision ledger entry;
+        # use it to distinguish pre-dispatch rejection from an executed search
+        # that legitimately returned no matches.  No model-facing protocol or
+        # new versioned schema is introduced here.
+        if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
+            broker_entries = [
+                entry
+                for evidence in result.evidence
+                for entry in (evidence.authority_receipt.ledger_entries if evidence.authority_receipt else ())
+                if entry.kind == "BROKER_DECISION"
+            ]
+            if broker_entries and all(
+                dict(entry.details).get("status") == "REJECTED"
+                for entry in broker_entries
+            ):
+                return False
+        return True
 
     def _execute_cognition_action(
         self,
