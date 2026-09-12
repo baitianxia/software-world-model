@@ -1222,9 +1222,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             )
                         }
                     )
+                    action_fingerprint = _lightweight_action_fingerprint(decision)
+                    action_repeated = action_fingerprint in executed_action_fingerprints
                     if unread_cognition_candidates and not (
                         cognition_replan_action or unread_read_selected
-                    ):
+                    ) and not action_repeated:
                         # A Reviewer identified a gap while the trusted
                         # Application already has an unread Source option.
                         # Do not spend the fixed Tool budget on another search
@@ -1260,8 +1262,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         # needed to consume the remaining unread evidence.
                         consecutive_no_progress = 0
                         continue
-                    action_fingerprint = _lightweight_action_fingerprint(decision)
-                    if action_fingerprint in executed_action_fingerprints:
+                    if action_repeated:
                         # A repeated proposal is a planning failure, not a
                         # reason to dispatch the same read/search again. Keep
                         # the fixed action fuse, record the bounded recovery,
@@ -1292,6 +1293,15 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "action that advances the evidence; do not "
                             "repeat the same action.",
                         )
+                        if unread_cognition_candidates:
+                            review_findings = (
+                                *review_findings,
+                                "Application reserved the fixed Tool budget for an "
+                                "existing unread Source candidate required by the "
+                                "review gap. Choose READ_SOURCE for one of the "
+                                "presented unread candidates; do not search or "
+                                "navigate again.",
+                            )
                         # This proposal never reached a Tool. Keep the
                         # execution/no-progress fuse available for a distinct
                         # legal action; the bounded Agent-step fuse still
