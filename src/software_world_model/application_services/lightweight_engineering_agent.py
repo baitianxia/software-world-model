@@ -1281,12 +1281,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "action that advances the evidence; do not "
                             "repeat the same action.",
                         )
-                        consecutive_no_progress += 1
-                        if (
-                            consecutive_no_progress
-                            >= self._limits.maximum_consecutive_no_progress
-                        ):
-                            tool_actions = self._limits.maximum_tool_actions
+                        # This proposal never reached a Tool. Keep the
+                        # execution/no-progress fuse available for a distinct
+                        # legal action; the bounded Agent-step fuse still
+                        # limits pathological repetition.
+                        consecutive_no_progress = 0
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
                     before_count = len(observations)
