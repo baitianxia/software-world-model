@@ -1722,16 +1722,27 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         # that legitimately returned no matches.  No model-facing protocol or
         # new versioned schema is introduced here.
         if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
-            broker_entries = [
-                entry
-                for evidence in result.evidence
-                for entry in (evidence.authority_receipt.ledger_entries if evidence.authority_receipt else ())
-                if entry.kind == "BROKER_DECISION"
-            ]
-            if broker_entries and all(
-                dict(entry.details).get("status") == "REJECTED"
-                for entry in broker_entries
-            ):
+            # Receipts contain the cumulative Turn ledger.  Bind the decision
+            # to this result's subject and evidence digest before inspecting
+            # its typed status; historical authorized entries must not charge
+            # or mask the current pre-dispatch rejection.
+            rejected = False
+            for evidence in result.evidence:
+                receipt = evidence.authority_receipt
+                if receipt is None:
+                    continue
+                current = [
+                    entry for entry in receipt.ledger_entries
+                    if entry.kind == "BROKER_DECISION"
+                    and entry.subject_ref == evidence.result_ref
+                    and entry.subject_digest == receipt.evidence_digest
+                ]
+                if current and all(
+                    dict(entry.details).get("status") == "REJECTED"
+                    for entry in current
+                ):
+                    rejected = True
+            if rejected:
                 return False
         return True
 

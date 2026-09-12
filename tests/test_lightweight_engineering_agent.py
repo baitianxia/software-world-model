@@ -13,6 +13,7 @@ from software_world_model.application_services.conversational_engineering_agent 
     EngineeringAgentCitation,
     EngineeringAgentEvidenceDisposition,
     EngineeringAgentLoopLimits,
+    EngineeringAgentLedgerEntryReceipt,
     EngineeringAgentModelCallReceipt,
     EngineeringAgentModelDispatchState,
     EngineeringAgentModelFailureKind,
@@ -537,6 +538,81 @@ class _NoProgressTool(_SourceTool):
             citation_refs=evidence.citation_refs,
             authority_receipt=evidence.authority_receipt,
         )
+
+
+class _CumulativeBrokerTool(_SourceTool):
+    """Return a boundary after an earlier authorized operation in the Turn."""
+
+    def __init__(self, *, rejected):
+        super().__init__()
+        self.rejected = rejected
+
+    def execute(self, request):
+        result = super().execute(request)
+        if len(self.calls) != 2:
+            return result
+        original = result.evidence[0].authority_receipt
+        entries = []
+        previous = None
+        for sequence, status in enumerate(
+            ("AUTHORIZED", "REJECTED" if self.rejected else "AUTHORIZED"), 1
+        ):
+            subject_ref = _id("broker", sequence).value
+            subject_digest = digest_of([subject_ref, status])
+            details = (("status", status),)
+            core = {
+                "ledger_id": original.ledger_ref,
+                "sequence": sequence,
+                "kind": "BROKER_DECISION",
+                "subject_id": subject_ref,
+                "subject_digest": subject_digest.value,
+                "references": (),
+                "details": details,
+                "previous_entry_digest": previous.value if previous else None,
+            }
+            entry = EngineeringAgentLedgerEntryReceipt.create(
+                sequence=sequence, kind="BROKER_DECISION",
+                subject_ref=subject_ref, subject_digest=subject_digest,
+                references=(), details=details, previous_entry_digest=previous,
+                source_entry_digest=digest_of(["EVIDENCE_LEDGER_ENTRY@1", core]),
+            )
+            entries.append(entry)
+            previous = entry.source_entry_digest
+        authority = EngineeringAgentToolAuthorityReceipt.create(
+            authority_kind=original.authority_kind,
+            turn_request_digest=original.turn_request_digest,
+            tool_request_digest=request.digest,
+            evidence_request_digest=original.evidence_request_digest,
+            repository_revision=original.repository_revision,
+            evidence_digest=entries[-1].subject_digest,
+            ledger_ref=original.ledger_ref, ledger_generation=1,
+            ledger_parent_seal_digest=None,
+            ledger_prefix_digest=digest_of([
+                "EVIDENCE_LEDGER_PREFIX@1", original.ledger_ref,
+                original.evidence_request_digest.value, 1, None,
+                tuple(entry.source_entry_digest.value for entry in entries),
+            ]),
+            ledger_entries=entries, citations=(),
+        )
+        return EngineeringAgentToolResult.create(
+            tool_request_digest=request.digest,
+            result_ref=entries[-1].subject_ref,
+            # Deliberately opaque: accounting must not parse observation text.
+            content="boundary observation", progress=False,
+            disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+            authority_receipt=authority,
+        )
+
+
+class _SearchBoundaryModel(_Model):
+    def decide(self, request):
+        result = super().decide(request)
+        if len(request.observations) == 1:
+            return replace(result, decision=replace(
+                result.decision, action=LightweightAgentAction.SEARCH_SOURCE,
+                query="Collaborator", read_index=None,
+            ))
+        return result
 
 
 class _NoProgressRecoveryModel(_Model):
@@ -2915,6 +2991,37 @@ class MultiMethod implements MultiContract {
             ],
             ["REPEATED_ACTION"],
         )
+
+    def test_current_broker_rejection_preserves_read_slot_after_authorized_history(self) -> None:
+        for rejected in (True, False):
+            with self.subTest(rejected=rejected):
+                model = _SearchBoundaryModel()
+                tool = _CumulativeBrokerTool(rejected=rejected)
+                executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                    model=model, tool_port=tool,
+                    delivery_control=SealedLightweightDeliveryControl(),
+                    trace_store=LightweightAgentTraceStore(),
+                    attempt_ref="attempt-cumulative-broker",
+                    limits=EngineeringAgentLoopLimits(maximum_tool_actions=2),
+                )
+                service = InMemoryEngineeringConversationService(
+                    _binding(), turn_executor=executor
+                )
+                conversation = service.create_conversation()
+                submission = service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=conversation.conversation.revision,
+                    message="Explain the collaborator's implementation.",
+                )
+                self.assertEqual(model.steps[2].remaining_tool_actions, int(rejected))
+                if rejected:
+                    self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+                    self.assertEqual(len(model.reviews), 1)
+                    self.assertEqual(tool.calls[-1].action.operation,
+                                     EngineeringAgentToolOperation.SOURCE_READ)
+                else:
+                    self.assertEqual(len(tool.calls), 2)
+                    self.assertEqual(submission.turn.failure_code, "BUDGET_EXHAUSTED")
 
     def test_no_progress_adds_bounded_replan_feedback(self) -> None:
         model = _NoProgressRecoveryModel()
