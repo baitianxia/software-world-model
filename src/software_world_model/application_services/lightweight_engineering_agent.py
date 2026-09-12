@@ -1348,6 +1348,43 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     # feedback, so this does not alter the normal path.
                     continue
 
+                if (
+                    decision.action is LightweightAgentAction.FINISH
+                    and consecutive_no_progress > 0
+                    and _unread_read_candidates(
+                        read_candidates,
+                        observations,
+                        read_candidate_metadata,
+                    )
+                ):
+                    # Do not let a no-progress Source search terminate the
+                    # investigation while unread authorized evidence remains.
+                    # The Agent must choose one of those existing candidates;
+                    # no new budget or model-facing protocol is introduced.
+                    events.append(
+                        {
+                            "kind": "ACTION_REPLAN_REQUIRED",
+                            "step": step,
+                            "reason": "NO_PROGRESS_WITH_UNREAD_SOURCE",
+                            "action": decision.action.value,
+                            "candidate_read_indexes": tuple(
+                                item.read_index
+                                for item in _unread_read_candidates(
+                                    read_candidates,
+                                    observations,
+                                    read_candidate_metadata,
+                                )
+                            ),
+                        }
+                    )
+                    review_findings = (
+                        *review_findings,
+                        "An existing unread Source candidate remains after "
+                        "a no-progress search. Read that candidate before "
+                        "finishing; do not repeat the search.",
+                    )
+                    consecutive_no_progress = 0
+                    continue
                 assert decision.answer is not None
                 assert decision.response_kind is not None
                 try:
