@@ -1303,9 +1303,22 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     progress = any(
                         item.progress for item in observations[before_count:]
                     )
-                    consecutive_no_progress = (
-                        0 if progress else consecutive_no_progress + 1
-                    )
+                    if progress:
+                        consecutive_no_progress = 0
+                    elif decision.action in {
+                        LightweightAgentAction.SEARCH_COGNITION,
+                        LightweightAgentAction.TRAVERSE_RELATIONS,
+                        LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
+                    }:
+                        # A cognition lookup may legitimately yield no new
+                        # observation when the request's entity is outside
+                        # the prebuilt snapshot. Preserve one transition to
+                        # the already-authorized Source search path instead
+                        # of closing the whole tool fuse before the Agent can
+                        # investigate the same gap in Source.
+                        consecutive_no_progress = 0
+                    else:
+                        consecutive_no_progress += 1
                     if not progress:
                         events.append(
                             {
