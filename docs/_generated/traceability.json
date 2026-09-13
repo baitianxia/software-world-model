@@ -4553,6 +4553,13 @@
       "tests/test_capability_cognition.py"
     ]
   },
+  "FINDING-010-282": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
+    "code": [
+      "src/software_world_model/application_services/lightweight_engineering_agent.py"
+    ],
+    "tests": []
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
