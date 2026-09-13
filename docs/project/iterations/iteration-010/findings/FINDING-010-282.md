@@ -173,3 +173,12 @@ corpus 的分支，恢复在既有 `maximum_files` 内继续扫描，以便 meth
 dispatch，post-dispatch unknown/retry 均为 0。q1 的 Source Search 现能把实现候选
 纳入可读集合，且未再重复已消费 read_index。独立监督确认该轨迹满足 C1/N1 运行证据
 条件，允许进入 C1.5/N2；顶层严格质量标识仍保留，不据此宣布 Alpha。
+
+## C2 run-256 q4 failure
+
+run-256 使用当前 `fdb1274`、修正后的会话编排和 fresh pricing；q1/q2/q3 在同一
+Conversation，均 `ACCEPTED`，q5 新 Conversation 也 `ACCEPTED`。q4 为自包含门户认证
+问题，但在 `JwtTokenUtil` 相关候选读取后出现 `REPEATED_ACTION`、`REVIEW_GAP_UNREAD_SOURCE`
+及 Source fuse 关闭，未进入 Reviewer，故 C2 仍未完成。该失败的最早责任层是 Agent
+证据规划在复杂调用链上的收敛，不是 Provider、协议或题目规则；后续需对 q4 的
+model-view/candidate identity 做一次本地对账，再以相同逻辑修复和重跑。
