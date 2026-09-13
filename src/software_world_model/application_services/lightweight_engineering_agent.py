@@ -732,6 +732,7 @@ class LightweightAgentStepRequest:
     # model_view and therefore does not add an Agent protocol/schema field.
     remaining_tool_actions: int | None = None
     source_tools_enabled: bool = True
+    consumed_source_read_indexes: tuple[int, ...] = ()
     read_candidate_metadata: tuple[
         tuple[int, _LightweightReadNavigationMetadata], ...
     ] = ()
@@ -742,7 +743,11 @@ class LightweightAgentStepRequest:
         # the Agent from selecting a consumed line/full-file candidate again.
         visible_read_candidates = (
             () if not self.source_tools_enabled else
-            _unread_read_candidates(self.read_candidates, self.observations)
+            _unread_read_candidates(
+                self.read_candidates,
+                self.observations,
+                self.consumed_source_read_indexes,
+            )
             if any(
                 item.operation is EngineeringAgentToolOperation.SOURCE_READ
                 for item in self.observations
@@ -1147,6 +1152,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             cognition_enabled=self._cognition is not None,
                             tools_enabled=tools_enabled,
                             source_tools_enabled=source_tools_enabled,
+                            consumed_source_read_indexes=tuple(
+                                sorted(executed_source_read_indexes)
+                            ),
                             rejected_answer=rejected_answer,
                             review_findings=review_findings,
                             remaining_tool_actions=(

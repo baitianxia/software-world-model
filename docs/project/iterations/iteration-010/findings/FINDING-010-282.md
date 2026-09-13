@@ -133,3 +133,19 @@ Agent 随后再次提交已消费的 read_index 16，未取得 answer/citation/r
 排除；不新增 Agent 协议、Schema、Prompt、预算或题目逻辑。定向测试
 `tests.test_lightweight_engineering_agent` + `tests.test_capability_cognition` 44/44
 通过。run-245 仍不构成 C1/C2/Alpha 证据，需在 successor clean run 复验。
+
+## Fresh run-250 and model-view consumption projection
+
+run-250 使用 fresh official pricing capture (`2026-09-13T23:03:33Z`，页面 digest
+未变) 并实际启动 loopback listener。输入审计显示 q1/q2 在同一 Conversation，q3 为
+同一 Conversation 的澄清 Turn，q4/q5 为新问题和新 Conversation。q2、q3、q5
+分别完成 `ACCEPTED/SUCCEEDED/AUTHORIZED`、真实 Citation 与独立 Review `APPROVED`；
+q1 因重复 Source proposal、q4 因 Source fuse 关闭而 fail-closed，故该轮不是 C2
+完成证据。
+
+q1 的最早偏差进一步定位到同一 Agent 的 `model_view`：已消费 read_index 集合此前
+只用于 Application 执行校验，未传入模型视图的 unread candidate projection。后续
+successor 将既有内部 `executed_source_read_indexes` sidecar 传给
+`LightweightAgentStepRequest`，仅影响 Application-owned candidate visibility，不增加
+版本化协议、Prompt、预算、Provider 或题目规则；定向测试 44/44 通过。需在 clean
+successor fresh run 复验 q1 与 C2 五轮链。
