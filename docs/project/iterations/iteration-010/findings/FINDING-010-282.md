@@ -83,3 +83,11 @@ commit `179aae0` 在既有内部 `_reserved_unread_cognition_candidates` 状态�
 可信 boundary fail-closed，避免将不可执行 locator 继续投影为保留 READ 动作；没有新增
 Agent 协议、版本化 schema、Prompt、预算或题目规则。定向测试 44/44 通过。该修正只消除
 错误的不可执行动作投影，尚不构成 C1/C2/Alpha 证据。
+
+后续复核发现上述局部修正仍未改变 `available_actions`，且通过 observation 正文
+substring 判断边界，不能作为受信状态。commit `d9b905e` 改为从当前 ToolResult 的
+`result_ref + evidence_digest + authority receipt` 精确绑定的 `BROKER_DECISION` 结构化
+`reason` 派生内部 `source_exhausted` 状态；同一 Turn 的 model view 与执行侧一致关闭
+三类 Source fuse 耗尽后的 SEARCH/READ，保留 cognition/FINISH，下一 Turn 重新初始化。
+新增的投影回归检查覆盖 source action 不可见、候选列表为空、正常路径不受影响；定向
+测试 44/44 通过。该修正仍只闭合 fail-closed 边界，尚未提供 fresh C1 运行证据。
