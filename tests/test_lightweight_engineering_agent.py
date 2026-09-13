@@ -1992,6 +1992,19 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             ],
         )
         normal = replace(gap, review_findings=())
+        exhausted = replace(
+            gap,
+            observations=(
+                *gap.observations,
+                replace(
+                    gap.observations[-1],
+                    disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+                    content="SOURCE_FILE_FUSE_EXHAUSTED",
+                    progress=False,
+                ),
+            ),
+        )
+        self.assertIn("SEARCH_SOURCE", exhausted.model_view()["available_actions"])
         self.assertIn("SEARCH_SOURCE", normal.model_view()["available_actions"])
         self.assertIn("TRAVERSE_RELATIONS", normal.model_view()["available_actions"])
         for unrestricted in (
