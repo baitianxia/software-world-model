@@ -149,3 +149,17 @@ successor 将既有内部 `executed_source_read_indexes` sidecar 传给
 `LightweightAgentStepRequest`，仅影响 Application-owned candidate visibility，不增加
 版本化协议、Prompt、预算、Provider 或题目规则；定向测试 44/44 通过。需在 clean
 successor fresh run 复验 q1 与 C2 五轮链。
+
+## Run-253 planning audit and search completeness correction
+
+run-253 的 q1 model-facing manifest 显示，Source Search `updateRole` 只产生了
+`UmsAdminController.java` 的两个 literal hits；其余可读候选是 controller/mapper 的
+旧 cognition navigation，缺少实际 `UmsAdminServiceImpl#updateRole` 实现。Agent 因而在
+读取 `12,1,2,3,4,5` 后 FINISH，Reviewer 才指出关键事实和 Citation 缺失，且 Source
+fuse 已关闭。最早责任层是 Source search ranking/early-stop，而非重复消费。
+
+successor 删除了针对“无 filename candidate 但已有 literal hit”而提前截断 fallback
+corpus 的分支，恢复在既有 `maximum_files` 内继续扫描，以便 method-name 查询能发现
+不含查询词于路径名中的实现文件；不改变 Source fuse、预算上限、结果 modality、Broker
+或任何 Agent-facing schema。Source/Conversation/Agent/Cognition 定向测试 76/76
+通过。需以当前 clean successor fresh C1 运行确认实现候选、引用及 Reviewer 闭环。

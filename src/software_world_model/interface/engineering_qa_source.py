@@ -720,54 +720,7 @@ class LocalGitRetrievalWorker:
                     filename_early_stop = True
                     failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
                     break
-            if (
-                not truncated
-                and filename_candidate_count == 0
-                and PurePosixPath(operation.query).suffix == ""
-                and len(path_candidates) > 1
-                and len(ranked_entries) > len(path_candidates)
-                and len(items) > 0
-                and rank[0] <= 2
-            ):
-                # A literal hit in a large path-ranked cohort is already
-                # usable for an exact READ. Stop before scanning unrelated
-                # fallback files and preserve the unexamined corpus as an
-                # explicit partial boundary.
-                truncated = True
-                filename_early_stop = True
-                failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
-                break
-            if (
-                not truncated
-                and filename_candidate_count == 0
-                and PurePosixPath(operation.query).suffix == ""
-                and len(ranked_entries) > operation.maximum_files
-                and len(items) > 0
-            ):
-                # For a large corpus with no filename-ranked cohort, the
-                # first literal hit is a usable exact READ. Preserve the
-                # remaining corpus as an explicit PARTIAL boundary rather
-                # than spending the fixed file fuse on more fallback scans.
-                truncated = True
-                filename_early_stop = True
-                failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
-                break
-        if (
-            not truncated
-            and filename_candidate_count == 0
-            and PurePosixPath(operation.query).suffix == ""
-            and path_candidates
-            and path_candidates_processed == len(path_candidates)
-            and len(items) > 0
-            and len(ranked_entries) > len(path_candidates)
-        ):
-            # Identifier/phrase queries can have literal hits in the
-            # path-ranked cohort without an exact filename stem. Preserve
-            # the remaining fallback corpus as an explicit partial boundary
-            # so later READ operations retain the fixed Source file fuse.
-            truncated = True
-            filename_early_stop = True
-            failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
+        
         literal_match_count = len(items)
         navigation_candidate_item_ids = ()
         selected_navigation_candidates: tuple[tuple[str, int, str], ...] = ()
