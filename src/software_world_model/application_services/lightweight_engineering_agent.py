@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from enum import Enum
 from threading import Lock
-from typing import Mapping, Protocol, Sequence
+from typing import Collection, Mapping, Protocol, Sequence
 
 from software_world_model.cross_cutting import (
     canonical_json_bytes,
@@ -535,6 +535,7 @@ def _ordered_read_candidates(
 def _unread_read_candidates(
     candidates: Sequence[LightweightReadCandidate],
     observations: Sequence[LightweightObservation],
+    consumed_read_indexes: Collection[int] = (),
 ) -> tuple[LightweightReadCandidate, ...]:
     """Return existing Source candidates whose resource is not yet read.
 
@@ -561,6 +562,8 @@ def _unread_read_candidates(
     }
     unread: list[LightweightReadCandidate] = []
     for candidate in candidates:
+        if candidate.read_index in consumed_read_indexes:
+            continue
         if candidate.citation.citation_ref in read_citation_refs:
             continue
         resources = {
@@ -1117,6 +1120,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         decision_shape_repairs = 0
         consecutive_no_progress = 0
         executed_action_fingerprints: set[tuple[object, ...]] = set()
+        executed_source_read_indexes: set[int] = set()
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
@@ -1239,14 +1243,14 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         LightweightAgentAction.TRAVERSE_RELATIONS,
                         LightweightAgentAction.RETRIEVE_COGNITION_DETAIL,
                     }
+                    unread_candidates = _unread_read_candidates(
+                        read_candidates, observations, executed_source_read_indexes
+                    )
                     unread_read_selected = (
                         decision.action is LightweightAgentAction.READ_SOURCE
                         and decision.read_index
                         in {
-                            candidate.read_index
-                            for candidate in _unread_read_candidates(
-                                read_candidates, observations
-                            )
+                            candidate.read_index for candidate in unread_candidates
                         }
                     )
                     action_fingerprint = _lightweight_action_fingerprint(decision)
@@ -1318,12 +1322,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "a currently presented unread candidate; do not reuse "
                             "the stale read_index."
                             if decision.action is LightweightAgentAction.READ_SOURCE
-                            and decision.read_index not in {
-                                candidate.read_index
-                                for candidate in _unread_read_candidates(
-                                    read_candidates, observations
-                                )
-                            }
+                            and decision.read_index not in {candidate.read_index for candidate in unread_candidates}
+                            and decision.read_index not in executed_source_read_indexes
                             else
                             "Application blocked the selected action because "
                             "it repeats a completed investigation action. "
@@ -1360,6 +1360,12 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         events=events,
                     )
                     source_tools_enabled = source_tools_enabled and not source_exhausted
+                    if (
+                        tool_executed
+                        and decision.action is LightweightAgentAction.READ_SOURCE
+                        and decision.read_index is not None
+                    ):
+                        executed_source_read_indexes.add(decision.read_index)
                     # A Broker rejection is a trusted boundary observation,
                     # not a consumed Source operation.  Keep the fixed tool
                     # fuse aligned with actual execution so a reserved READ
