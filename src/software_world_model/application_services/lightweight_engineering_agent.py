@@ -590,17 +590,6 @@ def _reserved_unread_cognition_candidates(
     These are Application-owned feedback markers, not answer or question
     semantics. Source eligibility still comes from trusted candidate identity.
     """
-    # A trusted Broker boundary saying that the global Source file fuse is
-    # exhausted makes every remaining locator non-executable.  Do not project
-    # such candidates as a reserved READ option: that would ask the Agent to
-    # repeat an action the Broker must reject.  This is application-owned
-    # state, kept out of the Agent protocol and answer semantics.
-    if any(
-        observation.disposition is EngineeringAgentEvidenceDisposition.BOUNDARY
-        and "SOURCE_FILE_FUSE_EXHAUSTED" in observation.content
-        for observation in observations
-    ):
-        return ()
     duplicate_feedback = any(
         finding.startswith(
             "Application blocked the selected action because it repeats a completed investigation action."
@@ -739,6 +728,7 @@ class LightweightAgentStepRequest:
     # Application-owned bookkeeping only.  It is intentionally omitted from
     # model_view and therefore does not add an Agent protocol/schema field.
     remaining_tool_actions: int | None = None
+    source_tools_enabled: bool = True
     read_candidate_metadata: tuple[
         tuple[int, _LightweightReadNavigationMetadata], ...
     ] = ()
@@ -748,6 +738,7 @@ class LightweightAgentStepRequest:
         # only executable unread resources after a Source READ.  This prevents
         # the Agent from selecting a consumed line/full-file candidate again.
         visible_read_candidates = (
+            () if not self.source_tools_enabled else
             _unread_read_candidates(self.read_candidates, self.observations)
             if any(
                 item.operation is EngineeringAgentToolOperation.SOURCE_READ
@@ -761,6 +752,18 @@ class LightweightAgentStepRequest:
             dict(self.read_candidate_metadata),
             self.review_findings,
         )
+        available_actions = ["FINISH"]
+        if self.tools_enabled:
+            if self.cognition_enabled:
+                available_actions = [
+                    "SEARCH_COGNITION", "TRAVERSE_RELATIONS",
+                    "RETRIEVE_COGNITION_DETAIL", *available_actions,
+                ]
+            if self.source_tools_enabled:
+                available_actions[-1:-1] = (
+                    ["READ_SOURCE"] if reserved_reads
+                    else ["SEARCH_SOURCE", "READ_SOURCE"]
+                )
         return {
             "mode": (
                 "WORLD_MODEL_PLUS_SOURCE"
@@ -784,30 +787,7 @@ class LightweightAgentStepRequest:
             "goal": self.goal,
             "plan": self.plan,
             "tools_enabled": self.tools_enabled,
-            "available_actions": (
-                [
-                    "SEARCH_COGNITION",
-                    "TRAVERSE_RELATIONS",
-                    "RETRIEVE_COGNITION_DETAIL",
-                    "READ_SOURCE",
-                    "FINISH",
-                ]
-                if self.tools_enabled and reserved_reads and self.cognition_enabled
-                else ["READ_SOURCE", "FINISH"]
-                if self.tools_enabled and reserved_reads
-                else [
-                    "SEARCH_COGNITION",
-                    "TRAVERSE_RELATIONS",
-                    "RETRIEVE_COGNITION_DETAIL",
-                    "SEARCH_SOURCE",
-                    "READ_SOURCE",
-                    "FINISH",
-                ]
-                if self.tools_enabled and self.cognition_enabled
-                else ["SEARCH_SOURCE", "READ_SOURCE", "FINISH"]
-                if self.tools_enabled
-                else ["FINISH"]
-            ),
+            "available_actions": available_actions,
             "read_candidates": [
                 item.model_view()
                 for item in _ordered_read_candidates(
@@ -1123,6 +1103,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         rejected_answer: str | None = None
         review_findings: tuple[str, ...] = ()
         tool_actions = 0
+        source_tools_enabled = True
         reviews = 0
         rewrites = 0
         # Citation selections are local to an immutable Observation prefix.
@@ -1145,7 +1126,10 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     _LightweightReadNavigationMetadata(),
                 )
             for step in range(1, self._limits.maximum_agent_steps + 1):
-                tools_enabled = tool_actions < self._limits.maximum_tool_actions
+                tools_enabled = (
+                    tool_actions < self._limits.maximum_tool_actions
+                    and (source_tools_enabled or self._cognition is not None)
+                )
                 try:
                     result = self._model.decide(
                         LightweightAgentStepRequest(
@@ -1158,6 +1142,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             cognition_candidates=tuple(cognition_candidates),
                             cognition_enabled=self._cognition is not None,
                             tools_enabled=tools_enabled,
+                            source_tools_enabled=source_tools_enabled,
                             rejected_answer=rejected_answer,
                             review_findings=review_findings,
                             remaining_tool_actions=(
@@ -1235,12 +1220,20 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     }
                 )
                 if decision.action is not LightweightAgentAction.FINISH:
+                    if not source_tools_enabled and decision.action in {
+                        LightweightAgentAction.SEARCH_SOURCE,
+                        LightweightAgentAction.READ_SOURCE,
+                    }:
+                        raise DomainError(
+                            ErrorCode.BUDGET_EXHAUSTED,
+                            "lightweight Agent selected Source after its Broker fuse closed",
+                        )
                     unread_cognition_candidates = _reserved_unread_cognition_candidates(
                         read_candidates,
                         observations,
                         read_candidate_metadata,
                         review_findings,
-                    )
+                    ) if source_tools_enabled else ()
                     cognition_replan_action = decision.action in {
                         LightweightAgentAction.SEARCH_COGNITION,
                         LightweightAgentAction.TRAVERSE_RELATIONS,
@@ -1357,7 +1350,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
                     before_count = len(observations)
-                    tool_executed = self._execute_action(
+                    tool_executed, source_exhausted = self._execute_action(
                         request=request,
                         decision=decision,
                         observations=observations,
@@ -1366,6 +1359,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         cognition_candidates=cognition_candidates,
                         events=events,
                     )
+                    source_tools_enabled = source_tools_enabled and not source_exhausted
                     # A Broker rejection is a trusted boundary observation,
                     # not a consumed Source operation.  Keep the fixed tool
                     # fuse aligned with actual execution so a reserved READ
@@ -1641,7 +1635,8 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         ],
         cognition_candidates: list[LightweightCognitionCandidate],
         events: list[Mapping[str, object]],
-    ) -> bool:
+    ) -> tuple[bool, bool]:
+        """Return execution accounting and current Broker Source-fuse state."""
         if decision.action in {
             LightweightAgentAction.SEARCH_COGNITION,
             LightweightAgentAction.TRAVERSE_RELATIONS,
@@ -1656,7 +1651,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 cognition_candidates=cognition_candidates,
                 events=events,
             )
-            return True
+            return True, False
         if decision.action is LightweightAgentAction.SEARCH_SOURCE:
             assert decision.query is not None
             operation = EngineeringAgentToolOperation.SOURCE_SEARCH
@@ -1817,6 +1812,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
             # its typed status; historical authorized entries must not charge
             # or mask the current pre-dispatch rejection.
             rejected = bool(result.evidence)
+            source_exhausted = False
             for evidence in result.evidence:
                 receipt = evidence.authority_receipt
                 if receipt is None:
@@ -1834,9 +1830,20 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 )):
                     rejected = False
                     break
+                source_exhausted = source_exhausted or (
+                    evidence.disposition is EngineeringAgentEvidenceDisposition.BOUNDARY
+                    and any(
+                        dict(entry.details).get("reason") in {
+                            "SOURCE_OPERATION_FUSE_EXHAUSTED",
+                            "SOURCE_FILE_FUSE_EXHAUSTED",
+                            "SOURCE_BYTE_FUSE_EXHAUSTED",
+                        }
+                        for entry in current
+                    )
+                )
             if rejected:
-                return False
-        return True
+                return False, source_exhausted
+        return True, False
 
     def _execute_cognition_action(
         self,
