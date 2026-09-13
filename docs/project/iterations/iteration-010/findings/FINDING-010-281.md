@@ -55,3 +55,11 @@ READ 分支仍消耗预算。整个轻量 Agent 定向集为 28 项通过。原�
 失败；这证明重复提案没有再伪造预算耗尽，但也暴露 Source candidate 排序/证据规划仍使预算被低价值读取消耗。q2 用户注册仍在两次
 `REWRITE` 后按既有上限关闭，q3 库存进入 `APPROVED`。该结果支持继续修复 Agent evidence planning，不支持放宽预算、rewrite 上限或
 Provider/Prompt/Schema。
+
+## Candidate projection follow-up
+
+离线审计显示 `role` 查询前 12 项可被 TYPE 实体填满，而同一 snapshot 中存在带有该 token 的方法实体（例如
+`getRoleList`）及完整 relation/provenance。仅改变全局 TYPE/METHOD 优先级会破坏复合标识符查询的既有声明锚点，因此候选修复只在宽首屏
+全为 TYPE 且存在同 token METHOD 时，将一个方法保留在该首屏末位；查询词、路径、项目和问题均未进入实现。交换实现同时保存候选索引，避免
+Python 左值求值导致“交换”实际无变化。`tests/test_capability_cognition.py::test_broad_type_page_keeps_matching_method_visible` 与轻量 Agent 定向集通过。
+该修复仍需在原始 `MORE_EVIDENCE` 轨迹和两个异质任务上取得 fresh 运行证据，不能据此宣布 C1 或 Alpha。

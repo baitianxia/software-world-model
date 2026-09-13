@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 import tempfile
 import unittest
 from pathlib import Path
@@ -293,6 +294,22 @@ class CapabilityCognitionTest(unittest.TestCase):
             page.items[0]["qualified_name"],
             "com.example.app.AuditEntry#inspect()",
         )
+
+    def test_broad_type_page_keeps_matching_method_visible(self) -> None:
+        source = _source()
+        files = dict(source.source_files)
+        for number in range(14):
+            files[f"app/src/main/java/com/example/app/UploadRecord{number}.java"] = (
+                f"package com.example.app; public class UploadRecord{number} {{}}"
+            ).encode()
+        files["app/src/main/java/com/example/app/UploadController.java"] = (
+            b"package com.example.app; public class UploadController { "
+            b"public void upload() {} }"
+        )
+        snapshot = build_java_capability_cognition(replace(source, source_files=files))
+        page = CapabilityCognitionIndex(snapshot).search("upload", limit=12)
+        self.assertEqual(page.items[0]["kind"], "TYPE")
+        self.assertTrue(any(item["kind"] == "METHOD" for item in page.items))
 
     def test_method_contracts_are_explicit_bidirectional_and_exact_source_bound(self) -> None:
         implementation = self._entity(

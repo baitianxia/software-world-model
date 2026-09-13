@@ -655,6 +655,28 @@ class CapabilityCognitionIndex:
                     )
                 )
                 selected_ids.add(companion.entity_id)
+        # Avoid a bounded page being filled entirely by TYPE entities when a
+        # same-token method declaration is available for navigation. Keep the
+        # existing lexical/kind order and identities; only expose one method
+        # at the page boundary. This is a projection concern, not a semantic
+        # query or authorization change.
+        if cursor == 0 and limit > 0:
+            first_page = expanded[:limit]
+            if first_page and all(item[3].kind is CognitionEntityKind.TYPE for item in first_page):
+                method_candidate = next(
+                    (
+                        item for item in expanded[limit:]
+                        if item[3].kind is CognitionEntityKind.METHOD
+                        and any(token in _tokens(item[3].name) for token in query_tokens)
+                    ),
+                    None,
+                )
+                if method_candidate is not None:
+                    method_index = expanded.index(method_candidate)
+                    expanded[limit - 1], expanded[method_index] = (
+                        method_candidate,
+                        expanded[limit - 1],
+                    )
         selected, next_cursor = _page(expanded, cursor, limit)
         items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
         return CognitionPage(
