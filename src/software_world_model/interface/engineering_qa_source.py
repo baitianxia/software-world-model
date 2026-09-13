@@ -737,6 +737,21 @@ class LocalGitRetrievalWorker:
                 filename_early_stop = True
                 failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
                 break
+            if (
+                not truncated
+                and filename_candidate_count == 0
+                and PurePosixPath(operation.query).suffix == ""
+                and len(ranked_entries) > operation.maximum_files
+                and len(items) > 0
+            ):
+                # For a large corpus with no filename-ranked cohort, the
+                # first literal hit is a usable exact READ. Preserve the
+                # remaining corpus as an explicit PARTIAL boundary rather
+                # than spending the fixed file fuse on more fallback scans.
+                truncated = True
+                filename_early_stop = True
+                failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
+                break
         if (
             not truncated
             and filename_candidate_count == 0
