@@ -62,8 +62,11 @@ SUPPORT+BOUNDARY、多次搜索、空结果以及非提升候选的相对顺序/
 在 clean `8cea04c11a94fad603c1e8ade5cffe76847112a6`（tree
 `8d711a947716f3397c8da7d75e13a68ebc146592`）上，run-241 通过 listener、product/tree
 和 fresh 官方 pricing 校验，真实完成 3 Conversation、3 Turn、38 provider dispatch，
-无 post-dispatch unknown 或重放。q1 实际先读取本轮 Source Search 命中的 11、15、16，
-证明 direct-hit 排序修正生效；之后仍出现重复 READ/no-progress（13、2），q1
+无 post-dispatch unknown 或重放。q1 实际读取了 11、15、16；逐步 model manifest 显示
+这些仍是 cognition/path candidates，未出现可识别的本轮 `LITERAL_TEXT_SEARCH_HIT`
+read candidate，因此不能据此声称 direct-hit 排序已被 live 证实。之后仍出现重复
+READ/no-progress（13、2），q1
 fail-closed 为 `BUDGET_EXHAUSTED`。q2 Turn `ACCEPTED`，q3 仍因 Agent step budget
-exhausted 失败。排序问题已改善，但 Agent 在同一预算内对重复/低进展候选的收敛仍未闭合，
+exhausted 失败。Source Search 结果进入受控 read candidate 的构造链仍需核对；Agent
+在同一预算内对重复/低进展候选的收敛也未闭合，
 故 C1/C2/Alpha 继续 `REWORK`。
