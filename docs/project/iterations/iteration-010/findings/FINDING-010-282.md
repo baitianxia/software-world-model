@@ -29,8 +29,17 @@ q2 Turn 获得 `ACCEPTED`，但该 logical run 的总体体验仍 `NOT_ACCEPTED`
 q3 真实执行后 Agent step budget exhausted。q1 的重复 SEARCH_SOURCE 被应用层拒绝
 后，模型转而读取当前合法候选；没有发现 stale candidate 泄漏或拒绝记账错误。
 
+逐步对账还显示，`SEARCH_SOURCE(updateRole)` 返回的新 literal Source 候选与较早
+cognition navigation 候选共存时，旧排序会把 cognition sibling 放在 direct search
+命中之前，使固定预算优先消费上下文文件。候选仍全部受控可见，但证据优先级偏离了
+当前 Gap。
+
 ## Disposition
 
 这是 Agent 在 Reviewer 缺口后的证据优先级/规划问题，继续定位同一通用层；不得增加
 预算、修改 Prompt/Schema、放宽 Reviewer 或加入题目特判。run-240 仅作为 fresh
 失败证据，不满足 C1/C2/Alpha。
+
+当前修正仅在既有 Application ordering sidecar 能证明候选来自本轮 `SOURCE_SEARCH`
+且 modality 为 literal/full Source 时，将该 direct hit 排在旧 cognition navigation
+sibling 前；不删除候选、不改变 read index、Citation identity、预算或模型协议。

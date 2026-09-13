@@ -409,6 +409,11 @@ def _ordered_read_candidates(
             "lightweight Agent remaining Tool budget is invalid",
         )
     navigation_metadata = metadata_by_read_index or {}
+    source_search_observation_indexes = {
+        observation.observation_index
+        for observation in observations
+        if observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+    }
     read_citation_refs = {
         citation.citation_ref
         for observation in observations
@@ -457,6 +462,17 @@ def _ordered_read_candidates(
         typed_origin = int(
             metadata is None or metadata.cognition_kind is None
         )
+        # A literal returned by the just-executed Source search is a direct
+        # answer to the current evidence gap. Prefer it over older cognition
+        # navigation siblings, while retaining the cognition sidecar for all
+        # other candidates. This is an internal ordering projection only.
+        direct_search_origin = int(
+            not (
+                metadata is not None
+                and metadata.origin_observation_index in source_search_observation_indexes
+                and modality in _FULL_SOURCE_MODALITIES | {"LITERAL_TEXT_SEARCH_HIT"}
+            )
+        )
         role_rank = (
             _cognition_entity_role_rank(
                 metadata.cognition_kind,
@@ -468,6 +484,7 @@ def _ordered_read_candidates(
         return (
             resource_read,
             citation_read,
+            direct_search_origin,
             # A cognition-issued typed origin is the Application's strongest
             # generic signal for a known declaration/effect gap.  Keep that
             # signal ahead of broad literal/search noise; modality remains a
