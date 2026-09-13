@@ -307,9 +307,30 @@ class CapabilityCognitionTest(unittest.TestCase):
             b"public void upload() {} }"
         )
         snapshot = build_java_capability_cognition(replace(source, source_files=files))
-        page = CapabilityCognitionIndex(snapshot).search("upload", limit=12)
+        index = CapabilityCognitionIndex(snapshot)
+        page = index.search("upload", limit=12)
         self.assertEqual(page.items[0]["kind"], "TYPE")
         self.assertTrue(any(item["kind"] == "METHOD" for item in page.items))
+        complete = index.search("upload", limit=64)
+        for page_size in (12, 1, 7, 64):
+            with self.subTest(page_size=page_size):
+                entries = []
+                cursor = 0
+                while True:
+                    page = index.search("upload", limit=page_size, cursor=cursor)
+                    self.assertEqual(page.snapshot_digest, snapshot.digest)
+                    self.assertEqual(page.snapshot_epistemics, complete.snapshot_epistemics)
+                    entries.extend(page.items)
+                    if page.next_cursor is None:
+                        break
+                    cursor = page.next_cursor
+                self.assertEqual(len({item["entity_id"] for item in entries}), complete.total)
+                self.assertEqual(entries, list(complete.items))
+        types = index.search("upload", kinds=(CognitionEntityKind.TYPE,), limit=64)
+        self.assertEqual(
+            [item["entity_id"] for item in complete.items if item["kind"] == "TYPE"],
+            [item["entity_id"] for item in types.items],
+        )
 
     def test_method_contracts_are_explicit_bidirectional_and_exact_source_bound(self) -> None:
         implementation = self._entity(

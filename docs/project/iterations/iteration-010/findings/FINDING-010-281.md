@@ -5,8 +5,8 @@ status: dispositioned
 authority: execution-evidence
 owners: [application, quality]
 depends_on: [FINDING-010-280]
-code: [src/software_world_model/application_services/lightweight_engineering_agent.py]
-tests: [tests/test_lightweight_engineering_agent.py]
+code: [src/software_world_model/application_services/lightweight_engineering_agent.py, src/software_world_model/knowledge_engine/capability_cognition.py]
+tests: [tests/test_lightweight_engineering_agent.py, tests/test_capability_cognition.py]
 iteration: ITER-010
 classification: local-implementation
 scope: systemic
@@ -63,3 +63,13 @@ Provider/Prompt/Schema。
 全为 TYPE 且存在同 token METHOD 时，将一个方法保留在该首屏末位；查询词、路径、项目和问题均未进入实现。交换实现同时保存候选索引，避免
 Python 左值求值导致“交换”实际无变化。`tests/test_capability_cognition.py::test_broad_type_page_keeps_matching_method_visible` 与轻量 Agent 定向集通过。
 该修复仍需在原始 `MORE_EVIDENCE` 轨迹和两个异质任务上取得 fresh 运行证据，不能据此宣布 C1 或 Alpha。
+
+### Pagination correction before live validation
+
+`88cb2ca` 的首屏测试不足以证明分页完整。新增跨页回归在页长 1、7、12 下均复现：31 项只能取得 30 个唯一实体；原因是只有
+`cursor=0` 重排，后续页恢复原顺序，重复 METHOD 并漏掉换出的 TYPE。此前“保留顺序/分页”的判断撤销，不能用该提交启动 fresh 验证。
+
+后续修正固定 12 项默认导航窗口，在任何 cursor/limit 切片之前计算同一实体序列。只将与窗口尾部词法分数相同、且自身名称词元匹配的一个
+METHOD 移入窗口末位，使用 pop/insert 保留其余实体（尤其 TYPE）的相对顺序，不按模型问题或路径判定语义。页长 1、7、12、64 的完整
+序列、唯一实体总量、逐项 provenance 与 snapshot epistemics 均一致，TYPE 子序列与显式 TYPE 检索一致。这是现有有界分页实现的纠错，
+不改变调用接口、Source 权威或跨模块契约；因此只需当前 cognition/Agent 定向验证，不启动全量回归。live C1 证据仍待获取。

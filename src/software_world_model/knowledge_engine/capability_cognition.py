@@ -655,28 +655,28 @@ class CapabilityCognitionIndex:
                     )
                 )
                 selected_ids.add(companion.entity_id)
-        # Avoid a bounded page being filled entirely by TYPE entities when a
-        # same-token method declaration is available for navigation. Keep the
-        # existing lexical/kind order and identities; only expose one method
-        # at the page boundary. This is a projection concern, not a semantic
-        # query or authorization change.
-        if cursor == 0 and limit > 0:
-            first_page = expanded[:limit]
-            if first_page and all(item[3].kind is CognitionEntityKind.TYPE for item in first_page):
-                method_candidate = next(
-                    (
-                        item for item in expanded[limit:]
-                        if item[3].kind is CognitionEntityKind.METHOD
-                        and any(token in _tokens(item[3].name) for token in query_tokens)
-                    ),
-                    None,
-                )
-                if method_candidate is not None:
-                    method_index = expanded.index(method_candidate)
-                    expanded[limit - 1], expanded[method_index] = (
-                        method_candidate,
-                        expanded[limit - 1],
-                    )
+        # Diversify the fixed default navigation window, not the requested
+        # page: every cursor/limit must slice the same ordered entity domain.
+        # Move one equally ranked, self-name-matching method into an all-TYPE
+        # window; retain all other entities and their relative order. Lexical
+        # relevance, Source identity and authority are unchanged.
+        navigation_window = 12
+        prefix = expanded[:navigation_window]
+        if len(prefix) == navigation_window and all(
+            item[3].kind is CognitionEntityKind.TYPE for item in prefix
+        ):
+            method_index = next(
+                (
+                    position
+                    for position, item in enumerate(expanded[navigation_window:], navigation_window)
+                    if item[3].kind is CognitionEntityKind.METHOD
+                    and item[:2] == prefix[-1][:2]
+                    and any(token in _tokens(item[3].name) for token in query_tokens)
+                ),
+                None,
+            )
+            if method_index is not None:
+                expanded.insert(navigation_window - 1, expanded.pop(method_index))
         selected, next_cursor = _page(expanded, cursor, limit)
         items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
         return CognitionPage(
