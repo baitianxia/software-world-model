@@ -8,7 +8,7 @@ opaque tool authority identifiers.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from threading import Lock
 from typing import Mapping, Protocol, Sequence
@@ -362,6 +362,7 @@ class _LightweightReadNavigationMetadata:
     cognition_kind: CognitionEntityKind | None = None
     cognition_attributes: tuple[tuple[str, str], ...] = ()
     origin_cognition_index: int | None = None
+    current_source_search_hit: bool = False
 
 
 def _ordered_read_candidates(
@@ -409,16 +410,6 @@ def _ordered_read_candidates(
             "lightweight Agent remaining Tool budget is invalid",
         )
     navigation_metadata = metadata_by_read_index or {}
-    source_search_observation_indexes = {
-        max(
-            observation.observation_index
-            for observation in observations
-            if observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
-        )
-    } if any(
-        observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
-        for observation in observations
-    ) else set()
     read_citation_refs = {
         citation.citation_ref
         for observation in observations
@@ -467,14 +458,13 @@ def _ordered_read_candidates(
         typed_origin = int(
             metadata is None or metadata.cognition_kind is None
         )
-        # A literal returned by the just-executed Source search is a direct
-        # answer to the current evidence gap. Prefer it over older cognition
-        # navigation siblings, while retaining the cognition sidecar for all
-        # other candidates. This is an internal ordering projection only.
+        # The executor marks exact citations from the latest Source-search
+        # invocation, including when it emits multiple observations. Prefer
+        # those hits for navigation; this does not establish answer support.
         direct_search_origin = int(
             not (
                 metadata is not None
-                and metadata.origin_observation_index in source_search_observation_indexes
+                and metadata.current_source_search_hit
                 and modality in _FULL_SOURCE_MODALITIES | {"LITERAL_TEXT_SEARCH_HIT"}
             )
         )
@@ -1710,6 +1700,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "read-only tool result binds another request",
             )
+        current_search_citation_digests: set[Digest] = set()
         for evidence in result.evidence:
             receipt = evidence.authority_receipt
             if receipt is None or receipt.tool_request_digest != tool_request.digest:
@@ -1725,6 +1716,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                     "observation references an unavailable Citation",
                 ) from exc
+            if (
+                operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+                and evidence.disposition is EngineeringAgentEvidenceDisposition.SUPPORT
+            ):
+                current_search_citation_digests.update(item.digest for item in citations)
             index = len(observations) + 1
             observation_core = {
                 "observation_index": index,
@@ -1776,6 +1772,20 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         )
                     )
                     known.add(citation.citation_ref)
+        if operation is EngineeringAgentToolOperation.SOURCE_SEARCH:
+            # One ToolResult binds every SUPPORT/BOUNDARY receipt to this
+            # exact invocation. Refresh the entire sidecar, even for an empty
+            # or rejected search, so historical hits cannot retain priority.
+            for candidate in read_candidates:
+                metadata = read_candidate_metadata.get(
+                    candidate.read_index, _LightweightReadNavigationMetadata()
+                )
+                read_candidate_metadata[candidate.read_index] = replace(
+                    metadata,
+                    current_source_search_hit=(
+                        candidate.citation.digest in current_search_citation_digests
+                    ),
+                )
         if sum(len(item.content.encode("utf-8")) for item in observations) > (
             self._limits.maximum_evidence_package_bytes
         ):

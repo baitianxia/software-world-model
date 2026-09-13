@@ -2298,7 +2298,80 @@ class MultiMethod implements MultiContract {
             [2, 6],
         )
 
-    def test_source_search_priority_uses_only_latest_search_observation(self) -> None:
+    def test_source_search_priority_binds_support_and_boundary_invocation(self) -> None:
+        class SplitSearchTool(_SourceTool):
+            def __init__(self, empty_second):
+                super().__init__()
+                self.empty_second = empty_second
+
+            def execute(self, request):
+                support = super().execute(request)
+                if request.action.operation is not EngineeringAgentToolOperation.SOURCE_SEARCH:
+                    return support
+                evidence = support.evidence[0]
+                boundary = EngineeringAgentToolResult.create(
+                    tool_request_digest=request.digest,
+                    result_ref=f"boundary-{self._ordinal}",
+                    content="Search coverage remains bounded.",
+                    disposition=EngineeringAgentEvidenceDisposition.BOUNDARY,
+                    progress=False,
+                    authority_receipt=evidence.authority_receipt,
+                )
+                return EngineeringAgentToolResult.create_many(
+                    tool_request_digest=request.digest,
+                    evidence=(
+                        () if self.empty_second and self._ordinal == 2
+                        else support.evidence
+                    ) + boundary.evidence,
+                )
+
+        class TwoSearchModel(_Model):
+            def decide(self, request):
+                if len(self.steps) >= 2:
+                    return super().decide(request)
+                self.steps.append(request)
+                return LightweightDecisionResult(
+                    decision=LightweightAgentDecision(
+                        goal=request.turn_request.user_message.content,
+                        plan="Read the more specific search result.",
+                        action=LightweightAgentAction.SEARCH_SOURCE,
+                        query=f"Entry{len(self.steps)}", read_index=None,
+                        response_kind=None, answer=None, citations=(),
+                    ),
+                    receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+                    disclosure_record_ref=f"disclosure-{self._calls}",
+                )
+
+        for empty_second in (False, True):
+            with self.subTest(empty_second=empty_second):
+                model = TwoSearchModel()
+                executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                    model=model, tool_port=SplitSearchTool(empty_second),
+                    delivery_control=SealedLightweightDeliveryControl(),
+                    trace_store=LightweightAgentTraceStore(),
+                    attempt_ref="split-search-results",
+                )
+                service = InMemoryEngineeringConversationService(
+                    _binding(), turn_executor=executor
+                )
+                conversation = service.create_conversation()
+                submission = service.submit_turn(
+                    conversation_id=conversation.conversation.conversation_id,
+                    expected_revision=conversation.conversation.revision,
+                    message="Explain the entry implementation.",
+                )
+                self.assertEqual(submission.turn.quality_status, "ACCEPTED")
+                step = model.steps[2]
+                self.assertEqual(step.observations[-1].disposition,
+                                 EngineeringAgentEvidenceDisposition.BOUNDARY)
+                self.assertEqual(
+                    [item["read_index"] for item in step.model_view()["read_candidates"]],
+                    [1] if empty_second else [2, 1],
+                )
+                self.assertFalse(getattr(dict(step.read_candidate_metadata)[1],
+                                         "current_source_search_hit", False))
+
+    def test_source_search_priority_preserves_other_candidate_order(self) -> None:
         """Historical search hits do not masquerade as the current Gap hit."""
         old_hit = _navigation_candidate(
             1, resource="module-a/src/Old.java", modality="LITERAL_TEXT_SEARCH_HIT"
@@ -2315,7 +2388,9 @@ class MultiMethod implements MultiContract {
         )
         metadata = {
             1: _LightweightReadNavigationMetadata(origin_observation_index=1),
-            2: _LightweightReadNavigationMetadata(origin_observation_index=2),
+            2: _LightweightReadNavigationMetadata(
+                origin_observation_index=2, current_source_search_hit=True
+            ),
             3: _LightweightReadNavigationMetadata(
                 origin_observation_index=1,
                 cognition_kind=CognitionEntityKind.METHOD,
@@ -2326,8 +2401,13 @@ class MultiMethod implements MultiContract {
             (old_hit, current_hit, navigation), observations,
             remaining_tool_actions=1, metadata_by_read_index=metadata,
         )
-        self.assertEqual([item.read_index for item in ordered[:2]], [2, 3])
-        self.assertGreater(ordered.index(old_hit), ordered.index(current_hit))
+        self.assertEqual([item.read_index for item in ordered], [2, 3, 1])
+        baseline = _ordered_read_candidates(
+            (old_hit, navigation), observations,
+            remaining_tool_actions=1, metadata_by_read_index=metadata,
+        )
+        self.assertEqual(tuple(item for item in ordered if item != current_hit), baseline)
+        self.assertEqual(set(ordered), {old_hit, current_hit, navigation})
 
     def test_read_coverage_matches_navigation_to_source_by_revision_and_resource(
         self,

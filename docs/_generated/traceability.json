@@ -4558,7 +4558,9 @@
     "code": [
       "src/software_world_model/application_services/lightweight_engineering_agent.py"
     ],
-    "tests": []
+    "tests": [
+      "tests/test_lightweight_engineering_agent.py"
+    ]
   },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
