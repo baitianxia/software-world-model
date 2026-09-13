@@ -590,6 +590,17 @@ def _reserved_unread_cognition_candidates(
     These are Application-owned feedback markers, not answer or question
     semantics. Source eligibility still comes from trusted candidate identity.
     """
+    # A trusted Broker boundary saying that the global Source file fuse is
+    # exhausted makes every remaining locator non-executable.  Do not project
+    # such candidates as a reserved READ option: that would ask the Agent to
+    # repeat an action the Broker must reject.  This is application-owned
+    # state, kept out of the Agent protocol and answer semantics.
+    if any(
+        observation.disposition is EngineeringAgentEvidenceDisposition.BOUNDARY
+        and "SOURCE_FILE_FUSE_EXHAUSTED" in observation.content
+        for observation in observations
+    ):
+        return ()
     duplicate_feedback = any(
         finding.startswith(
             "Application blocked the selected action because it repeats a completed investigation action."
