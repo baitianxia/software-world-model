@@ -410,10 +410,15 @@ def _ordered_read_candidates(
         )
     navigation_metadata = metadata_by_read_index or {}
     source_search_observation_indexes = {
-        observation.observation_index
+        max(
+            observation.observation_index
+            for observation in observations
+            if observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
+        )
+    } if any(
+        observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
         for observation in observations
-        if observation.operation is EngineeringAgentToolOperation.SOURCE_SEARCH
-    }
+    ) else set()
     read_citation_refs = {
         citation.citation_ref
         for observation in observations

@@ -2298,6 +2298,37 @@ class MultiMethod implements MultiContract {
             [2, 6],
         )
 
+    def test_source_search_priority_uses_only_latest_search_observation(self) -> None:
+        """Historical search hits do not masquerade as the current Gap hit."""
+        old_hit = _navigation_candidate(
+            1, resource="module-a/src/Old.java", modality="LITERAL_TEXT_SEARCH_HIT"
+        )
+        current_hit = _navigation_candidate(
+            2, resource="module-b/src/Current.java", modality="LITERAL_TEXT_SEARCH_HIT"
+        )
+        navigation = _navigation_candidate(
+            3, resource="module-c/src/Navigation.java"
+        )
+        observations = (
+            replace(_read_navigation_observation(1, old_hit), operation=EngineeringAgentToolOperation.SOURCE_SEARCH),
+            replace(_read_navigation_observation(2, current_hit), operation=EngineeringAgentToolOperation.SOURCE_SEARCH),
+        )
+        metadata = {
+            1: _LightweightReadNavigationMetadata(origin_observation_index=1),
+            2: _LightweightReadNavigationMetadata(origin_observation_index=2),
+            3: _LightweightReadNavigationMetadata(
+                origin_observation_index=1,
+                cognition_kind=CognitionEntityKind.METHOD,
+                cognition_attributes=(("has_body", "true"),),
+            ),
+        }
+        ordered = _ordered_read_candidates(
+            (old_hit, current_hit, navigation), observations,
+            remaining_tool_actions=1, metadata_by_read_index=metadata,
+        )
+        self.assertEqual([item.read_index for item in ordered[:2]], [2, 3])
+        self.assertGreater(ordered.index(old_hit), ordered.index(current_hit))
+
     def test_read_coverage_matches_navigation_to_source_by_revision_and_resource(
         self,
     ) -> None:
