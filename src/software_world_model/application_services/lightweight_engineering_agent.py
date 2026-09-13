@@ -1296,14 +1296,26 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                                 "query": decision.query,
                             }
                         )
-                        review_findings = (
-                            *review_findings,
+                        repeated_finding = (
+                            "Application blocked the selected Source read because "
+                            "its read_index is stale or already covered. Choose "
+                            "a currently presented unread candidate; do not reuse "
+                            "the stale read_index."
+                            if decision.action is LightweightAgentAction.READ_SOURCE
+                            and decision.read_index not in {
+                                candidate.read_index
+                                for candidate in _unread_read_candidates(
+                                    read_candidates, observations
+                                )
+                            }
+                            else
                             "Application blocked the selected action because "
                             "it repeats a completed investigation action. "
                             "Update the plan and choose a different legal "
                             "action that advances the evidence; do not "
-                            "repeat the same action.",
+                            "repeat the same action."
                         )
+                        review_findings = (*review_findings, repeated_finding)
                         if unread_cognition_candidates:
                             review_findings = (
                                 *review_findings,
