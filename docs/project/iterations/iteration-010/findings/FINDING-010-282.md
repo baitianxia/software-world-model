@@ -56,3 +56,14 @@ cognition navigation sibling 前；不删除候选、不改变 read index、Cita
 结果也清除历史命中标记；不再用全局 observation 次序猜测调用边界。测试同时覆盖
 SUPPORT+BOUNDARY、多次搜索、空结果以及非提升候选的相对顺序/身份守恒。
 这是局部登记实现纠错，不改变跨模块契约。live C1 仍须在 clean 新候选上复验。
+
+## Fresh run-241
+
+在 clean `8cea04c11a94fad603c1e8ade5cffe76847112a6`（tree
+`8d711a947716f3397c8da7d75e13a68ebc146592`）上，run-241 通过 listener、product/tree
+和 fresh 官方 pricing 校验，真实完成 3 Conversation、3 Turn、38 provider dispatch，
+无 post-dispatch unknown 或重放。q1 实际先读取本轮 Source Search 命中的 11、15、16，
+证明 direct-hit 排序修正生效；之后仍出现重复 READ/no-progress（13、2），q1
+fail-closed 为 `BUDGET_EXHAUSTED`。q2 Turn `ACCEPTED`，q3 仍因 Agent step budget
+exhausted 失败。排序问题已改善，但 Agent 在同一预算内对重复/低进展候选的收敛仍未闭合，
+故 C1/C2/Alpha 继续 `REWORK`。
