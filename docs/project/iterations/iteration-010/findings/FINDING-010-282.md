@@ -163,3 +163,13 @@ corpus 的分支，恢复在既有 `maximum_files` 内继续扫描，以便 meth
 不含查询词于路径名中的实现文件；不改变 Source fuse、预算上限、结果 modality、Broker
 或任何 Agent-facing schema。Source/Conversation/Agent/Cognition 定向测试 76/76
 通过。需以当前 clean successor fresh C1 运行确认实现候选、引用及 Reviewer 闭环。
+
+## Fresh run-255 C1 successor
+
+在 clean `4071f5f65b27698c361ea9f73b880a016a028c3b`、exact mall revision 和真实
+`2026-09-13T23:35:21Z` 官方定价抓取上，run-255 listener 与 Web dispatch 成功。
+原始 MORE_EVIDENCE 题及两个异质问题均完成 `ACCEPTED/SUCCEEDED/AUTHORIZED`，分别
+有 3、3、2 条真实 Source Citation 和 fresh Reviewer；Ark 3、DeepSeek 23 次
+dispatch，post-dispatch unknown/retry 均为 0。q1 的 Source Search 现能把实现候选
+纳入可读集合，且未再重复已消费 read_index。独立监督确认该轨迹满足 C1/N1 运行证据
+条件，允许进入 C1.5/N2；顶层严格质量标识仍保留，不据此宣布 Alpha。
