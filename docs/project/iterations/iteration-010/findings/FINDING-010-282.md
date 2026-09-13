@@ -117,3 +117,19 @@ Worker 仍把全部 fallback corpus 扫到 56 文件。后续修正为在非空 
 modality、Citation identity 或 Broker contract。Source/Conversation/Agent/Cognition
 定向测试共 76/76 通过；需要在 clean successor fresh run 中确认 q1 的剩余 Source read
 预算和 Reviewer 闭环。
+
+## Fresh run-245 and consumed-candidate correction
+
+在 clean `46ffab3` / tree `06d42a71c53e72d38c42f0d1b68cbc23c12ac2e2` 上运行 run-245；
+listener、health 和真实双 Provider Web dispatch 均完成，3 Conversation、3 Turn，
+terminal 为 `STOPPED_AFTER_DISPATCH`，无 post-dispatch unknown 或 replay。q1 仍以
+`BUDGET_EXHAUSTED` fail-closed：Source search 后成功读取 1、11、13、15、16，但
+Agent 随后再次提交已消费的 read_index 16，未取得 answer/citation/review 闭环。
+
+最早责任层定位为 Application-owned candidate consumption bookkeeping：候选是否已
+消费仅由 Citation locator 对账，某些受控 Source read 的 locator 形态未与原 candidate
+稳定归一化，导致同一 read_index 仍出现在模型可选集合。commit `c7a4697` 增加内部
+非版本化的已执行 read_index 集合，并在 unread candidate projection 与执行校验中共同
+排除；不新增 Agent 协议、Schema、Prompt、预算或题目逻辑。定向测试
+`tests.test_lightweight_engineering_agent` + `tests.test_capability_cognition` 44/44
+通过。run-245 仍不构成 C1/C2/Alpha 证据，需在 successor clean run 复验。
