@@ -109,3 +109,11 @@ tool budget 已关闭而 `NOT_ACCEPTED/BUDGET_EXHAUSTED`，q2、q3 的 Turn 均�
 `ACCEPTED`。这证明 boundary projection 修正 live 生效，但不构成 C1 的原题加两个
 异质问题闭环；剩余最早问题是 q1 在达到全局 Source fuse 前未取得足够证据，仍需从
 通用 Agent/检索规划层继续定位，不能增加预算或题目规则。
+
+进一步对账发现 q1 首次 Search 已有 literal hits，但 `filename_candidate_count=0` 时
+Worker 仍把全部 fallback corpus 扫到 56 文件。后续修正为在非空 path-ranked cohort
+已完成且已有 literal hit 时返回显式 `PARTIAL`，把未扫描 corpus 保留为 Coverage 边界；
+这与既有 exact-stem early-stop 共用同一 Source search 机制，不改变 Fuse 上限、Result
+modality、Citation identity 或 Broker contract。Source/Conversation/Agent/Cognition
+定向测试共 76/76 通过；需要在 clean successor fresh run 中确认 q1 的剩余 Source read
+预算和 Reviewer 闭环。

@@ -595,6 +595,7 @@ class LocalGitRetrievalWorker:
             rank[0] <= 1 for rank, _ in ranked_entries
         )
         filename_candidates_processed = 0
+        path_candidates_processed = 0
         filename_content_match_count = 0
         filename_unsafe_count = 0
         filename_early_stop = False
@@ -628,6 +629,8 @@ class LocalGitRetrievalWorker:
             files_read += 1
             if rank[0] == 3:
                 fallback_examined_file_count += 1
+            else:
+                path_candidates_processed += 1
             if b"\x00" in raw:
                 binary_entries += 1
                 if filename_candidate:
@@ -692,22 +695,47 @@ class LocalGitRetrievalWorker:
                 filename_candidates_processed += 1
                 filename_content_match_count += len(items) - matches_before_entry
                 if (
-                    exact_stem_candidate_count > 0
-                    and filename_candidates_processed
-                    == filename_candidate_count
-                    and filename_content_match_count > 0
+                    (
+                        (
+                            exact_stem_candidate_count > 0
+                            and
+                            filename_candidates_processed
+                            == filename_candidate_count
+                            and filename_content_match_count > 0
+                        )
+                    )
                     and filename_unsafe_count == 0
                     and len(ranked_entries) > filename_candidate_count
                 ):
-                    # The exact-stem anchor and every related filename have
-                    # yielded all of their case-sensitive content hits.  Keep
-                    # the unexamined lower-ranked corpus explicit as PARTIAL
-                    # instead of spending the whole-Turn file budget merely to
-                    # rediscover a locator already present in this cohort.
+                    # Every filename-ranked candidate has yielded its
+                    # case-sensitive content hits. Keep the unexamined
+                    # lower-ranked corpus explicit as PARTIAL instead of
+                    # spending the whole-Turn file budget rediscovering a
+                    # locator already present in this filename cohort. This
+                    # also applies when the query is an exact phrase whose
+                    # stem is not itself a filename; the coverage boundary,
+                    # rather than an inferred completeness claim, remains
+                    # visible to the Agent.
                     truncated = True
                     filename_early_stop = True
                     failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
                     break
+        if (
+            not truncated
+            and filename_candidate_count == 0
+            and PurePosixPath(operation.query).suffix == ""
+            and path_candidates
+            and path_candidates_processed == len(path_candidates)
+            and len(items) > 0
+            and len(ranked_entries) > len(path_candidates)
+        ):
+            # Identifier/phrase queries can have literal hits in the
+            # path-ranked cohort without an exact filename stem. Preserve
+            # the remaining fallback corpus as an explicit partial boundary
+            # so later READ operations retain the fixed Source file fuse.
+            truncated = True
+            filename_early_stop = True
+            failure_code = "SOURCE_SEARCH_FILENAME_MATCH_EARLY_STOP"
         literal_match_count = len(items)
         navigation_candidate_item_ids = ()
         selected_navigation_candidates: tuple[tuple[str, int, str], ...] = ()
