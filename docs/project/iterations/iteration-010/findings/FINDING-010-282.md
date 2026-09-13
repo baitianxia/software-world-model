@@ -91,3 +91,21 @@ substring 判断边界，不能作为受信状态。commit `d9b905e` 改为从�
 三类 Source fuse 耗尽后的 SEARCH/READ，保留 cognition/FINISH，下一 Turn 重新初始化。
 新增的投影回归检查覆盖 source action 不可见、候选列表为空、正常路径不受影响；定向
 测试 44/44 通过。该修正仍只闭合 fail-closed 边界，尚未提供 fresh C1 运行证据。
+
+## Fresh run-242 boundary verification
+
+以 clean `3b3376d` / tree `579c5b0d83413b8cc1dd004141ab986e1a6c25a0` 启动新的受控
+run-242；配置使用同一公开 mall exact revision、既有双 Provider route、预算和真实
+HTTPS pricing capture（`2026-09-13T18:25:52Z`，内容 digest
+`sha256:755aa9b488d1185cba016ca4de3b3b6b8f593f5e13e5f9f961305289a5c8d242`）。listener
+与 health 校验通过，terminal 记录 3 Conversation、3 Turn、36 dispatch（Ark 4、
+DeepSeek 32），post-dispatch unknown 与 replay 均为 0。
+
+run-242 q1 的 sealed model manifests 逐步显示：在 SOURCE fuse boundary 之后，后续
+Agent model view 的 `available_actions` 实际为 cognition actions + `READ_SOURCE`/`FINISH`
+（当仍有合法 cognition-derived read 时），而在所有 Source candidates 不可执行后最终
+收敛为仅 `FINISH`；没有再次出现 SEARCH_SOURCE。q1 仍因 Reviewer 请求补证时 Source
+tool budget 已关闭而 `NOT_ACCEPTED/BUDGET_EXHAUSTED`，q2、q3 的 Turn 均为
+`ACCEPTED`。这证明 boundary projection 修正 live 生效，但不构成 C1 的原题加两个
+异质问题闭环；剩余最早问题是 q1 在达到全局 Source fuse 前未取得足够证据，仍需从
+通用 Agent/检索规划层继续定位，不能增加预算或题目规则。
