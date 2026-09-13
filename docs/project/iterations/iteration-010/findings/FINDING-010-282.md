@@ -70,3 +70,16 @@ fail-closed 为 `BUDGET_EXHAUSTED`。q2 Turn `ACCEPTED`，q3 仍因 Agent step b
 exhausted 失败。Source Search 结果进入受控 read candidate 的构造链仍需核对；Agent
 在同一预算内对重复/低进展候选的收敛也未闭合，
 故 C1/C2/Alpha 继续 `REWORK`。
+
+## Run-241 source-fuse audit and fail-closed correction
+
+对 run-241 的 SQLite model manifest 逐次核对 q1/q3：首次 `SOURCE_SEARCH` 的
+`coverage.match_count` 为 0，返回的是 `IDENTIFIER_PATH_NAVIGATION_CANDIDATE`，而非
+literal claim-support；后续 `SOURCE_READ` 的 Broker boundary 明确为
+`SOURCE_FILE_FUSE_EXHAUSTED`。因此本次失败的最早责任层是 Source 检索预算耗尽后的
+Application action projection，而不是 read-candidate 构造丢失。
+
+commit `179aae0` 在既有内部 `_reserved_unread_cognition_candidates` 状态计算中对该
+可信 boundary fail-closed，避免将不可执行 locator 继续投影为保留 READ 动作；没有新增
+Agent 协议、版本化 schema、Prompt、预算或题目规则。定向测试 44/44 通过。该修正只消除
+错误的不可执行动作投影，尚不构成 C1/C2/Alpha 证据。
