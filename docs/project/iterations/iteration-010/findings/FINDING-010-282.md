@@ -182,3 +182,11 @@ Conversation，均 `ACCEPTED`，q5 新 Conversation 也 `ACCEPTED`。q4 为自�
 及 Source fuse 关闭，未进入 Reviewer，故 C2 仍未完成。该失败的最早责任层是 Agent
 证据规划在复杂调用链上的收敛，不是 Provider、协议或题目规则；后续需对 q4 的
 model-view/candidate identity 做一次本地对账，再以相同逻辑修复和重跑。
+## C2 q4 deterministic replan projection
+
+run-256 q4 的 sealed model inputs 证明认证链候选持续存在；失败发生在模型重复选择
+同一 `read_index=18`，而非候选构造缺失。Application 现对被拒绝的重复 READ 在同一
+Turn 内加入内部 `blocked_source_read_indexes` sidecar，并从下一次 model view 的
+可执行候选投影中排除；候选注册、Source/Citation identity、预算、Prompt 和版本化
+Agent schema 均不变。定向测试 44/44 通过，需 fresh C2 successor 验证 q4 能沿未读
+认证链候选继续并完成 Reviewer。

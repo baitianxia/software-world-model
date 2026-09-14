@@ -733,6 +733,7 @@ class LightweightAgentStepRequest:
     remaining_tool_actions: int | None = None
     source_tools_enabled: bool = True
     consumed_source_read_indexes: tuple[int, ...] = ()
+    blocked_source_read_indexes: tuple[int, ...] = ()
     read_candidate_metadata: tuple[
         tuple[int, _LightweightReadNavigationMetadata], ...
     ] = ()
@@ -754,6 +755,13 @@ class LightweightAgentStepRequest:
             )
             else self.read_candidates
         )
+        if self.blocked_source_read_indexes:
+            blocked = set(self.blocked_source_read_indexes)
+            visible_read_candidates = tuple(
+                candidate
+                for candidate in visible_read_candidates
+                if candidate.read_index not in blocked
+            )
         reserved_reads = _reserved_unread_cognition_candidates(
             visible_read_candidates,
             self.observations,
@@ -1126,6 +1134,7 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
         consecutive_no_progress = 0
         executed_action_fingerprints: set[tuple[object, ...]] = set()
         executed_source_read_indexes: set[int] = set()
+        blocked_source_read_indexes: set[int] = set()
         terminal = "FAILED"
         try:
             read_candidates.extend(self._prior_turn_read_candidates(request))
@@ -1154,6 +1163,9 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             source_tools_enabled=source_tools_enabled,
                             consumed_source_read_indexes=tuple(
                                 sorted(executed_source_read_indexes)
+                            ),
+                            blocked_source_read_indexes=tuple(
+                                sorted(blocked_source_read_indexes)
                             ),
                             rejected_answer=rejected_answer,
                             review_findings=review_findings,
@@ -1340,6 +1352,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "repeat the same action."
                         )
                         review_findings = (*review_findings, repeated_finding)
+                        if (
+                            decision.action is LightweightAgentAction.READ_SOURCE
+                            and decision.read_index is not None
+                        ):
+                            blocked_source_read_indexes.add(decision.read_index)
                         if unread_cognition_candidates:
                             review_findings = (
                                 *review_findings,
