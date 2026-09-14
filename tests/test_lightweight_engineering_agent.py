@@ -1214,6 +1214,13 @@ class _EmptyCognitionProjector:
         )
 
 class LightweightEngineeringAgentTest(unittest.TestCase):
+    def test_navigation_observation_does_not_project_locator_as_citation(self) -> None:
+        observation = _read_navigation_observation(
+            1,
+            _navigation_candidate(1, resource="src/Entry.java"),
+        )
+        self.assertEqual(observation.model_view()["citations"], [])
+
     def test_cognition_provenance_becomes_brokered_source_read_in_unrelated_repo(
         self,
     ) -> None:

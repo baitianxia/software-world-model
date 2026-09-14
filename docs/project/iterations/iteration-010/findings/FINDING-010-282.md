@@ -263,3 +263,21 @@ No prompt/schema, answer-text rule, file-count gate, budget or Provider change i
 introduced. This remains a local implementation correction with code/tests as the
 disposition. Fresh validation must include the original follow-up with its real
 conversation context and two heterogeneous questions; C3 is still incomplete.
+
+## Run-267: navigation hits were projected as Citation ordinals
+
+The fresh run on `fc12b071` completed 3 Conversations, 4 Turns and 43 dispatches.
+q1 failed closed at `CONTROL_STATE_DENIED` while q2 and q4 completed; q3 failed
+closed after a fresh review requested more evidence. q1's sealed rejection selected
+Citation 1 from observation 4. That observation was a `SOURCE_SEARCH` result whose
+nine entries had modality `IDENTIFIER_PATH_NAVIGATION_CANDIDATE` and represented
+locator-only navigation, not delivered Source evidence. The model-facing view
+therefore exposed a Citation domain that the executor could not deliver.
+
+The generic correction filters only navigation modalities from the Observation
+Citation projection. The underlying read candidates, locator identity, Source
+search behavior and executor binding remain unchanged; literal/full Source
+evidence remains projected normally. Existing agent/cognition tests pass 44/44.
+This is a projection correction, not a FINISH gate, prompt/schema, budget,
+Reviewer, Provider or question-specific rule. A fresh run is still required to
+show that q1/q3 reach review and to assess semantic quality; C3 remains incomplete.

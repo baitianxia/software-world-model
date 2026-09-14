@@ -696,6 +696,14 @@ class LightweightObservation:
     digest: Digest
 
     def model_view(self) -> dict[str, object]:
+        # Navigation hits locate a resource but are not delivered Source
+        # evidence. Do not expose their locator list as Citation ordinals:
+        # the executor will correctly reject those ordinals.
+        delivered_citations = tuple(
+            citation
+            for citation in self.citations
+            if "NAVIGATION" not in citation.modality.upper()
+        )
         return {
             "observation_index": self.observation_index,
             "operation": self.operation.value,
@@ -709,7 +717,7 @@ class LightweightObservation:
                     "modality": citation.modality,
                     "source_revision": citation.source_revision,
                 }
-                for index, citation in enumerate(self.citations, 1)
+                for index, citation in enumerate(delivered_citations, 1)
             ],
         }
 
