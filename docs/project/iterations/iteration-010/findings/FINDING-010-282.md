@@ -234,3 +234,32 @@ question and two heterogeneous questions on the new clean candidate; same-Agent
 source-only comparison remains outstanding. The earlier two reordered cognition
 searches and an unproductive read are additional trace observations, not claimed
 fixed by this change. Phase C remains incomplete pending independent evidence.
+
+## Run-266: mechanically rejected FINISH retained an active plan
+
+The clean `63e07ff` C3 browser run recorded three Conversations, four Turns and
+42 provider dispatches. q1/q3/q4 completed with Source Citations and fresh review;
+q2 failed closed with `CONTROL_STATE_DENIED`. Its actual actions were
+SEARCH_COGNITION, RETRIEVE_COGNITION_DETAIL, FINISH, binding rejection, FINISH.
+It did not perform a Source READ in that Turn. Cognition provenance and prior
+conversation content did not grant current Source Citation authority.
+
+The sealed step-4 input retained the failed FINISH proposal as its active `plan`,
+asserting that existing Source references were sufficient. The executor assigned
+that plan before validating the citation selection, but the binding-rejection
+handler retained it. This is an internal state-lifecycle defect; it does not prove
+that stale plan state is the sufficient cause of the model's citation mistake.
+
+The minimal fix applies the existing rejected-action plan invalidation to the
+mechanical Citation rejection: clear only the active plan. Keep the original
+MODEL_DECISION plan, rejected answer, observations, citation identities, feedback,
+one-replan-per-prefix bound and Reviewer behavior unchanged. Three existing
+fixtures (cognition-only citation selection, source-only out-of-range selection,
+and multiple observations with local citation ordinals) failed the new active-plan
+assertion before the fix and passed afterward. Agent/cognition targeted tests
+passed 44/44; these are state-lifecycle checks, not live answer-quality proof.
+
+No prompt/schema, answer-text rule, file-count gate, budget or Provider change is
+introduced. This remains a local implementation correction with code/tests as the
+disposition. Fresh validation must include the original follow-up with its real
+conversation context and two heterogeneous questions; C3 is still incomplete.

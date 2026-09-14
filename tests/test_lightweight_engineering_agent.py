@@ -3492,6 +3492,7 @@ class MultiMethod implements MultiContract {
         self.assertEqual(len(submission.turn.citations), 2)
         self.assertEqual(len(model.reviews), 1)
         self.assertEqual(model.invalid_submissions, 1)
+        self.assertEqual(model.steps[-1].plan, "")
         self.assertEqual(
             model.steps[-1].review_findings,
             (
@@ -3603,6 +3604,7 @@ class MultiMethod implements MultiContract {
         self.assertEqual(rejection["citation_index"], 2)
         self.assertEqual(rejection["available_citation_count"], 1)
         self.assertEqual(rejection["repair_ordinal"], 1)
+        self.assertEqual(model.steps[-1].plan, "")
         self.assertEqual(
             [
                 item["action"]
@@ -3699,6 +3701,7 @@ class MultiMethod implements MultiContract {
         )
         self.assertEqual(rejection["repair_ordinal"], 1)
         self.assertIn("not global", model.steps[-1].review_findings[0])
+        self.assertEqual(model.steps[-1].plan, "")
         self.assertEqual(
             model.steps[-1].rejected_answer,
             "多个独立 Source observation 各自支持该局部行为。",
@@ -3709,6 +3712,10 @@ class MultiMethod implements MultiContract {
             if item["kind"] == "MODEL_DECISION"
             and item["action"] == "FINISH"
             and item["step"] == 4
+        )
+        self.assertEqual(
+            rejected_finish["plan"],
+            "Answer only from the exact Source observations.",
         )
         self.assertIn(
             rejected_finish["model_call_receipt_ref"],

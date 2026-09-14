@@ -1463,6 +1463,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         raise
                     citation_binding_repair_prefixes.add(observation_prefix)
                     citation_binding_repair_count += 1
+                    # As with a rejected investigation action, the rejected
+                    # FINISH proposal is not an executable current plan. Its
+                    # original plan remains in MODEL_DECISION; keep the answer
+                    # and binding diagnosis below as rejected state only.
+                    plan = ""
                     # Keep the rejected selection intact in the trajectory and
                     # give the same primary Agent one bounded replan.  The
                     # feedback is deliberately mechanical: all actual evidence
