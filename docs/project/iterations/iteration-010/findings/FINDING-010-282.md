@@ -264,20 +264,30 @@ introduced. This remains a local implementation correction with code/tests as th
 disposition. Fresh validation must include the original follow-up with its real
 conversation context and two heterogeneous questions; C3 is still incomplete.
 
-## Run-267: navigation hits were projected as Citation ordinals
+## Run-267: rejected diagnosis and navigation-filter reversal
 
 The fresh run on `fc12b071` completed 3 Conversations, 4 Turns and 43 dispatches.
 q1 failed closed at `CONTROL_STATE_DENIED` while q2 and q4 completed; q3 failed
 closed after a fresh review requested more evidence. q1's sealed rejection selected
-Citation 1 from observation 4. That observation was a `SOURCE_SEARCH` result whose
-nine entries had modality `IDENTIFIER_PATH_NAVIGATION_CANDIDATE` and represented
-locator-only navigation, not delivered Source evidence. The model-facing view
-therefore exposed a Citation domain that the executor could not deliver.
+Citation 1 from observation 4. The initial audit incorrectly joined that q1 event
+to a q3 model manifest by selecting the payment question instead of q1's exact
+coupon question. The resulting claim that q1 exposed nine navigation Citations
+was false. Commit `0d27a16` implemented a filter based on that mistaken diagnosis;
+its prior test pass and supervision approval did not establish correctness.
 
-The generic correction filters only navigation modalities from the Observation
-Citation projection. The underlying read candidates, locator identity, Source
-search behavior and executor binding remain unchanged; literal/full Source
-evidence remains projected normally. Existing agent/cognition tests pass 44/44.
-This is a projection correction, not a FINISH gate, prompt/schema, budget,
-Reviewer, Provider or question-specific rule. A fresh run is still required to
-show that q1/q3 reach review and to assess semantic quality; C3 remains incomplete.
+An exact `current_request == q1-request.json.message` join now confirms that q1
+step 9 (`model_call_e1ddc9621ae74aaab1be00b407ecd189`) and step 10
+(`model_call_8f97341c4a6c44daa6f75c9c927fb795`) both expose observation 4 as
+SEARCH_COGNITION with zero Citations. Step 10's active plan is empty, confirming
+that `fc12b071` executed its intended state transition but did not prevent the
+model's invalid Citation selection. The nine-entry SOURCE_SEARCH belongs to q3,
+not q1. There is no demonstrated projection/resolver discrepancy in q1.
+
+The unsupported filter is reversed. Independently, filtering then re-enumerating
+a mixed Citation tuple could silently rebind ordinal 1 to a different original
+Citation because the resolver indexes the unfiltered tuple. A local regression
+now verifies that projected ordinals resolve to exactly the original identity,
+including mixed modalities. This check does not grant semantic support to a
+navigation locator; mechanical identity and evidentiary sufficiency remain
+distinct. No further live run is justified by the rejected diagnosis. Original
+runtime artifacts and both commits remain recoverable; C3 quality is incomplete.

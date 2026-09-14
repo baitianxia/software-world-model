@@ -1214,12 +1214,37 @@ class _EmptyCognitionProjector:
         )
 
 class LightweightEngineeringAgentTest(unittest.TestCase):
-    def test_navigation_observation_does_not_project_locator_as_citation(self) -> None:
-        observation = _read_navigation_observation(
-            1,
-            _navigation_candidate(1, resource="src/Entry.java"),
+    def test_observation_projection_preserves_resolver_ordinals(self) -> None:
+        navigation = _navigation_candidate(1, resource="src/Entry.java")
+        source = _navigation_candidate(
+            2, resource="src/Body.java", modality="EXACT_STATIC_SOURCE_TEXT"
         )
-        self.assertEqual(observation.model_view()["citations"], [])
+        observation = replace(
+            _read_navigation_observation(1, navigation),
+            citations=(navigation.citation, source.citation),
+        )
+        view = observation.model_view()
+        self.assertEqual(
+            [(item["citation_index"], item["locator"]) for item in view["citations"]],
+            [(1, navigation.citation.locator), (2, source.citation.locator)],
+        )
+        for index, citation in enumerate(observation.citations, 1):
+            decision = LightweightAgentDecision(
+                goal="Inspect the selected evidence.",
+                plan="Select its original local ordinal.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.ANSWER,
+                answer="Fixture; no semantic acceptance claim.",
+                citations=(LightweightCitationSelection(1, index),),
+            )
+            self.assertEqual(
+                ApplicationOwnedLightweightAgentTurnExecutor._resolve_citations(
+                    decision, (observation,)
+                ),
+                (citation,),
+            )
 
     def test_cognition_provenance_becomes_brokered_source_read_in_unrelated_repo(
         self,
