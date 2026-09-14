@@ -198,3 +198,39 @@ run-257 重现 q4 同一重复 READ 序列，证明单独隐藏 blocked candidat
 原 proposal/plan 仍保留于 immutable events；同一 Agent 必须基于现有 observations
 和合法候选形成新 plan。该变更不改变 Prompt、Schema、预算、Source/Citation identity
 或候选 registry；定向测试 44/44 通过，fresh q4/C2 仍待验证。
+
+## C3 run-262: no-progress incorrectly became a review-gap restriction
+
+On clean `c9c03b0ae8f05143afb14772c963660b8d1d2a07`, run-262 used the existing
+exact Source and cognition snapshot for three independently supplied heterogeneous
+questions and one same-conversation semantic follow-up. The real listener recorded
+3 Conversations and 4 Turns. q1/q2/q4 were `ACCEPTED`; q3 ended with
+`BUDGET_EXHAUSTED` after fresh review requested evidence. Ark had four pre-HTTP TLS
+failures; DeepSeek completed 36 HTTP dispatches. Retry and outcome-unknown were zero.
+These are WM+source-arm observations, not completed C3 or proof of comparative gain.
+
+The sealed q3 model manifests show that after a no-progress READ, step 6 omitted
+`SEARCH_SOURCE` despite having unused tool budget. The Agent proposed a distinct
+search for a missing callee, but Application rejected it as `REVIEW_GAP_UNREAD_SOURCE`
+before any independent review had occurred. The displayed candidates were the
+previous service declaration, controller and data-model navigation entries; the
+requested DAO was not among them. Additional reads consumed the remaining budget,
+and only then did the first Reviewer request the missing evidence. Thus the
+identified local defect precedes review: no-progress feedback was incorrectly
+treated as authority to reserve all Source actions for existing candidates.
+
+The minimal correction removes only the no-progress trigger from the shared
+reservation helper. A distinct Source search remains legal unless an existing
+independent-review/duplicate-action restriction or trusted budget/fuse actually
+closes it. Existing feedback, candidate identity, Source authorization, duplicate
+dispatch prevention, Reviewer behavior, tool limits and Agent protocol are unchanged.
+No domain, query, path or answer-text rule was added. The projection regression
+failed before this change and passed afterward; Agent/cognition targeted tests
+passed 44/44 (with existing ResourceWarnings). This is local implementation repair,
+so no cross-module contract is changed; disposition remains code/tests here.
+
+Live sufficiency is still unproven. The next controlled run must recheck the failed
+question and two heterogeneous questions on the new clean candidate; same-Agent
+source-only comparison remains outstanding. The earlier two reordered cognition
+searches and an unproductive read are additional trace observations, not claimed
+fixed by this change. Phase C remains incomplete pending independent evidence.

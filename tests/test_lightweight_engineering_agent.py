@@ -2018,15 +2018,11 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
         no_progress = replace(gap, review_findings=(
             "Application observed that the selected action produced no new evidence.",
         ))
+        # An unproductive read does not prove any existing candidate addresses
+        # the current gap. A new Source search must remain a legal next action.
         self.assertEqual(
             no_progress.model_view()["available_actions"],
-            [
-                "SEARCH_COGNITION",
-                "TRAVERSE_RELATIONS",
-                "RETRIEVE_COGNITION_DETAIL",
-                "READ_SOURCE",
-                "FINISH",
-            ],
+            normal.model_view()["available_actions"],
         )
         self.assertEqual(
             replace(gap, tools_enabled=False).model_view()["available_actions"],

@@ -599,11 +599,10 @@ def _reserved_unread_cognition_candidates(
         )
         for finding in findings
     )
+    # A no-progress observation alone cannot establish that existing unread
+    # candidates cover the gap. Preserve a distinct Source search in that case.
     if not duplicate_feedback and not any(
-        finding.startswith((
-            "Independent review requested more evidence.",
-            "Application observed that the selected action produced no new evidence.",
-        ))
+        finding.startswith("Independent review requested more evidence.")
         for finding in findings
     ):
         return ()
