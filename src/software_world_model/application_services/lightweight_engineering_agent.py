@@ -1352,6 +1352,10 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             "repeat the same action."
                         )
                         review_findings = (*review_findings, repeated_finding)
+                        # A rejected proposal is not the current executable
+                        # plan. Keep it in the immutable trajectory, but do
+                        # not feed the same stale plan back as active state.
+                        plan = ""
                         if (
                             decision.action is LightweightAgentAction.READ_SOURCE
                             and decision.read_index is not None

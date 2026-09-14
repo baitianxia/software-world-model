@@ -190,3 +190,11 @@ Turn 内加入内部 `blocked_source_read_indexes` sidecar，并从下一次 mod
 可执行候选投影中排除；候选注册、Source/Citation identity、预算、Prompt 和版本化
 Agent schema 均不变。定向测试 44/44 通过，需 fresh C2 successor 验证 q4 能沿未读
 认证链候选继续并完成 Reviewer。
+## Run-257 rejected-plan invalidation
+
+run-257 重现 q4 同一重复 READ 序列，证明单独隐藏 blocked candidate 不能使当前
+模型稳定重规划。失败后的 `plan` 仍来自被 Application 拒绝的 proposal，并在下一步
+被作为 active plan 再次投影。successor 在 `REPEATED_ACTION` 后清空 active plan，
+原 proposal/plan 仍保留于 immutable events；同一 Agent 必须基于现有 observations
+和合法候选形成新 plan。该变更不改变 Prompt、Schema、预算、Source/Citation identity
+或候选 registry；定向测试 44/44 通过，fresh q4/C2 仍待验证。
