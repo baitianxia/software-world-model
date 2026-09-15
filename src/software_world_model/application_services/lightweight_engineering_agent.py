@@ -1403,6 +1403,15 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         # exhausted Tool budget from an application-side
                         # duplicate; unread evidence must remain executable.
                         consecutive_no_progress += 1
+                        # Apply the same convergence fuse used after executed
+                        # no-progress actions.  Rejected duplicate proposals
+                        # do not consume a Tool slot, but they must not let a
+                        # primary Agent spin until the outer step budget.
+                        if (
+                            consecutive_no_progress
+                            >= self._limits.maximum_consecutive_no_progress
+                        ):
+                            tool_actions = self._limits.maximum_tool_actions
                         continue
                     executed_action_fingerprints.add(action_fingerprint)
                     before_count = len(observations)

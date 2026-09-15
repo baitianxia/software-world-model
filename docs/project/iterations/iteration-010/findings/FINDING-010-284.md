@@ -27,3 +27,8 @@ run-276 的三个全新会话已验证原始 q1 的非法索引可重规划到�
 模型视图中的非法 read index：记录 `READ_INDEX_UNAVAILABLE` 并对重复动作
 fail-closed；未增加模型可见字段，也不重绑定 candidate identity。C2 浏览器编排
 仍待验证。
+
+run-277/run-279 的两个异质无命中轨迹进一步确认：重复的未执行搜索提案也属于
+无进展，不能绕过既有 `maximum_consecutive_no_progress` 收敛熔断。Application
+现对重复提案使用同一熔断，不增加 Agent step、Tool、Provider 或 Reviewer 预算；
+达到阈值后保留原始轨迹并 fail-closed，避免模型在相同查询上旋转。
