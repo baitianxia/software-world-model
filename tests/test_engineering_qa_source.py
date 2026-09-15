@@ -339,6 +339,46 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         )
         self.assertEqual(filename_only_coverage["filename_early_stop"], "false")
 
+    def test_search_path_hint_prioritizes_exact_cognition_provenance(self):
+        search_root = self.repository / "hinted"
+        search_root.mkdir()
+        for index in range(20):
+            (search_root / f"unrelated-{index:02d}.txt").write_text(
+                "no matching token\n", encoding="utf-8"
+            )
+        target = search_root / "implementation.java"
+        target.write_text("int updateSkuStock() { return 1; }\n", encoding="utf-8")
+        self.git("add", "hinted")
+        self.git("commit", "-q", "-m", "cognition source hint fixture")
+        self.revision = self.git("rev-parse", "HEAD").strip()
+        self.source_profile = LocalGitEvidenceClassProfile.create(
+            profile_ref="engineering-qa-cognition-hint-test:1",
+            binding_id=self.binding_id,
+            evidence_class_paths={
+                EngineeringEvidenceClass.SOURCE: ("hinted",),
+                EngineeringEvidenceClass.REPOSITORY_DOCUMENT: ("README.md",),
+                EngineeringEvidenceClass.BUILD_CONFIGURATION: ("config",),
+                EngineeringEvidenceClass.TEST: ("tests",),
+            },
+        )
+        self.worker = LocalGitRetrievalWorker(
+            self.repository,
+            repository_id=self.repository_id,
+            binding_id=self.binding_id,
+            source_profile=self.source_profile,
+            search_path_hints={"updateSkuStock": ("hinted/implementation.java",)},
+        )
+        result = self.worker.execute(
+            self.operation(
+                operation=SourceReadOperation.SEARCH,
+                allowlist=("hinted",),
+                query="updateSkuStock",
+                maximum_files=1,
+            )
+        )
+        self.assertEqual(result.files_read, 1)
+        self.assertEqual(result.items[0].path, "hinted/implementation.java")
+
     def test_search_prioritizes_identifier_component_beyond_file_fuse(self):
         search_root = self.repository / "module/src/main/java/example"
         search_root.mkdir(parents=True)
