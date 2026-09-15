@@ -1,0 +1,27 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-275-c1-fresh-cohort",
+  "candidate_commit": "2412804c96f9f2232671017766624ba5b732a876",
+  "candidate_tree": "fcb76a1bf1ac70a5cce17f039e1f1e66bb69993d",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "session_config_sha256": "sha256:d514876771ab997118cabc751a611bd168f6c3fec4d601233ee90e988c055710",
+  "turn_scope_sha256": "sha256:858a28c587e3a26d36d6d903dd9f1b913aaa78c87b87337cf01d077ac76694d8",
+  "q1_file_sha256": "sha256:0043ba2ac77937eb4347aa38c898fbe88a235dfe4e5f9ec57eb355359d47d31b",
+  "terminal_file_sha256": "sha256:0a464451b731dec9d8c657b709c11f7759dfbccbb478301e4c7b23ad442c508c",
+  "terminal_digest": "sha256:abf188e5b36543c45536955b32ea5508c1ad7b9f9ec9f7f0854572e7d637d615",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 3,
+  "turn_count": 3,
+  "provider_dispatch_count": 21,
+  "decision": "REWORK",
+  "earliest_layer": "knowledge-cognition-source-option-projection",
+  "evidence": [
+    "run-275 q1 SEARCH_COGNITION returned item_count=12 from exact cognition snapshot sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243; the sealed cognition candidates included getRoleList at cognition index 11 and updateRole at index 12, both COMPLETE Java SOURCE provenance in UmsAdminController.java.",
+    "The following COGNITION_SOURCE_READ_OPTIONS event exposed option_count=11 and read_indexes 1..11, with no skipped non-SOURCE paths. The next Primary decision selected READ_SOURCE read_index=12, which was valid in the cognition page but absent from the Source option catalog; Application then failed closed with CONTROL_STATE_DENIED/unavailable read candidate before Reviewer or Delivery.",
+    "run-275 q2 RabbitMQ and q3 JWT turns each reached turn-level ACCEPTED with exact SOURCE citations and fresh independent Reviewer APPROVED/authorized delivery, but the q1 failure means this three-task C1 scope is not closed.",
+    "This is a generic cognition-to-Source catalog projection mismatch caused by one canonical resource having one path-scoped read option while the model-facing broad cognition page exposed multiple same-path methods; it is not a Provider, decoder, Prompt, Schema, Reviewer, or budget failure."
+  ],
+  "next_action": "Keep the strict fail-closed action boundary and remove any ordinal alias. Repair the generic SEARCH_COGNITION-to-Source projection so a capped page and its path-scoped read catalog expose one consistent representative per canonical SOURCE resource (or consistently exclude the extra cognition entries), while preserving exact snapshot, provenance, cursor semantics, and candidate identity. Add heterogeneous tests covering TYPE plus multiple METHOD entries on one path and pagination/cap behavior, then run a fresh original-plus-two-heterogeneous C1 scope.",
+  "advance_allowed": false,
+  "source_of_truth": "/Users/baitianxia/project/software-world-model/var/iteration-010/slice-001/run-275-c1-fresh-cohort/{session.json,turn-scope.json,q1.json,q2.json,q3.json,terminal.json,ark-gateway.sqlite3,deepseek-gateway.sqlite3}"
+}
