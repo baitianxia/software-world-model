@@ -67,7 +67,7 @@
       "ordinal": 5,
       "quality_status": "NOT_ACCEPTED",
       "failure_code": "LIVE_INTEGRATION_HELD",
-      "provider_dispatch_count": 1,
+      "provider_dispatch_count": 0,
       "citation_count": 0,
       "fresh_review": false,
       "delivery_state": "NOT_AUTHORIZED"
