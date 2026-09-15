@@ -1,0 +1,66 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_RUNTIME_REPRODUCTION@1",
+  "run_ref": "run-277-c2-browser",
+  "purpose": "independent pre-repair reproduction of the Agent evidence-planning deficit on two heterogeneous questions",
+  "candidate_commit": "51640be9c9a7d0ddc2126b889623d2ed1ab1c430",
+  "candidate_tree": "baac70a5e3c76b8bed6b604592b3c315a0f8be01",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_sha256": "sha256:7b93baa538f303bb1a2f8c3d7dd609dd30d4e74f5f44d29edc439c2b96bdc4f9",
+  "turn_scope_sha256": "sha256:e730508aa0efe226342853d2d92b4fa94dacd10e49e48b2d8add8ad7f571d71a",
+  "questions_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+  "terminal_sha256": "sha256:74f69063c40bdea42946fe1e665a412b1a18b7b40fbd94c7d418a80640c37590",
+  "terminal_digest": "sha256:5d0ef9ecc879f85e2fe8dc874a986c20355ca8616f0b401195d1fe84ecaf30b1",
+  "gateway_sha256": {
+    "ark": "sha256:3d209d9279aa289eacec796a6dfd75b5109d9b75e9ca278fcd2a252bfe89c300",
+    "deepseek": "sha256:b06aa7bbfc2b2fb336228b55a22059061093b8da2a962a4206b9cce9437f3ae7"
+  },
+  "runtime_status": "STOPPED_AFTER_DISPATCH",
+  "browser_live_verification": "NOT_EXECUTED",
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning",
+  "questions": [
+    {
+      "ordinal": 1,
+      "domain": "member-favorites",
+      "questions_file_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+      "trajectory_artifact": "var/iteration-010/slice-001/run-277-c2-browser/q1.json",
+      "trajectory_sha256": "sha256:c1d2ed38dfa5a89911cf15dc8d370fa0b15e991f7254c604e2141ec77e9da230",
+      "provider_dispatch_count": 13,
+      "quality_status": "NOT_ACCEPTED",
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": false,
+      "delivery": "NOT_AUTHORIZED",
+      "model_actions": [
+        "SEARCH_COGNITION(favorite) -> zero items",
+        "SEARCH_SOURCE(favorite) repeated ten times",
+        "no READ_SOURCE, FINISH, Citation, fresh Review, or Delivery"
+      ]
+    },
+    {
+      "ordinal": 5,
+      "domain": "coupon-promotion-rules",
+      "questions_file_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+      "trajectory_artifact": "var/iteration-010/slice-001/run-277-c2-browser/q5.json",
+      "trajectory_sha256": "sha256:1bc2c821105dbba95ca548f60561984063d8d0ad91bc97e47a2b0b76b85bc56a",
+      "provider_dispatch_count": 10,
+      "quality_status": "NOT_ACCEPTED",
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": false,
+      "delivery": "NOT_AUTHORIZED",
+      "model_actions": [
+        "SEARCH_COGNITION(优惠券发行规则) -> zero items",
+        "SEARCH_SOURCE(优惠券发行规则) repeated three times",
+        "SEARCH_SOURCE(Coupon), then repeated READ_SOURCE selections",
+        "no FINISH, Citation, fresh Review, or Delivery"
+      ]
+    }
+  ],
+  "interpretation": "The two domains independently reproduce the same first-layer pattern: a lexical Cognition miss is followed by repeated or weakly varied Source planning until the fixed budget closes. The evidence does not justify a query-specific synonym, prompt/schema change, provider/decoder change, Reviewer retry, budget increase, or automatic answer/read action.",
+  "browser_caveat": "The run used the direct urllib loopback runner; no immutable in-app Browser DOM or unique-POST receipt was present. This record is only N0 Agent-planning evidence and cannot satisfy C2 or phase exit.",
+  "next_action": "Use this evidence to design one generic Agent-layer convergence improvement only after preserving the fixed action/schema/budget/reviewer boundaries; validate the unchanged and repaired behavior on fresh heterogeneous tasks before any C2 Browser run.",
+  "advance_allowed": false
+}
