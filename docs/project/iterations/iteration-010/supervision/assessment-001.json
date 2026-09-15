@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T00:27:30+08:00",
+  "assessed_at": "2026-09-16T00:55:00+08:00",
   "evidence": [
     {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:17ac162754b328221dac604d044576a5dcd729ceb61ce3f64ac1dd9362a8f294"},
     {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ee1128ce0e396e88661e3c252d62cc2cd6cf44c0599ed06b1cab4821e9aec52b"},
@@ -26,9 +26,8 @@
   "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
   "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
   "defects": [
-    {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The negative-need cohort defect has been corrected in f21bd99. Exact snapshot d552b3d8 now preserves the lexical baseline for method-heavy updateRole/getRoleList/pay (12/12/10 matching methods) while promoting up to two methods for broad role/coupon/order/address/product pages. This local check is not live C1 evidence.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
-    {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved and no fresh original-plus-two-heterogeneous C1 execution exists on this candidate. Exact broad search now shows two methods for role/coupon/order, but this local observation is not a browser Answer/Citation/fresh-review closure.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]}
+    {"severity":"MAJOR","owner_layer":"browser-turn-scope-orchestration","summary":"Fresh run-276 C1 evidence closes the original role-reassignment question plus two independent heterogeneous tasks at turn level: each reached cognition/source evidence, exact-revision citations, fresh independent review, and authorized delivery. The enclosing @5 artifact projection remains NOT_ACCEPTED because that contract requires five turns while this C1 scope intentionally has three independent conversations. C2's fixed browser conversation choreography and phase-level five-task/semantic-follow-up evidence are still absent.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan","candidate-slice-binding"]}
   ],
-  "earliest_divergence":"agent-evidence-planning-and-review-loopback",
-  "next_action":"The missing-read-index boundary now has a committed integration fixture, while the complete cognition/read catalog and Citation identity invariants remain green. Create a fresh exact-source C1 browser scope with the fixed original question, two heterogeneous tasks, and an isolated semantic follow-up; verify empty/new conversation bindings, real Source Citations, fresh Reviewer and loopback Web evidence. Keep verdict REWORK until all five independent tasks pass on one clean exact-source commit; do not claim ADVANCE from local tests."
+  "earliest_divergence":"browser-turn-scope-orchestration",
+  "next_action":"Treat run-276-c1-read-selection as C1 evidence only and keep the phase verdict REWORK. Rebind a fresh exact-source @5 artifact session on the unchanged clean candidate, then execute C2's fixed browser scope: q1 and q2 in one Conversation, q3 as an in-context clarification Turn, and q4/q5 as new questions. Require listener/browser evidence, real Source citations, fresh independent review, loopback delivery, and fail-closed receipts; do not claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
 }
