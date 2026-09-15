@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "8e644e8b5f91085b5e39eae413436927491d749a",
-  "candidate_tree": "dd6315952eb91692f89ca94a0f9dcd5fa3f2014a",
-  "candidate_worktree_digest": "sha256:733d14901582928cdf620f4fb5cc64b17a33bb9f2f35af7382bc0229e8ac2928",
+  "candidate_commit": "f501045a02e6b72ef90240d9fcde9e67ada9573f",
+  "candidate_tree": "b3c64c28020a41e377c5de0c603b14f25eaa65fc",
+  "candidate_worktree_digest": "sha256:327d82bc1ec040f74925e40c5386a4732f55aee25781ec750b2e8fadb94eefac",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T04:27:00+08:00",
+  "assessed_at": "2026-09-16T04:39:00+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -57,7 +57,7 @@
       "id": "candidate-source-projection-finding",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-284.md",
-      "sha256": "sha256:5d155de3355f1287f0302cba3965a218716b137274918f0558dc53da7e4cd1df"
+      "sha256": "sha256:5c65bf9b8c1dd71663d0efc5c11403bdd3ea9693e7722b56fc433859223cf758"
     },
     {
       "id": "candidate-run-279-finding",
@@ -75,7 +75,7 @@
       "id": "candidate-agent-tests",
       "scope": "candidate",
       "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:b3687827e931455e9854e91b6908a8be4bb4949fdac8b8d94045e4433ca573e1"
+      "sha256": "sha256:2cd79a1def8d37d836ff433d7456e26cd61459dabf3ea03daf790aec8a66295d"
     },
     {
       "id": "exact-source-readme",
@@ -96,7 +96,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The duplicate-proposal fuse prevented additional Tool dispatch, but the repaired Agent behavior still lacks fresh heterogeneous C2 evidence and parent-reported Browser DOM is not independently sealed (supervision runtime record run-280-c2-browser-rework.json). The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
+      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The generic fuse now has two heterogeneous deterministic trajectory fixtures (f501045), but fresh exact-source browser/C2 behavior remains unproven and the parent-reported Browser DOM is not independently sealed (supervision runtime record run-280-c2-browser-rework.json). The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -105,5 +105,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning",
-  "next_action": "Keep the phase verdict REWORK and do not count run-280 (or earlier run-277/run-279) as C2/phase closure. Preserve all raw trajectories and do not replay run-280. Treat the fixed no-progress fuse and fail-closed post-fuse behavior as the current contract; do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax any boundary. First obtain at least two heterogeneous Agent-planning trajectory rechecks on this unchanged exact candidate, then execute a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Keep Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged, and do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
+  "next_action": "Keep the phase verdict REWORK and do not count run-280 (or earlier run-277/run-279) as C2/phase closure. Preserve all raw trajectories and do not replay run-280. The current generic fuse is covered by two deterministic heterogeneous fixtures, but no fresh real runtime trajectory yet proves the repair on independent tasks. Execute fresh exact-source Agent trajectory rechecks on at least two heterogeneous tasks, then a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
