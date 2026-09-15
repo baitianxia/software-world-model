@@ -1,0 +1,74 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-284-agent-hetero-recheck",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:4f7206dab5c898008f81a584dddc00ad960db21338fda99ee5fdd5212f959714",
+  "turn_scope_sha256": "sha256:55d4aca1435db11af846de28e3ae869c4e63bf754ccee081ed1c6bd42edb4755",
+  "questions_sha256": "sha256:96d713cc0a0090c2425c2ceba53d4094ce9528dd8779dc6960a4652ddd54a614",
+  "terminal_file_sha256": "sha256:b92799afe1c30fa0be1f8705a1ab6f2e4dac2fb49c4dccf8153566d139de5d9c",
+  "terminal_digest": "sha256:86e5e0e22a93f04228d4005cef86c210b8d8e211a2744c791f411f63b9b8dc73",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 2,
+  "provider_dispatch_count": 22,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark-gateway.sqlite3": "sha256:73c87940afd8485502f997b296a39fc19c1da6e1c6c1328bdffe0d9361738edc",
+    "deepseek-gateway.sqlite3": "sha256:9cc1583197bb38b357ea5074094e5433452a9e1afd4a7dd355a52d0406d4c83b"
+  },
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-action-selection",
+  "browser_live_verification": "NOT_EXECUTED",
+  "browser_evidence_status": "NOT_RUN",
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "task": "RabbitMQ timeout-cancel message consumer chain",
+      "conversation": "conversation_d9019cf201b74668a431d45e1a5cc8cf",
+      "conversation_revision_before": 1,
+      "conversation_revision_after": 2,
+      "quality_status": "ACCEPTED",
+      "delivery_state": "AUTHORIZED",
+      "provider_dispatch_count": 11,
+      "failure_code": null,
+      "citation_count": 4,
+      "fresh_review": true,
+      "review_verdict": "APPROVED"
+    },
+    {
+      "ordinal": 2,
+      "task": "JWT security-filter authentication chain",
+      "conversation": "conversation_d9019cf201b74668a431d45e1a5cc8cf",
+      "conversation_revision_before": 2,
+      "conversation_revision_after": 3,
+      "quality_status": "ACCEPTED",
+      "delivery_state": "AUTHORIZED",
+      "provider_dispatch_count": 11,
+      "failure_code": null,
+      "citation_count": 5,
+      "fresh_review": true,
+      "review_verdict": "APPROVED"
+    }
+  ],
+  "sealed_trajectory": {
+    "ordinal_1": [
+      "RabbitMQ timeout-cancel task: SEARCH_COGNITION(RabbitMQ), SEARCH_COGNITION(@RabbitListener), READ_SOURCE indexes 2 and 1, SEARCH_COGNITION(cancelOrder), READ_SOURCE indexes 6, 7, and 5, FINISH; all reads were legal and non-repeated, fresh independent Reviewer APPROVED, and four exact SOURCE Citations were delivered."
+    ],
+    "ordinal_2": [
+      "JWT security-filter task: SEARCH_COGNITION(JwtAuthenticationTokenFilter), READ_SOURCE indexes 5 and 6, SEARCH_COGNITION(JwtTokenUtil), READ_SOURCE indexes 10, 12, 7, and 11, FINISH; all reads were legal and non-repeated, fresh independent Reviewer APPROVED, and five exact SOURCE Citations were delivered."
+    ]
+  },
+  "evidence": [
+    "run-284 session, turn-scope, and questions files are mode 0600 and bind product 3930afe/tree 2fa471, exact mall Source 0504e86b/tree 047d79, and cognition snapshot d552b3d8.",
+    "terminal.json SHA-256 is b92799afe1c30fa0be1f8705a1ab6f2e4dac2fb49c4dccf8153566d139de5d9c; sealed digest is 86e5e0e22a93f04228d4005cef86c210b8d8e211a2744c791f411f63b9b8dc73, with one Conversation, two Turns, 22 provider dispatches, zero retries, and STOPPED_AFTER_DISPATCH.",
+    "DeepSeek completed the two semantic trajectories over HTTP with no retries; the two Ark attempts failed before TLS/HTTP dispatch and are transport evidence, not semantic failures.",
+    "Both current-candidate tasks produced natural answers, exact-revision SOURCE Citations, fresh independent Reviewer APPROVED decisions, and authorized delivery at turn level.",
+    "No Browser DOM, unique POST, or loopback Web evidence was executed; the two-turn artifact therefore cannot satisfy the fixed five-turn C2 or phase closure contract."
+  ],
+  "next_action": "Keep REWORK/NOT_RUN for C2 and phase exit. This run supplies two current-candidate task successes, but it is not a fixed five-turn Browser run and must not be called C1/C2 closure or ADVANCE. Preserve the sealed evidence, obtain the required original plus two heterogeneous tasks with the fixed scope, then run a fresh exact-source C2 using q1+q2 in one Conversation, q3 clarification in that Conversation, and q4/q5 in separate empty Conversations, with immutable DOM/unique-POST records, exact Citations, fresh Review, and authorized Delivery.",
+  "advance_allowed": false
+}
