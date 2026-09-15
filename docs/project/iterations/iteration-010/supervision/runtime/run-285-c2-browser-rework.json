@@ -1,0 +1,75 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-285-c2-browser-ui",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:7c3df7699fc05588fae3daebf84cb0b153e88f48e678883aded6d14c8bdf4ec3",
+  "turn_scope_sha256": "sha256:34ff7875c89e9196dd06da6438c6fd2dc8b1bbb0bb06a85606415ff70f00ae63",
+  "questions_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+  "launch_file_sha256": "sha256:d014d987f3dac804dda4f45b3746469fefe6319a63a1edb100a24b6809e87d97",
+  "terminal_file_sha256": "sha256:cae1802f8a8859cade660e45414d4f35d941f0a31421bfe058536977126c861d",
+  "terminal_digest": "sha256:b65ab6cbb87fa8dea927c2a501055d9adb76ad8ee76492914b1515b84d7fc459",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 1,
+  "provider_dispatch_count": 7,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark-gateway.sqlite3": "sha256:8b60b3ce2d01b686c449793d23214d2a5204cfa66e483b22d567ab9c7042de05",
+    "deepseek-gateway.sqlite3": "sha256:83047fb1e4b232e638b285f7207a77be13145d3eb0735094f622723a2cf1d198"
+  },
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-budget",
+  "browser_live_verification": "REPORTED_BY_PARENT_UNSEALED",
+  "browser_evidence_status": "NOT_SEALED",
+  "post_fuse_non_finish_observed": false,
+  "sealed_primary_steps": [
+    {"step": 1, "tools_enabled": true, "action": "SEARCH_COGNITION", "query": "favorite"},
+    {"step": 2, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 3, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 4, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 5, "tools_enabled": false, "action": "FINISH", "response_kind": "LIMITATION"}
+  ],
+  "conversation_topology": {
+    "A": [1, 2, 3],
+    "B": [4],
+    "C": [5]
+  },
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "task": "Member favorite ownership and persistence path",
+      "conversation": "conversation_not_independently_sealed",
+      "quality_status": "NOT_ACCEPTED",
+      "delivery_state": "NOT_AUTHORIZED",
+      "provider_dispatch_count": 7,
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": true,
+      "review_verdict": "MORE_EVIDENCE"
+    },
+    {"ordinal": 2, "status": "NOT_RUN"},
+    {"ordinal": 3, "status": "NOT_RUN"},
+    {"ordinal": 4, "status": "NOT_RUN"},
+    {"ordinal": 5, "status": "NOT_RUN"}
+  ],
+  "trajectory_summary": [
+    "DeepSeek sealed inputs show SEARCH_COGNITION(favorite) returned no cognition items, followed by SEARCH_SOURCE(favorite) with no source items and a boundary result.",
+    "The Primary repeated the same no-hit SEARCH_SOURCE(favorite) proposal after Application no-progress feedback; the generic fuse then closed tools and the Primary emitted a truthful LIMITATION without Citation.",
+    "The fresh independent Reviewer returned MORE_EVIDENCE; the Application failed closed with BUDGET_EXHAUSTED. It did not synthesize a Citation, rewrite the answer, relax decoding, or deliver unsupported evidence.",
+    "DeepSeek completed six HTTP calls with identity normalization and no post-dispatch failures. Ark had one pre-dispatch TLS failure and zero HTTP calls; this transport event is not the earliest semantic divergence.",
+    "The parent reported a real in-app Browser POST, but no immutable Browser DOM/POST artifact is present in the run directory, so Browser evidence is not independently sealed."
+  ],
+  "evidence": [
+    "run-285 session.json and turn-scope.json are mode 0600 and bind product 3930afe/tree 2fa471, exact mall Source 0504e86b/tree 047d79, and cognition sha256:d552b3d8.",
+    "run-285 terminal.json SHA-256 is cae1802f8a8859cade660e45414d4f35d941f0a31421bfe058536977126c861d; sealed digest is b65ab6cbb87fa8dea927c2a501055d9adb76ad8ee76492914b1515b84d7fc459, with one conversation, one turn, seven provider dispatches, zero retries, and STOPPED_AFTER_DISPATCH.",
+    "The fixed scope declares A=[1,2,3], B=[4], C=[5], but q2-q5 were not dispatched after q1 failed; no C2 closure is possible.",
+    "The DeepSeek Gateway raw manifests preserve the no-hit cognition/source observations, repeated proposal, no-progress feedback, tools_enabled=false boundary, truthful LIMITATION, and fresh Reviewer MORE_EVIDENCE. This is an Agent evidence-planning/convergence trajectory, not a cognition or Provider schema failure.",
+    "No independent Browser DOM/unique-POST artifact exists; the parent live report is retained only as unsealed context and cannot support ADVANCE."
+  ],
+  "next_action": "Keep REWORK/NOT_RUN and do not replay run-285. Do not change Prompt, Schema, Provider, decoder, Reviewer, budget, or question text, and do not synthesize evidence after the no-progress fuse. Treat the earliest divergence as Agent no-hit search planning/convergence; obtain a fresh original plus two heterogeneous trajectories on an exact-source candidate, then run the complete fixed-topology C2 Browser path with immutable DOM/unique-POST, exact Citations, fresh Review, and authorized Delivery before considering ADVANCE.",
+  "advance_allowed": false
+}
