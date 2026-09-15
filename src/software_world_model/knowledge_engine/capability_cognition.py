@@ -662,19 +662,26 @@ class CapabilityCognitionIndex:
         # relevance, Source identity and authority are unchanged.
         navigation_window = 12
         prefix = expanded[:navigation_window]
-        if len(prefix) == navigation_window and all(
-            item[3].kind is CognitionEntityKind.TYPE for item in prefix
+        if len(prefix) == navigation_window and not any(
+            item[3].kind is CognitionEntityKind.METHOD
+            and any(token in _tokens(item[3].name) for token in query_tokens)
+            for item in prefix
         ):
-            method_index = next(
-                (
-                    position
-                    for position, item in enumerate(expanded[navigation_window:], navigation_window)
-                    if item[3].kind is CognitionEntityKind.METHOD
-                    and item[:2] == prefix[-1][:2]
-                    and any(token in _tokens(item[3].name) for token in query_tokens)
+            method_candidates = [
+                (position, item)
+                for position, item in enumerate(expanded[navigation_window:], navigation_window)
+                if item[3].kind is CognitionEntityKind.METHOD
+                and any(token in _tokens(item[3].name) for token in query_tokens)
+            ]
+            method_index = min(
+                method_candidates,
+                key=lambda candidate: (
+                    candidate[1][0],
+                    candidate[1][1],
+                    candidate[1][2],
                 ),
-                None,
-            )
+                default=(None, None),
+            )[0]
             if method_index is not None:
                 expanded.insert(navigation_window - 1, expanded.pop(method_index))
         selected, next_cursor = _page(expanded, cursor, limit)
