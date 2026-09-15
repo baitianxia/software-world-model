@@ -341,3 +341,18 @@ query, budget, Provider, Reviewer, or Citation identity is changed. The Source
 contract above owns this ordering behavior. These deterministic checks do not
 establish autonomous Agent success; fresh C1 and C2 evidence remains required,
 and q1's separate Citation-selection failure remains unresolved.
+
+## Fresh run-269 evidence
+
+On clean product `458ea24`, a new authorized loopback run started the listener,
+accepted four real Web turns (34 provider dispatches total), produced Citations
+and fresh reviews, and stopped with a terminal receipt. The first turn replayed
+the payment/inventory question after the hint integration. Its Agent searched
+the broad cognition query, read only the first four returned candidates, and
+finished; it never paged cognition or issued the exact `updateSkuStock` search.
+The cognition-path hint therefore was not exercised in this trajectory. All
+four outer quality results were `NOT_ACCEPTED` despite turn-level technical
+completion, so this run is evidence of a remaining Agent evidence-gap planning
+failure, not C1 closure or a Source-ranking success. The run had no replay or
+post-dispatch unknown. The earlier run-268 preparation failure had zero model
+calls and is a separate environment precondition result.
