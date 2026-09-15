@@ -560,6 +560,46 @@ class _RepeatedNoProgressSearchModel(_Model):
         )
 
 
+class _CognitionEmptyThenRepeatedSearchModel(_RepeatedNoProgressSearchModel):
+    """Exercise the heterogeneous cognition-empty to Source-search path."""
+
+    def decide(self, request):
+        self.steps.append(request)
+        if not request.observations:
+            action = LightweightAgentAction.SEARCH_COGNITION
+            query = "unresolved-cognition-term"
+        else:
+            action = LightweightAgentAction.SEARCH_SOURCE
+            query = "unresolved-cognition-term"
+        if request.tools_enabled:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Use cognition, then the bounded Source fallback for the gap.",
+                action=action,
+                query=query,
+                read_index=None,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="The bounded investigation cannot establish the claim.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.LIMITATION,
+                answer="当前证据不足以确认该行为。",
+                citations=(),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 class _NoProgressTool(_SourceTool):
     def execute(self, request):
         result = super().execute(request)
@@ -1305,6 +1345,34 @@ class LightweightEngineeringAgentTest(unittest.TestCase):
             ["NO_PROGRESS", "REPEATED_ACTION"],
         )
         self.assertFalse(model.steps[-1].tools_enabled)
+
+    def test_cognition_empty_then_repeated_source_search_also_closes_fuse(self) -> None:
+        model = _CognitionEmptyThenRepeatedSearchModel()
+        tool = _NoProgressTool()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=LightweightAgentTraceStore(),
+            attempt_ref="attempt-cognition-empty-source-repeat",
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=8,
+                maximum_tool_actions=3,
+                maximum_consecutive_no_progress=2,
+            ),
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="复现认知无命中后的源码搜索收敛。",
+        )
+        self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
+        self.assertEqual(len(tool.calls), 1)
 
     def test_observation_projection_preserves_resolver_ordinals(self) -> None:
         navigation = _navigation_candidate(1, resource="src/Entry.java")

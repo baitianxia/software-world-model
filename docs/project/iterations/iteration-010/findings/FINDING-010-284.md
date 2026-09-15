@@ -35,3 +35,5 @@ run-277/run-279 的两个异质无命中轨迹进一步确认：重复的未执�
 定向测试 `test_repeated_no_progress_searches_close_fuse_without_extra_tool_dispatch`
 固定验证该行为：一次实际搜索后，重复提案不再产生 Tool dispatch，熔断关闭并
 进入经审核的 limitation；现有重复读取形状也继续通过。
+异质夹具 `test_cognition_empty_then_repeated_source_search_also_closes_fuse`
+进一步覆盖 cognition 无命中后转入 Source 搜索的相同收敛边界。
