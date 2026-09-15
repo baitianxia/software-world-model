@@ -4578,12 +4578,10 @@
   "FINDING-010-284": {
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-284.md",
     "code": [
-      "src/software_world_model/application_services/conversational_engineering_tools.py",
       "src/software_world_model/application_services/lightweight_engineering_agent.py"
     ],
     "tests": [
-      "tests/test_lightweight_engineering_agent.py",
-      "tests/test_conversational_engineering_tools.py"
+      "tests/test_lightweight_engineering_agent.py"
     ]
   },
   "ITER-001-DESIGN-INDEX": {

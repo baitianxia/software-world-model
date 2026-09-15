@@ -61,6 +61,7 @@ from software_world_model.application_services.lightweight_engineering_agent imp
     SealedLightweightDeliveryControl,
     _LightweightReadNavigationMetadata,
     _ordered_read_candidates,
+    _project_cognition_page_with_source_unique_paths,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -72,6 +73,7 @@ from software_world_model.cross_cutting import (
 )
 from software_world_model.knowledge_engine.capability_cognition import (
     CapabilityCognitionIndex,
+    CognitionPage,
     CognitionDirection,
     CognitionEntityKind,
     CognitionProvenance,
@@ -3895,6 +3897,35 @@ class MultiMethod implements MultiContract {
             ),
             0,
         )
+
+
+class CognitionProjectionTest(unittest.TestCase):
+    def test_only_duplicate_method_paths_are_collapsed(self) -> None:
+        digest = Digest("sha256:" + "0" * 64)
+        provenance = lambda path, line: {
+            "source_revision": REVISION,
+            "source_tree": "b" * 40,
+            "path": path,
+            "start_line": line,
+            "end_line": line,
+            "content_digest": digest.value,
+            "evidence_kind": "JAVA_METHOD",
+            "locator": f"{path}:L{line}-L{line}",
+        }
+        items = (
+            {"kind": "TYPE", "provenance": provenance("A.java", 1)},
+            {"kind": "METHOD", "provenance": provenance("A.java", 2)},
+            {"kind": "METHOD", "provenance": provenance("A.java", 3)},
+            {"kind": "METHOD", "provenance": provenance("B.java", 1)},
+            {"kind": "TYPE", "provenance": provenance("C.java", 1)},
+            {"kind": "METHOD", "provenance": provenance("C.java", 2)},
+        )
+        page = CognitionPage("SEARCH_COGNITION", items, 6, 6, digest, {})
+        projected = _project_cognition_page_with_source_unique_paths(page)
+        self.assertEqual(len(projected.items), 3)
+        self.assertEqual([item["provenance"]["path"] for item in projected.items], ["A.java", "B.java", "C.java"])
+        self.assertEqual(projected.total, 6)
+        self.assertEqual(projected.next_cursor, 6)
 
 
 if __name__ == "__main__":

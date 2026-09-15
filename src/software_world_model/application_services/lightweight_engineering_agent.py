@@ -539,9 +539,9 @@ def _project_cognition_page_with_source_unique_paths(
 
     The cognition index may contain several declarations in one source file,
     while the controlled navigation capability is intentionally path-scoped.
-    Retain one representative per path in this Agent projection (prefer a
-    METHOD over a TYPE), while leaving the underlying snapshot and pagination
-    cursor unchanged so refinement can reach omitted siblings.
+    Retain the first representative per path in this Agent projection. The
+    underlying snapshot and cursor remain unchanged; omitted same-path siblings
+    are intentionally a cognition-only pagination omission, not Source evidence.
     """
     selected: list[dict[str, object]] = []
     positions: dict[str, int] = {}
@@ -557,14 +557,7 @@ def _project_cognition_page_with_source_unique_paths(
             selected.append(item)
             continue
         existing = selected[existing_position]
-        # Only collapse duplicate METHOD declarations sharing one path.  A
-        # TYPE plus its method companions remain visible because their
-        # source-facing roles differ and existing fixtures rely on that.
-        if (
-            existing.get("kind") == CognitionEntityKind.METHOD.value
-            and item.get("kind") == CognitionEntityKind.METHOD.value
-        ):
-            continue
+        continue
     if len(selected) == len(page.items):
         return page
     return CognitionPage(
