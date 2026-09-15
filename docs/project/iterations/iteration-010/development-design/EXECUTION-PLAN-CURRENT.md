@@ -37,11 +37,11 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 
 ## 2. 代码现状与已完成能力
 
-- 最近产品代码候选为 `abcb5af`；其后仅有文档绑定提交，来源是公开 mall exact revision
+- 最近候选为 `f501045a02e6b72ef90240d9fcde9e67ada9573f`（新增异质 Agent fuse 夹具，运行代码 parent `254d33f`）；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
 - 世界模型已有可供 Agent 使用的结构、关系和详情能力；但最近运行表明它仍可能只给出导航候选，不能保证问题所需的完整行为链。最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
-- Agent 已有重复动作/无进展恢复和有限 replan 能力；`254d33f` 对未执行重复提案应用同一收敛熔断，记录于 FINDING-010-284。run279 暴露的无命中后重复搜索现已有最小通用修复，但仍需 fresh 异质运行验证。
+- Agent 已有重复动作/无进展恢复和有限 replan 能力；`254d33f` 对未执行重复提案应用同一收敛熔断，`f501045` 增加两个异质确定性夹具，记录于 FINDING-010-284。run279 暴露的无命中后重复搜索现已有最小通用修复，仍需 fresh 运行验证。
 - 开发记录中的 `run-255` 表明原问题加两个异质问题曾完成 C1 轨迹，但当前监督分支没有针对该运行及其后续候选形成新的独立 `ADVANCE` 评估，不能把开发方记录直接当作阶段完成。
 - 最新 `run-267-citation-plan-recheck` 仍未通过：q1 因引用超出已交付证据而 `CONTROL_STATE_DENIED`，q3 因审核要求补证后预算耗尽，只有 q4 成功。较早候选上的 C2 成功记录不能直接继承给当前 HEAD。
 - 当前监督 assessment 已绑定最新候选并保持 `FRESH/REWORK`；run279 已封存为 C2 REWORK/NOT_RUN，254d33f 的收敛修复仍需 fresh 异质运行验证。
