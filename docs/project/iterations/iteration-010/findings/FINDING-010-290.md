@@ -22,3 +22,8 @@ target: src/software_world_model/application_services/lightweight_engineering_ag
 未消费候选时保留 Source 路径，继续使用原有 READ 预算和 authority receipt；
 不会增加预算、协议字段、Provider 或题面规则。无未消费候选时仍按原契约
 fail-closed。现有 lightweight Agent 定向套件 34/34 通过。
+
+run-292 还暴露固定 `maximum_agent_steps` 的最后一步可能被合法 Tool 动作占用，
+导致同一 Agent 没有机会在 `tools_enabled=false` 的状态下综合已有证据。Application
+现在从原有固定步数中保留最后一步用于 FINISH；这是预算内重排，不增加任何
+Agent、Tool、Provider 或 Reviewer dispatch。定向套件继续为 34/34 PASS。
