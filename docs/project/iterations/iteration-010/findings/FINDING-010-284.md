@@ -20,6 +20,7 @@ run-275 的 q1 证明宽 cognition 页可暴露目标方法，但非 SOURCE 实�
 受控 Source read 选项中省略，导致模型把 cognition ordinal 当作 read ordinal
 而触发 `CONTROL_STATE_DENIED`。一次尝试的 Application ordinal alias 已撤回，
 不作为产品能力或验证证据；当前状态是 capped cognition/read-option projection
-缺口，需在 bridge 层使 eligible SOURCE 方法获得稳定候选，或一致排除。run-275
-的 q2/q3 已真实完成读取但整体质量仍未接受；新的 C1 successor 仍需验证 q1
-补证闭环。
+缺口。当前修复在 Agent-facing cognition projection 中仅折叠同一路径的重复
+METHOD，保留底层快照、cursor、Citation identity 与 Source 权限不变，使
+cognition-facing ordinal 与受控 path option 域一致。run-275 的 q2/q3 已真实
+完成读取但整体质量仍未接受；新的 C1 successor 仍需验证 q1 补证闭环。
