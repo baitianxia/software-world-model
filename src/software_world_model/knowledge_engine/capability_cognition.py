@@ -674,20 +674,16 @@ class CapabilityCognitionIndex:
                 if item[3].kind is CognitionEntityKind.METHOD
                 and any(token in _tokens(item[3].name) for token in query_tokens)
             ]
-            while len(matching_positions) < 2 and method_candidates:
-                method_index, _ = min(
-                    method_candidates,
-                    key=lambda candidate: (candidate[1][0], candidate[1][1], candidate[1][2]),
-                )
-                insert_position = navigation_window - 1 - len(matching_positions)
-                expanded.insert(insert_position, expanded.pop(method_index))
-                matching_positions.append(insert_position)
-                method_candidates = [
-                    (position, item)
-                    for position, item in enumerate(expanded[navigation_window:], navigation_window)
-                    if item[3].kind is CognitionEntityKind.METHOD
-                    and any(token in _tokens(item[3].name) for token in query_tokens)
-                ]
+            need = min(2 - len(matching_positions), len(method_candidates))
+            promoted = sorted(
+                (item for _, item in method_candidates),
+                key=lambda item: (item[0], item[1], item[2]),
+            )[:need]
+            promoted_ids = {item[3].entity_id for item in promoted}
+            if promoted:
+                expanded = [item for item in expanded if item[3].entity_id not in promoted_ids]
+                insert_position = navigation_window - need
+                expanded[insert_position:insert_position] = promoted
         selected, next_cursor = _page(expanded, cursor, limit)
         items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
         return CognitionPage(

@@ -394,3 +394,13 @@ stopped with a terminal receipt and no replay or post-dispatch unknown. This is
 progress on runner/Conversation correctness and heterogeneous evidence, but it
 does not satisfy the C1 requirement that the original failure and two unseen
 heterogeneous tasks all close successfully.
+### 2026-09-15 broad cognition method cohort
+
+The cognition search navigation window now promotes a stable cohort of up to two
+matching METHOD entities when a broad query is otherwise dominated by TYPE entities.
+This is a generic knowledge-layer retrieval change; it preserves the complete entity
+domain, deterministic pagination, entity identity, and TYPE-only ordering. The
+change is intended to make unconsumed method contracts available to the existing
+Agent evidence planner without changing prompts, schemas, providers, budgets, or
+question-specific behavior. Targeted cognition and conversation tests pass; live C1
+evidence remains pending until an exact-commit loopback run completes.
