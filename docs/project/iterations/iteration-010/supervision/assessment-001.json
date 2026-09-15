@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T05:01:00+08:00",
+  "assessed_at": "2026-09-16T05:24:34+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -102,8 +102,18 @@
         "phase-c-current-execution-plan",
         "candidate-slice-binding"
       ]
+    },
+    {
+      "severity": "MAJOR",
+      "owner_layer": "agent-evidence-planning-and-action-selection",
+      "summary": "The independently sealed run-283 heterogeneous recheck on the current clean candidate supplies a legal read_candidates catalog after SEARCH_COGNITION(role), but the Primary selected unavailable read_index 12, repeated a completed read, proposed SEARCH_SOURCE after that action was unavailable, and exhausted the fixed budget before FINISH; no Citation, fresh Review, or Delivery resulted. The same run's cart task read all four legal candidates and reached three exact SOURCE Citations plus a fresh Reviewer APPROVED decision, so the defect is an Agent/model action-selection trajectory rather than missing cognition, Source authority, or Provider schema. Browser/C2 and the required original-plus-two-heterogeneous closure remain unproven.",
+      "evidence_ids": [
+        "candidate-agent-projection-implementation",
+        "candidate-agent-tests",
+        "candidate-slice-binding"
+      ]
     }
   ],
   "earliest_divergence": "agent-evidence-planning",
-  "next_action": "Keep the phase verdict REWORK and do not count run-280 (or earlier run-277/run-279) as C2/phase closure. Preserve all raw trajectories and do not replay run-280. The current generic fuse is covered by two deterministic heterogeneous fixtures, but no fresh real runtime trajectory yet proves the repair on independent tasks. Execute fresh exact-source Agent trajectory rechecks on at least two heterogeneous tasks, then a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
+  "next_action": "Keep the phase verdict REWORK and do not count run-280, run-282, or run-283 as C2/phase closure. Preserve all raw trajectories and do not replay them. Run-283 proves one heterogeneous cart path but its original-role path still ignored legal read indexes and exhausted the fixed budget; obtain a second independent heterogeneous Agent trajectory or a generic Agent-layer repair with sealed evidence covering legal read-index adherence, unread-candidate prioritization, and no repeated actions. Then rerun the original plus two heterogeneous tasks on a fresh exact-source candidate, followed by a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
