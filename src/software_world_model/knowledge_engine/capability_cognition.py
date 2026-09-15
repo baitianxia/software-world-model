@@ -662,28 +662,31 @@ class CapabilityCognitionIndex:
         # relevance, Source identity and authority are unchanged.
         navigation_window = 12
         prefix = expanded[:navigation_window]
-        if len(prefix) == navigation_window and not any(
-            item[3].kind is CognitionEntityKind.METHOD
-            and any(token in _tokens(item[3].name) for token in query_tokens)
-            for item in prefix
-        ):
+        if len(prefix) == navigation_window:
+            matching_positions = [
+                position for position, item in enumerate(prefix)
+                if item[3].kind is CognitionEntityKind.METHOD
+                and any(token in _tokens(item[3].name) for token in query_tokens)
+            ]
             method_candidates = [
                 (position, item)
                 for position, item in enumerate(expanded[navigation_window:], navigation_window)
                 if item[3].kind is CognitionEntityKind.METHOD
                 and any(token in _tokens(item[3].name) for token in query_tokens)
             ]
-            method_index = min(
-                method_candidates,
-                key=lambda candidate: (
-                    candidate[1][0],
-                    candidate[1][1],
-                    candidate[1][2],
-                ),
-                default=(None, None),
-            )[0]
-            if method_index is not None:
+            while len(matching_positions) < 2 and method_candidates:
+                method_index, _ = min(
+                    method_candidates,
+                    key=lambda candidate: (candidate[1][0], candidate[1][1], candidate[1][2]),
+                )
                 expanded.insert(navigation_window - 1, expanded.pop(method_index))
+                matching_positions.append(navigation_window - 1)
+                method_candidates = [
+                    (position, item)
+                    for position, item in enumerate(expanded[navigation_window:], navigation_window)
+                    if item[3].kind is CognitionEntityKind.METHOD
+                    and any(token in _tokens(item[3].name) for token in query_tokens)
+                ]
         selected, next_cursor = _page(expanded, cursor, limit)
         items = tuple(self._entity_summary(item[3], score=-item[0]) for item in selected)
         return CognitionPage(
