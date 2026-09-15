@@ -37,7 +37,7 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 
 ## 2. 代码现状与已完成能力
 
-- 最近产品候选是开发分支 clean HEAD `254d33f6c8ac1859906385f5f1f3ac8f504e6d39`（tree `ab00d31dcd38d1b7f58e394e1313593c43ce6420`）；来源是公开 mall exact revision
+- 最近产品候选是开发分支 clean HEAD `abcb5af`（tree `ad1e4dc3f713661a56c919174c6064d47e0d0a5b`）；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
 - 世界模型已有可供 Agent 使用的结构、关系和详情能力；但最近运行表明它仍可能只给出导航候选，不能保证问题所需的完整行为链。最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
