@@ -1283,6 +1283,11 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         or unavailable_read_selection
                         and decision.read_index in blocked_source_read_indexes
                     )
+                    if unavailable_read_selection and decision.read_index in blocked_source_read_indexes:
+                        raise DomainError(
+                            ErrorCode.CONTROL_STATE_DENIED,
+                            "lightweight Agent repeated an unavailable read candidate",
+                        )
                     if unavailable_read_selection and not action_repeated:
                         blocked_source_read_indexes.add(decision.read_index)
                         events.append({
