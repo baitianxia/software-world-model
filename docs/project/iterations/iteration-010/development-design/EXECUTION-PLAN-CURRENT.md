@@ -37,11 +37,11 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 
 ## 2. 代码现状与已完成能力
 
-- 最近产品候选是开发分支 clean HEAD `940566c610ef101b70407179353fc8f744a14643`；来源是公开 mall exact revision
+- 最近产品候选是开发分支 clean HEAD `efb8abb9b1e0f9a9f47094447c1cb08560ef77ef`；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
 - 世界模型已有可供 Agent 使用的结构、关系和详情能力；但最近运行表明它仍可能只给出导航候选，不能保证问题所需的完整行为链。最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
-- Agent 已有重复动作/无进展恢复和有限 replan 能力；自 `8e9f1b6` 后又产生大量候选修复，最新提交 `940566c` 撤销了未经证实的引用模态投影。代码能力有增量，但当前还没有稳定的通用 Agent 证据链。
+- Agent 已有重复动作/无进展恢复和有限 replan 能力；自 `8e9f1b6` 后又产生大量候选修复，最新提交 `efb8abb` 撤销了未经证实的引用模态投影。代码能力有增量，但当前还没有稳定的通用 Agent 证据链。
 - 开发记录中的 `run-255` 表明原问题加两个异质问题曾完成 C1 轨迹，但当前监督分支没有针对该运行及其后续候选形成新的独立 `ADVANCE` 评估，不能把开发方记录直接当作阶段完成。
 - 最新 `run-267-citation-plan-recheck` 仍未通过：q1 因引用超出已交付证据而 `CONTROL_STATE_DENIED`，q3 因审核要求补证后预算耗尽，只有 q4 成功。较早候选上的 C2 成功记录不能直接继承给当前 HEAD。
 - 当前监督心跳为 `STALE`，开发任务也不在运行；这属于执行状态缺口，必须先恢复监督绑定和当前 HEAD 评估，不能继续无证据追加修复。
@@ -126,7 +126,7 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 
 ### N0 — 先完成一次最小根因定位（不先改产品代码）
 
-恢复开发任务并重新绑定当前 clean HEAD `940566c` 与监督任务。以最新 q1/q3 失败轨迹为入口，逐步对账世界模型候选、实际源码读取、Agent model view、
+恢复开发任务并重新绑定当前 clean HEAD `efb8abb` 与监督任务。以最新 q1/q3 失败轨迹为入口，逐步对账世界模型候选、实际源码读取、Agent model view、
   Citation binding、审核结果和预算消耗，明确最早责任层；不得把 Provider 状态、测试数量或最终拒绝码直接当作根因。若仅凭 sealed 证据无法区分
   cognition 覆盖和 Agent 规划，再做一次最小可复现运行，不扩展问题集。N0 必须在同一开发轮内完成并进入 N1，不能停在“已完成分析”。
 
