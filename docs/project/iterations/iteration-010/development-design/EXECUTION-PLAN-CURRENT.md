@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 slice: ITER-010-SLICE-001
 coding_input: true
-as_of: 2026-09-11
+as_of: 2026-09-15
 ---
 
 # ITER-010 当前执行计划
@@ -24,16 +24,27 @@ Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也
 目标不是先完成内部协议，而是尽快形成真实可用的浏览器 Chat，再用小样本验证方向，最后才夯实实现。普通失败、模型失败、网络失败和
 定向测试失败都留在本开发闭环中，不能把开发任务暂停或变成新的授权请求。
 
+本轮讨论补充并固定以下运行原则，但不改变既有架构契约：
+
+- **软件世界模型不是文字手册或答案库。** 它必须表达指定版本工程的实体、结构、关系、行为、边界、覆盖范围、来源和检索入口，作为 Agent
+  的可复用系统认知。只有 locator、导航关系或不完整索引，不能宣称认知闭包。
+- **Agent 是自适应的问题解决者。** 它负责理解问题、选择世界模型视图、按证据缺口读取源码、组织回答和处理追问；模型负责推理与表达。
+  世界模型提供认知和入口，源码是最终事实依据，回答不能只凭世界模型导航信息生成。
+- **世界模型失配必须可降级。** 当认知覆盖不足或检索没有命中时，Agent 必须继续走通用源码搜索；不能把错误的候选投影、固定动作或预算熔断
+  当成答案。World Model + source 要优于 source-only 是待验证产品假设，不是当前实现的前提。
+- **每次失败先判责任层再改动。** 先区分 knowledge construction、cognition retrieval、Agent planning/tool、synthesis/citation、review、Web
+  和 Provider；没有证明最早偏差前，不得改 Prompt、Schema、答案检查或单题逻辑碰答案。
+
 ## 2. 代码现状与已完成能力
 
-- 最近产品候选是开发分支 clean HEAD `8e9f1b6e149348379789583c209c37d0f29ed8df`；来源是公开 mall exact revision
+- 最近产品候选是开发分支 clean HEAD `940566c610ef101b70407179353fc8f744a14643`；来源是公开 mall exact revision
   `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
-- 世界模型已有可供 Agent 使用的结构、关系和详情能力；最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
+- 世界模型已有可供 Agent 使用的结构、关系和详情能力；但最近运行表明它仍可能只给出导航候选，不能保证问题所需的完整行为链。最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
   Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
-- Agent 已有重复动作/无进展恢复和有限 replan 能力；`e1b4e86` 修复了重复动作被应用层拒绝后错误消耗 Tool 预算的问题，但只完成了 C1 的一个局部闭环，尚无新的完整 Web 体验证据，不代表 Phase C 或 MVP 已完成。
-- 当前独立监督对 `8e9f1b6` 的结论为 `CORRECT_WITH_ACTION`，但明确禁止推进：C1 仍缺原失败轨迹和两个异质任务的运行证据。
-- 最近的 C2 运行 `run-193-phase-c-loopback` 也不能作为 Alpha：q1/q2 虽同一会话，q3 被错误地开成独立会话，启动收据仍是
-  `ARTIFACT_SESSION_PREPARED_NOT_STARTED`，终止收据显示只形成 4 个会话且生产未执行。
+- Agent 已有重复动作/无进展恢复和有限 replan 能力；自 `8e9f1b6` 后又产生大量候选修复，最新提交 `940566c` 撤销了未经证实的引用模态投影。代码能力有增量，但当前还没有稳定的通用 Agent 证据链。
+- 开发记录中的 `run-255` 表明原问题加两个异质问题曾完成 C1 轨迹，但当前监督分支没有针对该运行及其后续候选形成新的独立 `ADVANCE` 评估，不能把开发方记录直接当作阶段完成。
+- 最新 `run-267-citation-plan-recheck` 仍未通过：q1 因引用超出已交付证据而 `CONTROL_STATE_DENIED`，q3 因审核要求补证后预算耗尽，只有 q4 成功。较早候选上的 C2 成功记录不能直接继承给当前 HEAD。
+- 当前监督心跳为 `STALE`，开发任务也不在运行；这属于执行状态缺口，必须先恢复监督绑定和当前 HEAD 评估，不能继续无证据追加修复。
 
 ## 3. 只做以下四个开发包（顺序固定）
 
@@ -113,12 +124,18 @@ exact-source 评测、完整契约、全量回归、跨工程、性能和发布�
 当前开发任务继续使用 `codex/development`，监督任务继续使用 `codex/supervision`。以下三个动作属于同一轮连续开发；完成一个局部提交、定向测试或配置
 校验都不能结束本轮。
 
+### N0 — 先完成一次最小根因定位（不先改产品代码）
+
+恢复开发任务并重新绑定当前 clean HEAD `940566c` 与监督任务。以最新 q1/q3 失败轨迹为入口，逐步对账世界模型候选、实际源码读取、Agent model view、
+  Citation binding、审核结果和预算消耗，明确最早责任层；不得把 Provider 状态、测试数量或最终拒绝码直接当作根因。若仅凭 sealed 证据无法区分
+  cognition 覆盖和 Agent 规划，再做一次最小可复现运行，不扩展问题集。N0 必须在同一开发轮内完成并进入 N1，不能停在“已完成分析”。
+
 ### N1 — 闭合 C1 的通用 Agent 证据规划
 
-以 `8e9f1b6` 为候选，不先改产品代码。先重放原始 Reviewer `MORE_EVIDENCE` 失败轨迹，再运行两个未参与修复的异质问题。每条轨迹必须
-证明：同一预算内选择了与 Gap 相关且尚未消费的 cognition/Source candidate；不重复搜索、读取或分派；保留原有 Source/Citation identity；补证后
-确实进入审核，而不是只返回测试通过。若原失败仍出现，按最早责任层做一次通用修复，再重放原轨迹加两个异质问题。不能用增加预算、题面分支、Prompt/Schema
-或 Reviewer 规则替代修复。
+以 N0 确认的最早责任层为准。若责任在世界模型，先补齐通用的行为/关系/覆盖/来源或检索入口；若责任在 Agent，修复通用的证据规划和重规划；
+若责任在 Source、Citation 或 Review，只修复其通用契约。原始 `MORE_EVIDENCE` 轨迹和两个未参与修复的异质问题必须全部重放，证明：Agent 能在
+世界模型不足时继续通用源码搜索；能在同一预算内选择相关且未消费的证据；不重复搜索、读取或分派；保留 Source/Citation identity；补证后确实进入
+审核。不能用增加预算、题面分支、Prompt/Schema、引用重编号或 Reviewer 放宽替代修复。
 
 N1 的完成条件是“运行轨迹证据齐全”，不是 `22/22` 之类的单元测试数量。监督在证据齐全前不得允许进入 C1.5。
 
