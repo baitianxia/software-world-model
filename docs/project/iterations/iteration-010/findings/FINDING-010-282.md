@@ -342,6 +342,18 @@ contract above owns this ordering behavior. These deterministic checks do not
 establish autonomous Agent success; fresh C1 and C2 evidence remains required,
 and q1's separate Citation-selection failure remains unresolved.
 
+## Fresh run-270 C1 recheck
+
+The next fresh run used clean `7b309c0` and the original coupon question. The
+Agent searched cognition, read two candidates, performed two generic Source
+searches and additional reads, then finished without Citations; fresh review
+requested more evidence after 11 dispatches and the bounded read-only budget
+closed. The follow-up turn stayed in the same Conversation but returned an
+explicit HTTP 409 revision conflict before a model response, so it was not
+replayed and no later questions were submitted. The run produced no
+post-dispatch unknown. This confirms the original evidence-gap planning failure
+persists; it does not establish C1 closure or allow entry to C2.
+
 ## Fresh run-269 evidence
 
 On clean product `458ea24`, a new authorized loopback run started the listener,
