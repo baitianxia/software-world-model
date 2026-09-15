@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T05:40:38+08:00",
+  "assessed_at": "2026-09-16T05:46:00+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -96,7 +96,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The generic fuse now has two heterogeneous deterministic trajectory fixtures and is documented/bound by clean candidate 3930afe4cab82ec621730a902f700e4ad0d9690d, but fresh exact-source browser/C2 behavior remains unproven and the parent-reported Browser DOM is not independently sealed (supervision runtime record run-280-c2-browser-rework.json). The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
+      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The same no-hit planning pattern recurred in run-285 on current product 3930afe, where the no-progress fuse closed tools and the turn failed closed; its parent-reported Browser POST has no immutable supervision artifact. The generic fuse has two heterogeneous deterministic trajectory fixtures and is documented/bound by clean candidate 3930afe4cab82ec621730a902f700e4ad0d9690d, but fresh exact-source browser/C2 behavior remains unproven. The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -115,5 +115,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning",
-  "next_action": "Keep the phase verdict REWORK and do not count run-280, run-282, run-283, or run-284 as C2/phase closure. Preserve all raw trajectories and do not replay them. Run-284 supplies two current-candidate task-level successes, but the required original-plus-two-heterogeneous closure is not sealed and no Browser/CUA evidence exists; obtain the remaining original-role success, then run a fresh exact-source C2 successor with q1+q2 in one Conversation, q3 clarification in that Conversation, q4/q5 in separate empty Conversations, immutable per-ordinal DOM/unique-POST artifacts, exact Citations, fresh independent Review, and authorized Delivery. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
+  "next_action": "Keep the phase verdict REWORK and do not count run-280, run-282, run-283, run-284, or run-285 as C2/phase closure. Preserve all raw trajectories and do not replay them. Run-284 supplies two current-candidate task-level successes, while run-285 reproduces a no-hit Agent planning/convergence failure; the required original-plus-two-heterogeneous closure is not sealed and no Browser/CUA evidence is independently sealed. Obtain the remaining original-role success, then run a fresh exact-source C2 successor with q1+q2 in one Conversation, q3 clarification in that Conversation, q4/q5 in separate empty Conversations, immutable per-ordinal DOM/unique-POST artifacts, exact Citations, fresh independent Review, and authorized Delivery. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
