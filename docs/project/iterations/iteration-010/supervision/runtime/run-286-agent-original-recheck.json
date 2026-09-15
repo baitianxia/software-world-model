@@ -1,0 +1,77 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-286-agent-original-recheck",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:8a4ab0ac12152130702e2f58431d21220527c9a7fd03998cf8b681c05eab4c6c",
+  "turn_scope_sha256": "sha256:0fd773cdc89a1ebef257a43a013a73113e311bccc3223f23411ba28d16416519",
+  "questions_sha256": "sha256:1ac9cbd36333c09435daa33bfc3d8cf26e69437b1e5db011f3f2f0deb29987ff",
+  "launch_file_sha256": "sha256:a44a6dedcd0203b22e5af43fbf44b42a0d1deb3e4fb51320901f544dd77e5400",
+  "terminal_file_sha256": "sha256:1673597d188f8df6b2dff3ca61a4ff79d59a5eae6e354baaa89236ba3876b0a5",
+  "terminal_digest": "sha256:0d8d833d242d3be2ff1577672d6009cfd41e8deeacafc9253a0af3f7c9501f41",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 2,
+  "provider_dispatch_count": 21,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark-gateway.sqlite3": "sha256:5f31ccd249fff1d8cb0dd53318d7e6802c4b3ad17f062c9c88b192ce3be09c3d",
+    "deepseek-gateway.sqlite3": "sha256:6b811017fb22265ead09c0d6d3570aa958e0eea5ac2d14c9412489fac27553c8"
+  },
+  "decision": "C2_ALLOWED_REWORK",
+  "earliest_layer": "agent-evidence-planning-and-action-selection",
+  "browser_live_verification": "NOT_EXECUTED",
+  "browser_evidence_status": "NOT_RUN",
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "task": "Original role reassignment chain",
+      "conversation": "conversation_d99439f84b91412c944855530b073f3f",
+      "conversation_revision_before": 1,
+      "conversation_revision_after": 2,
+      "quality_status": "ACCEPTED",
+      "delivery_state": "AUTHORIZED",
+      "provider_dispatch_count": 13,
+      "failure_code": null,
+      "citation_count": 3,
+      "fresh_review": true,
+      "review_verdict": "APPROVED",
+      "trajectory_note": "The first primary proposal used unavailable read_index 12; the Application emitted one bounded shape rejection/replan, after which legal indexes 11, 1, 2, 18, 17, and 7 were read and the answer reached fresh Review/Delivery."
+    },
+    {
+      "ordinal": 2,
+      "task": "Heterogeneous cart quantity update",
+      "conversation": "conversation_d99439f84b91412c944855530b073f3f",
+      "conversation_revision_before": 2,
+      "conversation_revision_after": 3,
+      "quality_status": "ACCEPTED",
+      "delivery_state": "AUTHORIZED",
+      "provider_dispatch_count": 8,
+      "failure_code": null,
+      "citation_count": 3,
+      "fresh_review": true,
+      "review_verdict": "APPROVED",
+      "trajectory_note": "The primary read all four legal Source candidates (indexes 4, 5, 6, and 7), then reached fresh Review/Delivery with three exact SOURCE Citations."
+    }
+  ],
+  "sealed_trajectory": {
+    "ordinal_1": [
+      "SEARCH_COGNITION(role) returned 12 items and read_candidates [1..11]. The first READ_SOURCE(12) was unavailable and caused ACTION_REPLAN_REQUIRED plus one MODEL_DECISION_SHAPE_REJECTION; the same primary then selected legal unread indexes, performed SEARCH_SOURCE(updateRole), read indexes 18, 17, and 7, FINISHed, and received an independent Reviewer APPROVED decision with three exact SOURCE Citations."
+    ],
+    "ordinal_2": [
+      "SEARCH_COGNITION(cart update quantity) returned six items and read_candidates [4,5,6,7]. The primary read each once, FINISHed, and received an independent Reviewer APPROVED decision with three exact SOURCE Citations."
+    ]
+  },
+  "evidence": [
+    "run-286 session, turn-scope, and questions files bind clean product 3930afe/tree 2fa471, exact mall Source 0504e86b/tree 047d79, and cognition snapshot d552b3d8; session and turn-scope are mode 0600.",
+    "terminal.json SHA-256 is 1673597d188f8df6b2dff3ca61a4ff79d59a5eae6e354baaa89236ba3876b0a5; sealed digest is 0d8d833d242d3be2ff1577672d6009cfd41e8deeacafc9253a0af3f7c9501f41, with one Conversation, two Turns, 21 provider dispatches, zero retries, and STOPPED_AFTER_DISPATCH.",
+    "Both turns have natural answers, exact-revision SOURCE Citations, fresh independent Reviewer APPROVED decisions, and authorized Delivery. The q1 invalid read was rejected once and repaired without aliasing or candidate mutation; q2 used legal candidates without repeats.",
+    "Ark had two pre-dispatch TLS failures and zero HTTP calls; DeepSeek completed 19 HTTP calls with no post-dispatch failures. Transport status is not the earliest semantic divergence.",
+    "No Browser/CUA DOM or unique-POST evidence was executed, and the artifact has only two turns; this proves C1 trajectory coverage but not C2 or phase exit."
+  ],
+  "next_action": "C1 trajectory evidence is now sufficient to permit a fresh exact-source C2 attempt, but keep the phase verdict REWORK. Do not claim C1/C2 closure or ADVANCE from this two-turn artifact. Generate a new session bound to the unchanged clean candidate and run the fixed q1–q5 topology: q1+q2 in one Conversation, q3 contextual clarification in that Conversation, q4 and q5 in separate empty Conversations. Require immutable Browser DOM/unique-POST records, exact Citations, fresh independent Review, and authorized Delivery for every turn; stop and record any first failure without replaying it.",
+  "advance_allowed": false
+}
