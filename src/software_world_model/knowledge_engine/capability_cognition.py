@@ -657,8 +657,8 @@ class CapabilityCognitionIndex:
                 selected_ids.add(companion.entity_id)
         # Diversify the fixed default navigation window, not the requested
         # page: every cursor/limit must slice the same ordered entity domain.
-        # Move one equally ranked, self-name-matching method into an all-TYPE
-        # window; retain all other entities and their relative order. Lexical
+        # Promote up to two self-name-matching methods only when the window
+        # lacks them; retain all other entities and their relative order. Lexical
         # relevance, Source identity and authority are unchanged.
         navigation_window = 12
         prefix = expanded[:navigation_window]
@@ -674,7 +674,7 @@ class CapabilityCognitionIndex:
                 if item[3].kind is CognitionEntityKind.METHOD
                 and any(token in _tokens(item[3].name) for token in query_tokens)
             ]
-            need = min(2 - len(matching_positions), len(method_candidates))
+            need = max(0, min(2 - len(matching_positions), len(method_candidates)))
             promoted = sorted(
                 (item for _, item in method_candidates),
                 key=lambda item: (item[0], item[1], item[2]),
