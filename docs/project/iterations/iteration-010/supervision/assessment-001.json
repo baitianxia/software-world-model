@@ -2,18 +2,18 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "4c7d4ebdc2596303afbb7a4b0b4b5fbeee58f91a",
-  "candidate_tree": "a8a1b78c492048ad7f871a843459ea30b95fbf09",
-  "candidate_worktree_digest": "sha256:4819bfb03c8483b3662b9f46c221f00a8bbefc344b6c56e8ebf4254af22a526f",
+  "candidate_commit": "f21bd99dfe09a66c1d12683b9701213d1dcc093a",
+  "candidate_tree": "23098c016d8f39c24e89143b69b60f888a03ee2f",
+  "candidate_worktree_digest": "sha256:5723cffa00ec4518f3a70ef6408761a5486cfdbbf3d343729da07a2f0aa55532",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-15T20:22:32+08:00",
+  "assessed_at": "2026-09-15T20:31:00+08:00",
   "evidence": [
     {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"},
     {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"},
-    {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:3ea108a6e6219b254f8b2235b8c5b47cb58f18a3b393a7c079aa53f470efb8a9"},
+    {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:4cf6563b0d68cc32097884bace8d2cec5ee6b260fcf93d35a5dbbc6b13cc7eab"},
     {"id":"candidate-cognition-tests","scope":"candidate","path":"tests/test_capability_cognition.py","sha256":"sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"},
     {"id":"prior-c1-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:217bf64fb91362bd51460e9a9dbbdfc3deff1cc47e6093c11d98b6161fe0e1d4"},
     {"id":"exact-source-readme","scope":"source","path":"README.md","sha256":"sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"}
@@ -21,7 +21,7 @@
   "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
   "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
   "defects": [
-    {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The one-shot cohort computes a negative need when the fixed window already contains more than two matching METHOD entities. On exact snapshot d552b3d8, updateRole/getRoleList/pay already contain 12/12/10 matching methods, yet the negative slice reorders 15/33/30 later entities against the lexical baseline. Promotion must be a no-op when the window already meets the cohort invariant.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
+    {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The negative-need cohort defect has been corrected in f21bd99. Exact snapshot d552b3d8 now preserves the lexical baseline for method-heavy updateRole/getRoleList/pay (12/12/10 matching methods) while promoting up to two methods for broad role/coupon/order/address/product pages. This local check is not live C1 evidence.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
     {"severity":"MAJOR","owner_layer":"documentation-contract-consistency","summary":"The new cognition implementation is appended to FINDING-010-282, but that document still owns only Application/quality files and targets lightweight_engineering_agent.py. Its metadata does not name the knowledge implementation or cognition test and therefore does not accurately disposition this retrieval change.","evidence_ids":["candidate-cognition-implementation","prior-c1-finding"]},
     {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved and no fresh original-plus-two-heterogeneous C1 execution exists on this candidate. Exact broad search now shows two methods for role/coupon/order, but this local observation is not a browser Answer/Citation/fresh-review closure.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]}
   ],
