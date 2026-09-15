@@ -5,13 +5,13 @@ status: dispositioned
 authority: execution-evidence
 owners: [application, knowledge, quality]
 depends_on: [FINDING-010-283]
-code: [src/software_world_model/application_services/lightweight_engineering_agent.py]
-tests: [tests/test_lightweight_engineering_agent.py]
+code: [src/software_world_model/application_services/conversational_engineering_tools.py, src/software_world_model/application_services/lightweight_engineering_agent.py]
+tests: [tests/test_lightweight_engineering_agent.py, tests/test_conversational_engineering_tools.py]
 iteration: ITER-010
 classification: local-implementation
 scope: systemic
-disposition: code-tests-only-no-system-contract-change
-target: src/software_world_model/application_services/lightweight_engineering_agent.py
+disposition: rework-required-before-c1
+target: src/software_world_model/application_services/conversational_engineering_tools.py
 ---
 
 # FINDING-010-284：cognition ordinal 与 Source read ordinal 的内部对齐

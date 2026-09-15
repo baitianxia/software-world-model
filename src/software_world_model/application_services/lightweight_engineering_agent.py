@@ -1242,38 +1242,6 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         "model_call_receipt_ref": result.receipt.digest.value,
                     }
                 )
-                # A cognition page ordinal and the compact Source-read option
-                # ordinal are separate domains: non-SOURCE cognition entities
-                # are intentionally omitted from the latter.  When the model
-                # carries a page ordinal into READ_SOURCE, resolve it through
-                # the trusted sidecar's origin cognition index.  This is an
-                # internal identity normalization, not a new model-facing
-                # field or authority; ambiguous/unseen ordinals still fail
-                # closed at the existing candidate check.
-                if (
-                    decision.action is LightweightAgentAction.READ_SOURCE
-                    and decision.read_index is not None
-                    and decision.read_index
-                    not in {candidate.read_index for candidate in read_candidates}
-                ):
-                    requested_read_index = decision.read_index
-                    aliases = [
-                        candidate
-                        for candidate in read_candidates
-                        if read_candidate_metadata.get(candidate.read_index)
-                        is not None
-                        and read_candidate_metadata[candidate.read_index].origin_cognition_index
-                        == decision.read_index
-                    ]
-                    if len(aliases) == 1:
-                        decision = replace(decision, read_index=aliases[0].read_index)
-                        events.append(
-                            {
-                                "kind": "READ_INDEX_NORMALIZED_FROM_COGNITION",
-                                "requested_index": requested_read_index,
-                                "resolved_index": aliases[0].read_index,
-                            }
-                        )
                 if decision.action is not LightweightAgentAction.FINISH:
                     if not source_tools_enabled and decision.action in {
                         LightweightAgentAction.SEARCH_SOURCE,
