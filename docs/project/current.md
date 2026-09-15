@@ -59,8 +59,7 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
 - Phase B 已由监督方在 clean exact commit 上独立 `ADVANCE`；该结论不由开发分支修改或重新解释。
 - 当前唯一产品任务是 Phase C：先完成当前候选的根因对账（N0），再按最早责任层闭合 Agent/世界模型证据规划（N1），重新打通多轮浏览器（N2），
-  形成完整链后立即交付 Alpha（N3）。当前 clean HEAD 为 `efb8abb9b1e0f9a9f47094447c1cb08560ef77ef`；开发记录称 `run-255` 曾满足
-  C1 轨迹，但监督分支尚未对该运行和后续候选形成新的 `ADVANCE`。最新 `run-267-citation-plan-recheck` 的 q1、q3 仍失败，因此不能继承旧候选
+ 形成完整链后立即交付 Alpha（N3）。当前 clean HEAD 为 `51640be9c9a7d0ddc2126b889623d2ed1ab1c430`（tree `baac70a5e3c76b8bed6b604592b3c315a0f8be01`）；run-276 已补齐 C1 turn-level evidence，但监督仍未给出新的 `ADVANCE`。run-278/279 的 C2 真实浏览器尝试仍有失败，不能继承旧候选
   的 C2 结论。
 - `run-156` 的 q5 已证明固定 8-action fuse 与耗尽后 fail-closed 正常；当前最早偏差是 Application cognition→Source candidate construction
   的同路径重复幂等和同一预算内已有 cognition/Source candidate 的 Primary evidence planning/selection。`FINDING-010-277` 只复用既有
