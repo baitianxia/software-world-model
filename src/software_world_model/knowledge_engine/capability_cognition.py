@@ -679,8 +679,9 @@ class CapabilityCognitionIndex:
                     method_candidates,
                     key=lambda candidate: (candidate[1][0], candidate[1][1], candidate[1][2]),
                 )
-                expanded.insert(navigation_window - 1, expanded.pop(method_index))
-                matching_positions.append(navigation_window - 1)
+                insert_position = navigation_window - 1 - len(matching_positions)
+                expanded.insert(insert_position, expanded.pop(method_index))
+                matching_positions.append(insert_position)
                 method_candidates = [
                     (position, item)
                     for position, item in enumerate(expanded[navigation_window:], navigation_window)
