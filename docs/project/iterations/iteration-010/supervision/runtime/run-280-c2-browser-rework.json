@@ -24,6 +24,14 @@
   "earliest_layer": "agent-evidence-planning-and-budget",
   "browser_live_verification": "REPORTED_BY_PARENT_UNSEALED",
   "browser_evidence_status": "NOT_SEALED",
+  "post_fuse_non_finish_observed": false,
+  "sealed_primary_steps": [
+    {"step": 1, "tools_enabled": true, "action": "SEARCH_COGNITION", "query": "favorite"},
+    {"step": 2, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 3, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 4, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 5, "tools_enabled": false, "action": "FINISH", "response_kind": "LIMITATION"}
+  ],
   "conversation_topology": {
     "A": [1, 2, 3],
     "B": [4],
@@ -69,9 +77,9 @@
     "run-280/session.json is mode 0600 and binds product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a, exact mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a, and cognition sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243.",
     "run-280/terminal.json sha256:686669c3d0d6ececf80bbfe3684356ab78d53fb21270b8ff82d2a5f026ba8902 records STOPPED_AFTER_DISPATCH, one conversation, one turn, seven aggregate provider dispatches, zero retries, and production activation NOT_EXECUTED; terminal digest is sha256:6b5cfdaa1a012b4a0d376ee717563356bbbcc9577c2b825a0fb7676299d9f43d.",
     "The fixed scope declares A=[1,2,3], B=[4], C=[5], but q2-q5 were not dispatched after q1 failure. Parent-reported Browser DOM is not independently sealed in this record; no browser claim is used for acceptance.",
-    "The DeepSeek Gateway raw outputs show repeated identical SEARCH_SOURCE action proposals before a valid LIMITATION FINISH; the fresh reviewer returned MORE_EVIDENCE. Strict typed decoding and Citation rules remained unchanged.",
+    "The DeepSeek Gateway sealed-input records show tools_enabled=true for all four SEARCH proposals and tools_enabled=false with available_actions=[FINISH] for the fifth primary call; the post-fuse decision is a valid LIMITATION FINISH, not a non-FINISH action. The fresh reviewer returned MORE_EVIDENCE. Strict typed decoding and Citation rules remained unchanged.",
     "No C2 or phase exit requirement is satisfied by this partial run."
   ],
-  "next_action": "Keep REWORK/NOT_RUN. Do not auto-convert a non-FINISH proposal after the fixed fuse into an answer or limitation, and do not relax Citation/reviewer boundaries: fail closed is the truthful behavior. Preserve this raw run and run a fresh exact-source C2 successor only after the generic Agent no-progress handling is independently tested on heterogeneous tasks; keep Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged.",
+  "next_action": "Keep REWORK/NOT_RUN. The sealed run has no post-fuse non-FINISH proposal; if a future run does produce one, do not auto-convert it into an answer or limitation and do not relax Citation/reviewer boundaries: fail closed is the truthful behavior. Preserve this raw run and run a fresh exact-source C2 successor only after the generic Agent no-progress handling is independently tested on heterogeneous tasks; keep Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged.",
   "advance_allowed": false
 }
