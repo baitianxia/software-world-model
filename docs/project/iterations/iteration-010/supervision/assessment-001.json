@@ -2,26 +2,26 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "256047435bbf97d41e28626b5f713e8e9074f192",
-  "candidate_tree": "5a72db3224d1c60f4b39f2c8ef9477cc0fe595a9",
-  "candidate_worktree_digest": "sha256:dcef73b3366b6102a26e67afff8cdd49be85b46192f59f23144fcbabf9aa32a8",
+  "candidate_commit": "8e644e8b5f91085b5e39eae413436927491d749a",
+  "candidate_tree": "dd6315952eb91692f89ca94a0f9dcd5fa3f2014a",
+  "candidate_worktree_digest": "sha256:733d14901582928cdf620f4fb5cc64b17a33bb9f2f35af7382bc0229e8ac2928",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T04:06:00+08:00",
+  "assessed_at": "2026-09-16T04:16:00+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:3e62d49a0238cea5fa8efcc4579e7294e50a5a33a35ff15033d28d6dd03f86dd"
+      "sha256": "sha256:4f522888e1753f66a8f9367e45aa155cfbebd031f784c065a64e62a9cc42c8ff"
     },
     {
       "id": "phase-c-current-execution-plan",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
-      "sha256": "sha256:e12f65f763077628e8422980339e52e3024a7cc73d300077f0629f46bdfc324b"
+      "sha256": "sha256:f1e595d2bcca9e3ed359dee8935cdd99681a89c715603a14d4e86f6d182bd090"
     },
     {
       "id": "candidate-cognition-implementation",
