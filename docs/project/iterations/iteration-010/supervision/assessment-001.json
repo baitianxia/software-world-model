@@ -2,101 +2,29 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "62ec8f6050384bd9f7817b2b25bd500deda2bd08",
-  "candidate_tree": "0cbbc971219620484ec8038461f1cb35a2019a0c",
-  "candidate_worktree_digest": "sha256:37c29d9f063e59fd3c25752a8ba52c5d9dd5e333d1cfea774395b1ef853b1ca7",
+  "candidate_commit": "30416a992701b2eb007e09614d637e26f8f5aa4b",
+  "candidate_tree": "b230ede88e0c4ab39b41d120adb60dc0a34bb84b",
+  "candidate_worktree_digest": "sha256:b3b53f03979715e904026cb54e60eac3bddece4b3c4e21eda8bf745b1050daa7",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-15T19:12:05+08:00",
+  "assessed_at": "2026-09-15T20:07:00+08:00",
   "evidence": [
-    {
-      "id": "phase-c-current-objective",
-      "scope": "candidate",
-      "path": "docs/project/current.md",
-      "sha256": "sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"
-    },
-    {
-      "id": "phase-c-current-execution-plan",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
-      "sha256": "sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"
-    },
-    {
-      "id": "source-hint-contract",
-      "scope": "candidate",
-      "path": "docs/system/contracts/source/source-artifact.md",
-      "sha256": "sha256:f9702c094b974dd65d9b8939cb28ffb65d96f470c48f69a968ac507cf6ed04cd"
-    },
-    {
-      "id": "source-hint-finding-and-runtime-reconciliation",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
-      "sha256": "sha256:cc54826afc62d836c4e1d3a18edf18899a5b8beeb7dfed5f9a64daf64beb82d6"
-    },
-    {
-      "id": "source-hint-worker",
-      "scope": "candidate",
-      "path": "src/software_world_model/interface/engineering_qa_source.py",
-      "sha256": "sha256:f87c6777877d136fdb1522f9aa15e3b7074f38fbeba7b58c2b04b6bd23e656f4"
-    },
-    {
-      "id": "source-hint-session-composition",
-      "scope": "candidate",
-      "path": "src/software_world_model/interface/engineering_chat_session_artifact.py",
-      "sha256": "sha256:a991ec6f317919dd6d4b63ad3e70aeebba98a6b7c45ae47d34cc8c18c4f31b21"
-    },
-    {
-      "id": "agent-evidence-planning-code",
-      "scope": "candidate",
-      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:d74773bfd15a73b853e904f40e9e526ffa6a95a2360413935c7f861751c5222c"
-    },
-    {
-      "id": "source-hint-directed-tests",
-      "scope": "candidate",
-      "path": "tests/test_engineering_qa_source.py",
-      "sha256": "sha256:43c93d633da43a68b566d78b4dcb1eccbd85de07244664bca6c98d06978c8a97"
-    },
-    {
-      "id": "exact-source-payment-reference",
-      "scope": "source",
-      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java",
-      "sha256": "sha256:fbe4276a7c9bf462b6e9399965acd77e4ce72e968a74e6337e1a07cdf5b295a7"
-    }
+    {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"},
+    {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"},
+    {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:11648d379e23c7a75d1e937ca839f30ac49d65fc23f770ea55b469a27708ff1d"},
+    {"id":"candidate-cognition-tests","scope":"candidate","path":"tests/test_capability_cognition.py","sha256":"sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"},
+    {"id":"prior-c1-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:cc54826afc62d836c4e1d3a18edf18899a5b8beeb7dfed5f9a64daf64beb82d6"},
+    {"id":"exact-source-readme","scope":"source","path":"README.md","sha256":"sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"}
   ],
-  "completed_requirements": [
-    "same-agent-cognition-and-source-gap-integration"
-  ],
-  "unresolved_requirements": [
-    "answer-citation-fresh-review-loopback-web",
-    "three-heterogeneous-tasks-and-semantic-followup",
-    "world-model-material-gain-without-material-regression"
-  ],
+  "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
+  "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
   "defects": [
-    {
-      "severity": "MAJOR",
-      "owner_layer": "agent-evidence-planning-and-review-loopback",
-      "summary": "Fresh run-270 original coupon q1 searched cognition, read two candidates, issued two generic Source searches and additional reads, then FINISH supplied no citations. Fresh Reviewer correctly returned MORE_EVIDENCE after 11 dispatches and the fixed read-only budget closed before a fresh review or Delivery. Corrected-runner run-271 made q1/q2 and one heterogeneous q4 turn-level accepted, but the heterogeneous role-assignment q3 repeated Source searches and exhausted the bounded budget after MORE_EVIDENCE; the original q1 still did not execute the required exact-symbol Source search. Run-269 q3/q4 and run-271 q4 provide partial hint/provenance integration evidence, not complete C1 closure. The remaining failure is generic Agent evidence-gap planning; it is not a Source authority, Citation identity, Provider, decoder, or Prompt defect.",
-      "evidence_ids": [
-        "phase-c-current-objective",
-        "phase-c-current-execution-plan",
-        "source-hint-finding-and-runtime-reconciliation",
-        "agent-evidence-planning-code",
-        "source-hint-directed-tests"
-      ]
-    },
-    {
-      "severity": "MAJOR",
-      "owner_layer": "browser/turn-scope-orchestration",
-      "summary": "run-270's q2 HTTP 409 was caused by the diagnostic runner retaining the initial conversation revision after q1 advanced the server revision; execute.py did not copy the q1 response conversation/revision before submitting q2. This historical harness defect is not a product model result. Corrected-runner run-271 verified the required same-Conversation revision progression 1→2→3 with no replay; retain the run-270 failure as NOT_RUN evidence, not as a current product defect.",
-      "evidence_ids": [
-        "phase-c-current-execution-plan",
-        "source-hint-finding-and-runtime-reconciliation"
-      ]
-    }
+    {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The 30416a9 broad-page change claims at least two matching METHOD candidates, but exact snapshot execution still returns only one METHOD in the first 12 for role/coupon/order. Repeated insertion shifts the earlier promoted entry out of the fixed window; the existing test only checks any METHOD, so the claimed invariant is false.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
+    {"severity":"MAJOR","owner_layer":"documentation-contract-consistency","summary":"The knowledge-layer change is not accompanied by an updated active Finding or Owner document; FINDING-010-282 still records the prior Agent-only diagnosis and omits the new broad-page invariant and its failure.","evidence_ids":["candidate-cognition-implementation","prior-c1-finding"]},
+    {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved: broad cognition search was not refined or paged, repeated Source searches consumed the bounded path, and Reviewer MORE_EVIDENCE ended without Delivery. Partial turn-level ACCEPTED results do not close C1.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]}
   ],
-  "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "Keep the committed cognition→Source hint implementation and exact identities unchanged. Diagnose and apply only a general Agent evidence-planning correction for run-271 q3's MORE_EVIDENCE gap, then execute a fresh exact C1 run with the original question plus two heterogeneous tasks. Require an unread relevant Source observation after MORE_EVIDENCE, fresh review, and Delivery for every task; preserve corrected Conversation revision handoff and sealed ordinal scope. Do not modify Prompt, Schema, Provider, Reviewer, budget, or question-specific logic; do not enter C2/Alpha or announce ADVANCE before fresh C1 trajectory evidence is complete."
+  "earliest_divergence":"knowledge-cognition-broad-page-projection",
+  "next_action":"Do not launch fresh C1 on this candidate. Correct the broad-page projection with a one-shot stable promotion of at least two matching METHOD entities when available, add heterogeneous tests for actual first-page count, pagination and TYPE-only identity, update the active Finding/Owner in the same change, then rebind supervision to the new clean candidate. After that, run fresh original-plus-two-heterogeneous C1 evidence; do not modify Prompt, Schema, Provider, Reviewer, budget, or add question-specific logic."
 }
