@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T05:24:34+08:00",
+  "assessed_at": "2026-09-16T05:40:38+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -82,6 +82,12 @@
       "scope": "source",
       "path": "README.md",
       "sha256": "sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"
+    },
+    {
+      "id": "run-284-agent-hetero-recheck",
+      "scope": "runtime",
+      "path": "docs/project/iterations/iteration-010/supervision/runtime/run-284-agent-hetero-recheck.json",
+      "sha256": "sha256:02cf7f36ef2c40b99f2d2e4cfe7eb228aff26d6f15731452e7acd438011a64a5"
     }
   ],
   "completed_requirements": [
@@ -106,14 +112,15 @@
     {
       "severity": "MAJOR",
       "owner_layer": "agent-evidence-planning-and-action-selection",
-      "summary": "The independently sealed run-283 heterogeneous recheck on the current clean candidate supplies a legal read_candidates catalog after SEARCH_COGNITION(role), but the Primary selected unavailable read_index 12, repeated a completed read, proposed SEARCH_SOURCE after that action was unavailable, and exhausted the fixed budget before FINISH; no Citation, fresh Review, or Delivery resulted. The same run's cart task read all four legal candidates and reached three exact SOURCE Citations plus a fresh Reviewer APPROVED decision, so the defect is an Agent/model action-selection trajectory rather than missing cognition, Source authority, or Provider schema. Browser/C2 and the required original-plus-two-heterogeneous closure remain unproven.",
+      "summary": "The independently sealed run-283 heterogeneous recheck on the current clean candidate supplies a legal read_candidates catalog after SEARCH_COGNITION(role), but the Primary selected unavailable read_index 12, repeated a completed read, proposed SEARCH_SOURCE after that action was unavailable, and exhausted the fixed budget before FINISH; no Citation, fresh Review, or Delivery resulted. The same run's cart task read all four legal candidates and reached three exact SOURCE Citations plus a fresh Reviewer APPROVED decision. A subsequent run-284 recheck reached two independent task-level successes (RabbitMQ timeout-cancel and JWT security-filter), each with legal non-repeated reads, exact SOURCE Citations, fresh Reviewer APPROVED, and authorized Delivery. The remaining defect is therefore stochastic Agent/model action selection and the required original-plus-two-heterogeneous closure plus Browser/C2 evidence remain unproven; it is not evidence of missing cognition, Source authority, or Provider schema.",
       "evidence_ids": [
         "candidate-agent-projection-implementation",
         "candidate-agent-tests",
-        "candidate-slice-binding"
+        "candidate-slice-binding",
+        "run-284-agent-hetero-recheck"
       ]
     }
   ],
   "earliest_divergence": "agent-evidence-planning",
-  "next_action": "Keep the phase verdict REWORK and do not count run-280, run-282, or run-283 as C2/phase closure. Preserve all raw trajectories and do not replay them. Run-283 proves one heterogeneous cart path but its original-role path still ignored legal read indexes and exhausted the fixed budget; obtain a second independent heterogeneous Agent trajectory or a generic Agent-layer repair with sealed evidence covering legal read-index adherence, unread-candidate prioritization, and no repeated actions. Then rerun the original plus two heterogeneous tasks on a fresh exact-source candidate, followed by a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
+  "next_action": "Keep the phase verdict REWORK and do not count run-280, run-282, run-283, or run-284 as C2/phase closure. Preserve all raw trajectories and do not replay them. Run-284 supplies two current-candidate task-level successes, but the required original-plus-two-heterogeneous closure is not sealed and no Browser/CUA evidence exists; obtain the remaining original-role success, then run a fresh exact-source C2 successor with q1+q2 in one Conversation, q3 clarification in that Conversation, q4/q5 in separate empty Conversations, immutable per-ordinal DOM/unique-POST artifacts, exact Citations, fresh independent Review, and authorized Delivery. Keep the post-fuse fail-closed contract and do not synthesize a limitation for a non-FINISH proposal, add a Citation, or relax Prompt, Schema, Provider, decoder, Reviewer, budget or question text. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
