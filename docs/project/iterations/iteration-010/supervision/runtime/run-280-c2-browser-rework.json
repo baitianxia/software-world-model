@@ -1,0 +1,77 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-280-c2-browser-ui",
+  "candidate_commit": "8e644e8b5f91085b5e39eae413436927491d749a",
+  "candidate_tree": "dd6315952eb91692f89ca94a0f9dcd5fa3f2014a",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:a29f18d94306196ae0bed3e9ebcee861aad5d1615cb0528f955dc983db985b0c",
+  "turn_scope_sha256": "sha256:bab934084617400c36c9ed8bf814fcc9ebfc5bc469870a9255022592ba8e56ea",
+  "questions_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+  "terminal_file_sha256": "sha256:686669c3d0d6ececf80bbfe3684356ab78d53fb21270b8ff82d2a5f026ba8902",
+  "terminal_digest": "sha256:6b5cfdaa1a012b4a0d376ee717563356bbbcc9577c2b825a0fb7676299d9f43d",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 1,
+  "provider_dispatch_count": 7,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark": "sha256:184afe512e08105c2c25c35ff72773b69e8e2034254907a8cecfa23d0f4870eb",
+    "deepseek": "sha256:afc1b8acd3a784a95988b1dd8e5fb5f1ca8b523afc22ed43463dfc778aca99f1"
+  },
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-budget",
+  "browser_live_verification": "REPORTED_BY_PARENT_UNSEALED",
+  "browser_evidence_status": "NOT_SEALED",
+  "conversation_topology": {
+    "A": [1, 2, 3],
+    "B": [4],
+    "C": [5]
+  },
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "conversation": "conversation_eca1b9246ebf445b923d15d3ad835ef2",
+      "conversation_revision_after": 2,
+      "quality_status": "NOT_ACCEPTED",
+      "delivery_state": "NOT_AUTHORIZED",
+      "provider_dispatch_count": 7,
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": true,
+      "review_verdict": "MORE_EVIDENCE"
+    },
+    {
+      "ordinal": 2,
+      "status": "NOT_RUN"
+    },
+    {
+      "ordinal": 3,
+      "status": "NOT_RUN"
+    },
+    {
+      "ordinal": 4,
+      "status": "NOT_RUN"
+    },
+    {
+      "ordinal": 5,
+      "status": "NOT_RUN"
+    }
+  ],
+  "trajectory_summary": [
+    "The sealed DeepSeek Gateway contains five valid PRIMARY decisions followed by one valid INDEPENDENT_REVIEWER decision; output normalization is IDENTITY and no provider post-dispatch failure is recorded.",
+    "The primary proposed SEARCH_COGNITION(favorite), then repeated SEARCH_SOURCE(favorite) proposals, and eventually produced a truthful LIMITATION FINISH after the Application fuse disabled tools. The reviewer returned MORE_EVIDENCE because no exact Citation was available.",
+    "The Application then fail-closed with BUDGET_EXHAUSTED because the fixed read-only budget was closed; it did not synthesize a Citation, rewrite the answer, relax the decoder, or deliver unsupported evidence.",
+    "Ark has one pre-dispatch TLS failure in its isolated audit, while the six DeepSeek calls completed; this transport event is not the earliest semantic divergence."
+  ],
+  "evidence": [
+    "run-280/session.json is mode 0600 and binds product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a, exact mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a, and cognition sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243.",
+    "run-280/terminal.json sha256:686669c3d0d6ececf80bbfe3684356ab78d53fb21270b8ff82d2a5f026ba8902 records STOPPED_AFTER_DISPATCH, one conversation, one turn, seven aggregate provider dispatches, zero retries, and production activation NOT_EXECUTED; terminal digest is sha256:6b5cfdaa1a012b4a0d376ee717563356bbbcc9577c2b825a0fb7676299d9f43d.",
+    "The fixed scope declares A=[1,2,3], B=[4], C=[5], but q2-q5 were not dispatched after q1 failure. Parent-reported Browser DOM is not independently sealed in this record; no browser claim is used for acceptance.",
+    "The DeepSeek Gateway raw outputs show repeated identical SEARCH_SOURCE action proposals before a valid LIMITATION FINISH; the fresh reviewer returned MORE_EVIDENCE. Strict typed decoding and Citation rules remained unchanged.",
+    "No C2 or phase exit requirement is satisfied by this partial run."
+  ],
+  "next_action": "Keep REWORK/NOT_RUN. Do not auto-convert a non-FINISH proposal after the fixed fuse into an answer or limitation, and do not relax Citation/reviewer boundaries: fail closed is the truthful behavior. Preserve this raw run and run a fresh exact-source C2 successor only after the generic Agent no-progress handling is independently tested on heterogeneous tasks; keep Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged.",
+  "advance_allowed": false
+}
