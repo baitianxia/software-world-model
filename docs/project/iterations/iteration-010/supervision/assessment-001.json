@@ -82,12 +82,6 @@
       "scope": "source",
       "path": "README.md",
       "sha256": "sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"
-    },
-    {
-      "id": "run-284-agent-hetero-recheck",
-      "scope": "runtime",
-      "path": "docs/project/iterations/iteration-010/supervision/runtime/run-284-agent-hetero-recheck.json",
-      "sha256": "sha256:02cf7f36ef2c40b99f2d2e4cfe7eb228aff26d6f15731452e7acd438011a64a5"
     }
   ],
   "completed_requirements": [
@@ -116,8 +110,7 @@
       "evidence_ids": [
         "candidate-agent-projection-implementation",
         "candidate-agent-tests",
-        "candidate-slice-binding",
-        "run-284-agent-hetero-recheck"
+        "candidate-slice-binding"
       ]
     }
   ],
