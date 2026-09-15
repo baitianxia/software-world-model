@@ -532,44 +532,6 @@ def _ordered_read_candidates(
     return tuple(ordered)
 
 
-def _project_cognition_page_with_source_unique_paths(
-    page: CognitionPage,
-) -> CognitionPage:
-    """Keep the Agent-facing page aligned with one path-scoped READ option.
-
-    The cognition index may contain several declarations in one source file,
-    while the controlled navigation capability is intentionally path-scoped.
-    Retain the first representative per path in this Agent projection. The
-    underlying snapshot and cursor remain unchanged; omitted same-path siblings
-    are intentionally a cognition-only pagination omission, not Source evidence.
-    """
-    selected: list[dict[str, object]] = []
-    positions: dict[str, int] = {}
-    for item in page.items:
-        provenance = item.get("provenance")
-        if not isinstance(provenance, Mapping) or not isinstance(provenance.get("path"), str):
-            selected.append(item)
-            continue
-        source_path = provenance["path"]
-        existing_position = positions.get(source_path)
-        if existing_position is None:
-            positions[source_path] = len(selected)
-            selected.append(item)
-            continue
-        existing = selected[existing_position]
-        continue
-    if len(selected) == len(page.items):
-        return page
-    return CognitionPage(
-        page.operation,
-        tuple(selected),
-        page.total,
-        page.next_cursor,
-        page.snapshot_digest,
-        page.snapshot_epistemics,
-    )
-
-
 def _unread_read_candidates(
     candidates: Sequence[LightweightReadCandidate],
     observations: Sequence[LightweightObservation],
@@ -1310,8 +1272,31 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                             candidate.read_index for candidate in unread_candidates
                         }
                     )
+                    unavailable_read_selection = (
+                        decision.action is LightweightAgentAction.READ_SOURCE
+                        and decision.read_index is not None
+                        and decision.read_index not in {candidate.read_index for candidate in read_candidates}
+                    )
                     action_fingerprint = _lightweight_action_fingerprint(decision)
-                    action_repeated = action_fingerprint in executed_action_fingerprints
+                    action_repeated = (
+                        action_fingerprint in executed_action_fingerprints
+                        or unavailable_read_selection
+                        and decision.read_index in blocked_source_read_indexes
+                    )
+                    if unavailable_read_selection and not action_repeated:
+                        blocked_source_read_indexes.add(decision.read_index)
+                        events.append({
+                            "kind": "ACTION_REPLAN_REQUIRED",
+                            "step": step,
+                            "reason": "READ_INDEX_UNAVAILABLE",
+                            "action": decision.action.value,
+                            "read_index": decision.read_index,
+                        })
+                        review_findings = (*review_findings,
+                            "Application rejected a Source read selection that is not in the current read catalog. Choose one of the presented read_index values; do not infer cognition ordinals as Source read ordinals.")
+                        plan = ""
+                        consecutive_no_progress += 1
+                        continue
                     if unread_cognition_candidates and not (
                         cognition_replan_action or unread_read_selected
                     ) and not action_repeated:
@@ -1984,8 +1969,6 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     cursor=decision.cursor or 0,
                     limit=32,
                 )
-        if decision.action is LightweightAgentAction.SEARCH_COGNITION:
-            page = _project_cognition_page_with_source_unique_paths(page)
         cognition_metadata: dict[
             int, _LightweightReadNavigationMetadata
         ] = {}
