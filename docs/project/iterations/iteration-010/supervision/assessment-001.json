@@ -2,14 +2,14 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "7f326fe48c8ce915f9e602b9c75054b4c671230d",
-  "candidate_tree": "da395993633dc1b019d64a755bfbd9ac1dac01a5",
-  "candidate_worktree_digest": "sha256:94aeb1b1a442b84e4d0c02140e7c54faf9cb093928df5cc2727a57ee5d2dbff8",
+  "candidate_commit": "62ec8f6050384bd9f7817b2b25bd500deda2bd08",
+  "candidate_tree": "0cbbc971219620484ec8038461f1cb35a2019a0c",
+  "candidate_worktree_digest": "sha256:37c29d9f063e59fd3c25752a8ba52c5d9dd5e333d1cfea774395b1ef853b1ca7",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-15T19:05:05+08:00",
+  "assessed_at": "2026-09-15T19:12:05+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -33,7 +33,7 @@
       "id": "source-hint-finding-and-runtime-reconciliation",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
-      "sha256": "sha256:447b00ba21f76455c80df2aeb8f180b24a1ba886d6dd65f2190624f8aa52b11e"
+      "sha256": "sha256:cc54826afc62d836c4e1d3a18edf18899a5b8beeb7dfed5f9a64daf64beb82d6"
     },
     {
       "id": "source-hint-worker",
@@ -78,7 +78,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "agent-evidence-planning-and-review-loopback",
-      "summary": "Fresh run-270 original coupon q1 searched cognition, read two candidates, issued two generic Source searches and additional reads, then FINISH supplied no citations. Fresh Reviewer correctly returned MORE_EVIDENCE after 11 dispatches and the fixed read-only budget closed before a fresh review or Delivery. Fresh run-269 independently shows the new hint can be exercised on heterogeneous q3/q4 Source searches, but its original payment q1 stopped after broad cognition and four reads without the required exact symbol search. The remaining failure is generic Agent evidence-gap planning; it is not a Source authority, Citation identity, Provider, decoder, or Prompt defect.",
+      "summary": "Fresh run-270 original coupon q1 searched cognition, read two candidates, issued two generic Source searches and additional reads, then FINISH supplied no citations. Fresh Reviewer correctly returned MORE_EVIDENCE after 11 dispatches and the fixed read-only budget closed before a fresh review or Delivery. Corrected-runner run-271 made q1/q2 and one heterogeneous q4 turn-level accepted, but the heterogeneous role-assignment q3 repeated Source searches and exhausted the bounded budget after MORE_EVIDENCE; the original q1 still did not execute the required exact-symbol Source search. Run-269 q3/q4 and run-271 q4 provide partial hint/provenance integration evidence, not complete C1 closure. The remaining failure is generic Agent evidence-gap planning; it is not a Source authority, Citation identity, Provider, decoder, or Prompt defect.",
       "evidence_ids": [
         "phase-c-current-objective",
         "phase-c-current-execution-plan",
@@ -90,7 +90,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser/turn-scope-orchestration",
-      "summary": "run-270's q2 HTTP 409 was caused by the diagnostic runner retaining the initial conversation revision after q1 advanced the server revision; execute.py did not copy the q1 response conversation/revision before submitting q2. This is a harness evidence gap, not a product model result, and q2 must not be counted. Future fresh runs must update the exact conversation revision after every successful turn while preserving the sealed ordinal scope.",
+      "summary": "run-270's q2 HTTP 409 was caused by the diagnostic runner retaining the initial conversation revision after q1 advanced the server revision; execute.py did not copy the q1 response conversation/revision before submitting q2. This historical harness defect is not a product model result. Corrected-runner run-271 verified the required same-Conversation revision progression 1→2→3 with no replay; retain the run-270 failure as NOT_RUN evidence, not as a current product defect.",
       "evidence_ids": [
         "phase-c-current-execution-plan",
         "source-hint-finding-and-runtime-reconciliation"
@@ -98,5 +98,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "Keep the committed cognition→Source hint implementation and all exact identities unchanged. Build one fresh logical C1 run with new DB/receipt paths and a corrected runner that carries the returned conversation revision after each turn; replay the original evidence-gap question plus two heterogeneous tasks. Require an unread relevant Source observation after Reviewer MORE_EVIDENCE, fresh review and Delivery, and retain run269's q3/q4 hint Coverage as partial supporting evidence. Do not modify Prompt, Schema, Provider, Reviewer, budget, or question-specific logic; do not enter C2/Alpha or announce ADVANCE before fresh C1 trajectory evidence is complete."
+  "next_action": "Keep the committed cognition→Source hint implementation and exact identities unchanged. Diagnose and apply only a general Agent evidence-planning correction for run-271 q3's MORE_EVIDENCE gap, then execute a fresh exact C1 run with the original question plus two heterogeneous tasks. Require an unread relevant Source observation after MORE_EVIDENCE, fresh review, and Delivery for every task; preserve corrected Conversation revision handoff and sealed ordinal scope. Do not modify Prompt, Schema, Provider, Reviewer, budget, or question-specific logic; do not enter C2/Alpha or announce ADVANCE before fresh C1 trajectory evidence is complete."
 }

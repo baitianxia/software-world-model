@@ -1,0 +1,20 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "observed_candidate_commit": "7f326fe48c8ce915f9e602b9c75054b4c671230d",
+  "observed_candidate_tree": "da395993633dc1b019d64a755bfbd9ac1dac01a5",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "run_ref": "run-271-c1-closure-successor",
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-review-loopback",
+  "evidence": [
+    "session.json is bound to product 7f326fe48c8ce915f9e602b9c75054b4c671230d/tree da395993633dc1b019d64a755bfbd9ac1dac01a5, mall source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a, and cognition snapshot sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243; session file sha256:dd326ac85f7736c306201973589c065f63215e56a1dcff9014fa87886275f870.",
+    "terminal.json sha256:6462e7a7dbeb7635214a876e761134b6ce452120e75bc61f759980408f8eebcf records STOPPED_AFTER_DISPATCH, 3 conversations, 4 turns, 41 provider dispatches, retry 0, and production activation NOT_EXECUTED; terminal digest sha256:183e664881ff654754487a35245ce804fbb673e96ce19a3f18c9c93b7451f699.",
+    "q1 and q2 share conversation_c40572a35cb044549e830e525a071860 and advance revisions 1 to 2 to 3. Both reach turn-level ACCEPTED with four exact SOURCE citations, fresh independent APPROVED review, and AUTHORIZED delivery; their outer result quality remains NOT_ACCEPTED.",
+    "q3 role-assignment turn uses a new conversation and reaches 13 dispatches. After cognition search and reads, the Agent repeats SEARCH_SOURCE for allocRole, then searches updateRole; fresh review returns MORE_EVIDENCE for unread implementation evidence and the bounded read-only budget closes. No delivery or fresh approval follows.",
+    "q4 Elasticsearch-import turn uses a new conversation and reaches turn-level ACCEPTED with three exact SOURCE citations and fresh APPROVED review. Its trajectory uses SEARCH_COGNITION followed by Source reads and does not issue SEARCH_SOURCE, so it demonstrates cognition provenance to controlled read options but not direct hint-first Source-search ordering. The stronger direct ordering evidence remains run-269 q3/q4.",
+    "run-271 was executed before docs-only commit 62ec8f6050384bd9f7817b2b25bd500deda2bd08; that commit changes only the finding record, so the runtime remains valid historical evidence but is not a fresh execution of the later docs commit."
+  ],
+  "next_action": "Keep cognition and Source hint identities unchanged. Diagnose and apply only a general Agent evidence-planning correction for the q3 MORE_EVIDENCE gap, then run a fresh exact C1 scope containing the original question and two heterogeneous tasks with no repeated ordinal or conversation. Require unread relevant Source evidence after MORE_EVIDENCE, fresh review, and Delivery for every task; do not alter Prompt, Schema, Provider, Reviewer, budget, or question-specific logic.",
+  "advance_allowed": false,
+  "source_of_truth": "development/var/iteration-010/slice-001/run-271-c1-closure-successor/{session.json,terminal.json,q1.json,q2.json,q3.json,q4.json,questions.json,deepseek-gateway.sqlite3}"
+}
