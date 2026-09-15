@@ -1,0 +1,18 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "observed_candidate_commit": "efb8abb9b1e0f9a9f47094447c1cb08560ef77ef",
+  "observed_candidate_tree": "b36fb043de199b0a63406d0c3155be84011c325d",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "run_ref": "run-274-c1-fresh",
+  "decision": "REWORK",
+  "earliest_layer": "runtime-session-binding",
+  "evidence": [
+    "The run-274-c1-fresh directory contains session.json sha256:8fd343b83f6736269953dccf5fed6242a7d0076de3d04f87165a4a48ea8e2cf2, but its session_ref is iteration-010-c1-closure-run-271 and its product_commit/tree are 7f326fe48c8ce915f9e602b9c75054b4c671230d/da395993633dc1b019d64a755bfbd9ac1dac01a5, not the observed efb8abb/tree b36fb043.",
+    "The same session binds turn_scope_digest sha256:754434fc9444202383375ae30f2f4403351b42febd06b0186344aa6bffa436be and questions sourced from run-267/run-255; it does not describe a fresh run-274 scope.",
+    "run-274-c1-fresh/ark-gateway.sqlite3 sha256:5abe18e9dc3a249c9df9824fa81f2c500bfe4d3d578b82b75bc693567003ee4d and deepseek-gateway.sqlite3 sha256:4afd8d7c270c933af17aac95f50536149c7ae2dc9aa33f89befec6c9207cb51e are byte-identical to run-271-c1-closure-successor's databases; counts are Ark roots=4/outputs=0 and DeepSeek roots=37/outputs=37. They are stale evidence, not empty fresh stores.",
+    "execute.py sha256:2a3e29364011d9377616b2925c20019b95b62f9844df4cdc7afde63ccf2e263e asserts the stale session product identity before launch. No launch.json or terminal.json exists in this directory, so the reported pricing outcome cannot qualify as a correctly bound run-274 execution."
+  ],
+  "next_action": "Do not reuse or replay run-274. First update the normative current context and execution card to bind efb8abb/tree b36fb and Finding-010-283, run docs checks, and commit/rebind supervision. Then create a unique fresh C1 directory with new session/turn-scope/DB/receipt paths, exact efb8abb/tree b36fb, mall 0504e86/tree 047d, cognition d552b3d8/c5fe9b, and zero pre-existing gateway rows before launching.",
+  "advance_allowed": false,
+  "source_of_truth": "/Users/baitianxia/project/software-world-model/var/iteration-010/slice-001/run-274-c1-fresh/{session.json,questions.json,execute.py,ark-gateway.sqlite3,deepseek-gateway.sqlite3}"
+}
