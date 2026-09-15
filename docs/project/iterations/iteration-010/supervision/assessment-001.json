@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T02:44:53+08:00",
+  "assessed_at": "2026-09-16T02:54:07+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -90,7 +90,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "Run-277 was bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source, but its runner used direct urllib loopback rather than a real in-app Browser/CUA surface; startup health explicitly reports browser_live_verification=NOT_EXECUTED. The fixed A=[1,2,3], B=[4], C=[5] topology was only mechanically exercised. q1 and q5 ended BUDGET_EXHAUSTED without Citation/fresh Review/Delivery while q2-q4 were partial accepted turns. Runtime record run-277-c2-browser-rework is sealed in the supervision lane; C2 and phase exit remain unproven.",
+      "summary": "Run-278 was bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source. The parent reports a real in-app Browser/CUA execution with the fixed A=[1,2,3], B=[4], C=[5] topology, but no immutable DOM/unique-POST artifact is present in the run directory for independent verification. Sealed Gateway evidence shows q1 BUDGET_EXHAUSTED before Citation/Review/Delivery, q2-q4 accepted, and q5 LIVE_INTEGRATION_HELD pre-dispatch without Citation/Review/Delivery. Runtime record run-278-c2-browser-ui-rework is sealed in the supervision lane; C2 and phase exit remain unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -98,6 +98,6 @@
       ]
     }
   ],
-  "earliest_divergence": "browser-turn-evidence-and-agent-budget",
-  "next_action": "Keep the phase verdict REWORK and do not count run-277 direct-urllib artifacts or partial turns as browser evidence. On the unchanged clean exact candidate, prepare and run a fresh C2 session through a real in-app Browser/CUA surface with one unique POST per fixed ordinal: q1 and q2 in one Conversation, q3 as an in-context clarification Turn in that Conversation, and q4/q5 in new Conversations. Seal DOM, terminal, Gateway, exact Citation, fresh independent Review, and Delivery evidence; if a real browser run fails, fix only the earliest generic Agent/Application layer shown by its trajectory. Do not change Prompt, Schema, Provider, Reviewer, or claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
+  "earliest_divergence": "agent-evidence-budget-and-browser-evidence-sealing",
+  "next_action": "Keep the phase verdict REWORK and do not count run-278 as C2/phase closure: q1 and q5 lack Citation/Review/Delivery, and the claimed Browser DOM/POST evidence is not independently sealed. Do not replay q5 or alter Prompt, Schema, Provider, decoder, or Reviewer. On the unchanged clean exact candidate, prepare a fresh C2 successor with a real in-app Browser/CUA path and immutable DOM/unique-POST artifacts, preserving q1/q2/q3 in one Conversation and q4/q5 in fresh Conversations. Independently inspect each trajectory; only then consider a generic Agent-layer repair. Do not claim ADVANCE until all five turns and the phase-level material-gain criteria are independently evidenced."
 }
