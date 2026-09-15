@@ -1143,8 +1143,15 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                     _LightweightReadNavigationMetadata(),
                 )
             for step in range(1, self._limits.maximum_agent_steps + 1):
+                # Reserve the final fixed Agent step for synthesis.  Without
+                # this reservation a legal Tool action can consume the last
+                # step and the loop terminates before the same Agent ever sees
+                # tools_enabled=false and can FINISH from gathered evidence.
+                # This reallocates the existing budget; it does not add an
+                # Agent, Tool, Provider, or Review dispatch.
                 tools_enabled = (
-                    tool_actions < self._limits.maximum_tool_actions
+                    step < self._limits.maximum_agent_steps
+                    and tool_actions < self._limits.maximum_tool_actions
                     and (source_tools_enabled or self._cognition is not None)
                 )
                 try:
