@@ -2,32 +2,102 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "b48ad757176e6b5c307e0dfe8511a7eef9298e1c",
-  "candidate_tree": "0b0de3c3fde870e421b2be3c2f6aef2930e51663",
-  "candidate_worktree_digest": "sha256:fd45d633149c54bd31dbc8c40934504d91daa92b417444ae77f5ad70fafe7d02",
+  "candidate_commit": "51640be9c9a7d0ddc2126b889623d2ed1ab1c430",
+  "candidate_tree": "baac70a5e3c76b8bed6b604592b3c315a0f8be01",
+  "candidate_worktree_digest": "sha256:be9efac29c25fcb8db63947fbd005bda12c3958038eef62ec732169dcc56909a",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T00:55:00+08:00",
+  "assessed_at": "2026-09-16T01:38:00+08:00",
   "evidence": [
-    {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:17ac162754b328221dac604d044576a5dcd729ceb61ce3f64ac1dd9362a8f294"},
-    {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ee1128ce0e396e88661e3c252d62cc2cd6cf44c0599ed06b1cab4821e9aec52b"},
-    {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:4cf6563b0d68cc32097884bace8d2cec5ee6b260fcf93d35a5dbbc6b13cc7eab"},
-    {"id":"candidate-cognition-tests","scope":"candidate","path":"tests/test_capability_cognition.py","sha256":"sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"},
-    {"id":"prior-c1-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:217bf64fb91362bd51460e9a9dbbdfc3deff1cc47e6093c11d98b6161fe0e1d4"},
-    {"id":"candidate-cognition-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-283.md","sha256":"sha256:227cf975826a30a4e3db05a2fc9605e8dbb287efb0781bc2a5f971cd661bc6c1"},
-    {"id":"candidate-slice-binding","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md","sha256":"sha256:48534b9ade8aad875c55ff63336ee3f05774337c8a725c04afb5cb20aafe6cf9"},
-    {"id":"candidate-source-projection-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-284.md","sha256":"sha256:becea5019bceb16d8b2facdae974c10cd49c0c36a774193ac02426d537232921"},
-    {"id":"candidate-agent-projection-implementation","scope":"candidate","path":"src/software_world_model/application_services/lightweight_engineering_agent.py","sha256":"sha256:c2f95944c585727d728fd74eda15392e4ac0b702a27fe764ecea00c82477bd5a"},
-    {"id":"candidate-agent-tests","scope":"candidate","path":"tests/test_lightweight_engineering_agent.py","sha256":"sha256:bd72ee251b891a6294b20554ac28a270e957a6854d2bb7fb3eb609dafe33fd11"},
-    {"id":"exact-source-readme","scope":"source","path":"README.md","sha256":"sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"}
+    {
+      "id": "phase-c-current-objective",
+      "scope": "candidate",
+      "path": "docs/project/current.md",
+      "sha256": "sha256:17ac162754b328221dac604d044576a5dcd729ceb61ce3f64ac1dd9362a8f294"
+    },
+    {
+      "id": "phase-c-current-execution-plan",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
+      "sha256": "sha256:ee1128ce0e396e88661e3c252d62cc2cd6cf44c0599ed06b1cab4821e9aec52b"
+    },
+    {
+      "id": "candidate-cognition-implementation",
+      "scope": "candidate",
+      "path": "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "sha256": "sha256:4cf6563b0d68cc32097884bace8d2cec5ee6b260fcf93d35a5dbbc6b13cc7eab"
+    },
+    {
+      "id": "candidate-cognition-tests",
+      "scope": "candidate",
+      "path": "tests/test_capability_cognition.py",
+      "sha256": "sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"
+    },
+    {
+      "id": "prior-c1-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
+      "sha256": "sha256:217bf64fb91362bd51460e9a9dbbdfc3deff1cc47e6093c11d98b6161fe0e1d4"
+    },
+    {
+      "id": "candidate-cognition-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-283.md",
+      "sha256": "sha256:227cf975826a30a4e3db05a2fc9605e8dbb287efb0781bc2a5f971cd661bc6c1"
+    },
+    {
+      "id": "candidate-slice-binding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
+      "sha256": "sha256:48534b9ade8aad875c55ff63336ee3f05774337c8a725c04afb5cb20aafe6cf9"
+    },
+    {
+      "id": "candidate-source-projection-finding",
+      "scope": "candidate",
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-284.md",
+      "sha256": "sha256:1aeee12ce19d5317341028ef2a93eb120b6d431cf34d0a8523bce71812e9b2e8"
+    },
+    {
+      "id": "candidate-agent-projection-implementation",
+      "scope": "candidate",
+      "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "sha256": "sha256:c2f95944c585727d728fd74eda15392e4ac0b702a27fe764ecea00c82477bd5a"
+    },
+    {
+      "id": "candidate-agent-tests",
+      "scope": "candidate",
+      "path": "tests/test_lightweight_engineering_agent.py",
+      "sha256": "sha256:bd72ee251b891a6294b20554ac28a270e957a6854d2bb7fb3eb609dafe33fd11"
+    },
+    {
+      "id": "exact-source-readme",
+      "scope": "source",
+      "path": "README.md",
+      "sha256": "sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"
+    }
   ],
-  "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
-  "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
+  "completed_requirements": [
+    "same-agent-cognition-and-source-gap-integration"
+  ],
+  "unresolved_requirements": [
+    "answer-citation-fresh-review-loopback-web",
+    "three-heterogeneous-tasks-and-semantic-followup",
+    "world-model-material-gain-without-material-regression"
+  ],
   "defects": [
-    {"severity":"MAJOR","owner_layer":"browser-turn-scope-orchestration","summary":"Fresh run-276 C1 evidence closes the original role-reassignment question plus two independent heterogeneous tasks at turn level: each reached cognition/source evidence, exact-revision citations, fresh independent review, and authorized delivery. The enclosing @5 artifact projection remains NOT_ACCEPTED because that contract requires five turns while this C1 scope intentionally has three independent conversations. C2's fixed browser conversation choreography and phase-level five-task/semantic-follow-up evidence are still absent.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan","candidate-slice-binding"]}
+    {
+      "severity": "MAJOR",
+      "owner_layer": "browser-turn-scope-orchestration",
+      "summary": "Fresh run-276 C1 evidence closes the original role-reassignment question plus two independent heterogeneous tasks at turn level: each reached cognition/source evidence, exact-revision citations, fresh independent review, and authorized delivery. The enclosing @5 artifact projection remains NOT_ACCEPTED because that contract requires five turns while this C1 scope intentionally has three independent conversations. C2's fixed browser conversation choreography and phase-level five-task/semantic-follow-up evidence are still absent.",
+      "evidence_ids": [
+        "prior-c1-finding",
+        "phase-c-current-execution-plan",
+        "candidate-slice-binding"
+      ]
+    }
   ],
-  "earliest_divergence":"browser-turn-scope-orchestration",
-  "next_action":"Treat run-276-c1-read-selection as C1 evidence only and keep the phase verdict REWORK. Rebind a fresh exact-source @5 artifact session on the unchanged clean candidate, then execute C2's fixed browser scope: q1 and q2 in one Conversation, q3 as an in-context clarification Turn, and q4/q5 as new questions. Require listener/browser evidence, real Source citations, fresh independent review, loopback delivery, and fail-closed receipts; do not claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
+  "earliest_divergence": "browser-turn-scope-orchestration",
+  "next_action": "Treat run-276-c1-read-selection as C1 evidence only and keep the phase verdict REWORK. Rebind a fresh exact-source @5 artifact session on the unchanged clean candidate, then execute C2's fixed browser scope: q1 and q2 in one Conversation, q3 as an in-context clarification Turn, and q4/q5 as new questions. Require listener/browser evidence, real Source citations, fresh independent review, loopback delivery, and fail-closed receipts; do not claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
 }
