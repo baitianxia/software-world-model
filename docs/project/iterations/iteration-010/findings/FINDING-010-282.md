@@ -291,3 +291,25 @@ including mixed modalities. This check does not grant semantic support to a
 navigation locator; mechanical identity and evidentiary sufficiency remain
 distinct. No further live run is justified by the rejected diagnosis. Original
 runtime artifacts and both commits remain recoverable; C3 quality is incomplete.
+
+## N0 exact q1/q3 reconciliation on clean `940566c`
+
+The q1 audit is joined by exact request text and exact `model_call_id`, not by a
+prefix or turn ordinal. Both the rejected step and its bounded successor received
+the same Citation domains: observations 1, 4 and 7 had no Citations; the model
+selected `(4, 1)` in both outputs. The executor rejected that pair correctly, and
+the successor input had an empty active plan. This is a Primary Agent evidence-
+selection failure, not a plan, resolver, receipt, or projection failure.
+
+The q3 audit is likewise joined by its exact request. Cognition reads supplied the
+implementation and interface navigation candidates. The Agent then searched
+`updateSkuStock`; the Source Broker reported no literal content match and emitted
+identifier-navigation candidates for unrelated stock types. The Agent read those
+unrelated candidates and finished; fresh review requested missing payment-record,
+rollback, and timing evidence after the read-only budget closed. Existing ordering
+already ranks current full/literal search hits ahead of navigation-only candidates;
+the trace contains no demonstrated ordering or authority defect. The earliest
+remaining responsibility is Agent evidence-gap planning/synthesis, with world-model
+coverage/retrieval still a plausible input only if an independent task proves the
+same missing relation. N0 therefore makes no product change and does not justify
+Prompt/Schema, budget, Reviewer, or question-specific rules.
