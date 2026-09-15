@@ -331,6 +331,7 @@ class LocalGitRetrievalWorker:
         repository_id: StableId,
         binding_id: StableId,
         source_profile: LocalGitEvidenceClassProfile,
+        search_path_hints: Mapping[str, Sequence[str]] | None = None,
     ) -> None:
         root = Path(repository)
         if not root.is_absolute():
@@ -360,6 +361,10 @@ class LocalGitRetrievalWorker:
         self._repository_id = repository_id
         self._binding_id = binding_id
         self._source_profile = source_profile
+        self._search_path_hints = {
+            query: tuple(dict.fromkeys(paths))
+            for query, paths in (search_path_hints or {}).items()
+        }
         self._connector = LocalGitConnector(str(canonical))
 
     @property
@@ -558,13 +563,17 @@ class LocalGitRetrievalWorker:
             candidate_ordering = (
                 "QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2"
             )
+        hinted_paths = frozenset(self._search_path_hints.get(operation.query, ()))
         ranked_candidates = tuple(
             sorted(
                 (
                     (_search_entry_rank(entry.path, operation.query), entry)
                     for entry in entries
                 ),
-                key=lambda candidate: candidate[0],
+                key=lambda candidate: (
+                    0 if candidate[1].path in hinted_paths else 1,
+                    candidate[0],
+                ),
             )
         )
         path_candidates = tuple(

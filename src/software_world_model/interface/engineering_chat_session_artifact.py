@@ -1338,11 +1338,23 @@ def prepare_engineering_chat_artifact_session(
         at=current,
         clock=runtime_clock,
     )
+    cognition_search_path_hints: dict[str, tuple[str, ...]] = {}
+    if capability_cognition_index is not None:
+        by_name: dict[str, list[str]] = {}
+        for entity in capability_cognition_index.snapshot.entities:
+            source_path = dict(entity.attributes).get("source_path")
+            if isinstance(source_path, str) and entity.name:
+                by_name.setdefault(entity.name, []).append(source_path)
+        cognition_search_path_hints = {
+            name: tuple(dict.fromkeys(paths))
+            for name, paths in by_name.items()
+        }
     worker = LocalGitRetrievalWorker(
         source_repository,
         repository_id=repository_id,
         binding_id=binding_id,
         source_profile=profile,
+        search_path_hints=cognition_search_path_hints,
     )
     runtime = prepare_engineering_chat_session_runtime(
         binding=binding,
