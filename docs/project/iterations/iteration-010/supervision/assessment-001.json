@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T02:54:07+08:00",
+  "assessed_at": "2026-09-16T03:11:24+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -90,7 +90,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "Run-278 was bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source. The parent reports a real in-app Browser/CUA execution with the fixed A=[1,2,3], B=[4], C=[5] topology, but no immutable DOM/unique-POST artifact is present in the run directory for independent verification. Sealed Gateway evidence shows q1 BUDGET_EXHAUSTED before Citation/Review/Delivery, q2-q4 accepted, and q5 LIVE_INTEGRATION_HELD pre-dispatch without Citation/Review/Delivery. Runtime record run-278-c2-browser-ui-rework is sealed in the supervision lane; C2 and phase exit remain unproven.",
+      "summary": "Run-279 was bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source. The sealed q1 trajectory starts with SEARCH_COGNITION(query=favorite) returning zero items and then repeats SEARCH_SOURCE(query=favorite) until BUDGET_EXHAUSTED, with no READ_SOURCE, Citation, fresh Review or Delivery. The parent reports a real in-app Browser/CUA submission, but no immutable DOM/unique-POST artifact is present in the run directory for independent verification. Runtime record run-279-c2-browser-ui-rework is sealed in the supervision lane; C2 and phase exit remain unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -98,6 +98,6 @@
       ]
     }
   ],
-  "earliest_divergence": "agent-evidence-budget-and-browser-evidence-sealing",
-  "next_action": "Keep the phase verdict REWORK and do not count run-278 as C2/phase closure: q1 and q5 lack Citation/Review/Delivery, and the claimed Browser DOM/POST evidence is not independently sealed. Do not replay q5 or alter Prompt, Schema, Provider, decoder, or Reviewer. On the unchanged clean exact candidate, prepare a fresh C2 successor with a real in-app Browser/CUA path and immutable DOM/unique-POST artifacts, preserving q1/q2/q3 in one Conversation and q4/q5 in fresh Conversations. Independently inspect each trajectory; only then consider a generic Agent-layer repair. Do not claim ADVANCE until all five turns and the phase-level material-gain criteria are independently evidenced."
+  "earliest_divergence": "agent-evidence-planning",
+  "next_action": "Keep the phase verdict REWORK and do not count run-279 as C2/phase closure. Preserve the q1 raw trajectory and do not replay it or submit later ordinals from that run. Before any code change, independently reproduce the same evidence-planning deficit on at least two heterogeneous tasks; only then consider a minimal generic Agent-layer repair that leaves Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged. After a justified repair, prepare a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and the fixed A=[1,2,3], B=[4], C=[5] topology. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
