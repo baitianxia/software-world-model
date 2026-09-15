@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-15T20:49:00+08:00",
+  "assessed_at": "2026-09-15T20:54:00+08:00",
   "evidence": [
     {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"},
     {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"},
@@ -24,9 +24,8 @@
   "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
   "defects": [
     {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The negative-need cohort defect has been corrected in f21bd99. Exact snapshot d552b3d8 now preserves the lexical baseline for method-heavy updateRole/getRoleList/pay (12/12/10 matching methods) while promoting up to two methods for broad role/coupon/order/address/product pages. This local check is not live C1 evidence.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
-    {"severity":"MAJOR","owner_layer":"documentation-contract-consistency","summary":"The new cognition change now has accurate Finding-010-283 metadata and active SLICE binding, but docs/project/current.md still omits FINDING-010-283 from its current depends_on list. The authoritative current context should either include the new active finding or explicitly document why the list is intentionally bounded.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-finding","candidate-slice-binding"]},
     {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved and no fresh original-plus-two-heterogeneous C1 execution exists on this candidate. Exact broad search now shows two methods for role/coupon/order, but this local observation is not a browser Answer/Citation/fresh-review closure.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]}
   ],
   "earliest_divergence":"knowledge-cognition-broad-page-projection",
-  "next_action":"Do not launch fresh C1 until docs/project/current.md accurately reflects active FINDING-010-283 (or records a documented bounded-list rationale), then rebind this assessment to the resulting clean candidate. The exact snapshot guard is independently verified: broad pages expose two METHOD entities and method-heavy queries preserve lexical order. After that clean recheck, run fresh original-plus-two-heterogeneous C1 evidence without Prompt, Schema, Provider, Reviewer, budget, or question-specific changes."
+  "next_action":"The f21 cognition guard and efb Finding/SLICE binding are independently verified; rebind this assessment to efb8abb/tree b36fb043 and then launch one fresh exact C1 scope containing the original failure plus two heterogeneous tasks. Require real cognition→Source→Citation→fresh-review evidence for every task; do not alter Prompt, Schema, Provider, Reviewer, budget, or question-specific logic, and do not treat this as ADVANCE."
 }
