@@ -1,0 +1,29 @@
+{
+  "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
+  "iteration": "ITER-010",
+  "candidate_branch": "codex/development",
+  "candidate_commit": "30416a992701b2eb007e09614d637e26f8f5aa4b",
+  "candidate_tree": "b230ede88e0c4ab39b41d120adb60dc0a34bb84b",
+  "candidate_worktree_digest": "sha256:b3b53f03979715e904026cb54e60eac3bddece4b3c4e21eda8bf745b1050daa7",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "phase": "C",
+  "verdict": "REWORK",
+  "assessor": "independent-supervisor",
+  "assessed_at": "2026-09-15T20:03:00+08:00",
+  "evidence": [
+    {"id":"broad-page-runtime-audit","scope":"candidate","path":"docs/project/iterations/iteration-010/supervision/runtime/cognition-broad-page-30416a9-review.json","sha256":"sha256:6fecfbdf876e710ffb3bbe9f6772ba89258b5f7a4e0aacbfde642bcbf6b72cc4"},
+    {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:11648d379e23c7a75d1e937ca839f30ac49d65fc23f770ea55b469a27708ff1d"},
+    {"id":"candidate-cognition-tests","scope":"candidate","path":"tests/test_capability_cognition.py","sha256":"sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"},
+    {"id":"current-finding-stale-owner","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:cc54826afc62d836c4e1d3a18edf18899a5b8beeb7dfed5f9a64daf64beb82d6"},
+    {"id":"exact-source","scope":"source","path":"README.md","sha256":"sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"}
+  ],
+  "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
+  "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
+  "defects": [
+    {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The 30416a9 broad-page change claims at least two matching METHOD candidates, but exact snapshot execution still returns only one METHOD in the first 12 for role/coupon/order. The repeated insertion algorithm moves the earlier promoted entry out of the window; the existing test only checks any METHOD, so the claimed invariant is unproven and false.","evidence_ids":["broad-page-runtime-audit","candidate-cognition-implementation","candidate-cognition-tests"]},
+    {"severity":"MAJOR","owner_layer":"documentation-contract-consistency","summary":"The knowledge-layer change is not accompanied by an updated active Finding or Owner document; FINDING-010-282 still records the prior Agent-only diagnosis and does not describe the new broad-page invariant or its failure.","evidence_ids":["current-finding-stale-owner","candidate-cognition-implementation"]},
+    {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved: broad cognition search was not refined/paged, repeated Source searches consumed the bounded path, and Reviewer MORE_EVIDENCE ended without Delivery. No fresh C1 evidence may be credited from this candidate.","evidence_ids":["current-finding-stale-owner"]}
+  ],
+  "earliest_divergence":"knowledge-cognition-broad-page-projection",
+  "next_action":"Do not launch fresh C1 on this candidate. Correct the broad-page projection with a one-shot stable promotion of at least two matching METHOD entities (when available), add heterogeneous tests for actual first-page count, pagination and TYPE-only identity, update the active Finding/Owner in the same change, then rebind supervision to the new clean candidate. After that, run fresh original-plus-two-heterogeneous C1 evidence; do not modify Prompt, Schema, Provider, Reviewer, budget, or add question-specific logic."
+}

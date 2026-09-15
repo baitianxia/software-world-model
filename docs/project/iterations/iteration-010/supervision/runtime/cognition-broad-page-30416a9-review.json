@@ -1,0 +1,54 @@
+{
+  "schema": "SWM_SUPERVISION_RUNTIME_REVIEW@1",
+  "iteration": "ITER-010",
+  "candidate_commit": "30416a992701b2eb007e09614d637e26f8f5aa4b",
+  "candidate_tree": "b230ede88e0c4ab39b41d120adb60dc0a34bb84b",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "artifact": "var/iteration-010/slice-001/run-128-phase-c-integrated/capability-cognition.json",
+  "artifact_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "check": "CapabilityCognitionIndex.search broad query window",
+  "observations": [
+    {
+      "query": "role",
+      "limit": 12,
+      "total": 597,
+      "first_page_method_count": 1,
+      "first_page_names": [
+        "UmsRoleController",
+        "UmsAdminRoleRelationDao",
+        "UmsRoleDao",
+        "UmsAdminRoleRelationMapper",
+        "UmsRoleMapper",
+        "UmsRoleMenuRelationMapper",
+        "UmsRolePermissionRelationMapper",
+        "UmsRoleResourceRelationMapper",
+        "UmsAdminRoleRelation",
+        "UmsAdminRoleRelationExample",
+        "updateRole",
+        "Criteria"
+      ],
+      "target_method_visible": true,
+      "target_method": "updateRole"
+    },
+    {
+      "query": "coupon",
+      "limit": 12,
+      "total": 946,
+      "first_page_method_count": 1,
+      "target_method_visible": false
+    },
+    {
+      "query": "order",
+      "limit": 12,
+      "total": 2549,
+      "first_page_method_count": 1,
+      "target_method_visible": false
+    }
+  ],
+  "expected_invariant": "When at least two matching METHOD entities exist beyond a broad page, the first navigation window must contain at least two matching METHOD entities; full-domain uniqueness, pagination identity, and TYPE-only relative order must remain unchanged.",
+  "result": "FAIL",
+  "earliest_layer": "knowledge-cognition-broad-page-projection",
+  "reason": "The committed while-loop counts promoted positions but repeated insertion shifts the first promoted method out of the fixed window. The implementation claim of two visible methods is therefore not true on the exact artifact.",
+  "performed_by": "independent-supervisor",
+  "performed_at": "2026-09-15T20:02:00+08:00"
+}
