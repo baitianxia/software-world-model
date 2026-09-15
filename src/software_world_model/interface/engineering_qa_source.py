@@ -332,6 +332,8 @@ class LocalGitRetrievalWorker:
         binding_id: StableId,
         source_profile: LocalGitEvidenceClassProfile,
         search_path_hints: Mapping[str, Sequence[str]] | None = None,
+        search_path_hints_revision: str | None = None,
+        search_path_hints_digest: Digest | None = None,
     ) -> None:
         root = Path(repository)
         if not root.is_absolute():
@@ -365,6 +367,16 @@ class LocalGitRetrievalWorker:
             query: tuple(dict.fromkeys(paths))
             for query, paths in (search_path_hints or {}).items()
         }
+        if self._search_path_hints and (
+            not search_path_hints_revision
+            or not isinstance(search_path_hints_digest, Digest)
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "Source search hints require exact snapshot identity",
+            )
+        self._search_path_hints_revision = search_path_hints_revision
+        self._search_path_hints_digest = search_path_hints_digest
         self._connector = LocalGitConnector(str(canonical))
 
     @property
@@ -563,24 +575,32 @@ class LocalGitRetrievalWorker:
             candidate_ordering = (
                 "QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2"
             )
-        hinted_paths = frozenset(self._search_path_hints.get(operation.query, ()))
+        hinted_paths = frozenset(
+            self._search_path_hints.get(operation.query, ())
+            if operation.evidence_class is EngineeringEvidenceClass.SOURCE
+            and operation.repository_revision == self._search_path_hints_revision
+            else ()
+        ).intersection(entry.path for entry in entries)
         ranked_candidates = tuple(
             sorted(
                 (
                     (_search_entry_rank(entry.path, operation.query), entry)
                     for entry in entries
                 ),
-                key=lambda candidate: (
-                    0 if candidate[1].path in hinted_paths else 1,
-                    candidate[0],
-                ),
+                key=lambda candidate: candidate[0],
             )
         )
+        hint_candidates = tuple(
+            candidate for candidate in ranked_candidates
+            if candidate[1].path in hinted_paths
+        )
         path_candidates = tuple(
-            candidate for candidate in ranked_candidates if candidate[0][0] <= 2
+            candidate for candidate in ranked_candidates
+            if candidate[0][0] <= 2 and candidate[1].path not in hinted_paths
         )
         fallback_candidates = tuple(
-            candidate for candidate in ranked_candidates if candidate[0][0] == 3
+            candidate for candidate in ranked_candidates
+            if candidate[0][0] == 3 and candidate[1].path not in hinted_paths
         )
         fallback_offset_applied = (
             operation.search_fallback_offset % len(fallback_candidates)
@@ -588,10 +608,23 @@ class LocalGitRetrievalWorker:
             else 0
         )
         ranked_entries = (
+            *hint_candidates,
             *path_candidates,
             *fallback_candidates[fallback_offset_applied:],
             *fallback_candidates[:fallback_offset_applied],
         )
+        if hint_candidates:
+            candidate_ordering = "COGNITION_EXACT_SYMBOL_PATHS_THEN_" + candidate_ordering
+        search_scope_coverage.update({
+            "cognition_priority_path_count": str(len(hint_candidates)),
+            "cognition_priority_path_digest": (
+                digest_of(tuple(entry.path for _, entry in hint_candidates)).value
+                if hint_candidates else "NONE"
+            ),
+            "cognition_priority_snapshot_digest": (
+                self._search_path_hints_digest.value if hint_candidates else "NONE"
+            ),
+        })
         folded_query = operation.query.casefold()
         identifier_navigation_terms = _identifier_navigation_terms(
             operation.query
@@ -636,7 +669,7 @@ class LocalGitRetrievalWorker:
                 )
             bytes_read += len(raw)
             files_read += 1
-            if rank[0] == 3:
+            if rank[0] == 3 and entry.path not in hinted_paths:
                 fallback_examined_file_count += 1
             else:
                 path_candidates_processed += 1

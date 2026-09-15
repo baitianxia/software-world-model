@@ -4,9 +4,9 @@ kind: implementation-finding
 status: dispositioned
 authority: execution-evidence
 owners: [application, quality]
-depends_on: [FINDING-010-281]
-code: [src/software_world_model/application_services/lightweight_engineering_agent.py]
-tests: [tests/test_lightweight_engineering_agent.py]
+depends_on: [FINDING-010-281, SYS-CONTRACT-SOURCE-ARTIFACT]
+code: [src/software_world_model/application_services/lightweight_engineering_agent.py, src/software_world_model/interface/engineering_qa_source.py, src/software_world_model/interface/engineering_chat_session_artifact.py]
+tests: [tests/test_lightweight_engineering_agent.py, tests/test_engineering_qa_source.py, tests/test_engineering_chat_session_artifact.py]
 iteration: ITER-010
 classification: local-implementation
 scope: systemic
@@ -313,3 +313,31 @@ remaining responsibility is Agent evidence-gap planning/synthesis, with world-mo
 coverage/retrieval still a plausible input only if an independent task proves the
 same missing relation. N0 therefore makes no product change and does not justify
 Prompt/Schema, budget, Reviewer, or question-specific rules.
+
+## Exact-symbol navigation audit and correction of the first hint implementation
+
+On 2026-09-15, the current index loaded run-128's same cognition artifact with
+revision/tree/digest verification. `search("updateSkuStock")` returned 18 items,
+with `PortalOrderDao#updateSkuStock` first and its exact L22 provenance. Rebuilding
+the Source scan ordering over the 519 authorized Java paths placed that DAO at
+438 and the already-read caller implementation at 486, both beyond 56. Thus the
+Source PARTIAL result is truthful, but the integration can use exact cognition
+symbols as navigation hints without treating them as facts or narrowing scope.
+
+`9137db1` added this internal hint, but a subsequent independent recheck found
+that regrouping path and fallback cohorts lost cross-cohort priority. The fixture
+in `4205b63` was too weak: its target already preceded all unrelated filenames.
+Its pass was not evidence that the bug was fixed, and the prior claim is withdrawn.
+The revised unrelated `rotateCipherKey` fixture puts the target at rank 3 behind
+20 rank-2 paths, uses a one-file budget, and fails on `4205b63` with no hit.
+The corrected implementation gives hints their own first cohort, excludes them
+from rotating fallback accounting, and records actual ordering and hint identity
+in Coverage. The fixture also checks unhinted/stale-revision misses, allowlist
+intersection, and a no-literal-hit scan continuing through all 21 allowed files.
+
+The artifact composition now uses entity provenance, not an attribute path, and
+binds hints to the loaded snapshot revision/digest. No Agent protocol, Prompt,
+query, budget, Provider, Reviewer, or Citation identity is changed. The Source
+contract above owns this ordering behavior. These deterministic checks do not
+establish autonomous Agent success; fresh C1 and C2 evidence remains required,
+and q1's separate Citation-selection failure remains unresolved.

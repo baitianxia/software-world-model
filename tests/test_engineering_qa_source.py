@@ -343,11 +343,11 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
         search_root = self.repository / "hinted"
         search_root.mkdir()
         for index in range(20):
-            (search_root / f"unrelated-{index:02d}.txt").write_text(
+            (search_root / f"Cipher{index:02d}.java").write_text(
                 "no matching token\n", encoding="utf-8"
             )
-        target = search_root / "implementation.java"
-        target.write_text("int updateSkuStock() { return 1; }\n", encoding="utf-8")
+        target = search_root / "ZEngine.java"
+        target.write_text("int rotateCipherKey() { return 1; }\n", encoding="utf-8")
         self.git("add", "hinted")
         self.git("commit", "-q", "-m", "cognition source hint fixture")
         self.revision = self.git("rev-parse", "HEAD").strip()
@@ -366,18 +366,59 @@ class LocalGitRetrievalWorkerTests(unittest.TestCase):
             repository_id=self.repository_id,
             binding_id=self.binding_id,
             source_profile=self.source_profile,
-            search_path_hints={"updateSkuStock": ("hinted/implementation.java",)},
+            search_path_hints={
+                "rotateCipherKey": ("hinted/ZEngine.java", "README.md"),
+                "absentLiteral": ("hinted/ZEngine.java",),
+            },
+            search_path_hints_revision=self.revision,
+            search_path_hints_digest=digest_of("exact cognition fixture"),
         )
         result = self.worker.execute(
             self.operation(
                 operation=SourceReadOperation.SEARCH,
                 allowlist=("hinted",),
-                query="updateSkuStock",
+                query="rotateCipherKey",
                 maximum_files=1,
             )
         )
         self.assertEqual(result.files_read, 1)
-        self.assertEqual(result.items[0].path, "hinted/implementation.java")
+        self.assertEqual([item.path for item in result.items], ["hinted/ZEngine.java"])
+        coverage = dict(result.coverage)
+        self.assertEqual(result.status, RetrievalStatus.PARTIAL)
+        self.assertEqual(coverage["cognition_priority_path_count"], "1")
+        self.assertEqual(coverage["scoped_entry_count"], "21")
+        self.assertEqual(coverage["fallback_examined_file_count"], "0")
+        self.assertEqual(
+            coverage["candidate_ordering"],
+            "COGNITION_EXACT_SYMBOL_PATHS_THEN_"
+            "QUERY_IDENTIFIER_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@3",
+        )
+        # A hint is navigation, not a literal hit or a narrowed search scope.
+        absent = self.worker.execute(self.operation(
+            operation=SourceReadOperation.SEARCH, allowlist=("hinted",),
+            query="absentLiteral", maximum_files=32,
+        ))
+        self.assertEqual(absent.items, ())
+        self.assertEqual(absent.files_read, 21)
+        self.assertEqual(absent.status, RetrievalStatus.COMPLETE)
+        self.assertEqual(dict(absent.coverage)["fallback_examined_file_count"], "20")
+        for hint_revision in (None, "f" * 40):
+            baseline = LocalGitRetrievalWorker(
+                self.repository, repository_id=self.repository_id,
+                binding_id=self.binding_id, source_profile=self.source_profile,
+                search_path_hints=(
+                    {"rotateCipherKey": ("hinted/ZEngine.java",)}
+                    if hint_revision else None
+                ),
+                search_path_hints_revision=hint_revision,
+                search_path_hints_digest=digest_of("different snapshot"),
+            )
+            unhinted = baseline.execute(self.operation(
+                operation=SourceReadOperation.SEARCH, allowlist=("hinted",),
+                query="rotateCipherKey", maximum_files=1,
+            ))
+            self.assertEqual(unhinted.items, ())
+            self.assertEqual(dict(unhinted.coverage)["cognition_priority_path_count"], "0")
 
     def test_search_prioritizes_identifier_component_beyond_file_fuse(self):
         search_root = self.repository / "module/src/main/java/example"

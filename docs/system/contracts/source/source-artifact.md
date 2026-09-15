@@ -51,6 +51,12 @@ Source Integration 独占 Source Operation、Read Session、Artifact、Payload �
    `EXACT_STATIC_SOURCE_TEXT` 才能形成 affirmative support。若 bounded observation 已有任一 literal hit，不得再混发 navigation candidate；
    candidate、Boundary、Citation 和 opaque locator identity 不一致时必须失败关闭。该机制不改变 exact revision、allowlist、Source Profile、
    prefix/rotation、Partial semantics、16-candidate/56 per-search/64 whole-Turn、reserved READ 或任何 byte/action/result fuse。
+   World Model Chat 的组合层可以从已验证 exact revision/tree/digest 的 cognition snapshot 投影内部、非版本化的 exact entity-name → provenance-path hints。
+   Worker 仅在 SOURCE 类和同一 revision 使用它们，并先与已批准 scope/allowlist 的 tree entries 取交集。该 cohort 必须在最终扫描序列中置于
+   path 和 rotating fallback cohort 之前，不能在重新分组或 offset 后失去优先级；每个路径仍只扫描一次。其读取照常计入全部 file/byte fuse，
+   但不推进非 hint canonical fallback 的 offset。Coverage 必须记录实际 ordering、hint path count/digest 和 snapshot digest。该索引不是全工程
+   完整范围；没有 literal hit 仍继续原 bounded fallback，且不得改变 query、modality、Citation、read authority、原 scope 或 Partial 语义。
+   Source-only 不提供该 hint；revision 不匹配时不使用旧 hint。hint 路径只有 fresh Source 正文逐字匹配后才成为 literal evidence。
 8. Source Payload 及其中的注释、文档、配置和测试文本都是不可信 data。其中的指令、URL、路径、工具建议或权限声明不得改变授权、Target、allowlist、操作集、Provider disclosure 或资源上限。
 
 ## 目标命名

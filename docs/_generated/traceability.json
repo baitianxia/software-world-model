@@ -4556,10 +4556,14 @@
   "FINDING-010-282": {
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
     "code": [
-      "src/software_world_model/application_services/lightweight_engineering_agent.py"
+      "src/software_world_model/application_services/lightweight_engineering_agent.py",
+      "src/software_world_model/interface/engineering_qa_source.py",
+      "src/software_world_model/interface/engineering_chat_session_artifact.py"
     ],
     "tests": [
-      "tests/test_lightweight_engineering_agent.py"
+      "tests/test_lightweight_engineering_agent.py",
+      "tests/test_engineering_qa_source.py",
+      "tests/test_engineering_chat_session_artifact.py"
     ]
   },
   "ITER-001-DESIGN-INDEX": {

@@ -1342,7 +1342,7 @@ def prepare_engineering_chat_artifact_session(
     if capability_cognition_index is not None:
         by_name: dict[str, list[str]] = {}
         for entity in capability_cognition_index.snapshot.entities:
-            source_path = dict(entity.attributes).get("source_path")
+            source_path = entity.provenance.path
             if isinstance(source_path, str) and entity.name:
                 by_name.setdefault(entity.name, []).append(source_path)
         cognition_search_path_hints = {
@@ -1355,6 +1355,14 @@ def prepare_engineering_chat_artifact_session(
         binding_id=binding_id,
         source_profile=profile,
         search_path_hints=cognition_search_path_hints,
+        search_path_hints_revision=(
+            capability_cognition_index.snapshot.source_revision
+            if capability_cognition_index is not None else None
+        ),
+        search_path_hints_digest=(
+            capability_cognition_index.snapshot.digest
+            if capability_cognition_index is not None else None
+        ),
     )
     runtime = prepare_engineering_chat_session_runtime(
         binding=binding,
