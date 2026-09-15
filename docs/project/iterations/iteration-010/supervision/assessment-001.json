@@ -2,17 +2,17 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "efb8abb9b1e0f9a9f47094447c1cb08560ef77ef",
-  "candidate_tree": "b36fb043de199b0a63406d0c3155be84011c325d",
-  "candidate_worktree_digest": "sha256:d7a253b2e53bf53be6f6e5dc2896bc7e7b16575a14c6d95e7e44d5f03ccb5cf0",
+  "candidate_commit": "2412804c96f9f2232671017766624ba5b732a876",
+  "candidate_tree": "fcb76a1bf1ac70a5cce17f039e1f1e66bb69993d",
+  "candidate_worktree_digest": "sha256:c90bc42b13be784cc2e2d21edf9120bc8b43a95ce3ee2fdbb609519682c1aca3",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-15T21:02:00+08:00",
+  "assessed_at": "2026-09-15T21:31:00+08:00",
   "evidence": [
-    {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"},
-    {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"},
+    {"id":"phase-c-current-objective","scope":"candidate","path":"docs/project/current.md","sha256":"sha256:17ac162754b328221dac604d044576a5dcd729ceb61ce3f64ac1dd9362a8f294"},
+    {"id":"phase-c-current-execution-plan","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md","sha256":"sha256:ee1128ce0e396e88661e3c252d62cc2cd6cf44c0599ed06b1cab4821e9aec52b"},
     {"id":"candidate-cognition-implementation","scope":"candidate","path":"src/software_world_model/knowledge_engine/capability_cognition.py","sha256":"sha256:4cf6563b0d68cc32097884bace8d2cec5ee6b260fcf93d35a5dbbc6b13cc7eab"},
     {"id":"candidate-cognition-tests","scope":"candidate","path":"tests/test_capability_cognition.py","sha256":"sha256:3c27ef685325e7f0602e48ed22e9b086558ca0c127e674ed4837f266be2e44f5"},
     {"id":"prior-c1-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:217bf64fb91362bd51460e9a9dbbdfc3deff1cc47e6093c11d98b6161fe0e1d4"},
@@ -24,9 +24,8 @@
   "unresolved_requirements": ["answer-citation-fresh-review-loopback-web","three-heterogeneous-tasks-and-semantic-followup","world-model-material-gain-without-material-regression"],
   "defects": [
     {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The negative-need cohort defect has been corrected in f21bd99. Exact snapshot d552b3d8 now preserves the lexical baseline for method-heavy updateRole/getRoleList/pay (12/12/10 matching methods) while promoting up to two methods for broad role/coupon/order/address/product pages. This local check is not live C1 evidence.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
-    {"severity":"MAJOR","owner_layer":"documentation-contract-consistency","summary":"Candidate efb8abb binds Finding-010-283 and the active slice, but the normative current context and execution card still state the prior latest candidate 940566c and omit the new finding from the current context dependency list. Fresh C1 evidence must not be attributed to this candidate until those factual bindings are updated and the resulting clean tree is rechecked.","evidence_ids":["phase-c-current-objective","phase-c-current-execution-plan","candidate-cognition-finding","candidate-slice-binding"]},
     {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved and no fresh original-plus-two-heterogeneous C1 execution exists on this candidate. Exact broad search now shows two methods for role/coupon/order, but this local observation is not a browser Answer/Citation/fresh-review closure.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]}
   ],
-  "earliest_divergence":"documentation-contract-consistency",
-  "next_action":"Update current.md and EXECUTION-PLAN-CURRENT.md to accurately bind efb8abb/tree b36fb043 and Finding-010-283 (preserving historical run references), run docs generate/check, commit the docs-only correction, and rebind this assessment. Only then launch one fresh exact C1 scope containing the original failure plus two heterogeneous tasks; require real cognition→Source→Citation→fresh-review evidence for every task and do not alter Prompt, Schema, Provider, Reviewer, budget, or question-specific logic. This remains REWORK, not ADVANCE."
+  "earliest_divergence":"agent-evidence-planning-and-review-loopback",
+  "next_action":"The efb cognition guard, Finding/SLICE binding, and the 2412804 current/plan documentation correction are independently verified. Create one unique fresh exact C1 scope containing the original failure plus two heterogeneous tasks; require real cognition→Source→Citation→fresh-review evidence for every task, with empty new gateway stores and exact 2412804/tree fcb76a1 + mall 0504e86/tree 047d. Do not reuse run-274 or alter Prompt, Schema, Provider, Reviewer, budget, or question-specific logic. This remains REWORK, not ADVANCE."
 }
