@@ -368,3 +368,14 @@ completion, so this run is evidence of a remaining Agent evidence-gap planning
 failure, not C1 closure or a Source-ranking success. The run had no replay or
 post-dispatch unknown. The earlier run-268 preparation failure had zero model
 calls and is a separate environment precondition result.
+
+That statement is limited to q1: the same run's q3 Elasticsearch-import and
+q4 member-address turns did issue Source searches and independently exercised
+the hint path. Their sealed DeepSeek manifests record `cognition_priority_path_count=1`,
+the exact snapshot digest `sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243`,
+and literal Source hits after hint-first ordering (q3 path digest
+`sha256:1c4608e93a4b29936a713c0a5cfea2579e5e14d6e49adcba927a5d67b38dd81e`,
+q4 path digest
+`sha256:a32e3040e98c1bc5e635803440c83595a157b9d8ce44a393a8de9b92bbb1ad64`).
+These are heterogeneous runtime integration evidence, but the four-turn run
+still has outer `NOT_ACCEPTED` quality and does not close C1/C2.
