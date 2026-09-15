@@ -1,0 +1,74 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-282-c2-browser-ui",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:48bfaa31d7e828d674044b36b0d26c93c1e7bac1469cfa7a1c8e323dee058b25",
+  "turn_scope_sha256": "sha256:3b772d509b8d85dc07f0b503501a48fc02454633ecfc2aff5f7a65681007c49e",
+  "questions_sha256": "sha256:ab642a4010edcec49065be8b3b87781f317de12675cc90731cc5d1771fff6659",
+  "terminal_file_sha256": "sha256:c14480178ff286f59606012b6cb5cf30d50b9de1ab6532d8f2bdf1fffbcc924b",
+  "terminal_digest": "sha256:e74e87f4b5cef6fd580873c919f5120cc82af0ecde4a70c4676fe6b60fb7aa8c",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 1,
+  "provider_dispatch_count": 9,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark": "sha256:1fbf868a7eddd6e561262d07a6f6e42753d3dbbc65493a5662a24f5562751e42",
+    "deepseek": "sha256:8ba04ed5aba0289e3b854a3820fa584f7832ed25444032139e7b0170046977c8"
+  },
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-budget",
+  "browser_live_verification": "REPORTED_BY_PARENT_UNSEALED",
+  "browser_evidence_status": "NOT_SEALED",
+  "post_fuse_non_finish_observed": false,
+  "sealed_primary_steps": [
+    {"step": 1, "tools_enabled": true, "action": "SEARCH_COGNITION", "query": "favorite"},
+    {"step": 2, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 3, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 4, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "collect"},
+    {"step": 5, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "collect"},
+    {"step": 6, "tools_enabled": true, "action": "SEARCH_SOURCE", "query": "favorite"},
+    {"step": 7, "tools_enabled": false, "action": "FINISH", "response_kind": "LIMITATION"}
+  ],
+  "conversation_topology": {
+    "A": [1, 2, 3],
+    "B": [4],
+    "C": [5]
+  },
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "conversation": "conversation_5e8d2b29f89a4c43b29f162b92438909",
+      "conversation_revision_after": 2,
+      "quality_status": "NOT_ACCEPTED",
+      "delivery_state": "NOT_AUTHORIZED",
+      "provider_dispatch_count": 9,
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": true,
+      "review_verdict": "MORE_EVIDENCE"
+    },
+    {"ordinal": 2, "status": "NOT_RUN"},
+    {"ordinal": 3, "status": "NOT_RUN"},
+    {"ordinal": 4, "status": "NOT_RUN"},
+    {"ordinal": 5, "status": "NOT_RUN"}
+  ],
+  "trajectory_summary": [
+    "DeepSeek raw sealed inputs show four Source-search proposals after an empty cognition result; duplicate favorite and collect proposals are rejected/replanned, and the fixed no-progress fuse closes the tool catalog before step 7.",
+    "With tools_enabled=false and available_actions=[FINISH], the primary emits a truthful LIMITATION without Citation. The independent Reviewer returns MORE_EVIDENCE; the Application closes the turn with BUDGET_EXHAUSTED as required by the no-progress contract.",
+    "All eight DeepSeek outputs complete with IDENTITY normalization and no provider post-dispatch failure. Ark has one isolated pre-dispatch TLS failure, which is not the earliest semantic divergence.",
+    "No q2-q5 dispatch occurred after q1 failure; parent-reported Browser DOM is not independently sealed in supervision."
+  ],
+  "evidence": [
+    "run-282/session.json and turn-scope.json are mode 0600 and bind product 3930afe4cab82ec621730a902f700e4ad0d9690d/tree 2fa4718d8550d813dd3349cd3096a42038c6dc54, exact mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a, and cognition sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243.",
+    "run-282/terminal.json sha256:c14480178ff286f59606012b6cb5cf30d50b9de1ab6532d8f2bdf1fffbcc924b records STOPPED_AFTER_DISPATCH, one conversation, one turn, nine aggregate provider dispatches, zero retries, and production activation NOT_EXECUTED; terminal digest is sha256:e74e87f4b5cef6fd580873c919f5120cc82af0ecde4a70c4676fe6b60fb7aa8c.",
+    "The fixed scope declares A=[1,2,3], B=[4], C=[5], but only q1 ran. The raw DeepSeek sealed-input records independently establish the tools-enabled boundary and action sequence; no post-fuse non-FINISH decision is present.",
+    "The generic duplicate/no-progress fuse is covered by two heterogeneous deterministic fixtures in f501045 and documented by the current candidate. This live q1 still shows no source evidence and therefore does not establish C2 or phase closure."
+  ],
+  "next_action": "Keep REWORK/NOT_RUN and preserve run-282 without replay. Do not change decoder, schema, Prompt, Provider, Reviewer, budget or post-fuse fail-closed behavior. Use fresh exact-source runs on the unchanged candidate to test at least two independent heterogeneous trajectories and then the full C2 browser topology, sealing DOM/unique POST, Citation, fresh Review and Delivery evidence before any ADVANCE consideration.",
+  "advance_allowed": false
+}
