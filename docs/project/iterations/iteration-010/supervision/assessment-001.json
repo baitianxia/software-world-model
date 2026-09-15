@@ -2,62 +2,68 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "ba6cd61be1da78080ad0b897c0708d14ac9453f0",
-  "candidate_tree": "f9f8fe78f08b5e1a28a086ceae9df6efc84c21d4",
-  "candidate_worktree_digest": "sha256:94d6f2893f4cb33089c8a87cd5d69c2012e8ab1cd733d3909f54bd17ddf283bb",
+  "candidate_commit": "2b49a88177572b40fea79e72b57dc62317152d49",
+  "candidate_tree": "7f635878ede3e9895603c55dd1432d213de915ee",
+  "candidate_worktree_digest": "sha256:69dec810a31a35d4d1ef182c996d0c980b6b62d86c01b40b3cc27be0e84f503f",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-06T13:42:00+08:00",
+  "assessed_at": "2026-09-15T18:55:12+08:00",
   "evidence": [
     {
-      "id": "phase-c-objective-and-boundary",
+      "id": "phase-c-current-objective",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:917aeab706187ddf2821677b6598027fdf8dda1ac3b8faca80a3971921010cdb"
+      "sha256": "sha256:61b812f8b039115bf5405f01920c08babdcb2c52d596b14eb0f1b39983cfae14"
     },
     {
-      "id": "phase-c-design-and-failure-policy",
+      "id": "phase-c-current-execution-plan",
       "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md",
-      "sha256": "sha256:46e10cd50a7d5cc8f133d6438992ef6d88238f4ee71cdbe0da0e4b2b80719287"
+      "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
+      "sha256": "sha256:ef883308cf328df0202918bb2920bfc8a87368c9f878125a7a0f43594d7292f0"
     },
     {
-      "id": "candidate-citation-binding-contract",
+      "id": "source-hint-contract",
       "scope": "candidate",
-      "path": "docs/system/contracts/application/engineering-conversation.md",
-      "sha256": "sha256:d90777b7c8bae0fc5271700f49d97aefbd7022616115341428249a8cd72264d3"
+      "path": "docs/system/contracts/source/source-artifact.md",
+      "sha256": "sha256:f9702c094b974dd65d9b8939cb28ffb65d96f470c48f69a968ac507cf6ed04cd"
     },
     {
-      "id": "finding-278-local-citation-domain",
+      "id": "source-hint-finding-and-runtime-reconciliation",
       "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-278.md",
-      "sha256": "sha256:86afbca44f71ba86d9708536378d66aacf6f34e18fc9ff736f96240504d55c46"
+      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-282.md",
+      "sha256": "sha256:f9307bd818757e0cac7292a8bc494d8f6b0920fb6a69061e8997ae0ad498323e"
     },
     {
-      "id": "candidate-agent-implementation",
+      "id": "source-hint-worker",
+      "scope": "candidate",
+      "path": "src/software_world_model/interface/engineering_qa_source.py",
+      "sha256": "sha256:f87c6777877d136fdb1522f9aa15e3b7074f38fbeba7b58c2b04b6bd23e656f4"
+    },
+    {
+      "id": "source-hint-session-composition",
+      "scope": "candidate",
+      "path": "src/software_world_model/interface/engineering_chat_session_artifact.py",
+      "sha256": "sha256:a991ec6f317919dd6d4b63ad3e70aeebba98a6b7c45ae47d34cc8c18c4f31b21"
+    },
+    {
+      "id": "agent-evidence-planning-code",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:e41a5976927b1cd57ceab4eab1b008e402d68986043ef1bb221151b80b157eca"
+      "sha256": "sha256:d74773bfd15a73b853e904f40e9e526ffa6a95a2360413935c7f861751c5222c"
     },
     {
-      "id": "candidate-agent-tests",
+      "id": "source-hint-directed-tests",
       "scope": "candidate",
-      "path": "tests/test_lightweight_engineering_agent.py",
-      "sha256": "sha256:801aa80e3c761db6f658dca64042d0fc68fb750bd6afa4408aed4d866b4aad73"
+      "path": "tests/test_engineering_qa_source.py",
+      "sha256": "sha256:43c93d633da43a68b566d78b4dcb1eccbd85de07244664bca6c98d06978c8a97"
     },
     {
-      "id": "exact-source-behavior-reference",
+      "id": "exact-source-payment-reference",
       "scope": "source",
-      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/OmsPortalOrderService.java",
-      "sha256": "sha256:763729075392e55b6b57a161d17d0ec9231ce47aea9df782bd99b9f5879066fd"
-    },
-    {
-      "id": "finding-279-bounded-action-replan",
-      "scope": "candidate",
-      "path": "docs/project/iterations/iteration-010/findings/FINDING-010-279.md",
-      "sha256": "sha256:70b146cb5debb61f72f714cb471de7365f0f8d2df1dd46c4dc2dfe261626b3c3"
+      "path": "mall-portal/src/main/java/com/macro/mall/portal/service/impl/OmsPortalOrderServiceImpl.java",
+      "sha256": "sha256:fbe4276a7c9bf462b6e9399965acd77e4ce72e968a74e6337e1a07cdf5b295a7"
     }
   ],
   "completed_requirements": [
@@ -72,26 +78,25 @@
     {
       "severity": "MAJOR",
       "owner_layer": "agent-evidence-planning-and-review-loopback",
-      "summary": "run-160 在当前 clean product candidate 上贯通 q1/q2/q4 的 cognition→Source→Answer→fresh Review，但 q5 的 Reviewer call28 返回 MORE_EVIDENCE 后，Primary 直到 call29 才读取已存在的 UmsAdminService.java 候选；随后固定 11-step Agent fuse 耗尽，未完成 FINISH、fresh Reviewer、Delivery 或 Web。q5 轨迹在首次缺口前已出现重复 SEARCH_SOURCE(delResourceList)、重复 SEARCH_COGNITION 和重复 READ(read_index=13)，而可用的接口 declaration candidate(read_index=3)一直未被读取。该失败属于同一 Agent 的通用证据规划/重复动作收敛与 reviewer loopback，不是 Citation identity、Provider、Source authority 或题面。run-162、run-163、run-166、run-167、run-170、run-171、run-172、run-174、run-175、run-176、run-180、run-181、run-184、run-185、run-186、run-187、run-188、run-189 与 run-190 均因严格 decoder 拒绝 malformed/nested Reviewer 或 Primary structured output、typed action-shape 控制状态拒绝、Reviewer MORE_EVIDENCE 后证据规划耗尽，或浏览器 CUA safety 在 q3 空会话拒绝固定语义追问，而封存为 REWORK/NOT_RUN；run-168 的 q1 fresh Reviewer 正常 APPROVED，但同会话 q2 的 fresh Reviewer 再次返回 nested answer，q3-q5 未执行；run-169 的首轮 Reviewer 正常 MORE_EVIDENCE，但 Primary 选择同时携带 cognition_index/read_index 的 READ_SOURCE，边界拒绝后 bounded repair 输出 citations:null 并被严格 decoder 拒绝。run-173 独立完成 q1/q2/q4（含 Reviewer REWRITE→fresh APPROVED）与 q3 零 dispatch clarification，但 q5 Primary FINISH 含 answer 字符串内未转义 LF 控制字节，strict decoder 在 Reviewer 前拒绝；run-179 q1/q2/q4/q5 语义上交付，但重复 q5 使固定 five-ordinal scope 无效；run-180 q1 fresh Reviewer APPROVED 后 q2 Primary 输出顶层 array，被严格 decoder 在 Reviewer 前拒绝；run-181 q1 Reviewer MORE_EVIDENCE 后 Agent 重复搜索/读取控制器，未取得所需实现与接口证据并耗尽预算，未形成 fresh Reviewer/Delivery；run-184 q1 在同会话经 Reviewer REWRITE→fresh APPROVED，q2 Reviewer 返回额外 answer 字段的 nested malformed object，strict decoder 在 Reviewer 前拒绝，q3-q5 未执行；run-185 q1 同会话经 Reviewer REWRITE→fresh APPROVED，q2 Primary FINISH 后 Reviewer 再次返回额外 answer 字段的 nested malformed object（92 bytes，严格 decoder 拒绝），q3-q5 未执行；run-186 q1 在第二个 Primary decision 即以 READ_SOURCE+cognition_index=5/read_index=null 违反互斥 action shape，Application 正确 CONTROL_STATE_DENIED，未进入 Reviewer/Delivery，q2-q5 未执行；run-187 q1 经 Reviewer REWRITE 后 fresh Reviewer 再返回 62-byte nested answer wrapper，严格 decoder 拒绝，q2-q5 未执行；run-188 q1/q2 与 q3 clarification 成功，但 q4 fresh Reviewer 返回 57-byte nested answer wrapper，严格 decoder 拒绝，q5 未执行；run-189 q1 经 MORE_EVIDENCE/REWRITE 后 fresh Reviewer 返回 57-byte nested answer wrapper，严格 decoder 拒绝，q2-q5 未执行；run-190 q1/q2 delivered and q3 was correctly isolated but CUA safety refused the unchanged omitted-referent clarification before HTTP/provider dispatch, so q4/q5 were not run;因此完整 Phase C 闭包仍未满足。",
+      "summary": "Fresh run-270 original coupon q1 searched cognition, read two candidates, issued two generic Source searches and additional reads, then FINISH supplied no citations. Fresh Reviewer correctly returned MORE_EVIDENCE after 11 dispatches and the fixed read-only budget closed before a fresh review or Delivery. Fresh run-269 independently shows the new hint can be exercised on heterogeneous q3/q4 Source searches, but its original payment q1 stopped after broad cognition and four reads without the required exact symbol search. The remaining failure is generic Agent evidence-gap planning; it is not a Source authority, Citation identity, Provider, decoder, or Prompt defect.",
       "evidence_ids": [
-        "phase-c-objective-and-boundary",
-        "phase-c-design-and-failure-policy",
-        "candidate-citation-binding-contract",
-        "finding-278-local-citation-domain",
-        "candidate-agent-implementation",
-        "candidate-agent-tests",
-        "finding-279-bounded-action-replan"
+        "phase-c-current-objective",
+        "phase-c-current-execution-plan",
+        "source-hint-finding-and-runtime-reconciliation",
+        "agent-evidence-planning-code",
+        "source-hint-directed-tests"
       ]
     },
     {
       "severity": "MAJOR",
       "owner_layer": "browser/turn-scope-orchestration",
-      "summary": "run-179 的 q1/q2/q3/q4 均按固定编排完成，q5 首次在 Reviewer MORE_EVIDENCE 后因浏览器断开未闭合，随后同一 run 又启动第二个独立 q5 会话并成功交付。终端实际 turn_count=6、conversation_count=5，而 sealed five-ordinal scope 只允许五次 turn、四个会话（q1+q2 同会话，q3/q4/q5 各一个新会话）；第二次 q5 的成功不能冒充 exact-scope 第五项，因此该 run 只能记为 REWORK/NOT_RUN，不能用于 ADVANCE。",
+      "summary": "run-270's q2 HTTP 409 was caused by the diagnostic runner retaining the initial conversation revision after q1 advanced the server revision; execute.py did not copy the q1 response conversation/revision before submitting q2. This is a harness evidence gap, not a product model result, and q2 must not be counted. Future fresh runs must update the exact conversation revision after every successful turn while preserving the sealed ordinal scope.",
       "evidence_ids": [
-        "phase-c-design-and-failure-policy"
+        "phase-c-current-execution-plan",
+        "source-hint-finding-and-runtime-reconciliation"
       ]
     }
   ],
   "earliest_divergence": "agent-evidence-planning-and-review-loopback",
-  "next_action": "开发继续，不暂停、不重新授权：ba6cd61 已以通用 Application cognition page provenance rebridge 修复 run-181 暴露的已注册 entity detail/traverse bridge 缺口；保持 cognition/Source/Citation identity、固定 8-action/11-step fuse、Reviewer 独立性、Prompt/Schema、Provider 和严格 decoder 不变。该修复虽已通过 41 项相关测试与文档检查，run185 证明 q1 可经 Reviewer REWRITE→fresh APPROVED，但 q2 Reviewer 仍返回额外 answer 字段的 malformed object；run186 又在 q1 的第二个 Primary decision 触发既有互斥 action-shape CONTROL_STATE_DENIED；run187 q1 fresh Reviewer 再次返回 nested answer wrapper；run188 q1/q2/q3 成功但 q4 fresh Reviewer 再返回 nested answer wrapper；run189 q1 经 MORE_EVIDENCE/REWRITE 后 fresh Reviewer 再返回 nested answer wrapper；run190 q1/q2 成功但 q3 空会话的固定语义追问被 CUA safety 在 HTTP 前拒绝，均尚未由 fresh 浏览器闭环证明，也不得把它们视为 Phase C 完成。run-173 的 q1/q2/q4 fresh Reviewer/Delivery 与 q3 zero-dispatch clarification 均为有效进展，但 q5 malformed Primary JSON 被严格 decoder 正确拒绝；run-174 q1 fresh Reviewer nested answer、run-175 q2 fresh Reviewer nested answer、run-176 q2 fresh Reviewer nested answer plus schema metadata、run-180 q2 Primary top-level array、run-184/run-185 q2 Reviewer extra answer field、run-186 q1 cognition_index/read_index action-shape、run-187 q1 nested Reviewer answer wrapper、run-188 q4 nested Reviewer answer wrapper、run-189 q1 nested Reviewer answer wrapper、run-190 q3 CUA safety refusal 亦不能形成完整验收；run-179 q1/q2/q4/q5 semantic deliveries are useful, but its duplicated q5 makes the sealed five-ordinal scope invalid；run-181 q1 Reviewer MORE_EVIDENCE 后重复搜索/读取耗尽固定预算，未形成 fresh Reviewer/Delivery。封存 run-173/run-174/run-175/run-176/run-179/run-180/run-181/run-184/run-185/run-186/run-187/run-188/run-189/run-190 为 REWORK/NOT_RUN，不修 Provider、不放宽 decoder、不自动映射/过滤/替换 action、不绕过 CUA safety、不把部分成功、重复 q5 或预算耗尽计为通过。若平台允许，基于 ba6cd61 建 fresh successor，严格只执行一次完整 q1-q5（q1+q2 同会话、q3 新会话 clarification、q4/q5 各新会话；不得在同一 run 重复 ordinal），再验证 Reviewer/Delivery/Web、三异质题与语义追问及无回归的 source-only 增益。"
+  "next_action": "Keep the committed cognition→Source hint implementation and all exact identities unchanged. Build one fresh logical C1 run with new DB/receipt paths and a corrected runner that carries the returned conversation revision after each turn; replay the original evidence-gap question plus two heterogeneous tasks. Require an unread relevant Source observation after Reviewer MORE_EVIDENCE, fresh review and Delivery, and retain run269's q3/q4 hint Coverage as partial supporting evidence. Do not modify Prompt, Schema, Provider, Reviewer, budget, or question-specific logic; do not enter C2/Alpha or announce ADVANCE before fresh C1 trajectory evidence is complete."
 }

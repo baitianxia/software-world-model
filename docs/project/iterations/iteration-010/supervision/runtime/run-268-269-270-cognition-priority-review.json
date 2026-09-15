@@ -1,0 +1,19 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "observed_candidate_commit": "2b49a88177572b40fea79e72b57dc62317152d49",
+  "observed_candidate_tree": "7f635878ede3e9895603c55dd1432d213de915ee",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-review-loopback",
+  "evidence": [
+    "run-268 launch.json status ARTIFACT_SESSION_PREPARED_NOT_STARTED, listener_started_at_seal=false, provider_dispatch_count_at_seal=0; startup.log has only INVALID_ARGUMENT/Operation not permitted; both Gateway databases have zero manifests/roots/outputs/http failures. This is a pre-dispatch environment artifact, not a model or product result.",
+    "run-269 terminal.json status STOPPED_AFTER_DISPATCH, conversation_count=4, turn_count=4, provider_dispatch_count=34, digest sha256:b915e3624ef72d167b2244dd510cd00013589f644b8e69a1f717fec50789dc02.",
+    "run-269 q3 Gateway manifest input for getAllEsProductList contains SOURCE_SEARCH coverage with cognition_priority_path_count=1, cognition_priority_path_digest=sha256:1c4608e93a4b29936a713c0a5cfea2579e5e14d6e49adcba927a5d67b38dd81e, cognition_priority_snapshot_digest=sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243, ordering COGNITION_EXACT_SYMBOL_PATHS_THEN_QUESTION_PREFIX_QUERY_IDENTIFIER_PATH_THEN_ROTATING_CANONICAL_FALLBACK@2, 4 literal hits and 3 fallback files. This independently confirms the new Source hint is exercised on a heterogeneous task.",
+    "run-269 q4 Gateway manifest input for UmsMemberReceiveAddressService contains SOURCE_SEARCH coverage with cognition_priority_path_count=1, cognition_priority_path_digest=sha256:a32e3040e98c1bc5e635803440c83595a157b9d8ce44a393a8de9b92bbb1ad64, cognition_priority_snapshot_digest=sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243, ordering COGNITION_EXACT_SYMBOL_PATHS_THEN_QUERY_IDENTIFIER_PATH_RELEVANCE_THEN_ROTATING_CANONICAL_FALLBACK@3, 3 literal hits and zero fallback files.",
+    "run-269 q1 payment/inventory trajectory only SEARCH_COGNITION then four READ_SOURCE actions and FINISH; no exact updateSkuStock SEARCH_SOURCE or cognition hint was attempted. All four turns had technical quality_status=ACCEPTED with real citations/fresh review, but outer quality=NOT_ACCEPTED and each question used an independent conversation, so this is not C1/C2 closure.",
+    "run-270 q1.json state FAILED with failure code BUDGET_EXHAUSTED after 11 dispatches: cognition, two generic Source searches, reads, FINISH, then fresh Reviewer MORE_EVIDENCE; no citations/delivery. Its execute.py retained conversation_revision=1 for q2 after q1 advanced the server to revision=2, causing deterministic HTTP 409 before any model response. The runner defect is separate from the q1 Agent evidence-gap failure."
+  ],
+  "next_action": "Keep the Source hint implementation and exact identities unchanged. Build one fresh logical C1 run with new DB/receipt paths; fix only the runner's conversation revision handoff, then replay the original evidence-gap trajectory plus two heterogeneous tasks. Require machine-readable hint Coverage and actual unread Source evidence after Reviewer MORE_EVIDENCE, fresh review and Delivery before C1/C2 claims. Do not modify Prompt, Schema, Provider, Reviewer, budget, or question-specific logic.",
+  "advance_allowed": false,
+  "source_of_truth": "development/var/iteration-010/slice-001/run-268-cognition-priority-recheck/{launch.json,startup.log,ark-gateway.sqlite3,deepseek-gateway.sqlite3}; development/var/iteration-010/slice-001/run-269-cognition-priority-recheck/{terminal.json,q1.json,q2.json,q3.json,q4.json,deepseek-gateway.sqlite3}; development/var/iteration-010/slice-001/run-270-c1-closure-recheck/{q1.json,startup.log,execute.py}"
+}
