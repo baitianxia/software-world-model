@@ -2,26 +2,26 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "f501045a02e6b72ef90240d9fcde9e67ada9573f",
-  "candidate_tree": "b3c64c28020a41e377c5de0c603b14f25eaa65fc",
-  "candidate_worktree_digest": "sha256:327d82bc1ec040f74925e40c5386a4732f55aee25781ec750b2e8fadb94eefac",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "candidate_worktree_digest": "sha256:1544ee5e42a293c07b6b633408b8e8df5e1ab3c49d24bb8d6068ce94b121eb60",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T04:39:00+08:00",
+  "assessed_at": "2026-09-16T05:01:00+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:4f522888e1753f66a8f9367e45aa155cfbebd031f784c065a64e62a9cc42c8ff"
+      "sha256": "sha256:724d027cbd76c74a2693633273c3304615b1fa6866d5b4d917065ec0e4263a00"
     },
     {
       "id": "phase-c-current-execution-plan",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
-      "sha256": "sha256:f1e595d2bcca9e3ed359dee8935cdd99681a89c715603a14d4e86f6d182bd090"
+      "sha256": "sha256:304d29249c081b11ac18659ad10e13617fe0c563b62b3de1a826552321c000f8"
     },
     {
       "id": "candidate-cognition-implementation",
@@ -96,7 +96,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The generic fuse now has two heterogeneous deterministic trajectory fixtures (f501045), but fresh exact-source browser/C2 behavior remains unproven and the parent-reported Browser DOM is not independently sealed (supervision runtime record run-280-c2-browser-rework.json). The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
+      "summary": "The latest exact-source run-280 q1 was bound to clean product 8e644e8b5f91085b5e39eae413436927491d749a/tree dd6315952eb91692f89ca94a0f9dcd5fa3f2014a and mall Source 0504e86b1f1b6f1b8aa6a734d37a90fb67346be7/tree 047d79d8588b76013c260f3f1a9565707301a60a. Its sealed Gateway trajectory records SEARCH_COGNITION(favorite), repeated SEARCH_SOURCE(favorite) proposals, a truthful no-Citation LIMITATION FINISH, and a fresh Reviewer MORE_EVIDENCE followed by fixed-budget BUDGET_EXHAUSTED; no Citation or Delivery was possible. The generic fuse now has two heterogeneous deterministic trajectory fixtures and is documented/bound by clean candidate 3930afe4cab82ec621730a902f700e4ad0d9690d, but fresh exact-source browser/C2 behavior remains unproven and the parent-reported Browser DOM is not independently sealed (supervision runtime record run-280-c2-browser-rework.json). The earlier run-277/run-279 N0 findings remain historical context only; C2 and phase exit are unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
