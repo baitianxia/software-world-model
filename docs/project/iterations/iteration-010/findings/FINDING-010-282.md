@@ -379,3 +379,18 @@ q4 path digest
 `sha256:a32e3040e98c1bc5e635803440c83595a157b9d8ce44a393a8de9b92bbb1ad64`).
 These are heterogeneous runtime integration evidence, but the four-turn run
 still has outer `NOT_ACCEPTED` quality and does not close C1/C2.
+
+## Fresh run-271 corrected-runner evidence
+
+The corrected runner used new databases/receipts and updated the exact
+Conversation revision after each successful Turn. It started the listener and
+completed four Turns (41 dispatches): q1/q2 shared one Conversation with
+revisions `1→2→3`, while q3/q4 used new Conversations. q1, q2 and q4 reached
+turn-level `ACCEPTED` with Citations and fresh reviews. q3's heterogeneous role
+assignment question repeated `allocRole` Source search, then searched
+`updateRole`, and exhausted the bounded read-only budget after review requested
+more evidence. The outer quality result remained `NOT_ACCEPTED`; the run was
+stopped with a terminal receipt and no replay or post-dispatch unknown. This is
+progress on runner/Conversation correctness and heterogeneous evidence, but it
+does not satisfy the C1 requirement that the original failure and two unseen
+heterogeneous tasks all close successfully.
