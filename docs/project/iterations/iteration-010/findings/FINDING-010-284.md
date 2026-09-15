@@ -32,3 +32,6 @@ run-277/run-279 的两个异质无命中轨迹进一步确认：重复的未执�
 无进展，不能绕过既有 `maximum_consecutive_no_progress` 收敛熔断。Application
 现对重复提案使用同一熔断，不增加 Agent step、Tool、Provider 或 Reviewer 预算；
 达到阈值后保留原始轨迹并 fail-closed，避免模型在相同查询上旋转。
+定向测试 `test_repeated_no_progress_searches_close_fuse_without_extra_tool_dispatch`
+固定验证该行为：一次实际搜索后，重复提案不再产生 Tool dispatch，熔断关闭并
+进入经审核的 limitation；现有重复读取形状也继续通过。

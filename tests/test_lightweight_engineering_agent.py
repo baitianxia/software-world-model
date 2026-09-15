@@ -526,6 +526,40 @@ class _DuplicateActionRecoveryModel(_Model):
         )
 
 
+class _RepeatedNoProgressSearchModel(_Model):
+    """Keep proposing one empty search until the Application fuse closes."""
+
+    def decide(self, request):
+        self.steps.append(request)
+        if request.tools_enabled:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Search the source catalog for the unresolved term.",
+                action=LightweightAgentAction.SEARCH_SOURCE,
+                query="unresolved-term",
+                read_index=None,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+        else:
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="The bounded investigation cannot establish the claim.",
+                action=LightweightAgentAction.FINISH,
+                query=None,
+                read_index=None,
+                response_kind=LightweightAgentResponseKind.LIMITATION,
+                answer="当前证据不足以确认该行为。",
+                citations=(),
+            )
+        return LightweightDecisionResult(
+            decision=decision,
+            receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+            disclosure_record_ref=f"disclosure-{self._calls}",
+        )
+
+
 class _NoProgressTool(_SourceTool):
     def execute(self, request):
         result = super().execute(request)
@@ -1237,6 +1271,41 @@ class _EmptyCognitionProjector:
         )
 
 class LightweightEngineeringAgentTest(unittest.TestCase):
+    def test_repeated_no_progress_searches_close_fuse_without_extra_tool_dispatch(self) -> None:
+        model = _RepeatedNoProgressSearchModel()
+        tool = _NoProgressTool()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=tool,
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="attempt-repeated-no-progress-search",
+            limits=EngineeringAgentLoopLimits(
+                maximum_agent_steps=8,
+                maximum_tool_actions=2,
+                maximum_consecutive_no_progress=2,
+            ),
+        )
+        service = InMemoryEngineeringConversationService(
+            _binding(), turn_executor=executor
+        )
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="复现无进展搜索收敛。",
+        )
+        self.assertEqual(submission.turn.quality_status, "REVIEWED_LIMITATION")
+        self.assertEqual(len(tool.calls), 1)
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["reason"] for item in trace.events
+             if item["kind"] == "ACTION_REPLAN_REQUIRED"],
+            ["NO_PROGRESS", "REPEATED_ACTION"],
+        )
+        self.assertFalse(model.steps[-1].tools_enabled)
+
     def test_observation_projection_preserves_resolver_ordinals(self) -> None:
         navigation = _navigation_candidate(1, resource="src/Entry.java")
         source = _navigation_candidate(
