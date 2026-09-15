@@ -1,0 +1,24 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_SEMANTIC_REVIEW@1",
+  "reviewed_at": "2026-09-16T02:19:30+08:00",
+  "candidate_commit": "51640be9c9a7d0ddc2126b889623d2ed1ab1c430",
+  "candidate_tree": "baac70a5e3c76b8bed6b604592b3c315a0f8be01",
+  "candidate_worktree_digest": "sha256:be9efac29c25fcb8db63947fbd005bda12c3958038eef62ec732169dcc56909a",
+  "candidate_branch": "codex/development",
+  "candidate_clean": true,
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "supervision_commit": "39adf64fea4e9e87aeae0ffe5886cbe8a1551394",
+  "watcher_session": "42453",
+  "assessment_verdict": "REWORK",
+  "decision": "CORRECT",
+  "earliest_layer": "browser-turn-scope-orchestration",
+  "evidence": [
+    "The candidate contains only the documented C1 finding write-back after run-276; no product code or protocol drift was observed.",
+    "The exact source repository remains clean at the pinned revision and tree.",
+    "The current assessment is FRESH/REWORK with no evidence mismatch; run-276 was direct urllib C1 evidence, not the required C2 browser scope.",
+    "No fresh @5 C2 session, listener/browser POST, or q1-q5 terminal evidence exists yet."
+  ],
+  "next_action": "Generate a fresh exact-source @5 C2 session with exclusive receipts, then run the fixed browser topology (q1/q2 same Conversation, q3 contextual clarification same Conversation, q4/q5 new Conversations) and preserve real Citation, fresh Reviewer, Delivery, and fail-closed receipts.",
+  "advance_allowed": false
+}
