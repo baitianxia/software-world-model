@@ -1,0 +1,77 @@
+{
+  "schema": "SWM_INDEPENDENT_SUPERVISION_ASSESSMENT@1",
+  "run_ref": "run-283-agent-hetero-recheck",
+  "candidate_commit": "3930afe4cab82ec621730a902f700e4ad0d9690d",
+  "candidate_tree": "2fa4718d8550d813dd3349cd3096a42038c6dc54",
+  "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
+  "source_tree": "047d79d8588b76013c260f3f1a9565707301a60a",
+  "cognition_snapshot_digest": "sha256:d552b3d8df62271ac24c85d82fcf046eb67852397eb923212f7f1eb21ba7a243",
+  "session_config_sha256": "sha256:d8e4d6ea35707d6ec0df8312f80be023ff65d804bf5e97ad1871d3ae6194273d",
+  "turn_scope_sha256": "sha256:967ebf818f0151e636294fd844466662f474ab8ba0fec5b130f48224a4b801ad",
+  "questions_sha256": "sha256:1ac9cbd36333c09435daa33bfc3d8cf26e69437b1e5db011f3f2f0deb29987ff9",
+  "terminal_file_sha256": "sha256:55dcd291f09697b49b35825e8b8fe504ceda4377a4b1a57117b88b2640eb3c8a",
+  "terminal_digest": "sha256:333721aaa5b5ffef88520ffe973a6409daf184eb0ce5c5a807c4cb28e0bb0390",
+  "terminal_status": "STOPPED_AFTER_DISPATCH",
+  "conversation_count": 1,
+  "turn_count": 2,
+  "provider_dispatch_count": 21,
+  "request_retry_count": 0,
+  "gateway_database_sha256": {
+    "ark-gateway.sqlite3": "sha256:01d992002386f80351388b7d4e766a070e697740eb983d4207e20c19ce94ca2b",
+    "deepseek-gateway.sqlite3": "sha256:5ba1722189b64926c43bd31dfb8ad535a76236ee3e085716817c121faff99680"
+  },
+  "decision": "REWORK",
+  "earliest_layer": "agent-evidence-planning-and-action-selection",
+  "browser_live_verification": "NOT_EXECUTED",
+  "browser_evidence_status": "NOT_RUN",
+  "turn_outcomes": [
+    {
+      "ordinal": 1,
+      "conversation": "conversation_d20abbdf881342c3b5945ad5ee85677a",
+      "conversation_revision_before": 1,
+      "conversation_revision_after": 2,
+      "quality_status": "NOT_ACCEPTED",
+      "delivery_state": "NOT_AUTHORIZED",
+      "provider_dispatch_count": 12,
+      "failure_code": "BUDGET_EXHAUSTED",
+      "citation_count": 0,
+      "fresh_review": false,
+      "review_verdict": null
+    },
+    {
+      "ordinal": 2,
+      "conversation": "conversation_d20abbdf881342c3b5945ad5ee85677a",
+      "conversation_revision_before": 2,
+      "conversation_revision_after": 3,
+      "quality_status": "ACCEPTED",
+      "delivery_state": "AUTHORIZED",
+      "provider_dispatch_count": 9,
+      "failure_code": null,
+      "citation_count": 3,
+      "fresh_review": true,
+      "review_verdict": "APPROVED"
+    }
+  ],
+  "sealed_trajectory": {
+    "ordinal_1": [
+      "SEARCH_COGNITION(role) returned 12 cognition candidates and a separate read_candidates catalog with read indexes [11,1,2,3,4,5,6,7,8,9,10].",
+      "The Primary selected READ_SOURCE read_index=12, which was not in the presented catalog; the Application emitted READ_INDEX_UNAVAILABLE.",
+      "The Primary then read 11, repeated 11 (REPEATED_ACTION), read 1, proposed SEARCH_SOURCE(updateRole) after SEARCH_SOURCE was unavailable (REVIEW_GAP_UNREAD_SOURCE), then read 2 through 6 and exhausted the fixed budget before FINISH.",
+      "No Citation, fresh Review, or Delivery was produced."
+    ],
+    "ordinal_2": [
+      "SEARCH_COGNITION(cart batch update quantity) returned six cognition candidates and four legal read candidates; the Primary read all four.",
+      "FINISH was followed by a fresh independent Reviewer APPROVED decision and three exact SOURCE Citations were delivered.",
+      "Ark had a pre-dispatch transport failure before DeepSeek completed the semantic trajectory; this is not the earliest semantic divergence."
+    ]
+  },
+  "evidence": [
+    "run-283 session/turn-scope files are mode 0600 and bind product 3930afe/tree 2fa471, exact mall Source 0504e86b/tree 047d79, and cognition snapshot d552b3d8.",
+    "run-283 terminal.json SHA-256 is 55dcd291d09697b49b35825e8b8fe504ceda4377a4b1a57117b88b2640eb3c8a; its sealed digest is 333721aaa5b5ffef88520ffe973a6409daf184eb0ce5c5a807c4cb28e0bb0390, with one Conversation, two Turns, 21 dispatches, zero retries, and STOPPED_AFTER_DISPATCH.",
+    "DeepSeek sealed-input manifests explicitly supplied legal read_candidates and subsequent mechanical feedback; q1 ignored the catalog and repeated actions, distinguishing Agent/model action selection from missing cognition or Source authority.",
+    "q2 is a heterogeneous cart task that reached three exact SOURCE Citations and a fresh APPROVED Reviewer; only one heterogeneous task plus the original ran, so the required original-plus-two-heterogeneous C1 and all-turn C2 closure remain incomplete.",
+    "No Browser DOM, unique POST, or loopback Web evidence was executed in run-283."
+  ],
+  "next_action": "Keep REWORK/NOT_RUN and preserve run-283 without replay. Do not change Prompt, Schema, Provider, decoder, Reviewer, budget, cognition ordinals, Citation identity, or question text. First obtain a second independent heterogeneous Agent trajectory or a generic Agent-layer repair with sealed trajectory evidence covering legal read-index adherence, unread-candidate prioritization, and no repeated actions; then rerun the original plus two heterogeneous tasks on a fresh exact-source candidate before C2 or ADVANCE.",
+  "advance_allowed": false
+}
