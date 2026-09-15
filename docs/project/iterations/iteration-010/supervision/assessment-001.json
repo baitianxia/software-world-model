@@ -2,26 +2,26 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "5becaebede281a2e81aa9e4414b4fc46539f8188",
-  "candidate_tree": "b4eb5619b8602c03be96878393a817cdcd28fc4c",
-  "candidate_worktree_digest": "sha256:74f40089a73885ed9e05e191fe8fefe2dbf4d4fda12af2d87b98645407f04de7",
+  "candidate_commit": "9f10f7a4ca9bf95f81003ea5513342ca8961f40c",
+  "candidate_tree": "ed0bf475e72e9201179bdae92225d3805c78f808",
+  "candidate_worktree_digest": "sha256:77a3af340f06024f244cfa3deaaee7ace9ba90253f2b4787a63890cd775f6914",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T03:32:00+08:00",
+  "assessed_at": "2026-09-16T03:47:00+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
       "scope": "candidate",
       "path": "docs/project/current.md",
-      "sha256": "sha256:4790414d2fb3ce81c242155968813a3f454b16b6761782f5c923b4e7a3c1c1a0"
+      "sha256": "sha256:10887ac395d9ca7a5921ccd577fc549818c39ef22c34ed543556b246faa76969"
     },
     {
       "id": "phase-c-current-execution-plan",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/development-design/EXECUTION-PLAN-CURRENT.md",
-      "sha256": "sha256:7bf592aae9d90d749e67b3d9794da4bd16df4e777fb91ac8de641943439a89d2"
+      "sha256": "sha256:2932320b008ed7f889e12cfe01f1143a988d5839422f2212ab03d4f7b06f224b"
     },
     {
       "id": "candidate-cognition-implementation",
@@ -57,7 +57,7 @@
       "id": "candidate-source-projection-finding",
       "scope": "candidate",
       "path": "docs/project/iterations/iteration-010/findings/FINDING-010-284.md",
-      "sha256": "sha256:1aeee12ce19d5317341028ef2a93eb120b6d431cf34d0a8523bce71812e9b2e8"
+      "sha256": "sha256:2a81e32edbfffcf4abbf6739dd252de5629ef1d3edd564ffd0fc3d6e0d7102d7"
     },
     {
       "id": "candidate-run-279-finding",
@@ -69,7 +69,7 @@
       "id": "candidate-agent-projection-implementation",
       "scope": "candidate",
       "path": "src/software_world_model/application_services/lightweight_engineering_agent.py",
-      "sha256": "sha256:c2f95944c585727d728fd74eda15392e4ac0b702a27fe764ecea00c82477bd5a"
+      "sha256": "sha256:9f0d221a10fdca3a39bf000642afa45900173bfcdd96cab4ae3ea8154062efc5"
     },
     {
       "id": "candidate-agent-tests",
@@ -96,7 +96,7 @@
     {
       "severity": "MAJOR",
       "owner_layer": "browser-turn-evidence-and-agent-budget",
-      "summary": "Run-277 and run-279 were bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source. Independent run-277 q1 (member favorites) and q5 (coupon promotion) both show SEARCH_COGNITION returning zero items followed by repeated or weakly varied SEARCH_SOURCE proposals until BUDGET_EXHAUSTED; run-279 q1 reproduces the same pattern. None formed READ_SOURCE, Citation, fresh Review or Delivery. The sealed direct-loopback records have no immutable in-app Browser DOM/unique-POST artifact, so they are N0 Agent-planning evidence only; C2 and phase exit remain unproven.",
+      "summary": "Run-277 and run-279 were bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source. Independent run-277 q1 (member favorites) and q5 (coupon promotion) both show SEARCH_COGNITION returning zero items followed by repeated or weakly varied SEARCH_SOURCE proposals until BUDGET_EXHAUSTED; run-279 q1 reproduces the same pattern. None formed READ_SOURCE, Citation, fresh Review or Delivery. Commit 254d33f adds a generic duplicate-proposal convergence fuse, but its clean candidate has not yet been validated by a deterministic threshold fixture or fresh exact-source browser run. The sealed direct-loopback records have no immutable in-app Browser DOM/unique-POST artifact, so they are N0 Agent-planning evidence only; C2 and phase exit remain unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -105,5 +105,5 @@
     }
   ],
   "earliest_divergence": "agent-evidence-planning",
-  "next_action": "Keep the phase verdict REWORK and do not count run-277 or run-279 as C2/phase closure. Preserve their raw trajectories and do not replay those requests. The independent run-277 q1/q5 record now reproduces the same deficit on two heterogeneous domains, so the next and only product action is to document a falsifiable generic Agent convergence invariant and implement the smallest Application/Agent-layer repair that leaves Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged. Add deterministic tests for both heterogeneous shapes, then prepare a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
+  "next_action": "Keep the phase verdict REWORK and do not count run-277 or run-279 as C2/phase closure. Preserve their raw trajectories and do not replay those requests. For commit 254d33f, first add deterministic tests proving that consecutive rejected duplicate proposals invoke the existing no-progress fuse without inflating actual Tool usage, and cover at least the two heterogeneous planning shapes represented by run-277; keep Prompt, Schema, Provider, decoder, Reviewer, budget and question text unchanged. Then prepare a fresh exact-source C2 successor with a real in-app Browser/CUA path, immutable per-ordinal DOM/unique-POST artifacts, and fixed A=[1,2,3], B=[4], C=[5] topology. Do not claim ADVANCE until all five turns and phase-level material-gain criteria are independently evidenced."
 }
