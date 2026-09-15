@@ -748,6 +748,28 @@ class _CognitionFirstModel(_Model):
         )
 
 
+class _InvalidCognitionReadModel(_CognitionFirstModel):
+    def decide(self, request):
+        if request.observations and request.observations[-1].operation is LightweightAgentAction.SEARCH_COGNITION:
+            self.steps.append(request)
+            decision = LightweightAgentDecision(
+                goal=request.goal,
+                plan="Read the cognition-selected source candidate.",
+                action=LightweightAgentAction.READ_SOURCE,
+                query=None,
+                read_index=12,
+                response_kind=None,
+                answer=None,
+                citations=(),
+            )
+            return LightweightDecisionResult(
+                decision=decision,
+                receipt=self._receipt(EngineeringAgentModelRole.PRIMARY_AGENT),
+                disclosure_record_ref=f"disclosure-{self._calls}",
+            )
+        return super().decide(request)
+
+
 class _MoreEvidenceUnreadCandidateModel(_CognitionFirstModel):
     """Request more evidence, then briefly repeat search before reading it."""
 
@@ -3895,6 +3917,32 @@ class MultiMethod implements MultiContract {
                 "INDEPENDENT_REVIEW"
             ),
             0,
+        )
+
+class MissingReadIndexIntegrationTest(unittest.TestCase):
+    def test_missing_source_read_index_replans_once_then_fails_closed(self) -> None:
+        model = _InvalidCognitionReadModel()
+        traces = LightweightAgentTraceStore()
+        executor = ApplicationOwnedLightweightAgentTurnExecutor(
+            model=model,
+            tool_port=_SourceTool(),
+            capability_cognition=_cognition(),
+            delivery_control=SealedLightweightDeliveryControl(),
+            trace_store=traces,
+            attempt_ref="missing-source-read-index-replan",
+        )
+        service = InMemoryEngineeringConversationService(_binding(), turn_executor=executor)
+        conversation = service.create_conversation()
+        submission = service.submit_turn(
+            conversation_id=conversation.conversation.conversation_id,
+            expected_revision=conversation.conversation.revision,
+            message="查询 CheckoutService 实现。",
+        )
+        self.assertEqual(submission.turn.failure_code, "CONTROL_STATE_DENIED")
+        trace = traces.for_turn(submission.turn.request_digest)[0]
+        self.assertEqual(
+            [item["reason"] for item in trace.events if item.get("kind") == "ACTION_REPLAN_REQUIRED"],
+            ["READ_INDEX_UNAVAILABLE"],
         )
 
 
