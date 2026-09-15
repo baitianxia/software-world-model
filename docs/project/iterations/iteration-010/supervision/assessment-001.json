@@ -9,7 +9,7 @@
   "phase": "C",
   "verdict": "REWORK",
   "assessor": "independent-supervisor",
-  "assessed_at": "2026-09-16T01:38:00+08:00",
+  "assessed_at": "2026-09-16T02:44:53+08:00",
   "evidence": [
     {
       "id": "phase-c-current-objective",
@@ -89,8 +89,8 @@
   "defects": [
     {
       "severity": "MAJOR",
-      "owner_layer": "browser-turn-scope-orchestration",
-      "summary": "Fresh run-276 C1 evidence closes the original role-reassignment question plus two independent heterogeneous tasks at turn level: each reached cognition/source evidence, exact-revision citations, fresh independent review, and authorized delivery. The enclosing @5 artifact projection remains NOT_ACCEPTED because that contract requires five turns while this C1 scope intentionally has three independent conversations. C2's fixed browser conversation choreography and phase-level five-task/semantic-follow-up evidence are still absent.",
+      "owner_layer": "browser-turn-evidence-and-agent-budget",
+      "summary": "Run-277 was bound to clean product 51640be9c9a7d0ddc2126b889623d2ed1ab1c430/tree baac70a5e3c76b8bed6b604592b3c315a0f8be01 and exact mall Source, but its runner used direct urllib loopback rather than a real in-app Browser/CUA surface; startup health explicitly reports browser_live_verification=NOT_EXECUTED. The fixed A=[1,2,3], B=[4], C=[5] topology was only mechanically exercised. q1 and q5 ended BUDGET_EXHAUSTED without Citation/fresh Review/Delivery while q2-q4 were partial accepted turns. Runtime record run-277-c2-browser-rework is sealed in the supervision lane; C2 and phase exit remain unproven.",
       "evidence_ids": [
         "prior-c1-finding",
         "phase-c-current-execution-plan",
@@ -98,6 +98,6 @@
       ]
     }
   ],
-  "earliest_divergence": "browser-turn-scope-orchestration",
-  "next_action": "Treat run-276-c1-read-selection as C1 evidence only and keep the phase verdict REWORK. Rebind a fresh exact-source @5 artifact session on the unchanged clean candidate, then execute C2's fixed browser scope: q1 and q2 in one Conversation, q3 as an in-context clarification Turn, and q4/q5 as new questions. Require listener/browser evidence, real Source citations, fresh independent review, loopback delivery, and fail-closed receipts; do not claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
+  "earliest_divergence": "browser-turn-evidence-and-agent-budget",
+  "next_action": "Keep the phase verdict REWORK and do not count run-277 direct-urllib artifacts or partial turns as browser evidence. On the unchanged clean exact candidate, prepare and run a fresh C2 session through a real in-app Browser/CUA surface with one unique POST per fixed ordinal: q1 and q2 in one Conversation, q3 as an in-context clarification Turn in that Conversation, and q4/q5 in new Conversations. Seal DOM, terminal, Gateway, exact Citation, fresh independent Review, and Delivery evidence; if a real browser run fails, fix only the earliest generic Agent/Application layer shown by its trajectory. Do not change Prompt, Schema, Provider, Reviewer, or claim ADVANCE until the five independent phase-exit tasks and semantic follow-up are independently evidenced."
 }
