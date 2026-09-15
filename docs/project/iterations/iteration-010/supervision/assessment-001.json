@@ -2,9 +2,9 @@
   "schema": "SWM_INDEPENDENT_ASSESSMENT@2",
   "iteration": "ITER-010",
   "candidate_branch": "codex/development",
-  "candidate_commit": "a2d07332de86bc208b4d93dbd22923cced2d3237",
-  "candidate_tree": "e0b5e77ae2cb96313ca4cf54c633e22f65e9159c",
-  "candidate_worktree_digest": "sha256:71953beb48be6b08c5abbc501439e4be779fcb74d84a15dc7706d3a646ec4f62",
+  "candidate_commit": "ef5d1a9ddd2e2fef14a7cb6508171e28462d6aae",
+  "candidate_tree": "e325134a1a84257cdae141dcee3596df9ee84011",
+  "candidate_worktree_digest": "sha256:0ac56e5ee1cc0f9998dbfc113ceb53623d66a834694deab5f16e458450adf8f3",
   "source_commit": "0504e86b1f1b6f1b8aa6a734d37a90fb67346be7",
   "phase": "C",
   "verdict": "REWORK",
@@ -18,8 +18,9 @@
     {"id":"prior-c1-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-282.md","sha256":"sha256:217bf64fb91362bd51460e9a9dbbdfc3deff1cc47e6093c11d98b6161fe0e1d4"},
     {"id":"candidate-cognition-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-283.md","sha256":"sha256:227cf975826a30a4e3db05a2fc9605e8dbb287efb0781bc2a5f971cd661bc6c1"},
     {"id":"candidate-slice-binding","scope":"candidate","path":"docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md","sha256":"sha256:48534b9ade8aad875c55ff63336ee3f05774337c8a725c04afb5cb20aafe6cf9"},
-    {"id":"candidate-source-projection-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-284.md","sha256":"sha256:6ab56c8ec5333a46d9042dfe5c7bbae5c53a0ddff20a5acaae8799fcd3329b99"},
-    {"id":"candidate-agent-projection-implementation","scope":"candidate","path":"src/software_world_model/application_services/lightweight_engineering_agent.py","sha256":"sha256:892ce2c3346f8cef3ad1a46fb553a1a67726a26c7d5f8cc9fc3529583f76e259"},
+    {"id":"candidate-source-projection-finding","scope":"candidate","path":"docs/project/iterations/iteration-010/findings/FINDING-010-284.md","sha256":"sha256:05c6d607f4a93ddcac912a33a1b132b3d97b88fb8750a3cafb0cf786f4659b41"},
+    {"id":"candidate-agent-projection-implementation","scope":"candidate","path":"src/software_world_model/application_services/lightweight_engineering_agent.py","sha256":"sha256:435c90a3efaefc8a4e874e0843eedb0591ac8a68610baf7b97936d3bb32a8d38"},
+    {"id":"candidate-agent-tests","scope":"candidate","path":"tests/test_lightweight_engineering_agent.py","sha256":"sha256:95f9ced089eef9aacbf335a4e80926924d6c9888fe2d18b50c5edfa618079c1e"},
     {"id":"exact-source-readme","scope":"source","path":"README.md","sha256":"sha256:e387ff537c8d51b4a6a165a73198a560f92725f0d3d598d3488bdbd41d99f7d7"}
   ],
   "completed_requirements": ["same-agent-cognition-and-source-gap-integration"],
@@ -27,8 +28,8 @@
   "defects": [
     {"severity":"MAJOR","owner_layer":"knowledge-cognition-broad-page-projection","summary":"The negative-need cohort defect has been corrected in f21bd99. Exact snapshot d552b3d8 now preserves the lexical baseline for method-heavy updateRole/getRoleList/pay (12/12/10 matching methods) while promoting up to two methods for broad role/coupon/order/address/product pages. This local check is not live C1 evidence.","evidence_ids":["candidate-cognition-implementation","candidate-cognition-tests"]},
     {"severity":"MAJOR","owner_layer":"agent-evidence-planning-and-review-loopback","summary":"Run271 q3 remains unresolved and no fresh original-plus-two-heterogeneous C1 execution exists on this candidate. Exact broad search now shows two methods for role/coupon/order, but this local observation is not a browser Answer/Citation/fresh-review closure.","evidence_ids":["prior-c1-finding","phase-c-current-execution-plan"]},
-    {"severity":"MAJOR","owner_layer":"knowledge-cognition-source-option-projection","summary":"Fresh run-275 q1 exposed a generic catalog mismatch: the exact cognition broad page exposed twelve SOURCE-backed candidates including getRoleList and updateRole in one Java resource, while the path-scoped Source bridge exposed eleven read options (skipped_non_source_count=0). The model selected cognition ordinal 12, which was absent from the Source option catalog, and the Application failed closed before Reviewer/Delivery. The a2d0733 projection folds every repeated SEARCH path by retaining only its first representative; this removes updateRole from the Agent-facing cognition page and remains a semantic regression despite closing the numeric count. No executor/model_view integration proof or generic missing-read-index replan exists yet.","evidence_ids":["candidate-source-projection-finding","candidate-agent-projection-implementation"]}
+    {"severity":"MAJOR","owner_layer":"application-agent-read-catalog-boundary","summary":"ef5d1a9 removes the unsafe SEARCH projection deletion and keeps the complete cognition page, then adds mechanical READ_INDEX_UNAVAILABLE feedback for a Source read ordinal absent from the current read catalog. Independent heterogeneous reproduction confirms one invalid selection can be corrected and a valid read preserves the complete Source citation identity. The implementation does not yet bound missing-index repairs to one immutable observation/catalog prefix: repeating the same invalid index emits repeated planning feedback until BUDGET_EXHAUSTED, and distinct invalid indexes can each receive a repair. The candidate test suite has no direct READ_INDEX_UNAVAILABLE/model-view ordinal integration assertion.","evidence_ids":["candidate-source-projection-finding","candidate-agent-projection-implementation","candidate-agent-tests"]}
   ],
-  "earliest_divergence":"knowledge-cognition-source-option-projection",
-  "next_action":"The a2d0733 SEARCH projection is not acceptable as semantic closure: it deletes same-path cognition entities (including the exact updateRole target) while leaving total/cursor unchanged. Keep strict fail-closed Source identity and do not add ordinal aliases. Revert entity deletion and implement one generic Application-owned missing-read-index replan against the unchanged existing candidate catalog, preserving rejected receipts and second-failure fail-closed behavior; add executor/model_view integration tests for run-275's two SOURCE methods, TYPE+METHOD same-path variants, repeated-page/detail traversal, non-SOURCE provenance, exact read-index/opaque citation identity, and snapshot epistemics. Correct FINDING-010-284's false non-SOURCE attribution. Do not alter Prompt, Schema, Provider, Reviewer, budget, or question-specific logic; only after this evidence create a unique fresh exact C1 scope with the original question plus two heterogeneous tasks."
+  "earliest_divergence":"application-agent-read-catalog-boundary",
+  "next_action":"Keep the complete cognition page, strict Source identity, and no ordinal alias. Add one explicit Application-owned missing-read-index replan bound to the immutable observation/catalog prefix; preserve the rejected decision/receipt/findings and fail closed on a second invalid selection in that prefix. Add heterogeneous integration tests for same-path two METHOD, TYPE+METHOD, multi-path plus non-SOURCE provenance, model-view ordinal separation, and exact Citation identity. Then re-run targeted/docs checks and only afterward create a fresh C1 browser scope."
 }
