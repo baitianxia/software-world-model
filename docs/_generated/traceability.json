@@ -4566,6 +4566,15 @@
       "tests/test_engineering_chat_session_artifact.py"
     ]
   },
+  "FINDING-010-283": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-283.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py"
+    ],
+    "tests": [
+      "tests/test_capability_cognition.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
