@@ -1424,6 +1424,21 @@ class ApplicationOwnedLightweightAgentTurnExecutor(
                         cognition_candidates=cognition_candidates,
                         events=events,
                     )
+                    # A Broker search fuse can close after returning a bounded
+                    # candidate page.  That boundary must not discard the
+                    # already-authorized READ options: cognition→Source
+                    # provenance still has to be consumable even when no more
+                    # SEARCH_SOURCE calls are allowed.  Only close the Source
+                    # path when the exhausted search left no unread candidate;
+                    # a READ exhaustion remains terminal as before.
+                    if (
+                        source_exhausted
+                        and decision.action is LightweightAgentAction.SEARCH_SOURCE
+                        and _unread_read_candidates(
+                            read_candidates, observations, executed_source_read_indexes
+                        )
+                    ):
+                        source_exhausted = False
                     source_tools_enabled = source_tools_enabled and not source_exhausted
                     if (
                         tool_executed
