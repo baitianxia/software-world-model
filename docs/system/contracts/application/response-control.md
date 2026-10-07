@@ -18,7 +18,7 @@ Response Control 审核、授权并唯一交付用户可见响应。它同时处
 
 ## Ownership
 
-Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Engineering Question Answering、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。
+Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Engineering Question Answering、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。当前 Turn 的 Ledger/Package/Draft/Review 正文在该 Turn 终态后释放；对话可见消息和不含正文的最小交付/去重摘要可保留，但不能作为后续 Turn 的证据。
 
 ## Invariants
 
@@ -35,10 +35,11 @@ Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Clai
 11. Evidence Answer 重写必须绑定同一 Checklist、Packet Digest、prior Draft 和 exact Review Findings；Review 要求补证时必须返回 Application 形成新 Packet，Response Control 不能访问 Source Tool 或自行扩充证据。
 12. World Model Answer 的生成、审核和重写固定同一 Snapshot、View/Query Result、Coverage 与 Support Map；Response Control 不得访问 Source、启动 Knowledge Update 或切换 Direct Investigation。输入变化必须形成新的 Candidate，而不是改写旧授权。
 13. Engineering Conversation Reviewer 必须在不继承主 Agent 会话的 fresh 独立上下文中，从 current User Turn 和受信 relevant Conversation
-    Context 重建目标，并检查 Draft 的直接性、对最新纠正的响应、正确性、完整性、相关性、可用性、Citation 和 unknown 边界；任一失败
-    必须有具体 Finding，不得因正文流畅、沿用先前答案或其他项通过而抵消。代码事件的机械完整不等于解决了用户当前问题。
+    Context 重建目标，并检查 Draft 的直接性、对最新纠正的响应、正确性、完整性、相关性、可用性、Citation 和 unknown 边界；Reviewer 只审核
+    当前 Draft 与 Package，不重新作答、不生成替代 Draft，也不把自身推断当作证据。任一失败必须有具体 Finding，不得因正文流畅、沿用先前
+    答案或其他项通过而抵消。代码事件的机械完整不等于解决了用户当前问题。
 14. 同包定向重写必须保持 Package Digest 并再次独立 Review。Response Control 和 Reviewer 都不得读 Source、查询 World Model、写 Ledger
-    或自行扩充包；Reviewer 只返回绑定当前 Turn/Claim/Package entry 或具体 material evidence gap 的 Finding。可信 Application 把现有证据
+    或自行扩充包；Reviewer 只返回绑定当前 Turn/Claim/Package entry 或具体 material evidence gap 的 Finding，不返回第二份答案。可信 Application 把现有证据
     问题路由为同一主 Agent 的新 Work State Revision，把缺证路由为绑定该 gap 的新 Agent Attempt；主 Agent 仍只能经 Broker/Worker 使用
     工具。新 Observation 形成新 Ledger/Package，旧 Review 不能放行新包。
 15. Agent 调查、重写、Package Revision、调用次数、成本和其他资源上限不得使 Response Control 删除用户约束、Claim Citation、evidence

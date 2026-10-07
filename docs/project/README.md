@@ -19,5 +19,6 @@ tests: []
 - [Roadmap](roadmap/README.md)：结果方向与候选，不直接授权编码。
 - [Iterations](iterations/README.md)：按轮次保存开发输入、发现、决策和结果。
 - [Governance](governance/README.md)：选择迭代、写开发设计、验证和回写规则。
+- [架构变更规则](governance/architecture-change-policy.md)：修改唯一架构基线前必须遵守的权威、影响和迁移流程。
 
 每轮开发必须从明确的 Proposal 和 Development Slice 开始。实现过程中出现的新事实先进入该轮 `findings/`，再被吸收到系统文档、本轮设计、Roadmap 或代码/测试；不能留成无人处置的日志。

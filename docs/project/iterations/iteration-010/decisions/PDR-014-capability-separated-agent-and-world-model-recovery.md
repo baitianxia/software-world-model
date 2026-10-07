@@ -13,35 +13,42 @@ rework_strategy: CAPABILITY_SEPARATED_WORLD_MODEL_AND_AGENT_RECOVERY
 decision_ref: local-user-direction-2026-09-01-plan-failure-review
 effective_scope: ITER-010-SLICE-001
 supersedes: ITER-010-PDR-013
-coding_input: true
+coding_input: false
+execution_sequence_owner: ITER-010-EXECUTION-PLAN-CURRENT
+operational_sequence_status: historical-compatibility-only
 ---
 
 # PDR-014：按世界模型、Agent 和产品增益分层恢复 ITER-010
 
+> 本决定保留目标、边界和历史恢复依据，不是当前任务顺序的编码输入。当前唯一执行顺序是
+> [`EXECUTION-PLAN-CURRENT.md`](../development-design/EXECUTION-PLAN-CURRENT.md)。本文后面的 Phase A/B/C/D
+> 仅是历史决策映射；它们不得被实现 Agent、监督器或门禁解释成当前阶段、晋级条件或固定运行时顺序。
+
 ## Decision
 
 PDR-013 的执行路线终止。它正确停止了旧协议扩张，但仍把“建立 Agent-first 候选”作为一个整体任务，没有把知识构建、Agent harness 和
-二者集成增益分开，也没有给知识构建分配必须发生的交付。因此它不足以纠正已发生的系统性偏航。
+二者集成增益分开，也没有给知识构建分配必须发生的交付。因此它不足以纠正已发生的系统性偏航。这里保留该判断作为决策背景；当前任务的
+拆分和顺序不由本节重定义。
 
 ITER-010 不新建迭代、不等待新的治理动作，也不改变产品架构和 standing authority。`SYS-ADR-018` 的两项核心能力保持：软件世界模型负责
 精确版本上的持久软件认知，主工程 Agent 负责理解问题、使用认知、调查源码、根据观察重规划和自然回答。当前被替换的是实现路线：旧
-Answer/Review/preflight 封闭协议不再是产品候选，开发改为四个可独立归因、连续交付的能力阶段。
+Answer/Review/preflight 封闭协议不再是产品候选。当前实现路线由
+[`EXECUTION-PLAN-CURRENT.md`](../development-design/EXECUTION-PLAN-CURRENT.md) 的用户价值纵向任务定义；本决定不另行创建阶段或固定运行时顺序。
 
-## 全部分支收敛与阶段复位
+## 历史分支收敛与阶段复位记录（非当前执行）
 
 `268b4546a893ff346da34d4f4d06057d860e2aa3` 是本次收敛唯一可信产品基线。仓库只保留 `main`、`codex/development` 和
 `codex/supervision` 三个活动分支；所有 `codex/iter-*` 分支及两处未提交候选先转为可恢复 `archive/*` 标签，再退出开发与监督目标。
 后续迭代沿用统一开发/监督分支，不再为每个失败、运行或计划修订创建长期开发分支。
 
-Phase A 的 source-only Agent 结果只保留为诊断证据。Phase B 状态复位为 `REWORK`：既有 `5/5` 报告没有覆盖真实问题揭示的声明、继承、
-注解与实现之间的有界检索闭包，不能推动 Phase C。当前唯一产品任务是补齐这项通用世界模型能力，并用监督方持有的五个未参与实现任务重新
-验证 search/traverse/detail、来源、Coverage/Unknown 和跨问题复用。归档中的 Reviewer、Provider recovery 和 Phase C/D 工作不得整包回灌；
-只有最早缺失能力闭合后，才可按新证据选择性恢复。
+Phase A 的 source-only Agent 结果、Phase B 的 `REWORK` 和当时用于选择性恢复的诊断依据均保留在历史记录中；它们不推动当前任务，也不产生
+新的晋级条件。当前唯一产品任务、最小证据和失败出口由 `EXECUTION-PLAN-CURRENT.md` 定义。归档中的 Reviewer、Provider recovery 和 Phase C/D
+材料不得整包回灌；需要恢复某项能力时，必须先在当前任务内形成真实端到端证据。
 
-开发分支不能通过修改计划、自报或本分支测试自行推进 Phase。独立监督分支是阶段状态的唯一写入方：它必须绑定 exact 开发分支、可信基线
-和当前 HEAD，在每次候选变化以及最长 30 分钟间隔内产生 heartbeat 与 assessment。发现偏航时直接向同一开发任务发送 `CORRECT` 和唯一
-下一动作；目标绑定故障只修复监督，不暂停开发、不重新授权。只有 clean commit 的通用实现和监督方独立原始证据均满足退出条件时才可
-`ADVANCE`。
+历史上曾要求开发分支不能自报推进 Phase、监督分支绑定 exact HEAD；这些约束只说明当时的失败背景。静态检查器只能报告风险信号和证据是否
+过期，不能把非空字段解释成能力完成。监督 Agent 仍需独立检查任务、代码和真实运行证据，提出纠偏动作，不能以静态报告代替复核。
+监督实际是否运行必须有可观察 heartbeat；Codex heartbeat `iter-010` 虽已创建但当前已按用户停止要求暂停，
+Manifest 状态恢复为 `SUPERVISION_UNVERIFIED`，在用户重新允许并完成首次运行确认前不得宣称周期监督已经生效。
 
 ## 被否决的进度定义
 
@@ -64,7 +71,9 @@ Markdown、句段或封闭 Claim 映射判断技术语义。Reviewer 返回简�
 Codex、Claude Code、OpenHands、SWE-agent 等只作为 harness 能力参考或外部基线。产品运行时和计划不依赖具体模型/Provider。直接接入外部
 harness 只有在阶段 A 的同一短 spike 内能使用现有模型网关、只读工具和 Web 交付时才采用；否则继续薄运行时，不形成独立研究阶段。
 
-## 四阶段连续开发计划
+## 历史四阶段连续开发计划（非当前执行顺序）
+
+以下 A/B/C/D 只用于解释本决定当时的恢复思路。它们已被当前的用户价值纵向任务替代；不得从本节生成新的阶段游标、前置门禁或监督动作。
 
 时间上限是**自动简化/换路点**，不是停工点、质量裁剪或重新授权点。超出上限时立即删除非必要工作，继续下一条能形成真实结果的路径。
 
@@ -102,13 +111,15 @@ harness 只有在阶段 A 的同一短 spike 内能使用现有模型网关、�
 - actual current Codex 使用相同 exact revision、问题和输出目标独立回答，双方在完成前互不可见；
 - 未参与生成的技术评测方直接读取 exact Source，按正确性、完整性、相关性、Citation 和 Unknown 逐题裁决；任何模型答案都不是 Oracle；
 - 只有系统重大错误为 0、逐题不低于 Codex、总体严格更好、Reviewer 无重大漏判且世界模型有非 locator 增益时，才称为 MVP；
-- 未通过时按 `Source truth → knowledge construction → cognition retrieval → Agent understanding/plan → tool use → synthesis → review → Web`
-  找最早偏差。Knowledge 失败改构建/表示/查询；Agent 失败改 loop、memory 或工具；只有替换实验确认最早偏差确在模型交互时才允许改精简
-  Prompt。开发在同一动作继续，不暂停、不重复申请授权。
+- 未通过时按最早偏差责任层定位：Source truth、knowledge construction/admission、cognition retrieval、Agent understanding/plan、tool use、
+  synthesis、review 或 Web。这个列表只用于归因，不规定运行时先后。Knowledge 失败改构建/表示/查询；Agent 失败改 loop、memory 或工具；只有
+  替换实验确认最早偏差确在模型交互时才允许改精简 Prompt。开发在同一动作继续，不暂停、不重复申请授权。
 
 用户确认 Alpha 和质量方向后，才进入跨工程、hidden、持久恢复、性能、安全矩阵和 full regression。
 
-## 机械防偏航规则
+## 历史机械防偏航规则（非当前执行）
+
+以下规则只记录当时的防偏航设计，不产生当前任务、阶段、监督或重试动作；当前开发规则唯一见 `EXECUTION-PLAN-CURRENT.md`。
 
 第一项开发变更必须实现轻量检查；它只保护方向，不审核答案语义：
 
@@ -133,4 +144,5 @@ harness 只有在阶段 A 的同一短 spike 内能使用现有模型网关、�
 
 本决定不宣称产品或方向已经通过。它只确认计划审计完成，并在 PDR-012 的既有公开 Source、模型透明 route、预算、loopback、只读和非
 Production standing scope 内替换执行路线。`ITER-010-ACTION-USER-DIRECTION-DECISION-001` 和
-`V-BROWSER-CHAT-MVP-BUILD-001` 继续作为 Manifest 兼容身份，但其唯一当前语义由本决定的 A→B→C→D 顺序定义。
+`V-BROWSER-CHAT-MVP-BUILD-001` 继续作为 Manifest 兼容身份，但其当前语义和顺序只由
+[`EXECUTION-PLAN-CURRENT.md`](../development-design/EXECUTION-PLAN-CURRENT.md) 定义。

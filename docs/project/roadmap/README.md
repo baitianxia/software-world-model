@@ -30,6 +30,10 @@ Roadmap 按产品或系统结果组织方向，不按组件列任务。它用于
 - [Schema Evolution](candidates/schema-evolution.md)
 - [Semantic View](candidates/semantic-view.md)
 
+## Deferred governance backlog
+
+- [架构唯一入口机械门禁](candidates/architecture-authority-mechanical-gate.md) — 已登记但暂缓；待当前架构与文档问题收敛、文档检查恢复绿色后处理，不授权当前开发或修改系统代码。
+
 Candidate 的存在不表示它会成为下一轮。只有进入条件有证据、Outcome 相对其他候选更优且 Proposal 获得明确授权后，才能建立 Iteration。
 
 ## 选择规则

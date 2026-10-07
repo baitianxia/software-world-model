@@ -3,6 +3,8 @@ id: SYS-ADR-017
 kind: system-decision
 status: accepted
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: execution-routing-decision-rationale
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
 derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-236]
@@ -11,6 +13,8 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
 ---
 
 # ADR-017：对用户透明的合格执行配置有序路由
+
+> 范围说明：本文定义通用 route role、attempt 隔离、受信不可用裁决、零重试、失败关闭和持续授权边界。Provider/model/endpoint、HTTP 状态、字段、transport、receipt、预算和 admission plugin 的具体规则属于 Model Gateway/Provider Routing Contract 与 Operations；它们不能成为产品分支、默认 Chat 编排或顶层架构语义。
 
 ## Context
 
@@ -40,11 +44,12 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
    replay、Model Egress 与 Application receipt 投影中重验。parameter-name 只用于 request-field 诊断且不得参与 availability/routing；不得持久化 response body、header、
    credential、Secret Reference 或任意错误正文。Raw `PROVIDER_UNAVAILABLE`、HTTP error/status 或 `PROVIDER_OUTCOME_UNKNOWN` 只是
    availability owner 可验证的输入证据；它们不得被 Gateway、Adapter、Application 或字符串映射直接转成 fallback eligibility。
-   当前通用 availability owner 只接受 typed pre-HTTP unavailable，或 dispatch/call receipt 成立且 Gateway-sealed HTTP status 属于
-   `{402,408,425,429,500,502,503,504}`；`402` 只表示当前 execution profile 的付款/资源服务能力不可用。`400/401/403/404/409/422`、
-   缺少 evidence digest 的 status、普通 owner code 或相似字符串都必须 fail closed。没有该 exact verdict 就必须视为
-   `FALLBACK_NOT_ELIGIBLE`。`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、Capability/qualification failure、Application orchestration failure、
-   Source/Broker/Worker failure、authorization/dispatch-admission failure 和 Security failure 都明确不具备 fallback 资格，不得伪装成 unavailable。
+   当前通用 availability owner 只接受 typed pre-HTTP unavailable，或由 Model Gateway Contract 定义、且经 dispatch/call receipt 与
+   Gateway-sealed evidence 绑定的受信 transport/provider verdict。具体 HTTP status、provider code/type、字段限制及其映射由 Model Gateway
+   Contract 唯一负责，本 ADR 不复制这些值；缺少完整 evidence digest、普通 owner code 或相似字符串都必须 fail closed。没有该 exact verdict
+   就必须视为 `FALLBACK_NOT_ELIGIBLE`。`PROVIDER_OUTPUT_INVALID`、`MODEL_REVIEW_REJECTED`、Capability/qualification failure、Application
+   orchestration failure、Source/Broker/Worker failure、authorization/dispatch-admission failure 和 Security failure 都明确不具备 fallback
+   资格，不得伪装成 unavailable。
    Availability verdict 只证明 fallback route 可被考虑，不替代 fallback profile 自身的资格、披露、预算和 dispatch admission。
 4. Fallback 是新的 Provider attempt，不是同一个外部 request 的 retry。它只能从 immutable original interaction input、同一 exact World Model
    Cognition Context、当前 Turn 的 exact relevant Application-sealed Conversation Context（若为 Chat）和 Session 的受信
@@ -57,7 +62,7 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
    fresh Review 都是新的 authorized model call，必须有新 call identity、Manifest、one-use disclosure/dispatch receipt、预算消费和原始输出审计。
    它们不是对同一 Provider request 的 retry，不得重发旧 request bytes；未预留该类新调用的资格、权威或预算时，当前 interaction 失败关闭，不 fallback。
 6. 每个 attempt 拥有唯一 identity、Manifest、role receipts、disclosure grants、transport/usage/cost audit 与 terminal result。公开开源
-   exact revision 且 route/预算/loopback evaluation 边界未变化时，这些 exact run/Turn/call 对象由可信系统从 standing authority 自动
+   exact revision 且 route/预算/候选运行边界未变化时，这些 exact run/Turn/call 对象由可信系统从 standing authority 自动
    派生，不是逐 attempt 的人工审批；派生对象仍是 one-use 且不得跨 Turn 或扩张 payload。每个
    Provider 内 request retry 为 0；每个 logical interaction unit 的 fallback attempt 上限为 1，Chat 中不得将整段 Conversation
    合并成一次。preferred outcome unknown 终止后仍然只有受信 availability owner 已密封 unavailable verdict 才可以 fallback，并必须
@@ -69,10 +74,10 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
    不改变 Provider request/response/transport 的 post-terminal availability-evidence 处理必须位于独立 Gateway decorator：它只可把同一
    immutable request 原样委托给 exact qualified Adapter，并在 inner Gateway terminal 后写入 call/request/isolation-bound auxiliary evidence。
    decorator、repository 或 Application 失败只使 availability fail closed，不能改写 Provider call。不得因这类外围证据实现变化让未变化的
-   Provider identity 资格失效，也不得以 decorator 为理由跳过 Conformance manifest 的现有 exact raw-digest、配置、model、fixture 或有效期校验。
+   Provider identity 资格失效，也不得以 decorator 为理由跳过既有资格记录的精确身份、配置和有效期校验。
 9. 成本只在 logical interaction unit 开始前决定是否允许完整的 preferred + fallback 最坏成本，不能在 attempt 开始后删减 Evidence、Citation、
-   Answer 或 Review。所有 planned development/evaluation fallback 工作必须遵守其 execution profile 选择的 Operations admission plugin：在任何
-   Provider socket/connected descriptor provisioning、TLS、credential resolution 或 HTTP 前密封通用 route-admission receipt，并在每个新外部 request 前重验插件要求的价格、时间、资格或 exact override。
+   Answer 或 Review。所有 fallback 外部执行必须遵守其 execution profile 的运行准入策略：在建立外部连接或发送 request 前密封通用
+   route-admission receipt，并在每个新外部 request 前重验该策略要求的边界、资格或 exact override。
    合法 receipt 可由可信系统从 standing authority 自动派生；普通 standing Session、canary、route 或 fallback authority 不自动包含策略例外。
    计划者必须保证完整最坏质量链满足插件准入；策略条件失效后不得创建新的 fallback request，已发出的单个 request 仍按零重试和
    outcome-unknown 规则密封。无法完成独立审核时
@@ -90,16 +95,8 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
   override 及逐 dispatch/terminal receipt；standing scope 内的 receipt 应从 standing authority 自动派生，不再要求逐 run 人工 grant。
   该派生链在实现与验证前仍标记为
   `STANDING_AUTHORITY_DERIVATION_REQUIRED / NOT_DISPATCHABLE`。
-- 当前 ITER-010 配置实例把 Ark 映射到 `preferred`、DeepSeek 映射到 `fallback`，并由 `V-DEEPSEEK-IDLE-001` 验证该备用配置的专属调度插件。
-  这是可替换配置和历史执行证据，不是本 ADR 的动作、分支或质量语义。
-- `FINDING-010-100` 已以 Application-owned typed classification、两个独立 attempt authority/runtime/receipt、committed Work State 隔离、
-  logical Turn 分账、duplicate-cost risk 和 non-starting fixed Browser composition 形成确定性本地候选。该候选没有执行真实 Adapter/transport、
-  credential、Provider 或 Browser；Operations 必须标记为 `LOCAL_COMPOSITION_CANDIDATE / REAL_RUNTIME_NOT_ATTESTED / NOT_QUALIFIED /
-  NOT_LIVE`，不得宣称透明 fallback 已可供用户使用。
-- `FINDING-010-101` 已把生产 Ark/DeepSeek Adapter、credential-lazy direct transport、Model Gateway、Session Disclosure Authorizer 和
-  Conversational Agent model boundary 接入同一 non-starting composition，形成 `PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE`。该证据只用
-  本地构造的 typed qualification identity，未加载 current sealed Conformance、Source/World Model Session 或执行 dispatch，故仍不得写成
-  qualified/live 产品 route。
+- 具体 Provider、模型、执行配置、资格收据和运行状态属于可替换的 Operations/Implementation 实例，不属于本 ADR 的路由语义。
+  它们必须在项目实现参考和运行记录中分别说明，不能反向改变 `preferred → fallback` 的准入条件、attempt 隔离或失败关闭规则。
 
 ## Rejected alternatives
 

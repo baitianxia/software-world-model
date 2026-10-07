@@ -63,6 +63,7 @@ Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固�
 ## Change rules
 
 - System 只写当前语义；原因进入 ADR，实施发现进入 Finding，运行事实进入 Result。
+- 顶层架构只由 `SYS-ARCH-BASELINE` 拥有。架构附录、ADR 和 Contract 不得在没有同步基线的情况下新增、删除或收窄架构语义；具体流程见[架构变更规则](architecture-change-policy.md)。
 - 被替代正文由 Git 历史保存；Archive 只保留迁移记录，不复制可由提交精确恢复的旧正文。不得修改历史结果来符合当前结论。
 - Roadmap Candidate 必须标记 `authority: planning-only` 和 `coding_input: false`。
 - `_generated/` 由脚本生成，不人工编辑。
@@ -74,3 +75,5 @@ Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固�
 授权闭包、Manifest 唯一长运行 action、Current 镜像、交接后继、未替换模板输入、Finding disposition 和完成验收，并验证生成索引没有漂移。
 `python3 scripts/plan_gate.py diff --base <trusted-base-ref>` 另用 base plan 检查候选 diff、Result 和单步迁移，防止候选树修改自己的白名单。
 两套门禁绕过分别用 `tests/test_docs_gate.py` 与 `tests/test_plan_gate.py` 固化；CI 必须同时执行。
+
+上述检查目前不替代架构语义差分。架构基线的章节、关键概念、组件关系和架构图保留情况，必须由独立架构变更动作核对；普通产品 action 不得以文档检查通过作为修改 System 的依据。

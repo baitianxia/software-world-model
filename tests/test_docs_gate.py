@@ -10868,6 +10868,64 @@ class ReworkPlanningGateTests(unittest.TestCase):
             any("micro_checkpoint_count" in error for error in errors), errors
         )
 
+    def test_current_plan_context_and_manifest_share_one_execution_identity(
+        self,
+    ) -> None:
+        repository = docs_gate.REPOSITORY
+        current_path = repository / "docs/project/current.md"
+        plan_path = repository / (
+            "docs/project/iterations/iteration-010/development-design/"
+            "EXECUTION-PLAN-CURRENT.md"
+        )
+        manifest_path = repository / (
+            "docs/project/iterations/iteration-010/manifest.yaml"
+        )
+
+        def frontmatter(text: str) -> dict[str, str]:
+            self.assertTrue(text.startswith("---\n"))
+            end = text.find("\n---\n", 4)
+            self.assertGreater(end, 0)
+            values: dict[str, str] = {}
+            for line in text[4:end].splitlines():
+                if ":" not in line or line.startswith(" "):
+                    continue
+                key, value = line.split(":", 1)
+                values[key.strip()] = value.strip()
+            return values
+
+        current = frontmatter(current_path.read_text(encoding="utf-8"))
+        plan = frontmatter(plan_path.read_text(encoding="utf-8"))
+        manifest = docs_gate.safe_load_manifest(
+            manifest_path.read_text(encoding="utf-8")
+        )
+        iteration = manifest["iteration"]
+        branch = manifest["branch_convergence_control"]
+        self.assertIsInstance(iteration, dict)
+        self.assertIsInstance(branch, dict)
+        assert isinstance(iteration, dict)
+        assert isinstance(branch, dict)
+
+        self.assertEqual(plan["id"], current["execution_plan_ref"])
+        self.assertEqual(plan["id"], branch["execution_plan_ref"])
+        self.assertEqual(plan["current_task"], current["current_task"])
+        self.assertEqual(plan["current_task"], branch["current_task"])
+        self.assertEqual(plan["plan_shape"], current["plan_shape"])
+        self.assertEqual(plan["plan_shape"], branch["plan_shape"])
+        self.assertEqual(plan["readiness_status"], current["readiness_status"])
+        self.assertEqual(plan["readiness_status"], branch["readiness_status"])
+        self.assertEqual(
+            current["execution_decision_ref"], iteration["current_decision_ref"]
+        )
+        self.assertEqual(
+            current["execution_decision_ref"], branch["owner_decision_ref"]
+        )
+        self.assertEqual(plan["iteration"], iteration["id"])
+        self.assertTrue(current["active_iteration"].startswith(iteration["id"]))
+        task_prefix = "-".join(plan["current_task"].split("-")[:2])
+        headings = re.findall(r"^### (TASK-[1-4])：", plan_path.read_text(encoding="utf-8"), re.MULTILINE)
+        self.assertEqual(headings, ["TASK-1", "TASK-2", "TASK-3", "TASK-4"])
+        self.assertIn(task_prefix, headings)
+
     def test_semantic_chat_requires_lead_agent_context_and_turn_isolation(
         self,
     ) -> None:
@@ -10981,11 +11039,6 @@ class ReworkPlanningGateTests(unittest.TestCase):
             ("first_chat_canary_turn_count", 4),
             ("new_conversation_context_isolation_required", False),
             ("full_regression_before_direction_confirmation_allowed", True),
-            ("first_live_chat_turn_result", "passed"),
-            (
-                "deterministic_successor_canary_source_file_budget",
-                "search-64-plus-read-1",
-            ),
         )
         for field, value in invalid_policy_values:
             invalid = copy.deepcopy(manifest)
@@ -10999,6 +11052,29 @@ class ReworkPlanningGateTests(unittest.TestCase):
                 required=True,
             )
             self.assertTrue(any(field in error for error in errors), (field, errors))
+
+        # These are historical live-run fields.  They are validated only for
+        # the legacy implemented-* states that own those receipts; changing
+        # them on the current qualified candidate must not revive the old
+        # protocol.
+        historical_only = copy.deepcopy(manifest)
+        historical_only["conversational_engineering_agent"][
+            "first_live_chat_turn_result"
+        ] = "passed"
+        historical_only["conversational_engineering_agent"][
+            "deterministic_successor_canary_source_file_budget"
+        ] = "search-64-plus-read-1"
+        self.assertEqual(
+            docs_gate.validate_conversational_engineering_agent(
+                historical_only,
+                historical_only["product_goal_alignment"],
+                new_refs,
+                blocking,
+                "manifest.yaml",
+                required=True,
+            ),
+            [],
+        )
 
         missing = copy.deepcopy(manifest)
         missing.pop("conversational_engineering_agent")

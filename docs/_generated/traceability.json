@@ -4593,6 +4593,41 @@
       "tests/test_lightweight_engineering_agent.py"
     ]
   },
+  "FINDING-010-291": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-291.md",
+    "code": [
+      "pyproject.toml",
+      "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/interface/engineering_qa_alpha_cli.py",
+      "src/software_world_model/interface/engineering_qa_preview_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_engineering_qa_alpha_cli.py",
+      "tests/test_engineering_qa_preview_cli.py",
+      "tests/test_browser_chat_interface.py"
+    ]
+  },
+  "FINDING-010-292": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-292.md",
+    "code": [
+      "validation/iteration_010_mvp/direction_check.py"
+    ],
+    "tests": [
+      "tests/test_iteration_010_direction_check.py"
+    ]
+  },
+  "FINDING-010-293": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-293.md",
+    "code": [
+      "src/software_world_model/interface/http_api.py",
+      "src/software_world_model/interface/agentic_runtime.py",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -5850,6 +5885,19 @@
       "validation/iteration_010_mvp"
     ]
   },
+  "ITER-010-SLICE-001-HISTORY": {
+    "path": "docs/project/implementation-reference/iteration-010-slice-001-history.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services",
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests",
+      "validation/iteration_010_mvp"
+    ]
+  },
   "ITER-010-SLICE-002": {
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-002-cross-project-hardening.md",
     "code": [
@@ -5918,6 +5966,17 @@
     "tests": [
       "tests",
       "validation"
+    ]
+  },
+  "PROJECT-GOVERNANCE-ARCHITECTURE-CHANGE": {
+    "path": "docs/project/governance/architecture-change-policy.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py"
     ]
   },
   "PROJECT-GOVERNANCE-DOCUMENTATION": {
@@ -6088,6 +6147,15 @@
       "tests/test_conversational_engineering_routing.py",
       "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_chat_provider_runtime.py"
+    ]
+  },
+  "SYS-ARCH-BASELINE": {
+    "path": "docs/system/architecture/architecture-baseline.md",
+    "code": [
+      "src/software_world_model"
+    ],
+    "tests": [
+      "tests"
     ]
   },
   "SYS-ARCH-COMPONENTS": {
@@ -6837,6 +6905,17 @@
   },
   "SYS-OPS-LOCAL-BROWSER": {
     "path": "docs/system/operations/local-browser.md",
+    "code": [
+      "pyproject.toml",
+      "src/software_world_model/interface/engineering_chat_alpha_cli.py"
+    ],
+    "tests": [
+      "tests/test_engineering_chat_alpha_cli.py",
+      "tests/test_engineering_chat_browser.py"
+    ]
+  },
+  "SYS-OPS-LOCAL-BROWSER-HISTORY": {
+    "path": "docs/project/implementation-reference/local-browser-history.md",
     "code": [
       "pyproject.toml",
       "src/software_world_model/application_services/conversational_engineering_agent.py",

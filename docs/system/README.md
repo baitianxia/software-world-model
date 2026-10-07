@@ -16,7 +16,7 @@ tests: [tests]
 ## 阅读路径
 
 1. [产品定位](product/vision.md)与[能力地图](product/capability-map.md)
-2. [架构概览](architecture/overview.md)、[组件边界](architecture/components.md)与[架构不变量](architecture/invariants.md)
+2. 唯一顶层[架构基线](architecture/architecture-baseline.md)，再按需阅读[组件边界](architecture/components.md)、[领域模型](architecture/domain-model.md)与[架构不变量](architecture/invariants.md)；`overview.md` 仅是兼容投影，不是入口
 3. 当前切片引用的[系统契约](contracts/README.md)
 4. [质量属性](quality/attributes.md)、[安全边界](quality/security-boundaries.md)与[验收原则](quality/acceptance-principles.md)
 5. 需要本地运行时再读取[运维说明](operations/README.md)

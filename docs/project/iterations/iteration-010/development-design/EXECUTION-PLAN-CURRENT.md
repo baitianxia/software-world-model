@@ -3,165 +3,120 @@ id: ITER-010-EXECUTION-PLAN-CURRENT
 kind: development-design
 status: current
 authority: current-development
-owners: [project, engineering, architecture, quality]
+owners: [project, engineering, quality]
 depends_on: [ITER-010-SLICE-001, ITER-010-PDR-014, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
 slice: ITER-010-SLICE-001
 coding_input: true
-as_of: 2026-09-15
+as_of: 2026-10-07
+plan_shape: USER_VALUE_VERTICAL_SLICE@1
+task_count: 4
+current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
+readiness_status: PRE_DEVELOPMENT_REPAIR
 ---
 
-# ITER-010 当前执行计划
+# ITER-010 当前任务拆分计划
 
-## 1. 这张卡的地位
+## 1. 唯一地位和目标
 
-这是 ITER-010-SLICE-001 的唯一当前执行顺序。它把已接受的架构和 PDR-014 转成可直接执行的开发任务；不改变软件世界模型、主工程
-Agent、Source、Evidence、Citation、独立审核和 Web 的系统契约，也不创建新的迭代、授权或门禁。`proposal.md` 和 `readiness-review.md`
-中关于 Phase B REWORK、Reviewer 未激活的文字是历史记录；与本卡冲突时以本卡、`current.md`、SLICE-001 和 PDR-014 为准。
+本文是当前开发任务唯一的任务顺序。PDR、Slice、Proposal、Readiness 和 Finding 提供目标、边界和历史证据，但不再定义另一套
+开发顺序。不得把阶段名称、内部能力包、配置校验、监督记录或测试数量当作当前任务。
 
-目标不是先完成内部协议，而是尽快形成真实可用的浏览器 Chat，再用小样本验证方向，最后才夯实实现。普通失败、模型失败、网络失败和
-定向测试失败都留在本开发闭环中，不能把开发任务暂停或变成新的授权请求。
+目标是实现一个真正的软件世界模型辅助工程 Agent：世界模型提供指定版本工程的结构、关系、行为、边界、来源和检索入口；Agent 使用认知
+理解问题并自主选择世界模型或精确版本源码作为证据，按观察结果继续规划或追问；用户可在浏览器中持续聊天；答案带真实来源，独立复核发现
+问题时把缺口反馈给同一个 Agent 循环。这里描述的是一个可往返的运行闭环，不是“世界模型先于 Agent、源码随后补证”的固定流水线。
 
-本轮讨论补充并固定以下运行原则，但不改变既有架构契约：
+第一任务必须同时包含世界模型、Agent、源码、答案、引用、独立复核和浏览器。它是最小方向体验，不冒充最终 MVP，但不能用静态回放、预制答案、
+POM 介绍或只完成一个内部模块代替。
 
-- **软件世界模型不是文字手册或答案库。** 它必须表达指定版本工程的实体、结构、关系、行为、边界、覆盖范围、来源和检索入口，作为 Agent
-  的可复用系统认知。只有 locator、导航关系或不完整索引，不能宣称认知闭包。
-- **Agent 是自适应的问题解决者。** 它负责理解问题、选择世界模型视图、按证据缺口读取源码、组织回答和处理追问；模型负责推理与表达。
-  世界模型提供认知和入口，源码是最终事实依据，回答不能只凭世界模型导航信息生成。
-- **世界模型失配必须可降级。** 当认知覆盖不足或检索没有命中时，Agent 必须继续走通用源码搜索；不能把错误的候选投影、固定动作或预算熔断
-  当成答案。World Model + source 要优于 source-only 是待验证产品假设，不是当前实现的前提。
-- **每次失败先判责任层再改动。** 先区分 knowledge construction、cognition retrieval、Agent planning/tool、synthesis/citation、review、Web
-  和 Provider；没有证明最早偏差前，不得改 Prompt、Schema、答案检查或单题逻辑碰答案。
+## 2. 任务规则
 
-## 2. 代码现状与已完成能力
+- 任务按用户可观察能力拆分，不按组件完成度、协议版本或证明记录拆分。
+- 只有一个当前任务；内部实现可有子任务，但子任务不能成为新的产品阶段或晋级门。
+- 每个任务都必须写清：用户结果、最小证据、允许的内部工作、失败出口和下一步动作。
+- 配置、Provider 收据、监督、定向测试和报告是伴随工作，不得成为第一次浏览器体验的前置任务。
+- 普通失败留在当前任务，先定位最早责任层，再做一次最小通用修复并复验原问题和未参与修复的问题。
+- Provider、模型名称、调用时段和具体 Prompt 不是任务语义；模型透明路由由运行配置负责。
+- 只有 scope/safety 变化或用户明确停止、转向、拒绝时才等待。其他失败继续在当前任务内处理。
+- 任何任务不得通过修改 `docs/system/architecture/**` 改变系统语义；架构目录保持用户批准的冻结状态。
 
-- 最近候选为 `f501045a02e6b72ef90240d9fcde9e67ada9573f`（新增异质 Agent fuse 夹具，运行代码 parent `254d33f`）；来源是公开 mall exact revision
-  `0504e86b1f1b6f1b8aa6a734d37a90fb67346be7`，只读边界不变。
-- 世界模型已有可供 Agent 使用的结构、关系和详情能力；但最近运行表明它仍可能只给出导航候选，不能保证问题所需的完整行为链。最近的通用修复把 cognition detail/traverse 中已登记实体重新连接到已有
-  Source candidate，保持 Citation、Source identity 和 provenance，不增加题面或 Provider 特判。
-- Agent 已有重复动作/无进展恢复和有限 replan 能力；`254d33f` 对未执行重复提案应用同一收敛熔断，`f501045` 增加两个异质确定性夹具，记录于 FINDING-010-284。run279 暴露的无命中后重复搜索现已有最小通用修复，仍需 fresh 运行验证。
-- 开发记录中的 `run-255` 表明原问题加两个异质问题曾完成 C1 轨迹，但当前监督分支没有针对该运行及其后续候选形成新的独立 `ADVANCE` 评估，不能把开发方记录直接当作阶段完成。
-- 最新 `run-267-citation-plan-recheck` 仍未通过：q1 因引用超出已交付证据而 `CONTROL_STATE_DENIED`，q3 因审核要求补证后预算耗尽，只有 q4 成功。较早候选上的 C2 成功记录不能直接继承给当前 HEAD。
-- 当前监督 assessment 已绑定最新候选并保持 `FRESH/REWORK`；run279 已封存为 C2 REWORK/NOT_RUN，254d33f 的收敛修复仍需 fresh 异质运行验证。
+## 3. 唯一任务顺序
 
-## 3. 只做以下四个开发包（顺序固定）
+### TASK-1：最小完整体验链
 
-### C0 — 恢复执行与绑定监督（无产品代码）
+在一个公开、精确版本、只读工程上形成最小真实纵切：
 
-恢复原开发任务，明确它使用本卡，绑定 `codex/development` 当前 HEAD。开发任务内部创建或恢复一个监督子 Agent；监督子 Agent 不开独立
-产品任务、不写产品代码，只读开发工作树和运行证据，并在同一开发任务内发送纠偏意见。监督绑定 `codex/supervision`、可信基线和当前
-HEAD；每次 HEAD/工作树/运行证据变化以及最长 30 分钟写 heartbeat 和 assessment。监督失联时只恢复监督，不停止产品开发。
+1. 构建一份真实的软件世界模型认知，至少包含一个可追踪的结构/关系/行为路径、来源和覆盖/未知状态；不能只建立 Maven 模块目录。
+2. 接入一个 Provider 透明的 Agent 循环；Agent 根据问题、当前证据状态和观察结果自主选择世界模型工具或源码只读工具，可在两条证据路径
+   之间往返，并据此调整计划。不得把“先世界模型、后源码”实现成固定顺序。
+3. 生成自然答案和真实 Citation；Citation 必须指向本轮实际证据，不能由世界模型导航候选直接冒充事实。
+4. 经过 fresh 独立技术复核；复核失败时返回真实限制或在同一任务内重新调查。
+5. 接入持续浏览器 Chat，至少支持一个问题、一个追问、一个新问题和单题失败后继续服务。
 
-### C1 — 修复通用 Agent 证据规划闭环（首个代码包）
+**交付出口：** loopback 地址、启动方式、精确产品/源码版本、一个可复现问题、一个追问、已知限制和真实证据记录。形成最小可操作闭环后立即交付用户；
+不等待 Codex、全量回归、跨工程、隐藏题或工程夯实。
 
-以一个真实失败轨迹为依据，定位 `Reviewer → MORE_EVIDENCE → Agent` 的最早偏差。只允许通用修复：同一预算内选择尚未消费且与当前 Gap
-相关的 cognition/Source candidate，阻止重复搜索/读取和无进展循环，保留已有 Evidence/Citation identity；不能扩大预算、重试 Reviewer、
-增加答案协议、增加问题/工程/类名分支。用原失败轨迹和两个未参与修复的异质任务做定向验证。
+**失败出口：** 若完整可操作闭环尚未形成，交付最后一个可运行版本、唯一最早阻塞层和可证伪根因；不得继续扩展无关内部能力，也不得宣称任务完成。
 
-### C1.5 — 准备可体验环境（启动前提，不是产品代码包）
+**Route-0（第一开发动作）：** 现有浏览器请求仍可能落到只读源码的旧证据回答路径，默认 Chat Access 也可能只展示未连接状态；这不是已完成的
+Agent 能力。先从真实浏览器入口追踪到运行时组合，确保同一请求实际进入主 Agent，并能调用世界模型和精确版本源码两类只读证据工具；首条端到端
+运行记录必须证明同一路由完成 Agent、世界模型、源码、Citation 和 fresh Reviewer。若默认入口仍是 Access 展示页，必须明确它只是未激活
+入口，不能当作体验版本。Route-0 未完成前，不得把答案协议、引用格式、审核字段、Provider 收据或静态报告的修改计为产品进展。
 
-在 C1 的候选提交稳定后，必须使用现有 standing authority、公开 mall exact revision、当前 clean product commit/tree 以及已经生成的 World Model
-artifact，准备并校验当前多轮 Chat 入口 `engineering_chat_alpha_cli` 所需的
-`SWM-ENGINEERING-CHAT-ARTIFACT-SESSION-CONFIG@4`（若当前 loader 明确要求已记录的兼容扩展，则按同一契约使用 `@5`）。禁止改用
-历史单路兼容入口 `engineering_qa_alpha_cli` 或 `SWM-ENGINEERING-QA-ALPHA-SESSION-CONFIG@1`，因为它不能证明当前双路 Provider、World Model
-和 Chat 目标。配置必须通过当前 Chat launcher 的字段、绝对路径、版本绑定、0600 权限、唯一键、双 Provider route、互异且尚不存在的数据库/
-receipt 输出路径校验；不得写入 Secret value，不新增 Provider、模型、预算、授权或外部接收方。每次产品或当前文档提交后都重新读取 clean HEAD/tree
-绑定配置，不能复制旧 commit/tree。缺少配置或 artifact 只能在本地补齐生成/校验步骤，不能当成“等待授权”的产品阻塞，也不能以无配置为理由
-结束本开发任务。此包完成的唯一可观察结果是 Chat launcher 能在监听前完成配置校验；它不等于 Alpha，也不允许开发任务在此返回“计划完成”。
+### TASK-2：方向与归因验证
 
-### C2 — 打通真实多轮浏览器交互（第二个代码包）
+在同一可运行链上运行少量异质问题，至少包含原问题、一个未参与实现的问题、一个不同类型的问题和一个语义追问；同时保留同一 Agent 的
+source-only 与 World Model + source 两臂。
 
-使用上述 artifact-backed Chat launcher，沿用同一个 Agent、Conversation 和 Web，完成一组固定但不写入产品逻辑的体验脚本：q1 与 q2 在同一 Conversation，q3 为上下文澄清并新建
-Turn，q4、q5 为新问题；不得产生重复 ordinal、额外隐式 Conversation 或重连造成的伪 Turn。每个 Turn 仍须有自然答案、真实 Citation、
-fresh 独立审核和可观察的失败关闭。
+判定三个事实：
 
-### C3 — 立即交付 Alpha，再验证产品增益（第三个代码包）
+- Agent 是否真的使用世界模型并按缺口读取源码；
+- 世界模型是否增加至少一个正确的非定位性结论，或修复 source-only 的真实遗漏；
+- 失败最早发生在知识、认知检索、Agent、证据/答案、复核还是 Web。
 
-一旦 C1/C2 形成可重复启动的完整主链，立即交付 loopback 地址、启动方式、exact revision 和已知限制；不等待 Codex 比较、全量回归、
-hidden、跨工程或性能工作。随后在同一 candidate 上运行三个异质问题和一个语义追问，保存同一 Agent 的 source-only 与
-World Model + source 两臂。World Model 只有在至少增加一个正确的非 locator 结论，或修复一个 source-only 的真实遗漏且无物质退步时，才
-计为产品增益。
+若失败，只修复一个最早责任层的通用问题，再复验原问题和两个未参与修复的问题。不得增加题面分支、关键词规则、答案格式规则、预算或模型特判。
+方向比较失败只阻止方向通过和夯实，不阻止当前任务继续返工。
 
-### C4 — 方向通过后才夯实
+### TASK-3：通用能力增量
 
-只有用户确认 Alpha 方向继续，且 C3 的异质体验显示世界模型确有增益，才执行五个异质问题、多轮 Chat、current Codex 强基线、独立
-exact-source 评测、完整契约、全量回归、跨工程、性能和发布准备。Codex 是独立强基线，不是 Oracle 或裁判。方向不成立时按最早责任层
-回到 Source truth → cognition → Agent/tool → synthesis → review → Web，不能靠添加单题规则碰答案。
+用户确认继续后，每次只扩展一个可观察能力，例如行为覆盖、关系遍历、认知降级到源码、多轮上下文或复核缺陷发现。每个增量都必须重新经过
+TASK-1 的最小端到端链，并交付新的用户可见结果。
 
-## 4. 完成和继续规则
+知识构建、Agent、工具、答案和 Web 可以并行实现，但只能由端到端结果合并验收；不能分别宣布“模块完成”。相同失败签名连续一次通用修复仍
+复现时，停止无新证据的外部重跑，重新审查责任层和实现策略，不继续堆规则。
 
-- **可体验出口：** C2 后真实浏览器能持续提问、追问、纠正和新建对话；主链中的 cognition、Source、Answer、Citation、fresh Review 均有
-  可观察证据。达到即交付，交付不是暂停点。
-- **单次开发任务边界：** 一个开发 turn 不以单个提交、定向测试或配置校验结束。开发任务必须沿 C1 → C1.5 → C2 → C3 连续推进；只有已经
-  交付 loopback 体验或确认了无法绕过的真实安全/范围阻塞，才可以汇报本轮结束。普通测试失败、缺少本地启动前提和实现错误都必须在当前任务内
-  修复或补齐，不能把“已完成一个局部 commit”描述为计划完成。
-- **MVP 出口：** C4 在用户确认 Alpha 方向继续后，完成五个异质问题、多轮 Chat、独立审核和 Codex 比较，达到既定质量且 World Model 有
-  非 locator 增益；C3 Alpha 本身不得使用 “MVP” 名称。
-- **失败处理：** 只记录原始轨迹，按最早责任层提出可证伪根因；做最小通用修复并复验原问题加两个异质问题。失败不新建 PDR/Result、
-  不重复授权、不改变模型透明路由、不停止开发。
-- **偏离处理：** 若提交只增加 Prompt/Schema/Reviewer/输出检查、只改善已知题、或没有 knowledge/Agent/Web 新证据，监督立即标记
-  `NO_PRODUCT_PROGRESS`，向开发任务发送 `CORRECT` 和唯一下一动作，开发回到最早未完成的 C1/C2/C3；不得继续扩张旧协议。
-- **时间处理：** 时间上限只触发删减非必要工作或更换实现；不降低质量、不等待用户、不消费新的授权。受信 pre-dispatch 网络失败按新
-  logical run 自动重试；post-dispatch unknown 不重放同一请求。
+### TASK-4：MVP 夯实与正式验收
 
-## 5. 开发任务内监督子 Agent 的工作协议
+只有 TASK-2 证明方向成立后，才执行五个以上异质问题、多轮 Chat、独立 exact-source 评测、当前 Codex 强基线、完整安全/只读/失败恢复、
+全量回归、跨工程、性能和发布准备。此阶段才允许正式宣称 MVP。
 
-监督子 Agent 每次检查都必须读取：当前文档、本次 HEAD 与工作树差分、最近代码/测试、最近 Web/Agent trajectory 和上次 assessment。
-它输出四个字段：`decision`（`CORRECT`/`CORRECT_WITH_ACTION`/`REWORK`）、`earliest_layer`、`evidence`、`next_action`。
+## 4. 监督和失败处理
 
-- `CORRECT`：继续当前开发包，并说明下一可观察产品证据。
-- `CORRECT_WITH_ACTION`：发现轻微偏离，直接把一个明确可执行动作发给父开发任务；父任务继续，不等待人工确认。
-- `REWORK`：确认通用方向偏离或已有能力退步；直接要求父任务停止当前错误路径、保留证据、回到最早责任层。它不是暂停整个开发任务。
-- 只有用户明确 STOP/REDIRECT/REJECT、发生 standing authority scope delta，或安全边界不可绕过时，才允许父任务等待；其他情况均继续。
+监督 Agent 是当前开发任务的非阻塞子任务，不拥有新的产品阶段。它在每次代码、运行证据或工作树变化以及最长 30 分钟检查一次，并只输出：
+`decision`、`earliest_layer`、`evidence`、`next_action`。
 
-监督不得把测试数量、文档数量、调用收据或“门禁通过”当作产品进展，不得自行修改产品代码，不得创建并行开发分支，不得要求逐次
-授权。父开发任务中断后，恢复时必须先重新创建/绑定这个监督子 Agent，再继续 C1/C2/C3。
+- `CORRECT`：继续当前任务并指出下一用户可见结果；
+- `CORRECT_WITH_ACTION`：发送一个明确纠偏动作，开发继续；
+- `REWORK`：保留证据并切换到最早责任层，开发继续；
+- 不得因为监督等待、普通测试失败、模型失败、配置缺失或网络失败暂停产品任务。
 
-## 6. 当前下一轮执行包（顺序不可跳过）
+每次失败只允许一份根因记录和一个下一动作，不新建 PDR、Result、授权请求或并行开发分支。只有用户方向改变、权限范围变化或安全禁止才改变
+当前任务。
 
-当前开发任务继续使用 `codex/development`，监督任务继续使用 `codex/supervision`。以下三个动作属于同一轮连续开发；完成一个局部提交、定向测试或配置
-校验都不能结束本轮。
+## 5. 防止任务拆分再次漂移
 
-### N0 — 先完成一次最小根因定位（不先改产品代码）
+以下规则是计划完整性的机械约束，不依赖开发 Agent 自觉：
 
-恢复开发任务并重新绑定当前 clean HEAD `254d33f` 与监督任务。以 run279 的 q1 失败轨迹为入口，逐步对账世界模型候选、实际源码读取、Agent model view、
-  Citation binding、审核结果和预算消耗，明确最早责任层；不得把 Provider 状态、测试数量或最终拒绝码直接当作根因。若仅凭 sealed 证据无法区分
-  cognition 覆盖和 Agent 规划，再做一次最小可复现运行，不扩展问题集。N0 必须在同一开发轮内完成并进入 N1，不能停在“已完成分析”。
+1. 当前执行计划必须有 `plan_shape: USER_VALUE_VERTICAL_SLICE@1`、四个任务和一个 `current_task`；不得在当前计划中新增第二套阶段编号。
+2. 第一个任务必须同时出现世界模型、Agent、源码、答案、引用、独立复核和浏览器的交付要求；配置、监督、全量测试、Codex 比较不得出现在其前置任务中。
+3. `project/current.md` 的 `execution_plan_ref`、`active_slice`、`next_action` 必须与本计划和 Manifest 的当前动作一致；任何不一致都阻止开发提交。
+4. 计划只能绑定当前任务的产品目标和候选策略，不能硬编码过期 commit、旧 run 或旧监督 HEAD；精确 commit/tree 只在运行收据和交付证据中记录。
+5. 计划修改后必须先运行文档检查和计划形状检查，再继续产品代码；检查失败只阻止计划变更，不撤销既有开发授权。
+6. 计划形状检查只允许确认结构、依赖和出口，不判断答案质量，不生成模型调用，不修改架构，不替代独立复核。
 
-### N1 — 闭合 C1 的通用 Agent 证据规划
+## 6. 当前执行动作
 
-以 N0 确认的最早责任层为准。若责任在世界模型，先补齐通用的行为/关系/覆盖/来源或检索入口；若责任在 Agent，修复通用的证据规划和重规划；
-若责任在 Source、Citation 或 Review，只修复其通用契约。原始 `MORE_EVIDENCE` 轨迹和两个未参与修复的异质问题必须全部重放，证明：Agent 能在
-世界模型不足时继续通用源码搜索；能在同一预算内选择相关且未消费的证据；不重复搜索、读取或分派；保留 Source/Citation identity；补证后确实进入
-审核。不能用增加预算、题面分支、Prompt/Schema、引用重编号或 Reviewer 放宽替代修复。
-
-N1 的完成条件是“运行轨迹证据齐全”，不是 `22/22` 之类的单元测试数量。监督在证据齐全前不得允许进入 C1.5。
-
-### N2 — 用当前 Chat 入口完成 C2 浏览器链
-
-N1 通过后，重新读取 clean HEAD/tree，生成当前 `engineering_chat_alpha_cli` 所需的 artifact-backed Chat 配置（当前 loader 接受的 `@4`/`@5`），
-  然后只运行一条固定脚本：
-
-1. q1、q2 使用同一个 Conversation；
-2. q3 是基于前文的澄清，必须作为同一 Conversation 的新 Turn，不能新建 Conversation；
-3. q4、q5 是封闭范围内的两个新问题，可使用新的 Conversation，但不得产生隐式会话或重复 ordinal。
-
-每个 Turn 都要有自然答案、真实 Citation、独立 fresh review，并在失败时留下可观察的 fail-closed 结果。必须记录 listener 已实际启动、Web
-请求已进入生产链、Conversation/Turn 数量与每个 Turn 的结果；仅有 `PREPARED_NOT_STARTED`、本地配置通过或终止收据不算完成。禁止使用旧
-`engineering_qa_alpha_cli`、旧单路配置、全量回归、Codex 等待比较或重新申请同范围授权。
-
-### N3 — 首次完整链形成后立即交付 Alpha
-
-N2 形成可重复的完整链后，立即给出 loopback 地址、启动方式、代码提交、已知限制和一组可复现问题；不等待 C4。随后只做三个异质问题和一个语义
-追问，用同一 Agent 分别记录 source-only 与 World Model + source 的结果，判断世界模型是否增加非 locator 正确结论或修复真实遗漏。若没有增益，
-回到最早的 knowledge/cognition/Agent 层定位，不增加题目特判。
-
-## 7. 本轮监督和停止条件
-
-- 监督在每次 HEAD、工作树、轨迹或收据变化以及最长 30 分钟时检查；必须输出 `decision`、`earliest_layer`、`evidence`、`next_action`。
-- 在 N1/N2 的运行证据齐全前，监督只能给 `CORRECT_WITH_ACTION` 或 `REWORK`，不得给 `ADVANCE`、不得宣布 Alpha/MVP。
-- 发现偏离时，监督直接向开发任务发送一个唯一纠偏动作，开发继续执行；不暂停、不重复授权、不新建 PDR，不把普通失败升级为阻塞。
-- 只有 scope/safety 真正变化、用户明确停止，或无法绕过的外部不可用才允许等待；普通模型、网络、配置和测试失败都在本轮内诊断和修复。
-- 本轮明确禁止：继续扩展旧回答协议、针对单题碰答案、用测试数量冒充产品进展、先做 C4 夯实、把监督收据当作用户体验。
+当前唯一动作是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。下一步不是继续增加内部协议或补齐全量知识，而是把最小真实世界模型、Agent、源码证据、答案、
+复核和浏览器连接成可往返的运行闭环，并在形成第一条可操作闭环后立即交付用户。

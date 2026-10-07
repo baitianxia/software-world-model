@@ -3,6 +3,8 @@ id: SYS-ADR-007
 kind: system-decision
 status: accepted
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: decision-rationale-only
 owners: [architecture]
 depends_on: [SYS-ADR-006]
 derived_from: [AD-045, AD-046, AD-050, AD-130]

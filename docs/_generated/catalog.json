@@ -5483,6 +5483,45 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-290.md"
   },
   {
+    "id": "FINDING-010-291",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "execution-evidence",
+    "owners": [
+      "project",
+      "application",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-291.md"
+  },
+  {
+    "id": "FINDING-010-292",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "implementation-evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-292.md"
+  },
+  {
+    "id": "FINDING-010-293",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "implementation-evidence",
+    "owners": [
+      "project",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-293.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -7141,7 +7180,6 @@
     "owners": [
       "project",
       "engineering",
-      "architecture",
       "quality"
     ],
     "derived_from": [],
@@ -7634,6 +7672,20 @@
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-001-engineering-qa-direction-preview.md"
   },
   {
+    "id": "ITER-010-SLICE-001-HISTORY",
+    "kind": "development-slice",
+    "status": "historical-evidence",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture",
+      "quality",
+      "product"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/iteration-010-slice-001-history.md"
+  },
+  {
     "id": "ITER-010-SLICE-002",
     "kind": "development-slice",
     "status": "proposed",
@@ -7848,6 +7900,31 @@
     "path": "docs/project/current.md"
   },
   {
+    "id": "PROJECT-DOCUMENTATION-REORGANIZATION",
+    "kind": "project-documentation-reorganization",
+    "status": "current",
+    "authority": "documentation-maintenance",
+    "owners": [
+      "project",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/documentation-reorganization/README.md"
+  },
+  {
+    "id": "PROJECT-GOVERNANCE-ARCHITECTURE-CHANGE",
+    "kind": "project-governance",
+    "status": "current",
+    "authority": "project-governance",
+    "owners": [
+      "architecture",
+      "project",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/governance/architecture-change-policy.md"
+  },
+  {
     "id": "PROJECT-GOVERNANCE-BOUNDARY",
     "kind": "project-governance",
     "status": "current",
@@ -7955,6 +8032,18 @@
     "path": "docs/project/governance/verification-policy.md"
   },
   {
+    "id": "PROJECT-IMPLEMENTATION-REFERENCE",
+    "kind": "project-reference-index",
+    "status": "current",
+    "authority": "historical-evidence",
+    "owners": [
+      "project",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/README.md"
+  },
+  {
     "id": "PROJECT-INDEX",
     "kind": "project-index",
     "status": "current",
@@ -7964,6 +8053,143 @@
     ],
     "derived_from": [],
     "path": "docs/project/README.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-AGENT-IMPLEMENTATION-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/agent-implementation-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-DEPLOYMENT-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "operations",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/deployment-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-DOMAIN-IMPLEMENTATION-STATUS",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/domain-implementation-status.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-ENGINEERING-CONVERSATION-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/engineering-conversation-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-ENGINEERING-QA-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/engineering-qa-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-PROVIDER-ROUTING-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "operations",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/provider-routing-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-ROUTING-INSTANCE-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/routing-instance-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-RUNTIME-PROFILE-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/runtime-profile-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-STANDING-AUTHORITY-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "operations",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/standing-authority-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-WORLD-MODEL-INVESTIGATION-HISTORY",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "quality",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/world-model-investigation-history.md"
+  },
+  {
+    "id": "ROADMAP-CANDIDATE-ARCHITECTURE-AUTHORITY-MECHANICAL-GATE",
+    "kind": "roadmap-candidate",
+    "status": "candidate",
+    "authority": "planning-only",
+    "owners": [
+      "architecture",
+      "project",
+      "engineering"
+    ],
+    "derived_from": [],
+    "path": "docs/project/roadmap/candidates/architecture-authority-mechanical-gate.md"
   },
   {
     "id": "ROADMAP-CANDIDATE-BOUNDED-WORLD-MODEL-INVESTIGATION",
@@ -8478,6 +8704,22 @@
     "path": "docs/system/architecture/decisions/README.md"
   },
   {
+    "id": "SYS-ARCH-BASELINE",
+    "kind": "system-architecture",
+    "status": "current",
+    "authority": "normative",
+    "owners": [
+      "architecture"
+    ],
+    "derived_from": [
+      "SYS-ADR-018",
+      "SYS-ADR-005",
+      "SYS-ADR-006",
+      "SYS-ADR-010"
+    ],
+    "path": "docs/system/architecture/architecture-baseline.md"
+  },
+  {
     "id": "SYS-ARCH-COMPONENTS",
     "kind": "system-architecture",
     "status": "current",
@@ -8581,7 +8823,7 @@
   {
     "id": "SYS-ARCH-OVERVIEW",
     "kind": "system-architecture",
-    "status": "current",
+    "status": "derived",
     "authority": "normative",
     "owners": [
       "architecture"
@@ -9246,6 +9488,18 @@
       "operations",
       "interface"
     ],
+    "derived_from": [],
+    "path": "docs/system/operations/local-browser.md"
+  },
+  {
+    "id": "SYS-OPS-LOCAL-BROWSER-HISTORY",
+    "kind": "system-operations",
+    "status": "historical-evidence",
+    "authority": "operational",
+    "owners": [
+      "operations",
+      "interface"
+    ],
     "derived_from": [
       "FINDING-010-029",
       "FINDING-010-140",
@@ -9254,7 +9508,7 @@
       "FINDING-010-157",
       "FINDING-010-158"
     ],
-    "path": "docs/system/operations/local-browser.md"
+    "path": "docs/project/implementation-reference/local-browser-history.md"
   },
   {
     "id": "SYS-PRODUCT-CAPABILITIES",
