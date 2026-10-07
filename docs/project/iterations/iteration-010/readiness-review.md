@@ -25,7 +25,8 @@ current_scheduling_finding_ref: FINDING-010-179
 # ITER-010 Readiness Review
 
 > 当前开发阅读提示：本文是历史就绪和授权证据，`coding_input: false`。不得把旧授权时间、Provider 准入、运行收据或历史阶段当作新的
-> 前置门禁。当前任务、出口和失败处理唯一见 `development-design/EXECUTION-PLAN-CURRENT.md`。
+> 前置门禁。当前任务、出口和失败处理唯一见 `development-design/EXECUTION-PLAN-CURRENT.md`；本文不替代当前执行计划，也不生成新的
+> 任务顺序或授权。
 
 > `PHASE A/B/C/D` 在本文中均为历史记录，不是当前状态。本文不产生任务顺序、晋级门或监督动作；当前唯一活动任务是
 > `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。

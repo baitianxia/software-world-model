@@ -860,6 +860,36 @@ class SnapshotTests(unittest.TestCase):
             [],
         )
 
+    def test_not_ready_metadata_closes_coding_and_external_execution(self) -> None:
+        metadata = current_metadata()
+        metadata["readiness_status"] = "NOT_READY"
+        candidate = manifest()
+        control = candidate["plan_execution_control"]
+        assert isinstance(control, dict)
+        current_action = control["current_action"]
+        contracts = control["next_action_contracts"]
+        assert isinstance(current_action, dict)
+        assert isinstance(contracts, dict)
+        registered_action = contracts["direction_freeze"]
+        assert isinstance(registered_action, dict)
+        for action_value in (current_action, registered_action):
+            action_value["coding_allowed"] = True
+            action_value["external_execution_allowed"] = True
+        errors = plan_gate.validate_snapshot(
+            candidate,
+            current_metadata=metadata,
+            verification_cases=cases(),
+            documents=documents(),
+        )
+        self.assertTrue(
+            any("must forbid product code changes" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any("must forbid external execution" in error for error in errors),
+            errors,
+        )
+
     def test_route_policy_rejects_concrete_provider_or_model_identity_inputs(
         self,
     ) -> None:

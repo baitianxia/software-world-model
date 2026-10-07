@@ -14,7 +14,7 @@ as_of: 2026-10-07
 plan_shape: USER_VALUE_VERTICAL_SLICE@1
 task_count: 4
 current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
-readiness_status: PRE_DEVELOPMENT_REPAIR
+readiness_status: READY
 ---
 
 # ITER-010 当前任务拆分计划
@@ -118,5 +118,5 @@ TASK-1 的最小端到端链，并交付新的用户可见结果。
 
 ## 6. 当前执行动作
 
-当前唯一动作是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。下一步不是继续增加内部协议或补齐全量知识，而是把最小真实世界模型、Agent、源码证据、答案、
-复核和浏览器连接成可往返的运行闭环，并在形成第一条可操作闭环后立即交付用户。
+当前唯一动作是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。本轮修复后的代码与计划可进入该任务；先完成 Route-0 和第一条真实端到端
+体验，再决定是否扩展能力或进入夯实阶段。

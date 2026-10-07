@@ -126,7 +126,7 @@ class EngineeringQuestionAlphaCliTests(unittest.TestCase):
 
     def test_parser_exposes_only_the_frozen_session_config(self):
         parser = build_parser()
-        self.assertEqual(parser.prog, "swm-engineering-qa")
+        self.assertEqual(parser.prog, "swm-engineering-qa-evaluation")
         destinations = {
             action.dest for action in parser._actions if action.dest != "help"
         }
@@ -140,11 +140,11 @@ class EngineeringQuestionAlphaCliTests(unittest.TestCase):
         )
         scripts = project["project"]["scripts"]
         self.assertEqual(
-            scripts["swm-engineering-qa"],
+            scripts["swm-engineering-qa-evaluation"],
             "software_world_model.interface.engineering_qa_alpha_cli:main",
         )
         self.assertEqual(
-            scripts["swm-engineering-qa-preview"],
+            scripts["swm-engineering-qa-preview-evaluation"],
             "software_world_model.interface.engineering_qa_preview_cli:main",
         )
 

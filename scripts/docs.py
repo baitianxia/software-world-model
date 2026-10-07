@@ -2996,6 +2996,26 @@ def validate_experience_first_delivery_policy(
             errors.append(f"{label}: experience_delivery_policy is required")
     elif not isinstance(policy, dict):
         errors.append(f"{label}: experience_delivery_policy must be a mapping")
+    elif review_only_not_ready(manifest):
+        control = manifest.get("plan_execution_control")
+        action = control.get("current_action") if isinstance(control, dict) else None
+        locks = control.get("locks") if isinstance(control, dict) else None
+        if not isinstance(action, dict) or action.get("coding_allowed") is not False:
+            errors.append(f"{label}: NOT_READY review-only action must forbid product coding")
+        if not isinstance(action, dict) or action.get("external_execution_allowed") is not False:
+            errors.append(f"{label}: NOT_READY review-only action must forbid external execution")
+        if not isinstance(locks, dict) or any(
+            locks.get(field) is not True
+            for field in (
+                "product_code_changes",
+                "prompt_or_reviewer_changes",
+                "web_canary",
+                "hardening",
+                "full_regression",
+                "provider_dispatch",
+            )
+        ):
+            errors.append(f"{label}: NOT_READY review-only action must keep all execution locks closed")
     elif continuous_product_build_active(manifest):
         errors.extend(
             _validate_continuous_product_build_experience_policy(
@@ -7827,6 +7847,8 @@ def continuous_product_build_active(manifest: dict[str, object]) -> bool:
 
     control = manifest.get("plan_execution_control")
     policy = manifest.get("experience_delivery_policy")
+    if review_only_not_ready(manifest):
+        return True
     if not isinstance(control, dict) or not isinstance(policy, dict):
         return False
     action = control.get("current_action")
@@ -7852,10 +7874,19 @@ def continuous_product_build_active(manifest: dict[str, object]) -> bool:
     )
 
 
+def review_only_not_ready(manifest: dict[str, object]) -> bool:
+    """Recognize a deliberately closed development action during review."""
+    branch = manifest.get("branch_convergence_control")
+    return isinstance(branch, dict) and branch.get("readiness_status") == "NOT_READY"
+
+
 def validate_continuous_product_build_authority(
     manifest: dict[str, object], label: str
 ) -> list[str]:
     """Keep real scope boundaries without reviving per-run authorization gates."""
+
+    if review_only_not_ready(manifest):
+        return []
 
     control = manifest.get("plan_execution_control")
     authority = manifest.get("public_oss_evaluation_standing_authority")

@@ -164,7 +164,7 @@ class PreparedEngineeringQuestionPreview:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="swm-engineering-qa-preview",
+        prog="swm-engineering-qa-preview-evaluation",
         description="Launch one exact, user-authorized Engineering QA direction preview",
     )
     parser.add_argument("--product-repository", required=True)

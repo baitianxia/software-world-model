@@ -292,7 +292,7 @@ class PreparedEngineeringQuestionAlpha:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="swm-engineering-qa",
+        prog="swm-engineering-qa-evaluation",
         description="Launch one exact sustained Engineering QA Web Alpha session",
     )
     parser.add_argument("--session-config", required=True)

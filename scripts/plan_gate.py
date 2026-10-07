@@ -1931,6 +1931,20 @@ def validate_snapshot(
             errors.append("PROJECT-CURRENT next_action_case_id must match current_action.case_id")
         if current_metadata.get("active_slice") != owner_slice:
             errors.append("PROJECT-CURRENT active_slice must match current_action.owner_slice_ref")
+        readiness_status = current_metadata.get("readiness_status")
+        if readiness_status in {"NOT_READY", "PRE_DEVELOPMENT_REPAIR"}:
+            if action.get("coding_allowed") is not False:
+                errors.append(
+                    "NOT_READY/PRE_DEVELOPMENT_REPAIR current action must forbid product code changes"
+                )
+            if action.get("external_execution_allowed") is not False:
+                errors.append(
+                    "NOT_READY/PRE_DEVELOPMENT_REPAIR current action must forbid external execution"
+                )
+            if any(locks.get(field) is not True for field in LOCK_KEYS):
+                errors.append(
+                    "NOT_READY/PRE_DEVELOPMENT_REPAIR current action must keep every execution lock closed"
+                )
     return sorted(set(errors))
 
 

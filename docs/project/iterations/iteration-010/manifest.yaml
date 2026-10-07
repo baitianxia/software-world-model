@@ -240,7 +240,7 @@ branch_convergence_control:
   plan_shape: USER_VALUE_VERTICAL_SLICE@1
   execution_plan_ref: ITER-010-EXECUTION-PLAN-CURRENT
   current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
-  readiness_status: PRE_DEVELOPMENT_REPAIR
+  readiness_status: READY
   supervision_interval_minutes: 30
   supervision_on_candidate_change: true
   supervision_heartbeat_required: true

@@ -63,7 +63,7 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
             "software_world_model.interface.engineering_chat_alpha_cli:main",
         )
         self.assertEqual(
-            scripts["swm-engineering-qa"],
+            scripts["swm-engineering-qa-evaluation"],
             "software_world_model.interface.engineering_qa_alpha_cli:main",
         )
 

@@ -853,7 +853,10 @@ def _domain_status(code: ErrorCode) -> str:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="swm-http", description="Software World Model HTTP API")
+    parser = argparse.ArgumentParser(
+        prog="swm-http-evaluation",
+        description="Software World Model HTTP evaluation API",
+    )
     parser.add_argument("--database", required=True)
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
