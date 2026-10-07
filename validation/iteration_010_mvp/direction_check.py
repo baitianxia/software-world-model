@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Lightweight PDR-014 direction guard and capability progress reporter.
+"""Report static repository risk signals without judging product correctness.
 
-The guard deliberately checks repository direction, not answer semantics.  It
-prevents growth of the two frozen prompt-heavy implementation surfaces,
-rejects newly-added legacy protocol versions and obvious evaluation-specific
-branches, and reports the four PDR-014 progress dimensions.  A
-``NO_PRODUCT_PROGRESS`` result is informational: it resets the next task to
-the earliest missing phase without stopping development.
+Line counts and regex matches are review hints, not proof of a direction or
+answer defect. Evidence references are declarations, not verified capability.
+The current task comes only from project/current.md; this helper never advances
+it or diagnoses a root cause. Reports can be checked for freshness, not truth.
 """
 
 from __future__ import annotations
@@ -23,9 +21,18 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 
-TRUSTED_PDR014_BASELINE = "8131caecea912ae60c68e20bd4e241c03a0efe2c"
-REPORT_SCHEMA = "ITER_010_CAPABILITY_DIRECTION_REPORT@1"
+REPORT_SCHEMA = "ITER_010_CAPABILITY_DIRECTION_REPORT@2"
 EVIDENCE_SCHEMA = "ITER_010_CAPABILITY_PROGRESS_EVIDENCE@1"
+TASK_1 = "TASK-1-MINIMUM-COMPLETE-EXPERIENCE"
+TASK_2 = "TASK-2-DIRECTION-AND-ATTRIBUTION"
+# These are repository documents, not frozen baselines.  The current task is
+# read from the document on every run so that this helper cannot become a
+# second task state machine.
+CURRENT_CONTEXT_PATH = Path("docs/project/current.md")
+CURRENT_PLAN_PATH = Path(
+    "docs/project/iterations/iteration-010/development-design/"
+    "EXECUTION-PLAN-CURRENT.md"
+)
 
 FROZEN_LEGACY_GROWTH_PATHS = (
     "src/software_world_model/ai_infrastructure/"
@@ -159,6 +166,38 @@ def collect_repository_delta(repository: Path, base: str) -> RepositoryDelta:
     )
 
 
+def _workspace_digest(
+    repository: Path,
+    base: str,
+    delta: RepositoryDelta,
+    *,
+    ignored_paths: frozenset[str] = frozenset(),
+) -> str:
+    """Digest the complete local delta, including deletions and untracked bytes."""
+
+    diff = _git(
+        repository, "diff", "--no-ext-diff", "--no-textconv", "--binary", base, "--"
+    )
+    untracked: list[tuple[str, bytes]] = []
+    for path in delta.untracked_paths:
+        if path in ignored_paths:
+            continue
+        candidate = repository / path
+        value = (
+            os.readlink(candidate).encode("utf-8")
+            if candidate.is_symlink()
+            else candidate.read_bytes()
+        )
+        untracked.append((path, value))
+    material = bytearray(diff)
+    for path, value in untracked:
+        material.extend(b"\0UNTRACKED\0")
+        material.extend(path.encode("utf-8"))
+        material.extend(b"\0")
+        material.extend(value)
+    return "sha256:" + hashlib.sha256(bytes(material)).hexdigest()
+
+
 def _line_count(value: bytes) -> int:
     return len(value.decode("utf-8", errors="strict").splitlines())
 
@@ -168,6 +207,10 @@ def _current_line_count(repository: Path, path: str) -> int:
     if not candidate.exists():
         return 0
     return len(candidate.read_text(encoding="utf-8").splitlines())
+
+
+def _file_digest(repository: Path, path: Path) -> str:
+    return "sha256:" + hashlib.sha256((repository / path).read_bytes()).hexdigest()
 
 
 def _legacy_growth(
@@ -216,10 +259,11 @@ def _added_line_violations(
         for ordinal, line in enumerate(lines, start=1):
             for match in PROTOCOL_VERSION_RE.finditer(line):
                 token = match.group(0)
-                exists = baseline_protocol_cache.setdefault(
-                    token,
-                    _protocol_exists_at_base(repository, base, token),
-                )
+                if token not in baseline_protocol_cache:
+                    baseline_protocol_cache[token] = _protocol_exists_at_base(
+                        repository, base, token
+                    )
+                exists = baseline_protocol_cache[token]
                 if not exists:
                     violations.append(
                         {
@@ -306,26 +350,22 @@ def _prompt_schema_delta(paths: Sequence[str]) -> tuple[str, ...]:
     )
 
 
-def _next_phase(evidence: CapabilityEvidence) -> str:
-    if not evidence.agent:
-        return "PHASE_A_SOURCE_ONLY_AGENT"
-    if not evidence.knowledge:
-        return "PHASE_B_WORLD_MODEL_COGNITION"
-    if not evidence.browser:
-        return "PHASE_C_INTEGRATED_BROWSER_ALPHA"
-    return "PHASE_D_QUALITY_GATE"
+def _current_task(repository: Path) -> str:
+    """Read the one task declared by the current project context."""
 
-
-def _non_product_only(paths: Sequence[str]) -> bool:
-    if not paths:
-        return True
-    return all(
-        path.startswith(("docs/", "tests/", "validation/"))
-        or path in PROMPT_SCHEMA_PATHS
-        or "/prompts/" in f"/{path}"
-        or "/schemas/" in f"/{path}"
-        for path in paths
+    text = (repository / CURRENT_CONTEXT_PATH).read_text(encoding="utf-8")
+    lines = text.splitlines()
+    if not lines or lines[0] != "---" or "---" not in lines[1:]:
+        raise DirectionCheckError("PROJECT-CURRENT must have frontmatter")
+    frontmatter = lines[1:lines.index("---", 1)]
+    declarations = [line for line in frontmatter if line.startswith("current_task:")]
+    match = (
+        re.fullmatch(r"current_task:[ \t]*(TASK-[0-9]+-[A-Z0-9-]+)[ \t]*", declarations[0])
+        if len(declarations) == 1 else None
     )
+    if match is None:
+        raise DirectionCheckError("PROJECT-CURRENT must declare one exact current_task")
+    return match.group(1)
 
 
 def build_direction_report(
@@ -345,39 +385,36 @@ def build_direction_report(
             {
                 "code": "PROMPT_SCHEMA_WITHOUT_LAYER_EVIDENCE",
                 "path": ",".join(prompt_schema_paths),
-                "detail": "trajectory and replacement experiment are required",
+                "detail": "no trajectory/replacement references declared; inspect the change",
             }
         )
-    capability_present = bool(evidence.knowledge or evidence.agent or evidence.browser)
-    if _non_product_only(delta.changed_paths) and not capability_present:
-        progress_verdict = "NO_PRODUCT_PROGRESS"
-    elif capability_present:
-        progress_verdict = "CAPABILITY_EVIDENCE_PRESENT"
-    else:
-        progress_verdict = "CAPABILITY_EVIDENCE_PENDING"
-    delta_material = json.dumps(
-        {
-            "paths": delta.changed_paths,
-            "added_lines": {
-                path: lines for path, lines in sorted(delta.added_lines.items())
-            },
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
+    delta_digest = _workspace_digest(repository, base, delta)
+    decision = "REVIEW_STATIC_SIGNALS" if violations else "NO_STATIC_RISK_SIGNALS"
+    current_task = _current_task(repository)
+    current_plan_digest = _file_digest(repository, CURRENT_PLAN_PATH)
+    current_context_digest = _file_digest(repository, CURRENT_CONTEXT_PATH)
     return {
         "schema": REPORT_SCHEMA,
         "baseline": base,
         "head": _git(repository, "rev-parse", "HEAD").decode("ascii").strip(),
         "repository": str(repository),
-        "direction_verdict": "FAIL" if violations else "PASS",
-        "progress_verdict": progress_verdict,
-        "next_phase": _next_phase(evidence),
+        "decision": decision,
+        "direction_verdict": "STATIC_RISK" if violations else "NO_STATIC_RISK",
+        "progress_verdict": "NOT_ASSESSED",
+        "earliest_layer": "not-assessed",
+        "current_task": current_task,
+        "next_action": current_task,
+        "current_plan_digest": current_plan_digest,
+        "current_context_digest": current_context_digest,
         "changed_paths": list(delta.changed_paths),
         "untracked_paths": list(delta.untracked_paths),
-        "candidate_delta_digest": "sha256:"
-        + hashlib.sha256(delta_material).hexdigest(),
+        "candidate_delta_digest": delta_digest,
+        "workspace_digest": delta_digest,
+        "report_semantics": {
+            "direction_verdict": "static-risk-signal-only",
+            "progress_verdict": "not-assessed",
+            "evidence_references": "unverified-declarations",
+        },
         "legacy_line_counts": counts,
         "progress": {
             "knowledge_evidence": {
@@ -402,6 +439,15 @@ def build_direction_report(
             "replacement_experiment_refs": list(evidence.replacement_experiment),
             "verification_cases": list(evidence.verification_cases),
         },
+        "evidence": {
+            "candidate_delta_digest": delta_digest,
+            "changed_paths": list(delta.changed_paths),
+            "untracked_paths": list(delta.untracked_paths),
+            "verified": False,
+            "source": "static-diff-only",
+            "violations": violations,
+            "capability_references_are_unverified": True,
+        },
         "violations": violations,
     }
 
@@ -409,13 +455,71 @@ def build_direction_report(
 def check_repository(
     repository: Path,
     *,
-    base: str = TRUSTED_PDR014_BASELINE,
+    base: str | None = None,
     evidence_path: Path | None = None,
 ) -> dict[str, object]:
     repository = repository.resolve()
-    delta = collect_repository_delta(repository, base)
+    effective_base = _git(
+        repository, "rev-parse", "--verify", f"{base or 'HEAD'}^{{commit}}"
+    ).decode("ascii").strip()
+    delta = collect_repository_delta(repository, effective_base)
     evidence = load_capability_evidence(evidence_path)
-    return build_direction_report(repository, base, delta, evidence)
+    return build_direction_report(repository, effective_base, delta, evidence)
+
+
+def validate_report(repository: Path, report_path: Path) -> dict[str, object]:
+    """Reject reports tied to another HEAD or another current plan/context."""
+
+    repository = repository.resolve()
+    report_path = report_path.resolve()
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise DirectionCheckError("direction report must be UTF-8 JSON") from exc
+    if type(report) is not dict:
+        raise DirectionCheckError("direction report must be a JSON object")
+    head = _git(repository, "rev-parse", "HEAD").decode("ascii").strip()
+    current_plan_digest = "sha256:" + hashlib.sha256(
+        (repository / CURRENT_PLAN_PATH).read_bytes()
+    ).hexdigest()
+    current_context_digest = "sha256:" + hashlib.sha256(
+        (repository / CURRENT_CONTEXT_PATH).read_bytes()
+    ).hexdigest()
+    baseline = report.get("baseline")
+    workspace_digest = None
+    if isinstance(baseline, str):
+        delta = collect_repository_delta(repository, baseline)
+        report_relative: frozenset[str] = frozenset()
+        try:
+            report_relative = frozenset(
+                {str(report_path.resolve().relative_to(repository))}
+            )
+        except ValueError:
+            pass
+        workspace_digest = _workspace_digest(
+            repository, baseline, delta, ignored_paths=report_relative
+        )
+    mismatches: list[str] = []
+    if report.get("schema") != REPORT_SCHEMA:
+        mismatches.append("schema")
+    if report.get("head") != head:
+        mismatches.append("head")
+    if report.get("current_plan_digest") != current_plan_digest:
+        mismatches.append("current_plan_digest")
+    if report.get("current_context_digest") != current_context_digest:
+        mismatches.append("current_context_digest")
+    if workspace_digest is None or report.get("workspace_digest") != workspace_digest:
+        mismatches.append("workspace_digest")
+    return {
+        "schema": "ITER_010_DIRECTION_REPORT_VALIDATION@1",
+        "valid": not mismatches,
+        "mismatches": mismatches,
+        "report_path": str(report_path.resolve()),
+        "current_head": head,
+        "current_plan_digest": current_plan_digest,
+        "current_context_digest": current_context_digest,
+        "current_workspace_digest": workspace_digest,
+    }
 
 
 def _write_private_json(path: Path, value: Mapping[str, object]) -> None:
@@ -432,17 +536,26 @@ def _write_private_json(path: Path, value: Mapping[str, object]) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", type=Path, default=Path.cwd())
-    parser.add_argument("--base", default=TRUSTED_PDR014_BASELINE)
+    parser.add_argument(
+        "--base",
+        help="trusted parent commit for a committed candidate; defaults to current HEAD for local changes",
+    )
     parser.add_argument("--progress-evidence", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--validate-report", type=Path)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     arguments = build_parser().parse_args(argv)
     try:
+        repository = arguments.repository.resolve()
+        if arguments.validate_report is not None:
+            result = validate_report(repository, arguments.validate_report)
+            print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+            return 0 if result["valid"] else 1
         report = check_repository(
-            arguments.repository,
+            repository,
             base=arguments.base,
             evidence_path=arguments.progress_evidence,
         )
@@ -452,7 +565,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"direction check input error: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
-    return 1 if report["direction_verdict"] == "FAIL" else 0
+    # Static signals are review output, never a product/plan gate.
+    return 0
 
 
 if __name__ == "__main__":

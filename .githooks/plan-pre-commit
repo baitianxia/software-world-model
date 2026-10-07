@@ -9,6 +9,19 @@ if git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
 fi
 
 REPOSITORY_ROOT=$(git rev-parse --show-toplevel)
+ARCHITECTURE_LOCK_CHECKER=$(git rev-parse --git-path hooks)/architecture-lock.py
+if [ ! -x "$ARCHITECTURE_LOCK_CHECKER" ]; then
+    echo "ERROR: architecture lock checker is missing or not executable" >&2
+    exit 1
+fi
+python3 "$ARCHITECTURE_LOCK_CHECKER" check --staged
+PLAN_SHAPE_CHECKER=$(git rev-parse --git-path hooks)/plan-shape-check.py
+if [ ! -x "$PLAN_SHAPE_CHECKER" ]; then
+    echo "ERROR: plan shape checker is missing or not executable" >&2
+    exit 1
+fi
+python3 "$PLAN_SHAPE_CHECKER"
+
 TRUSTED_HEAD=$(GIT_NO_REPLACE_OBJECTS=1 git rev-parse HEAD)
 if ! GIT_NO_REPLACE_OBJECTS=1 git cat-file -e "$TRUSTED_HEAD:scripts/plan_gate.py" 2>/dev/null; then
     echo "ERROR: trusted HEAD does not contain scripts/plan_gate.py" >&2

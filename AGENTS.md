@@ -23,6 +23,23 @@ read every document before acting.
 When no active slice is named, do not edit product code or create an iteration from
 these documents alone; a user's explicit request is still required.
 
+The current checkout has an explicit architecture freeze. Do not modify, add,
+delete, rename, move, replace, reformat, regenerate, or otherwise rewrite any
+path under `docs/system/architecture/` without the user's explicit consent.
+Normal development authority does not include architecture changes, and a test
+result, failed gate, or generated index cannot imply consent. The local
+architecture lock checker is an additional mechanical guard; never refresh its
+manifest automatically. This freeze is checkout-local and must not be assumed
+for another clone, worktree, or branch.
+
+The current development plan is constrained to one user-value vertical
+sequence. Before changing product code, run the local plan-shape checker at
+`.git/hooks/plan-shape-check.py`; it must pass together with the architecture
+lock check. Do not add a second phase numbering scheme, hard-code an expired
+commit or run, or put configuration, supervision, full regression, or Codex
+comparison in front of the first browser experience.
+
+
 ## Documentation write-back
 
 Implementation is expected to discover new information. Record a finding under the

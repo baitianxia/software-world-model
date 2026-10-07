@@ -14,11 +14,19 @@ tests: [tests/test_knowledge_update.py, tests/test_maven_structure.py, tests/tes
 
 ## Purpose and scope
 
-Knowledge Update 用同一契约处理首次构建和后续更新：从显式授权的 Build Objective 出发，可选绑定 Requirement Gap / Requirement，并把目标解析为 Canonical Build Target；随后经受控来源调查、Candidate、Admission、Application Acceptance 和 Publication 形成新 Snapshot。它由人工命令、计划任务、来源事件或显式任务独立触发，不以有人提问为运行前提。Knowledge Use 不得因缺少知识而隐式访问 Source。
+Knowledge Update 用同一契约处理首次构建和后续更新：从显式授权的 Build Objective 出发，可选绑定 Requirement Gap / Requirement，并把目标解析为 Canonical Build Target；随后经受控来源调查、Candidate、Admission、Application Acceptance 和 Publication 形成新 Snapshot。它由人工命令、计划任务、来源事件、显式任务或当前回合生成的最小 `Knowledge Maintenance Task` 触发，不以有人提问为运行前提。Knowledge Use 不得因缺少知识而隐式访问 Source。
 
 ## Ownership
 
-Application 拥有 Update Attempt、Publication Policy、编排和 Result；具体 Capability Strategy 归提供该能力的业务模块。Source Integration 止于 Artifact；Knowledge Engine 独占 Evidence、Candidate Admission 与 Snapshot Publication。
+Application 拥有 Update Attempt、Knowledge Maintenance Task、Publication Policy、编排和 Result；具体 Capability Strategy 归提供该能力的业务模块。Source Integration 止于 Artifact；Knowledge Engine 独占 Evidence、Candidate Admission 与 Snapshot Publication。
+
+## Knowledge Maintenance Task
+
+Knowledge Maintenance Task 是当前回合发现世界模型与同一精确版本来源不一致时产生的最小、可持久、可重试维护任务。它不是答案、Evidence Packet、正式知识或新的权威来源。
+
+任务至少绑定：冲突对象身份、原世界模型 Snapshot/Context、精确来源 revision/context、冲突类型、去重键、创建原因与处理状态；可靠的来源 locator 可以作为候选定位，但不是必需，没有可靠定位时由 Knowledge Update 重新检索。任务不得包含完整答案、模型隐藏状态、整份 Ledger、整份 Package 或可直接支持用户 Claim 的来源正文。
+
+任务在当前 Turn 完成后异步消费；它不阻塞当前答案、不修改当前 Snapshot。Knowledge Update 必须重新读取精确来源、形成 Candidate、执行独立 Verifier、Admission 和原子 Publication。失败、未知、冲突或并发竞争均保留旧 CURRENT，并通过任务状态等待重试或人工处理。
 
 ## Invariants
 

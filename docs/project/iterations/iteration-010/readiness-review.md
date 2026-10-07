@@ -24,30 +24,39 @@ current_scheduling_finding_ref: FINDING-010-179
 
 # ITER-010 Readiness Review
 
+> 当前开发阅读提示：本文是历史就绪和授权证据，`coding_input: false`。不得把旧授权时间、Provider 准入、运行收据或历史阶段当作新的
+> 前置门禁。当前任务、出口和失败处理唯一见 `development-design/EXECUTION-PLAN-CURRENT.md`。
+
+> `PHASE A/B/C/D` 在本文中均为历史记录，不是当前状态。本文不产生任务顺序、晋级门或监督动作；当前唯一活动任务是
+> `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。
+
 ## Reviewed exact inputs
 
-CURRENT READINESS ACCEPTED / PDR-014 CAPABILITY-SEPARATED RECOVERY / PHASE C ACTIVE。
+HISTORICAL READINESS ACCEPTED / PDR-014 CAPABILITY-SEPARATED RECOVERY / OLD PHASE C RECORD（非当前状态）。
 
-PDR-014 已把 run-127 后的旧协议路线冻结为历史证据，并把开发分为 Agent、世界模型、集成和质量四个可归因阶段。Phase B 的 clean cognition
-基线已由独立监督推进，当前激活的是 Phase C：以通用 Agent 证据规划为首，打通世界模型、Source、自然答案、Citation、fresh Reviewer 和
-真实多轮 Web。本文其余 Phase B REWORK、Reviewer 未激活和 Provider recovery 未激活的文字是当时的 readiness 记录，不是当前开发输入；
-当前顺序以 SLICE-001 和 `ITER-010-EXECUTION-PLAN-CURRENT` 为准。旧 Provider、只读 Source、loopback、授权、预算和失败真实性边界继续
+PDR-014 已把 run-127 后的旧协议路线冻结为历史证据，并曾把开发分为 Agent、世界模型、集成和质量四个可归因阶段。本文其余 Phase B REWORK、
+Phase C ACTIVE、Reviewer 未激活和 Provider recovery 未激活的文字都是当时的 readiness 记录，不是当前开发输入；当前顺序只以
+`ITER-010-EXECUTION-PLAN-CURRENT` 为准。旧 Provider、只读 Source、loopback、授权、预算和失败真实性边界继续
 复用，full regression、hidden、跨工程和硬化仍不构成当前前置项。
 
-SLICE-001 是唯一 active coding input，`codex/development` 是唯一开发分支，`codex/supervision` 是唯一阶段监督分支。当前公开 mall exact
-revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效，因此当前 Phase C 产品代码和定向
-验证可以直接继续。PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-014、run-052/053 及
-run-074/075/076/077/078 trace、当前 System Contracts 与公开 mall exact revision。
+SLICE-001 是历史就绪材料，不是当前编码输入；当前工作区、开发分支和监督绑定目标以执行计划的声明为准。当前公开 mall exact
+revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效，因此 TASK-1 的产品代码和定向验证
+可以直接继续。PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-014、run-052/053 及
+run-074/075/076/077/078 trace、当前 System Contracts 与公开 mall exact revision；这些历史材料不重新构成当前任务前置条件。
 
 ## Outcome, scope and non-goals
 
-开发必须直接形成一条普通用户可操作的完整链：
+本节只描述当前 TASK-1 的用户结果和边界；其余长篇运行记录自下一节起均为历史证据。
+
+当前开发必须直接形成一个普通用户可操作的完整闭环：
 
 1. 世界模型按问题提供结构、行为、职责或失败边界的版本化认知及 Coverage/Gap，不能只提供 Maven/POM 或 locator；
 2. 主工程 Agent 维护 Conversation 目标、假设、计划和观察，根据 Gap 受控读取源码并重规划；
 3. 每个 Turn 生成自然答案、可打开 Citation 和 fresh independent Review；
 4. 同一 Conversation 至少完成首问、上下文追问和纠正/深入/总结，新 Conversation 不继承旧指代；
 5. 固定 loopback、无认证、单 Turn 失败不关闭服务，不存在工程或题面特判。
+
+## Historical readiness and execution evidence（非当前编码输入）
 
 run-074 的第一条真实三轮链已经作为“开发体验候选”交付，requires_result=false；它不得称为 MVP、质量 PASS、方向 PASS 或完成。首次交付前
 只运行了 targeted impact、startup、安全和失败真实性验证，没有以全量回归、hidden、跨工程、完整比较基础设施或工程夯实延迟早期反馈。
@@ -221,9 +230,9 @@ Chat。任何单独组件、POM/Maven-only 回答或静态回放都不能满足�
 
 ## Slice, dependency and risk closure
 
-答案、格式、测试或审核失败只阻止该 Turn 或完成声明。实现者必须保存 trace，定位
-Source → 世界模型构建/查询 → Agent → Evidence/Answer → Review → Web
-的最早偏差，提出可证伪根因、做通用修复，并用未参与修复的异质问题复验。失败不会暂停 Slice、产生失败 Result、切换路线碰答案或要求
+答案、格式、测试或审核失败只阻止该 Turn 或完成声明。实现者必须保存 trace，定位 Source truth、世界模型认知、Agent 规划与工具使用、
+Evidence/Answer、Review 或 Web 呈现中的最早偏差；这些是诊断责任层，不是运行时顺序。随后提出可证伪根因、做通用修复，并用未参与修复的
+异质问题复验。失败不会暂停 Slice、产生失败 Result、切换路线碰答案或要求
 同范围重新授权。
 
 世界模型和主工程 Agent 是两个同等必要的核心：前者提供真正的软件认知，后者像高级工程师一样利用认知与受控源码完成用户目标。Codex

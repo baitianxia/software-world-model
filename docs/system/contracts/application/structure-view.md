@@ -35,7 +35,9 @@ Structure View 把 exact Snapshot 中已经发布的 Structure Model 组织为�
 2. View 不按名称补边、不隐藏悬空端点、不把 `dependencyManagement` 或传递可达性伪装成直接依赖。
 3. View `READY` 只表示所请求投影可读；Coverage 不足时必须返回 View Limitation。只有 Knowledge Use 把该结果与 exact Requirement/Need 对照后，才能形成 Knowledge Gap；View 不能证明任意软件结构问题已充分。
 4. 同一输入产生可验证的稳定结果；缓存可以删除和重建，不能成为第二权威。
-5. 世界模型回答只能引用当前 View 输出及其 Support Map；需要源码调查时必须结束当前模式并由用户显式启动独立 `DIRECT_INVESTIGATION`。
+5. 世界模型查询只能引用当前 View 输出及其 Support Map。默认 Engineering Conversation 中，主 Agent 可以在同一受控循环继续请求
+   Source Broker/Worker 的 exact-revision 只读证据，不需要结束对话或由用户显式启动独立 `DIRECT_INVESTIGATION`；只有显式选择严格
+   `WORLD_MODEL` profile 时才保持 Source-off 边界。
 6. 结构查询、路径、diff、规划、生成和审核只能读取 Read Bundle 中的 Entity/Fact State、Coverage 及 Evidence ref/locator/digest，禁止读取或重解析 Evidence excerpt/POM bytes。View/Query Result 从 Support Map 机械派生并密封 typed Evidence allowlist；trusted broker 只能按该 allowlist 从 Knowledge owner 重读 exact 自包含 observation，生成 Result-scoped、manifest-bound、可删除的 Citation Store。独立 Citation Projector 只读 Result seal 与该 Store，不直接挂载权威数据库或完整 Evidence Store；不得重新访问 Source/工作树，也不得把 excerpt 回流到 Query Result、模型或审核。Artifact Reference 只用于 provenance 身份。
 7. Citation Store 与展示 Projection 都不拥有 Evidence、Fact、Snapshot 或 Result；缺失、额外、重复、换序、跨 Result、metadata/正文/file/manifest digest 篡改、symlink 或路径逃逸必须失败关闭。Projection 只能进入浏览器或隔离评测展示 Sink；Broker 与 Projector 都不能成为 answer worker 的正文输入 Port。
 8. 输出必须显式携带关系的 Profile 与 modality。本版 `CONTAINS_MODULE` 是 software system 对递归 child module 的扁平成员关系，不表达 Maven aggregator/parent 层级；`DEPENDS_ON` 是 POM 本地声明的直接内部依赖，不是 effective、传递、compile 或 runtime 依赖图。

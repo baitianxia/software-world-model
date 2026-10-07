@@ -50,7 +50,7 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
             text=True,
         ).stdout.strip()
 
-    def test_distribution_exposes_distinct_chat_command_without_rebranding_qa(self) -> None:
+    def test_distribution_exposes_chat_and_explicit_evaluation_commands(self) -> None:
         project = tomllib.loads(
             (Path(__file__).parents[1] / "pyproject.toml").read_text(
                 encoding="utf-8"
@@ -63,7 +63,7 @@ class EngineeringChatAlphaCliTests(unittest.TestCase):
             "software_world_model.interface.engineering_chat_alpha_cli:main",
         )
         self.assertEqual(
-            scripts["swm-engineering-qa"],
+            scripts["swm-engineering-qa-evaluation"],
             "software_world_model.interface.engineering_qa_alpha_cli:main",
         )
 

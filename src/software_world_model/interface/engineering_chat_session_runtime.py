@@ -341,7 +341,7 @@ def prepare_engineering_chat_session_runtime(
     artifact_session_config_digest: Digest | None = None,
     fixed_command_wired: bool = False,
     availability_clock: Callable[[], datetime] | None = None,
-    agent_mode: str = ENGINEERING_CHAT_LEGACY_AGENT_MODE,
+    agent_mode: str = ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
     capability_cognition: CapabilityCognitionIndex | None = None,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""

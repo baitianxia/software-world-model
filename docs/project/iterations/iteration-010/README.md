@@ -9,9 +9,14 @@ code: []
 tests: []
 iteration: ITER-010
 coding_input: true
+execution_sequence_owner: ITER-010-EXECUTION-PLAN-CURRENT
+operational_sequence_status: index-and-history-only
 ---
 
 # ITER-010：软件世界模型与主工程 Agent 驱动的多轮工程 Chat
+
+> 本索引是活动迭代的导航和历史汇总，不拥有当前任务顺序。任何旧的“源码 Agent 基线 → 世界模型 → 集成 → 质量”阶段描述均为历史映射；
+> 当前唯一执行顺序、当前任务和失败出口见 [`EXECUTION-PLAN-CURRENT.md`](development-design/EXECUTION-PLAN-CURRENT.md)。
 
 ## 先看懂这轮要做什么
 
@@ -38,22 +43,26 @@ coding_input: true
 
 ## Status and authorization
 
-### PDR-014 current status
+### Current execution status
 
 `AUTHORIZED / REWORK / CAPABILITY-SEPARATED RECOVERY ACTIVE / STANDING SCOPE ACTIVE / NON-PRODUCTION`。
 
 当前唯一执行决定是 [PDR-014](decisions/PDR-014-capability-separated-agent-and-world-model-recovery.md)。产品目标与 PDR-012 的 standing
-authority 不变；PDR-014 完全替换 PDR-013 的执行路线，按“源码 Agent 基线 → 真正世界模型纵切 → 二者集成浏览器 Alpha → 与 actual current
-Codex 独立比较”的顺序验证能力。前两阶段分别回答“Agent 是否能工作”和“知识是否真的增加系统认知”，第三阶段必须用同一 Agent 做
-source-only 与 world-model-plus-source 消融，证明世界模型带来非定位类质量增益，第四阶段才判定 MVP。
+authority 不变；PDR-014 保留目标、边界和历史恢复依据，不再定义当前任务顺序。当前任务、用户结果、失败出口和下一动作只由
+[`EXECUTION-PLAN-CURRENT.md`](development-design/EXECUTION-PLAN-CURRENT.md) 定义。
 
-任何阶段都不得以增加 Answer/Review/preflight 协议版本、词法语义规则或单题提示词补丁充当进展。每累计两小时必须由机器从知识构建、Agent
-harness、浏览器纵切、prompt/schema 四个维度核对 diff；只有最后一项增长时自动记为 `NO_PRODUCT_PROGRESS`，回到最早未证明的能力阶段继续，
-不得暂停、重授权或降低质量。详细证据见 `FINDING-010-256/257`。
+当前任务是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`：在一个真实精确版本工程上贯通世界模型认知、主工程 Agent、按需源码调查、自然答案、真实
+Citation、fresh 独立复核和持续浏览器 Chat。旧的 A/B/C/D、C/N 和内部协议阶段只保留在下方历史记录或验证映射中，不构成当前阶段、晋级条件
+或固定的运行时先后。
+
+任何仅增加 Answer/Review/preflight 协议、词法语义规则、定向测试或单题提示词补丁的变更，都不能称为产品进展；是否继续、返工或交付由当前
+执行计划的用户可观察出口决定。历史证据无需重新执行为当前任务前置条件。
 
 `FINDING-010-266` 进一步关闭 Provider 临时故障造成的假停工：受信 receipt 证明 HTTP/model dispatch 为 0 时，按 5/15/30 分钟调度新的
 logical run，计时期间继续独立开发；没有本地工作时仍保持带下次唤醒时间的 active 状态。它不放宽 same-request no-replay，也不改变透明
 首选/备用路线。
+
+## Historical execution records（非当前编码输入）
 
 ### PDR-013 historical record（已被 PDR-014 替换）
 
@@ -402,7 +411,8 @@ DIRTY V7 AND OLD VALUE RUNNER QUARANTINED / SLICE-002 AND SLICE-003 NOT AUTHORIZ
 当前唯一动作是 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-PREVIEW-002`：向用户如实呈现已密封的 run-052/053 pre-answer
 failure，并记录 `CONTINUE / REWORK / REDIRECT / REJECT`。coding、Prompt、Web 和 Provider dispatch 全部锁定。
 
-[PDR-011](decisions/PDR-011-truthful-pre-answer-failure-handoff.md) 是当前最高优先级执行决定；PDR-010 继续拥有产品设计与停止条件；
+在该历史记录对应的时间点，[PDR-011](decisions/PDR-011-truthful-pre-answer-failure-handoff.md) 曾是最高优先级执行决定；这不产生当前动作。
+PDR-010 当时继续拥有产品设计与停止条件；
 [PDR-009](decisions/PDR-009-value-first-four-arm-and-plan-lock.md) 的 Freeze-first 顺序已被取代，仅保留为历史；
 [PDR-008](decisions/PDR-008-public-oss-standing-model-execution-authority.md) 继续拥有公开工程持续授权；
 [PDR-007](decisions/PDR-007-deepseek-off-peak-hard-admission.md) 继续拥有 DeepSeek 闲时硬门禁；
@@ -411,12 +421,15 @@ failure，并记录 `CONTINUE / REWORK / REDIRECT / REJECT`。coding、Prompt、
 接手产品修复或“fresh Ark+DeepSeek Conformance → 第八次同五轮”待办，只能从当前用户方向动作继续。v7 仅是未接受症状实验，
 dirty 代码/测试不构成当前设计或质量证据。
 
-此前分层归因、认知资格、执行配置本地准入和 Web Access 只作为可复用输入，不需要再变成体验前阶段。PDR-010 的执行顺序是：
+此前分层归因、认知资格、执行配置本地准入和 Web Access 只作为可复用输入，不需要再变成体验前阶段。以下是历史上 PDR-010 曾采用的执行顺序，
+仅用于解释旧运行记录，不是当前编码输入：
 
 1. 在同一候选上接通软件世界模型认知、主工程 Agent、按 Gap 受控源码补证、Evidence/Citation、fresh 独立 Review 和语义多轮无认证 Web；
 2. 主链完整后以 `V-CHAT-EXPERIENCE-001` 立即交给用户体验，不等待全量回归或四路比较基础设施；该交付 `requires_result=false`、不移动游标；
 3. 在同一候选上执行至少三条异质问题和 current Codex 定向对照；若失败，先归因根因，再做一次最小通用修复和定向复验；
 4. 比较完成，或证明一次通用修复后同类重大失败仍存在时，才密封 `V-MVP-EXPERIENCE-001` Result 并进入用户方向决定。
+
+以上编号步骤及其后续结果均属于历史记录；当前任务、顺序和失败出口只由 `EXECUTION-PLAN-CURRENT.md` 定义。
 
 current candidate `a5c780f51fa5242ee8209766712ad408ed023f80` 已走到第 4 步的失败出口：run-052 原失败和 run-053 两个异质案例在一次通用修复后
 仍发生 Ark typed-output contract failure，DeepSeek 在所有结构化失败路径上保持 0。`FINDING-010-161` 因而停止产品修复与外调。
@@ -424,6 +437,8 @@ current candidate `a5c780f51fa5242ee8209766712ad408ed023f80` 已走到第 4 步�
 明确授权最小治理恢复；`FINDING-010-164` 记录 @3 首次真实回放发现的 Gateway canonical-string digest codec 错配，
 `FINDING-010-165` 又分离 sealing action 的新执行权限与历史 runtime 对账。修正后的 trusted-parent runner 已对真实证据重放，
 `ITER-010-RESULT-V-MVP-EXPERIENCE-001` 以 machine PASS 密封 truthful failure handoff；该 PASS 不改变产品质量 FAIL，不改产品或历史运行字节。
+
+### Historical PDR-004 and run records（非当前编码输入）
 
 用户方向 Result/receipt 只记录 `CONTINUE / REWORK / REDIRECT / REJECT`，direction action 保持自环。`CONTINUE` 不自行解锁 hardening、
 full regression、第二工程或 hidden；这些工作仍须新 PDR、明确用户授权和可信父 cutover。本地消息 digest 只是内容证据引用，不是平台认证

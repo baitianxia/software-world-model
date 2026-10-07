@@ -3,6 +3,8 @@ id: SYS-ADR-013
 kind: system-decision
 status: accepted
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: decision-rationale-only
 owners: [architecture, application, quality]
 depends_on: [SYS-ADR-002, SYS-ADR-003, SYS-ADR-006, SYS-ADR-010]
 code: [src/software_world_model/application_services/evidence_answer.py, src/software_world_model/ai_infrastructure/evidence_answer_strategy.py]
@@ -35,6 +37,6 @@ Knowledge Update、Admission、Publication 和 Knowledge Use 保留为显式或�
 
 ## Consequences
 
-直接调查路径的核心对象减少为检查清单、Evidence Packet、Answer Draft 和 Review Finding，答案可以综合多条源码证据自然表达。知识沉淀从该模式的时延和可用性边界中移出，但需要独立调度、去重和准入。Capability Evaluation 与 Product Validation 必须覆盖检索完整性、固定证据重写、缺证据补检索、独立审核和用户可读答案；模型调用次数或成本不能成为跳过审核或发布未通过答案的理由。
+直接调查路径的核心对象减少为检查清单、Evidence Packet、Answer Draft 和 Review Finding，答案可以综合多条源码证据自然表达。知识沉淀从该模式的时延和可用性边界中移出，但需要独立调度、去重和准入。本架构只规定检索完整性、固定证据重写、缺证据补检索、独立审核和用户可读交付之间的边界；具体能力资格和业务质量判定由各自 Owner 负责。模型调用次数或成本不能成为跳过独立审核、越过证据边界或发布未授权答案的理由。
 
 本决定不再规定所有同步软件问题的统一主路径；该部分由 ADR-014 收窄。

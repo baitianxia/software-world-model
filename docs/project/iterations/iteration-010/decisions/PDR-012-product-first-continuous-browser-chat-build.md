@@ -30,8 +30,9 @@ authority。用户已明确要求停止把主要精力投入阻塞开发的门�
 
 1. 不新建 Iteration 或 Slice。恢复 ITER-010 / SLICE-001 的一个持续产品开发动作。为兼容可信父切换，current_action 的技术 ID 暂保留旧值；其 kind、Case、路径、权限和本 PDR 明确定义为产品 BUILD，不再代表等待用户判向。Manifest 中非 current 的 governance compatibility contract 也只用于可信父格式兼容，不是当前任务、停止点或再次授权要求。范围内编码、本地启动、定向测试和已授权执行配置直接
    继续，不再逐问题、运行、失败或计划调整申请授权。
-2. 当前唯一纵切是：真实世界模型认知 → 主工程 Agent → 按 Gap 受控只读源码 → Evidence/Citation → 自然答案 → fresh Review →
-   无认证语义多轮 Web Chat。组件单独完成、POM/Maven-only 回答、静态回放或一次性脚本都不是进度出口。
+2. 当前唯一纵切是一个可往返的用户闭环：真实世界模型认知和精确版本只读源码作为 Agent 可选择的两类证据路径；Agent 根据问题和当前
+   证据状态调查、综合并生成带 Evidence/Citation 的自然答案，fresh Review 可把缺口反馈给同一个 Agent，最后由无认证语义多轮 Web Chat
+   承载本轮结果。组件单独完成、POM/Maven-only 回答、静态回放或一次性脚本都不是进度出口。这里不规定世界模型与源码的固定先后。
 3. 第一条非 POM/Maven 的真实三轮 Conversation 可操作即在固定 loopback 页面作为“开发体验候选”交给用户，requires_result=false；它只证明
    产品链可操作，不得称为 MVP、质量 PASS、方向 PASS 或完成，也不等待全量回归、hidden、跨工程、完整比较基础设施或工程夯实。
 4. 普通答案、格式、测试和 Reviewer 失败留在同一开发动作。必须先定位最早偏差层，提出可证伪根因，做通用修复并用不同类型、未参与修复

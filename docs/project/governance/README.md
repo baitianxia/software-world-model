@@ -14,6 +14,7 @@ tests: []
 | 文档 | 解决的问题 |
 |---|---|
 | [系统/项目边界](system-project-boundary.md) | 一条信息应该写在哪里 |
+| [架构变更规则](architecture-change-policy.md) | 如何修改唯一架构基线，以及如何阻止产品实现隐式改变架构 |
 | [迭代生命周期](iteration-lifecycle.md) | 每轮内容如何确定和授权 |
 | [开发设计规则](development-design-policy.md) | 编码前需要写到什么程度 |
 | [实现发现回写](implementation-feedback-policy.md) | 代码和测试的新事实如何回流 |

@@ -7,7 +7,7 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279, FINDING-010-280, FINDING-010-281, FINDING-010-282, FINDING-010-283, SYS-ADR-018]
 code: []
 tests: []
-as_of: 2026-09-15
+as_of: 2026-10-07
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
 worktree_status: single-development-and-independent-supervision-lanes
@@ -16,6 +16,9 @@ live_model_path: preferred-execution-profile-first-fallback-only-on-trusted-unav
 plan_revision_ref: ITER-010-PDR-012
 execution_decision_ref: ITER-010-PDR-014
 execution_plan_ref: ITER-010-EXECUTION-PLAN-CURRENT
+plan_shape: USER_VALUE_VERTICAL_SLICE@1
+current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
+readiness_status: PRE_DEVELOPMENT_REPAIR
 next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001
 next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 ---
@@ -24,23 +27,24 @@ next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 
 ## 当前结论
 
-ITER-010 的产品目标和总体架构不变，但 PDR-013 的执行计划已经被 PDR-014 完全替换。Git 投入审计证明过去 186 个提交主要增长了回答、审核
-和输出协议，知识引擎没有提交；因此不得继续把旧模型边界、正文证明协议或逐题修复当作产品主线。
+### 入口字段的唯一解释
 
-当前唯一开发主线是分别建立并验证：
+`plan_revision_ref: ITER-010-PDR-012` 只表示本轮仍沿用的 standing authority；它不是任务顺序。
+`execution_decision_ref: ITER-010-PDR-014` 表示当前决策边界；`execution_plan_ref:
+ITER-010-EXECUTION-PLAN-CURRENT` 才是唯一的开发顺序和当前任务来源。Proposal、Readiness、Verification、PDR
+正文中的旧阶段、旧运行记录和旧协议只能作为历史证据，不能生成新的任务顺序或前置门槛。
 
-1. 一个小型、Provider 透明、能观察后重规划的主工程 Agent；
-2. 一份在提问前构建、可跨问题复用、包含结构/关系/行为/边界的真正软件世界模型认知；
-3. Agent 通过通用搜索、遍历、详情工具使用世界模型，并按 Gap 受控读取源码；
-4. 同一浏览器 Chat 中的自然答案、真实 Citation、fresh 独立技术审核和多轮上下文；
-5. same-Agent source-only、same-Agent World Model + source 与 actual current Codex 的独立比较。
+ITER-010 的产品目标和总体架构不变，但任务拆分已改为面向用户价值的单一纵向主线。Git 投入审计证明过去 186 个提交主要增长了回答、审核
+和输出协议，知识引擎没有获得相称投入；因此不得继续把旧模型边界、正文证明协议或逐题修复当作产品主线。
 
-Phase A 的 source-only Browser 诊断基线保留为已完成的诊断证据。Phase B 的首版认知证据曾因声明/继承闭包不足进入 `REWORK`；该缺口已由
-`FINDING-010-270` 的 clean product commit `b3c19ff31fcc8e498bcbaf9c36f2434e86570e75` 修复。独立监督在
-`codex/supervision@7615bffccaf3df3b299304a52b1218f8b4680585` 对同一 exact Source 重建 artifact，并以 report
-`sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66` 给出 `ADVANCE → C`。Phase C 现已激活，
-Phase D 继续锁定。Reviewer 只按 Phase C 的 fresh review 最小职责接入；Provider recovery 和其他归档内容仍须在对应阶段重新取证后才能
-选择性引入，不能直接恢复到产品线。
+当前唯一任务仍是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`，但尚未开始产品实现；当前只处理开发输入和监督准备，不启动该任务。在一个真实精确版本工程上同时贯通最小软件世界模型、Provider 透明 Agent、源码补证、
+自然答案、真实 Citation、fresh 独立复核和持续浏览器 Chat。它是方向体验出口，不冒充最终 MVP；必须先交付它，再进行异质问题判向和后续夯实。
+
+旧的 Phase A/B/C/D、C0/C1/C1.5/C2/C3/C4、N0/N1/N2/N3 只保留为历史或验收背景，不再作为当前任务顺序。当前执行顺序唯一见
+`ITER-010-EXECUTION-PLAN-CURRENT`。
+
+历史 Proposal、PDR、Verification 和 Finding 中出现的箭头只记录当时的验证、归因或交付语境，不是当前运行时链路。当前运行时唯一有效的
+关系是 Agent 主导的可往返循环：世界模型与精确版本只读源码是并列证据路径，Reviewer 的缺口可以反馈回同一 Agent，Chat 负责承载和呈现结果。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
 `ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
@@ -52,33 +56,24 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 
 ## 唯一开发入口与下一动作
 
-当前执行顺序唯一见 `ITER-010-EXECUTION-PLAN-CURRENT`。该执行卡把 C0 恢复绑定、C1 Agent 证据规划、C2 多轮浏览器、C3 Alpha 交付和 C4
-方向通过后的夯实分开；旧 Proposal/Readiness 中的 Phase B REWORK 文字只保留历史记录，不得作为开发任务输入。
+当前执行顺序唯一见 `ITER-010-EXECUTION-PLAN-CURRENT`。该执行卡只保留四项用户价值任务：最小完整体验、方向与归因验证、通用能力增量、MVP
+夯实验收。旧 Proposal/Readiness/PDR 中的阶段和历史 Finding 不得重新生成另一套前置顺序。
 
 - 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
-- Phase B 已由监督方在 clean exact commit 上独立 `ADVANCE`；该结论不由开发分支修改或重新解释。
-- 当前唯一产品任务是 Phase C：先完成当前候选的根因对账（N0），再按最早责任层闭合 Agent/世界模型证据规划（N1），重新打通多轮浏览器（N2），
-形成完整链后立即交付 Alpha（N3）。当前候选为 `f501045a02e6b72ef90240d9fcde9e67ada9573f`（新增异质 Agent fuse 夹具，运行代码 parent `254d33f`）；run-276 已补齐 C1 turn-level evidence，但监督仍未给出新的 `ADVANCE`。run-278/279/280 的 C2 真实浏览器尝试仍有失败，不能继承旧候选
-  的 C2 结论。
-- `run-156` 的 q5 已证明固定 8-action fuse 与耗尽后 fail-closed 正常；当前最早偏差是 Application cognition→Source candidate construction
-  的同路径重复幂等和同一预算内已有 cognition/Source candidate 的 Primary evidence planning/selection。`FINDING-010-277` 只复用既有
-  path capability、内部 sidecar 和通用呈现收敛，不恢复工具、不扩大预算、不重试 Reviewer、不新增 Agent 协议；历史 raw citation receipt
-  缺失时只记录机器可读 `NOT_RUN`。
-- `run-158` 的 q5 暴露多个 Source Observation 的 Citation ordinal 是局部域；`FINDING-010-278` 的 Application 修复按不可变
-  Observation prefix 允许一次同一主 Agent 机械 replan，新增 Observation 才形成新的同范围机会，严格保留 rejected receipt/answer/findings，
-  不自动映射、重编号或合成 Citation。fresh successor 仍需证明 q5 补证后进入 Reviewer。
-- FINDING-010-279 记录同一主 Agent 的重复动作与无进展恢复：Application 以既有 action fuse 阻止重复 Tool dispatch，向同一 Agent 反馈换用
-  不同合法动作，并在 Reviewer MORE_EVIDENCE 后稳定呈现已有未读 Source candidate。该修复保持现有协议、预算和 Source/Citation identity
-  不变；fresh successor 仍需验证补证后进入 Reviewer。
-- Phase D、完整质量 Gate、Provider recovery 和归档协议扩张仍禁止；Phase C 若失败，按最早 knowledge/integration/Agent/review/Web 层做通用
-  修复，不回写题面规则。
+- 当前 `codex/development` 工作树仍有未提交和未归档变更；这些变更的归属尚未逐项确认。本轮不使用破坏性 reset、clean 或批量提交，
+  在归属确认前不得把它当作干净开发基线。
+- 内部实现可以并行，但只能由端到端结果合并验收；配置、Provider 收据、监督、定向测试和报告不再是浏览器体验的前置任务。
+- 最小可操作闭环形成后立即交付 loopback 地址、启动方式、精确版本、已知限制和可复现问题；不等待 Codex、全量回归、隐藏题或工程夯实。
+- 方向判定使用同一 Agent 的 source-only 与 World Model + source 两臂；只有方向成立后才进入多问题、多轮、Codex 比较和正式夯实。
+- `next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001` 是历史兼容的机器标识，不表示等待用户决定；在当前 standing scope 内，开发任务无需逐次授权，实际顺序只看 `TASK-1` 至 `TASK-4`。
+- 普通失败按最早责任层修复：先区分 Source truth、World Model 认知、Agent 规划与工具使用、Evidence/Answer、Review 或 Web 呈现的偏差，
+  再做一次通用修复；这些是诊断层次，不表示运行时必须按这个顺序执行，也不回写题面规则。
 
-Phase C 只启用集成纵切所需的 fresh Reviewer，不继续 Provider recovery、回答 Prompt/Schema 或 Phase D 验收器。普通测试、模型、答案或
-网络失败仍不暂停开发、不重复申请授权。
-
-监督每 30 分钟以及每次 HEAD/工作树/运行证据变化时检查一次。监督必须同时写入可观察 heartbeat 和独立 assessment；目标分支、工作树或
-baseline 不匹配时只修复监督绑定，不能把开发误判为完成、暂停或重新授权。
+监督协议要求在每次 HEAD/工作树/运行证据变化以及最长 30 分钟间隔检查，并同时写入 heartbeat 和独立 assessment。
+当前仓库没有内置定时器或开发分支 CI；Codex heartbeat `iter-010` 已创建但已按用户停止要求暂停，当前状态为
+`SUPERVISION_UNVERIFIED`。它只监督开发准备，不启动开发、不发送 Provider 请求、不修改代码；在用户重新允许并完成首次运行确认前，不得宣称监督已经生效。
+目标分支、工作树或 baseline 不匹配时，只修复监督绑定，不能把开发误判为完成、暂停或重新授权。
 
 时间上限只触发自动简化或换实现，不触发暂停、失败 Result、重复授权或质量降低。第一个可操作候选立即交付；full regression、hidden、
 跨工程、性能和工程化只在用户确认方向后开始。
@@ -99,4 +94,4 @@ baseline 不匹配时只修复监督绑定，不能把开发误判为完成、�
 Conversation、Turn、问题、候选、定向测试和外调不重复申请授权；每次外调仍自动生成 exact runtime record。只有私有/新 Source、新接收方
 或账户、扩大披露/预算、外部写入、非 loopback、Production 或破坏性操作才属于 scope delta。
 
-当前状态：`AUTHORIZED / PHASE C ACTIVE / ROOT-CAUSE RECONCILIATION REQUIRED / NON-PRODUCTION`。
+当前状态：`AUTHORIZED / PRE-DEVELOPMENT READINESS REPAIR / NON-PRODUCTION`。

@@ -3,13 +3,17 @@ id: SYS-ARCH-DOMAIN
 kind: system-architecture
 status: current
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: controlled-architecture-appendix
 owners: [architecture, knowledge]
-depends_on: [SYS-ARCH-OVERVIEW]
+depends_on: [SYS-ARCH-BASELINE]
 code: [src/software_world_model/knowledge_engine, src/software_world_model/application_services/evidence_answer.py]
 tests: [tests/test_formal_knowledge.py, tests/test_knowledge_scope.py, tests/test_evidence_answer.py]
 ---
 
 # 顶层领域模型
+
+> 本文件是架构基线的领域投影。它描述对象边界，不决定默认 Chat 的认知路线；顶层关系以 [Software World Model 架构基线](architecture-baseline.md) 为准。
 
 ```mermaid
 flowchart TD
@@ -54,7 +58,7 @@ flowchart TD
     SN --> IN["Inference / Conflict State"]
     SN --> RB["Exact Snapshot Read Bundle<br/>no Evidence payload"]
     RB --> SV["Read-only Structure / Behavior View"]
-    RB --> IQ["Implementation candidates / method semantics"]
+    RB --> IQ["Profile-specific query projection"]
     WQ["World Model Question"] --> WR["Exact Snapshot Read Session"]
     SV --> WR
     IQ --> WR
@@ -92,8 +96,9 @@ Conversation 由主工程 Agent 在 Application-owned Conversation/Work State �
 - **Fact** 是在明确 Context 中由直接 Evidence 完整支持的命题。
 - **Inference** 从已发布前提形成受控结论；Conflict 证明语义不兼容但不擅自选赢家。
 - **Snapshot** 是单一 Scope 下完整、不可变、原子发布的正式知识状态。
-- **Structure / Behavior / Implementation Query** 是 exact Snapshot 中 typed Entity/Fact 的可重建只读组织，不创建知识；Java
-  Implementation Query 只能读取 `JAVA_SOURCE_SEMANTICS@1` 的 no-payload atoms 与 per-method completeness。
+- **Structure / Behavior / Profile-specific Query Projection** 是 exact Snapshot 中 typed Entity/Fact 的可重建只读组织，不创建知识；其中
+  Profile-specific Query Projection 只是特定语言或任务的查询组织，不是新的 Semantic View，也不增加软件世界模型的认知维度。具体 Profile
+  的查询输入、完整性及结果 Contract 由相应详细契约定义，不能改变该只读、无权威的边界。
 - **Requirement** 固定任务语义；Sufficiency 必须逐 Need 从同一 Read Session 重建。
 
 Knowledge Scope 保留三类稳定归属边界：
@@ -102,6 +107,7 @@ Knowledge Scope 保留三类稳定归属边界：
 - **Shared Component Scope** 拥有公共组件定义与静态知识；该组件在宿主系统中的运行观察仍归宿主 System Scope。
 - **Business Domain Scope** 拥有跨系统 Business Entity 与业务语义；它通过对 exact upstream Snapshot 的 Fact / Inference 引用关联多个 System Scope，不复制或改变技术对象的归属。
 
-Structure View、`JAVA_STATIC_CALL_GRAPH@1` 的最小 Behavior View 与 `JAVA_SOURCE_SEMANTICS@1` 的通用查询 Contract 已接受为规范；
-后者尚不代表实现或 Product Validation 已完成。它们都不拥有知识、不改变充分性。完整运行时 Behavior、Business、History 和
-其他语言尚未接受，不能从当前子集推导其存在。
+## 实现与运行记录
+
+原文中的具体配置、局部实现状态和运行记录已原样归位至项目路径 `docs/project/implementation-reference/domain-implementation-status.md`。
+这些记录不能覆盖架构基线、证明当前代码已满足本契约，或恢复被用户暂停的开发。

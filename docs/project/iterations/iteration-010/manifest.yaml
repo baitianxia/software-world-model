@@ -2,13 +2,16 @@ schema_version: 2
 iteration:
   id: ITER-010
   status: authorized
-  outcome_scope: agent-first-world-model-assisted-browser-chat-convergence-with-immediate-current-codex-comparison
+  outcome_scope: minimum-complete-world-model-assisted-chat-then-direction-validation-and-hardening
   current_decision: REWORK
   current_decision_ref: ITER-010-PDR-014
   current_gate_decision_ref: ITER-010-PDR-014
   current_continuation_decision_ref: ITER-010-PDR-014
   coding_input: true
+  execution_sequence_owner: ITER-010-EXECUTION-PLAN-CURRENT
+  operational_sequence_status: current-task-only
 
+# Historical iteration-start identity. Not the current development/monitoring target.
 baseline:
   commit: 1fb997bab6444523f82ebf1a514a1abbf79656c7
   tree: 1369ce932c778c57a118123e8257ede476229d73
@@ -71,7 +74,6 @@ plan_execution_control:
       - docs/project/iterations/iteration-010/**
       - docs/project/current.md
       - docs/_generated/**
-      - docs/system/**
     forbidden_change_paths:
       - validation/iteration_010_mvp/value_gate/**
       - tests/test_iteration_010_mvp_value_gate.py
@@ -127,7 +129,6 @@ plan_execution_control:
         - docs/project/iterations/iteration-010/**
         - docs/project/current.md
         - docs/_generated/**
-        - docs/system/**
       forbidden_change_paths:
         - validation/iteration_010_mvp/value_gate/**
         - tests/test_iteration_010_mvp_value_gate.py
@@ -204,14 +205,15 @@ product_convergence_control:
   schema: AGENT_FIRST_PRODUCT_CONVERGENCE@1
   active_decision_ref: ITER-010-PDR-014
   legacy_protocol_candidate_status: quarantined-no-run128-successor
-  legacy_protocol_files_quarantined:
+  legacy_protocol_growth_frozen_paths:
     - src/software_world_model/ai_infrastructure/conversational_engineering_model.py
     - tests/test_conversational_engineering_model.py
-    - docs/system/contracts/application/engineering-conversation.md
+  legacy_dependencies_policy: preserve-required-imports-thin-adapt-or-remove-after-migration
+  current_contract_ref: SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION
   application_semantic_text_validation_allowed: false
   benchmark_or_project_literal_branching_allowed: false
   first_candidate_requires_browser_handoff: true
-  first_candidate_requires_parallel_current_codex_run: true
+  first_candidate_requires_parallel_current_codex_run: false
   heterogeneous_question_count: 5
   implementation_unseen_question_minimum: 3
   independent_exact_source_evaluation_required: true
@@ -224,7 +226,7 @@ branch_convergence_control:
   schema: SINGLE_DEVELOPMENT_LANE@1
   owner_decision_ref: ITER-010-PDR-014
   owner_finding_ref: FINDING-010-269
-  trusted_product_baseline_commit: b3c19ff31fcc8e498bcbaf9c36f2434e86570e75
+  candidate_identity_policy: resolve-development-HEAD-and-working-diff-at-check-time
   development_branch: codex/development
   supervision_branch: codex/supervision
   allowed_active_branches:
@@ -233,26 +235,31 @@ branch_convergence_control:
     - codex/supervision
   legacy_branch_policy: archive-tags-only
   dirty_candidate_policy: archive-only-selective-reapply-after-independent-evidence
-  active_phase: C
-  active_phase_status: ACTIVE
-  phase_state_owner: codex/supervision
-  developer_phase_self_report_accepted: false
+  active_phase: vertical-slice
+  phase_semantics: compatibility-history-only
+  plan_shape: USER_VALUE_VERTICAL_SLICE@1
+  execution_plan_ref: ITER-010-EXECUTION-PLAN-CURRENT
+  current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
+  readiness_status: PRE_DEVELOPMENT_REPAIR
   supervision_interval_minutes: 30
   supervision_on_candidate_change: true
   supervision_heartbeat_required: true
   supervision_assessment_required: true
+  supervision_execution_status: UNVERIFIED
+  supervision_automation_id: iter-010
+  supervision_scope: readiness-only-no-development-or-provider
   supervision_target_mismatch_action: repair-supervision-binding-without-stopping-development
-  phase_b_advance_product_commit: b3c19ff31fcc8e498bcbaf9c36f2434e86570e75
-  phase_b_advance_supervision_commit: 7615bffccaf3df3b299304a52b1218f8b4680585
-  phase_b_advance_report_digest: sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66
-  current_owner_layer: cognition-agent-browser-integration
-  current_objective: same-agent-cognition-source-answer-review-browser-vertical-slice
-  current_candidate_evidence_ref: FINDING-010-270
-  current_candidate_gate: first-complete-operable-browser-chain-then-three-heterogeneous-plus-followup
+  current_owner_layer: end-to-end-world-model-agent-browser
+  current_objective: minimum-complete-world-model-agent-source-answer-review-chat
+  current_candidate_evidence_ref: FINDING-010-284
+  current_candidate_gate: TASK-1-minimum-complete-browser-chain
   current_exit_case_id: V-INTEGRATED-ALPHA-001
-  current_independent_task_count: 3-plus-one-followup
-  phase_c_work_allowed: true
-  phase_d_work_allowed: false
+  current_independent_task_count: one-current-task-with-supporting-subtasks
+  historical_cognition_validation:
+    product_commit: b3c19ff31fcc8e498bcbaf9c36f2434e86570e75
+    supervision_commit: 7615bffccaf3df3b299304a52b1218f8b4680585
+    report_digest: sha256:8d7e4a1a5c205d28ae54a43f5c88e2f361ea82d55dabb4edf80a02e4e71b7b66
+    controls_current_task: false
 
 direction_quality_gate:
   schema: POST_EXPERIENCE_STRONG_BASELINE_GATE@1
@@ -266,7 +273,8 @@ direction_quality_gate:
   mvp_claim_requires_same_candidate: true
   mvp_claim_requires_current_codex_comparison: true
   candidate_change_invalidates_prior_preview_and_quality_evidence: true
-  execution_order: first-agent-first-browser-candidate->same-candidate-heterogeneous-system-and-current-codex-in-parallel->independent-exact-source-evaluation->user-direction
+  execution_order: defined-only-by-ITER-010-EXECUTION-PLAN-CURRENT
+  applicable_task: TASK-4
   arms:
     - complete-world-model-system
     - current-codex
@@ -2154,7 +2162,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:005786d0b4ab4378d05939d8468e0c40d19832592736791e5e0f9ce0cea52ce6
+  system_contract_set_digest: sha256:8d01c2c9ddb300d2ecaa408ebfa6532657048927d215d01bc9e9a6c9c923de71
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

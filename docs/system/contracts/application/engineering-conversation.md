@@ -14,6 +14,8 @@ tests: [tests]
 
 ## Purpose and scope
 
+> 本文是跨模块 Engineering Conversation Contract，同时包含当前 Chat 的稳定边界和旧 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 的兼容约束。后者只在明确选择兼容 Profile 时生效，不能覆盖 [唯一架构基线](../../architecture/architecture-baseline.md) 或 `SYS-ADR-018` 的默认主 Agent 语义。具体 Prompt、模型输入版本、测试夹具和局部实现状态不是架构权威。
+
 本契约定义 `CONVERSATIONAL_ENGINEERING_AGENT@1`：普通用户默认的工程 Chat。主工程 Agent 在固定工程和 exact revision 上持续理解多轮
 对话，使用软件世界模型认知和受控只读来源工具解决用户问题，并以有引用的自然答案或诚实 Limitation 响应。它不是给单轮
 `ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 页面增加历史消息，也不是开放 shell、仓库写入或任意网络的自治编码 Agent。
@@ -35,12 +37,12 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
    semantic query；read 只提交 Application 分配的数字 `read_index`。模型不提交 locator authority、文件系统命令或重复的 Turn/Binding
    identity。Application 把选择映射到已有 Broker/Worker 请求并验证 exact authority receipt；
    World Model + Source 臂在同一循环额外暴露有界 `search cognition / traverse relations / retrieve cognition detail`。Session 在 listener 和
-   Provider attempt 前按 canonical private artifact、snapshot digest/ID、project、exact revision/tree 一次加载 Phase B query projection；所有
-   Turn 只读复用同一 snapshot。模型只能提交 Application 分配的数字 `cognition_index`，以及注册的 relation kind、direction、depth 和 cursor，
+   Provider attempt 前按 canonical private artifact、project、exact revision/tree 和当前有效 World Model Read Authority 加载本 Turn query projection；
+   一个 Turn 内固定该 Turn 解析出的 Snapshot，后续 Turn 重新解析当前有效 Snapshot，不把上一 Turn 的 Snapshot 绑定到答案或证据。模型只能提交 Application 分配的数字 `cognition_index`，以及注册的 relation kind、direction、depth 和 cursor，
    不能制造 entity ID。cognition search 是对 source-derived identifier/statement 的有界 lexical query，不是翻译后的自然语言或通用语义搜索；
    Agent 必须使用预期存在于源码中的 repository-native identifier/technical token，且不能只用 module name。若物质 contract 可能声明在 interface
    或 supertype，Agent 必须在 `FINISH` 前检查该声明，不能从单个 implementation body 的缺失推出 contract 不存在。每页保留 snapshot
-   digest、Coverage/Conflict/Unknown 与 provenance；默认先建立 cognition，再按真实 Gap 读 Source；
+   digest、Coverage/Conflict/Unknown 与 provenance；Agent 可依据当前问题与已观察结果选择 World Model cognition 或 Source，也可交替使用；Application 只保证两者在同一 exact revision 与本 Turn 证据边界内接入，不规定固定先后顺序；
 2. goal 每次以 current User Message 为权威，相关历史仅帮助解析追问。每个 Observation 后模型必须有机会修改 plan 或停止；Application 保存
    ordered trajectory，并用成功 Turn 的 Work State digest/revision 维持 Conversation 连续性；
 3. 模型每次调用前自动密封 one-use runtime authorization，绑定 exact product/source/session/route、完整 disclosure digest、Provider binding、
@@ -48,18 +50,20 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
 4. 回答以 Observation/Citation 的 1-based ordinal 选择受信 Citation。Application 解析 ordinal 并保留 authority-owned identity；ANSWER 至少有
    一项 exact-revision Citation，模型不能制造 opaque Citation ref；
 5. fresh Reviewer 只读 current request、相关 Conversation context、完整 response、selected Citation 和必要 evidence，一次返回 verdict 与全部
-   material findings。现有 Evidence 足够时最多一次整体 rewrite；缺 Evidence 且只读工具仍可用时回同一 Agent 调查，不能用正文规则补齐；
+   material findings。Reviewer 只审核现有 response 与 evidence，不重新作答、不生成替代 Draft，也不自行解决原问题。现有 Evidence 足够时最多一次整体 rewrite；缺 Evidence 且只读工具仍可用时回同一 Agent 调查，不能用正文规则补齐；
    工具熔断已关闭时必须立即失败当前 Turn，不能重复生成相同 Limitation/Review 消耗预算；
 6. 独立 one-use Delivery Control 重新验证 Reviewer 成功回执、空 Finding、response/Citation identity、Citation 唯一性与 Binding exact
    revision 后才能授权。它不按正文词语、标题、格式、句段或 Claim 映射判断技术语义；Agent 和 Reviewer 都不能创建或重复消费授权；
 7. source-only 与 World Model + Source 两臂使用同一个 loop、Conversation、Reviewer、Provider route、dispatch fuse 和质量口径，只改变
-   cognition artifact/tools 是否可用。Cognition Observation 可以指导路径和提供非 locator 认知，但 ANSWER 的重要结论仍须选择 exact Source
-   Citation；Coverage/Unknown 不得被改写成肯定事实。旧 prompt-heavy profile 不得静默成为 fallback 或继续增长。
+   cognition artifact/tools 是否可用。World Model 的正式 Support 可以支持其 Coverage 内的结论；需要当前实现、未覆盖细节或冲突核验时，
+   Agent 再选择 exact Source Citation。重要结论必须由与其 modality、Context、Coverage 匹配的当前 Turn evidence 支持；Coverage/Unknown
+   不得被改写成肯定事实。旧 prompt-heavy profile 不得静默成为 fallback 或继续增长。
 
 ## Ownership and state separation
 
 - Conversational Task Control/Application 是 Conversation、Conversation Revision、Turn、User Message、Accepted Correction、Agent Work
-  State Revision、Agent Attempt、Tool Authorization/Observation、Evidence Ledger/Package reference 和不可变 Turn Result 的唯一写者。
+  State Revision、Agent Attempt、Tool Authorization/Observation、当前 Turn 的 Evidence Ledger/Package reference 和不可变 Turn Result 的唯一写者；
+  完整 Ledger/Package 只服务当前 Turn，Turn 结束后释放，不能成为后续 Turn 的证据。
 - Application-owned committed Work State repository 只保存成功 Turn 已密封的 Conversation successor。每个 Provider attempt 的 executor、
   Ledger、Package、Draft 与 Review 是 attempt-local；失败 attempt 不写 committed repository。fresh executor 可从 exact sealed Context 读取
   已提交 predecessor，但 fallback-route executor 不能从 preferred-route executor 私有内存取得输入。
@@ -81,17 +85,11 @@ authority、共享 dispatch fuse、Citation、fresh Review、Response Control �
 
 对话记录、工作状态和先前助手答案都不能自动成为 Turn Evidence。任何沿用结论必须由当前 exact revision 的 admissible evidence 重新支持。
 
-历史 Turn 的 Evidence 只有在 `repository revision + Binding + World Model authority + Source Profile + allowlist + content digest + coverage`
-全部 exact match 时才可作为本 Turn 的复用 candidate；Application 仍须按本 Turn 的问题、目标和证据需求重新校验，并把实际使用项重新绑定
-到本 Turn Package。旧 Answer Authorization、Review Decision、Limitation、未密封 Tool Result、Provider memory 或隐藏状态一律不可复用。
-用户陈述、纠正和偏好可以改变对话目标或待验证假设，但不能成为 Source truth 或支持软件事实。
-
-对于成功且已获 Delivery Authorization 的历史 Turn，Application 可以从其已交付 Citation projection 中选择同 revision 的 full-resource
-Source Citation，按 canonical resource 去重并以固定上限形成 current-Turn revalidation candidate。candidate 只携带 prior path、modality、
-content digest 和 origin identity，不携带 source content、旧 Observation 或 Claim authority；Source Broker 必须为 current Request/attempt/
-Profile/class/path 重新签发 direct opaque locator。只有本 Turn 实际 READ 后由 Worker 返回完整相同 path/coverage/modality/content digest，才
-形成新的 current-Turn SUPPORT、Ledger Result、Citation 与 Package closure；任一 identity/content mismatch 失败关闭。search line hit、
-World Model Citation、失败/未授权 Turn、不同 revision 或新 Conversation 不得生成该能力。
+任何历史 Turn 的 Evidence、Observation、Citation、Evidence Package、答案内容或 locator 都不得成为本 Turn 的 Evidence，也不得生成
+本 Turn 的 revalidation candidate。历史对话只能帮助解析当前指代、目标和约束；当前 Turn 必须重新查询当前 exact revision 的 World Model
+或重新由 Source Broker/Worker 读取来源，并把实际结果写入本 Turn 的 Ledger/Package。旧 Answer Authorization、Review Decision、Limitation、
+未密封 Tool Result、Provider memory 或隐藏状态一律不可复用。用户陈述、纠正和偏好可以改变对话目标或待验证假设，但不能成为 Source truth
+或支持软件事实。
 
 对于 current exact `CapabilityCognitionIndex` 返回的 entity provenance，Application 可以把 provenance 的 canonical path 转换为同 Turn 的数字
 Source read candidate，但必须先重验 snapshot revision/tree 与 Turn Binding，并由 Source Broker 按 current Request/attempt/Profile/allowlist/
@@ -113,7 +111,7 @@ cognition-derived catalog 按整个 Turn 累计有界，不能通过分页调用
    披露范围、有效期和每 Turn/整会话高安全熔断。产品、主 Agent、Reviewer 和 route branch 只读取通用 route role/profile reference、顺序和受信 availability verdict，
    不得使用 Provider/model 名称选择行为或质量标准。每个 execution profile 的运行配置内部绑定 Provider/model/endpoint、Adapter/plugin、资格、transport 与 admission
    plugin；浏览器不能扩大这些边界。current Artifact Session Configuration `@4` 必须以 zero-based fixed order 列出各 cognition Profile 的
-   Profile/Schema/Source Binding、selected Snapshot、ordered/Snapshot Bundle digest 与 exact file digest，并绑定两个 route profile、plugin
+   Profile/Schema/Source Binding、Snapshot selection policy（而非答案绑定的固定 Snapshot）、ordered/Snapshot Bundle digest 与 exact file digest，并绑定两个 route profile、plugin
    ref+digest、形成通用 dispatch-admission receipt 所需的 closed trusted inputs，以及 `PUBLIC_SOURCE_MODEL_STANDING_AUTHORITY@1` 的明确父
    ref/digest、Source 公开性/upstream/license/exact commit-tree、Provider/account/disclosure/budget/time/loopback 边界；装载时逐项重算后才能
    派生 exact `PUBLIC_SOURCE_MODEL_SESSION_AUTHORITY@1` 与 Application-owned Manifest authority。旧 `@3` admission、`@2` 多 Profile 与
@@ -127,10 +125,10 @@ cognition-derived catalog 按整个 Turn 累计有界，不能通过分页调用
    对象。这个响应只是 input clarification，不含工程事实，不创建 Evidence Package/Review/Delivery，也不能用于非空 Context 或普通显式首问。
    Application 必须从密封 Request 与 Binding 重新计算 policy 命中和澄清文本；Turn executor 或 Provider 自报 clarification quality 不能取得该
    例外。
-   用户纠正形成新 Revision 并标记被取代的对话假设，不删除原消息、证据或失败结果。
+   用户纠正形成新 Revision 并标记被取代的对话假设；原消息和最小终态摘要可保留，但本 Turn 的完整 Evidence/Package/Draft/Review 正文按生命周期释放。
 4. 一次 Turn 失败只密封该 Turn 的失败或 Limitation；Conversation 和 listener 继续可用。后续 Turn 不继承失败 Attempt 的未密封输出、
    Provider 隐藏状态、临时授权或未审核答案。
-5. 新对话从空 Conversation Work State 开始，但仍可读取同一 exact World Model；跨对话偏好或长期 Memory 在独立合同接受前不启用。
+5. 新对话从空 Conversation Work State 开始，但每个 Turn 仍可读取当前有效的 exact World Model；跨对话偏好或长期 Memory 在独立合同接受前不启用。
 
 ## Primary engineering Agent loop
 
@@ -227,9 +225,10 @@ Primary input 还必须从 Application-owned loop limit 和 exact current action
 该投影不得被用来规避 fuse：Reviewer 返回 `MORE_EVIDENCE` 且 `remaining=0` 时，Application 仍按上述规则失败关闭，不得恢复工具、扩大预算、
 重试 Reviewer 或把 cognition provenance 提升为答案 Citation。
 
-没有 current observation/action history 且没有 prior exact-source revalidation candidate 的 fresh investigation，只要 effective catalog 含
-World Model，第一步必须为 `WORLD_MODEL_QUERY`；decoder 从原 invocation 重算并拒绝先行 Source proposal。这个稳定认知起点用于取得
-repository-native target symbol，不要求把全部问题都交给世界模型，也不阻止 current-Turn 重签的 prior full-source candidate 直接重验。
+没有 current observation/action history 的 fresh investigation，Agent 可以依据问题选择 `WORLD_MODEL_QUERY` 或 `SOURCE_SEARCH/READ`；decoder
+不得以固定的 World Model-first 或 Source-first 顺序拒绝另一合法 proposal。World Model 可帮助取得 repository-native target symbol，但不要求
+把全部问题交给世界模型；同样，Source 也不因被先选而取得更高权威。两者均必须在本 Turn 重新形成受控 Observation，且 exact revision、权限
+和证据类型由 Application/Broker 重新校验。
 同一 material semantic need 的换句式不是新 need；World Model 已明确给出同一 implementation gap 后，Primary 不得继续询问缺失实现，
 必须转向一个命中该 gap 的 Source target 或保留诚实 Boundary。Application 的 exact duplicate/no-progress guard 仍机械执行，但不声称用
 字符串规则完整判定语义等价。
@@ -310,9 +309,9 @@ no-progress failure 关闭。
    Decoder 必须从原 Observation 重算并 fail closed，不能删除错误 Claim、替换引用、提升 Boundary 或自动授权 Draft。current model
    input 还必须由可信 Application 从 current isolated attempt 的 typed action history 与 Source authority-receipt Citations 投影
    `tool_reference_policy`：列出已执行 exact action、已尝试 query/read 和未使用的 `source_read_options`；Provider 只能复制列出的 opaque
-   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。read option 可以来自本 Turn Search receipt，也可以是前述
-   current-Turn revalidation candidate；后者在执行 READ 前不是 Evidence，相关 follow-up 应优先用它重验已知 full resource，而不是先以内容
-   SEARCH 消耗目录扫描熔断。每个 canonical Source resource 至多暴露一个 read option；
+   locator，不能重复 exact action、伪造 locator 或把 display path 当 authority。read option 可以来自本 Turn Search receipt 或本 Turn 已形成的
+   source-navigation observation；该 option 在执行 READ 前不是 Evidence，只有本 Turn Worker 实际读取后才能形成 Observation 与 Citation，不得
+   把历史 Turn 的内容、Citation 或 locator 当作 option，也不得以内容 SEARCH 消耗目录扫描熔断。每个 canonical Source resource 至多暴露一个 read option；
    任一 line reference 被读取后，同一 resource 的全部 reference 都离开 legal domain；没有未使用 option 时 `SOURCE_READ` 不得出现在
    effective tool catalog。Application 还必须从最新受信 Source `RESOURCE_RECEIPT` 投影 exact `used / maximum / remaining / exhausted`
    file budget；没有 receipt 时为 `null`，不得推测。`source_read_options` 只含当前预算与 catalog 下可执行的 opaque locator；
@@ -719,153 +718,7 @@ Browser 的失败视图必须把 logical Turn/Agent/Application 的 execution-st
 status 并保留 evidence digest identity，不存在时也不能推测 Provider 原因。这个显示不取得
 availability 或 fallback 权威，不得暴露 Provider 错误正文、credential、secret reference 或未密封模型输出。
 
-## 当前配置实例与历史实现证据
+## 实现与运行记录
 
-当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile；以下具体名称、状态和运行
-记录只描述当前配置实例与历史实现证据，不定义本契约的 route 分支、质量、授权或 Agent 语义。
-
-当前独立 Chat Access 已提供 Application-owned Conversation/Turn/Message、不可变 Revision、完整页面消息历史、“新对话”隔离与失败
-Turn 后 Conversation 继续，并已通过真实 browser Access Case。Application-owned bounded executor 也已在确定性 fake ports 上密封跨 Turn
-Work State revision、工具 Observation、support/boundary Package、Answer、fresh Review 与 Delivery Authorization；协议错绑、缺证后无新
-Observation 重写、无进展和资源熔断只关闭当前 Turn。trusted evidence-tool adapter 已复用现有 World Model projector、Source Broker 与
-Retrieval Worker；同一动作可分别密封 support/boundary，每条 Observation 携带 exact Turn/Tool/revision、Application 可重算的完整
-append-only Ledger entry chain/prefix 与 Citation content digest，Source READ 只接受本 Turn 先前签发的 opaque locator。状态为
-`ACCESS_BROWSER_PASS / AGENT_EXECUTOR_LOCAL_CANDIDATE / EVIDENCE_TOOLS_LOCAL_CANDIDATE / MODEL_BOUNDARY_LOCAL_CANDIDATE /
-PROVIDER_ROUTE_COMPOSITION_LOCAL_CANDIDATE / PROVIDER_RUNTIME_COMPOSITION_LOCAL_CANDIDATE /
-SESSION_RUNTIME_COMPOSITION_LOCAL_CANDIDATE / ARTIFACT_SESSION_V3_ADMISSION_LOCAL_PASS /
-ARK_TRANSPORT_SESSION_AUDIT_LOCAL_CANDIDATE / PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE /
-SEVENTH_LIVE_CHAT_THREE_OF_FIVE_LIMITATIONS_OVERALL_FAIL / NEW_CONVERSATION_LEAKAGE_PASS /
-V7_UNACCEPTED_SYMPTOM_EXPERIMENT / V8_SEMANTIC_NEED_QUERY_LOCAL_CANDIDATE / RUN043_QUALITY_REWORK /
-SESSION_AUTHORITY_REQUIRED / NOT_PRODUCTION`。单 Provider Agent/Reviewer 已使用 separate closed no-tools contracts、逐调用 one-use
-Disclosure 和 typed Gateway receipt；pre-dispatch、fresh dispatch、outcome unknown 与 replay 的计数由 Application 重验，Turn/Browser 只保存
-receipt digest reference。Application-owned generic preferred→fallback router（当前配置实例映射 Ark→DeepSeek）、committed Work State repository、两 attempt receipt、logical Turn 汇总与
-non-starting fixed Browser composition 已通过本地确定性 Gate；预检没有创建 attempt、启动 listener、解析 credential、读取 Source 或 dispatch。
-Provider runtime composition 已使用生产 Ark/DeepSeek Adapter 与 credential-lazy transport，但只消费本地构造的 typed qualification identity。
-non-starting Session runtime 又把两条 Provider runtime、exact evidence authority、per-attempt fresh Tool/Response Control、共享 committed
-   Work State、Conversation 与 Browser 组合成一个对象图；preparation 没有创建 attempt、读取 Source、解析 credential、dispatch 或启动 listener。
-artifact Session loader 现可从一个 owner-private closed document 绑定 product/source Git identity、ordered profile-specific published
-World Model authorities、Source Profile、Ark→DeepSeek qualification identity、两个 private Gateway repositories 与 Session authority；
-current `@4` 在逐 Profile 重验 expected file/Bundle digest、Profile/Schema/Source Binding/selected Snapshot 并形成 Capability Manifest 后，
-还要求在 Provider network/credential 前重验公开 upstream、clean HEAD、exact commit/tree、license object、standing scope 和 DeepSeek
-admission，再派生 exact Session/Turn/call 摘要链且记录人工重复审批数 0；`@3` admission、`@2` 多 Profile 与 `@1` 单 Profile 配置继续
-只读兼容，但不能取得 current standing-authority preparation 状态。唯一 `--session-config` selector 让固定
-`127.0.0.1:8765` 命令消费该组合，并在 listener 前/停止后分别密封 launch/terminal receipt；terminal 已验证 Ark/DeepSeek transport audit。
-PDR-014 `@5` 在完整继承 `@4` standing scope 的同时，额外固定一个 `JAVA_CAPABILITY_COGNITION@1` private artifact 的 path、digest、snapshot
-ID 和 exact Source revision/tree；只有全部重算一致才启用 `WORLD_MODEL_SOURCE_LIGHTWEIGHT_AGENT`，否则在 listener、credential 与 Provider
-dispatch 前失败关闭。没有该字段的 `@4` 继续形成同 Agent source-only 消融臂。
-Ark HTTP 前 transport unavailable 也已通过 Gateway owner-typed 为 availability raw evidence，但受信 availability-owner verdict 尚未闭合，不得追认为 fallback eligibility。历史 fresh Ark 与 DeepSeek Conformance 已分别以
-exact clean identity、2/2 request 和 strict Session audit PASS，并按各自 exact identity 用于多个 owner-private mall artifact Session。`run-035-chat-alpha` 与
-`run-036-chat-alpha` 均真实启动 listener、执行 Browser 五轮 Chat、消费受限 Source/Provider 并优雅停止，但五轮各自 5/5 失败；run-036 的
-新 Conversation probe 已以 Application clarification、零 dispatch 和空 Context 通过泄漏负测。run-037 在 fresh 双资格后仍为 0/5；v3
-tool copy domain 与 Reviewer assessment 随后形成。`run-038-chat-alpha` 再次取得 fresh 双资格并执行五轮，其中仅 Turn 5 以 reviewed
-Limitation 技术成功，整体仍为 1/5 / Quality FAIL；v4 随后关闭 Source resource domain 与 no-progress completion。`run-040-chat-alpha`
-在 v4 fresh 双资格后仍只有 Turn 2 的 reviewed Limitation，整体 1/5 / Quality FAIL；v5 随后把 previous Work State Observation IDs 移出
-current Turn copy domain，并要求 `requires_evidence` Review successor 只能提交 exact tool action。`run-041-chat-alpha` 已让 Turn 1
-Answer 与 Turn 3/4 reviewed Limitation 技术成功，但 Turn 2 重复 exact Source action、Turn 5 在 empty SUPPORT domain 复述 prior
-Answer，故整体仍为 3/5 / Quality FAIL。v6 successor 把 response kind 与 tool argument 的 current feasible domain 就地密封；
-strategy/prompt/Primary input identity 再次改变，所以 run-041 只保留为执行证据。`run-042-chat-alpha` 已在 v6 对应 route 资格后执行：
-Turn 2/3/4 为 reviewed Limitation，Turn 1 review limit、Turn 5 model-call rejection，仍为 3/5 / Quality FAIL；新 Conversation
-clarification/隔离/零 dispatch 继续 PASS。后续 v7 的 path-relevance prompt guidance 与 review-scope policy 没有经过逐层因果归因或跨题
-验证，只是已停止的本地症状实验，不能成为 current Contract、Conformance 失效原因或下一次 live 重跑入口。run-043 随后把 first
-divergence 定位到 semantic `evidence_need` 未进入 Cognition query；current v8 已在 Application 边界本地闭合该绑定，并以两个未参与修复
-的异质问题做真实 bundle 诊断。run-043 的答案质量和 DeepSeek 峰时调度 FAIL 均保持；领域 Prompt 变化本身不触发 ADR-017 Provider
-Conformance。`run-060/061/062` 又依次暴露同 Turn 重复 Cognition、closed operation repair 诊断和跨 Turn full-source 重验缺口；
-`FINDING-010-170/171/172` 已分别形成 `BOUNDED_CONTEXT_REPAIR_LOCAL_CANDIDATE / CLOSED_TOOL_DIAGNOSTIC_LOCAL_CANDIDATE /
-CROSS_TURN_SOURCE_REVALIDATION_LOCAL_CANDIDATE`。run-063 已真实证明 revalidation locator 在 Turn 2 生成相同 content digest 的新
-current-Turn Citation，但同一答案又包含 indirect type-relation overclaim 且 Reviewer 漏判，Turn 3 的 initial/repair output 连续把
-input-only `work_state_ref` 加入 closed output。`FINDING-010-173` 已形成 `EXACT_OUTPUT_ALLOWLIST_REPAIR_LOCAL_CANDIDATE`。run-064 随后
-证明 parent mismatch 的 early return 会隐藏同份 output 的 nested missing field；`FINDING-010-174` 已形成
-`BOUNDED_COMPLETE_SHAPE_DIAGNOSTIC_LOCAL_CANDIDATE`。run-065 Turn 1 真实成功但 material narrative conclusion 未进入 claims 且 Reviewer
-漏判，Turn 2 的 nested diagnostic 正确、shape repair 却改写既有合法值而被机械守恒拒绝；`FINDING-010-175` 已形成
-`EXACT_REPAIR_COPY_AND_DRAFT_CLAIM_CLOSURE_LOCAL_CANDIDATE`。run-066 又在 current Controller/Service Source 已足够证明 caller
-invocation/order、Draft 已声明 callee semantics 未知时，被 Reviewer 错标为强制补证；Application 正确执行 tool-action-only successor 并
-在 Primary 未服从时失败关闭。`FINDING-010-176` 已形成
-`CALL_EXPRESSION_EVIDENCE_AND_REVIEW_REMEDIATION_LOCAL_CANDIDATE`。完整三轮仍须新 exact product identity 的 fresh Browser successor 验证，
-不能追认这些失败 run 或把局部技术成功称为 MVP。
-run-067 随后在 fresh Turn 跳过 World Model，以 broad Source search、已读 caller expression search 和辅助 Mapper read 消耗 Source slots，
-再对同一 service implementation gap 连续换句式查询 World Model；第九个 Primary call 提出第九项 Tool action，Application 在执行前以
-8-action 上限失败关闭，仍无 Draft/Review/Delivery。`FINDING-010-177` 已形成
-`BOUNDED_INVESTIGATION_BUDGET_AND_TARGET_RELEVANCE_LOCAL_CANDIDATE`：Primary input 精确投影 remaining budget，零预算撤销 catalog 并要求
-收敛；fresh 无 revalidation 调查机械要求 World Model-first；同义 gap requery 与不命中 unresolved target 的 Source 选择被明确禁止。上限
-保持 8，不以扩容掩盖路径漂移；fresh exact Browser successor 仍是唯一产品验证。
-run-085 随后完成 52 次 Ark HTTP dispatch，其中 51 次完成、1 次在发出后成为 `PROVIDER_OUTCOME_UNKNOWN`；没有 HTTP 前 trusted
-unavailable，故 DeepSeek 0 正确。Q4 fresh Conversation 零 dispatch Clarification 继续通过，其余工程 Turn 未交付。Q1 暴露 Reviewer nested
-`challenge_id` 与 existing-value repair 缺口；Q3 暴露 Boundary evidence binding 被误作 raw metadata 全文披露，并继发空 Boundary
-`LIMITATION` 与 action/phase 冲突；Q5 的 action argument shape 和 required-action branch 漂移耗尽既有 15 次 authority。
-`FINDING-010-208` 已形成 current `@13/@7/@8` nested closed-shape、trusted branch、binding/disclosure 和 untrusted typed-error candidate；
-144 项定向测试 PASS，fresh run-086 仍须证明真实 Answer/Review，run-085 保持质量 FAIL。
-run-086 随后完成 49 次 Ark HTTP dispatch，其中 47 次完成、2 次在发出后成为 `PROVIDER_OUTCOME_UNKNOWN`；没有 HTTP 前 trusted
-unavailable，故 DeepSeek 0 正确。Q4 fresh Conversation 零 dispatch Clarification 继续通过，其余工程 Turn 未交付。Q2 暴露 final
-preflight 未重复 exact SUPPORT/BOUNDARY ID domains；Q3 暴露 Review successor 只收到 Findings/digest、没有收到 exact rejected Draft，
-使同包重写的 Claim inventory 从 `5 → 10 → 7 → 13` 扩张并产生新缺陷。`FINDING-010-209` 已形成 current `@14/@7/@9` exact rejected-Draft
-edit base、targeted rewrite 与 redundant reference-domain preflight candidate；144 项定向测试 PASS，fresh run-087 仍须证明真实 Answer/Review，
-run-086 保持质量 FAIL。
-run-087 随后由 Ark 10 个完成 call 与 4 个 sealed `429 / AccountQuotaExceeded` call 触发合法 DeepSeek fallback；DeepSeek 42 个完成 call、
-1 个 post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`，retry/人工审批/Production 仍为 0。Q4 fresh Conversation 零 dispatch
-Clarification 继续通过；Q1/Q2/Q5 均以 Review limit 失败，Q3 按 unknown no-retry 失败。Q1 的 exact rejected Draft Claim inventory 保持
-`4 → 5 → 6 → 6 → 6`，证明 `FINDING-010-209` edit base 已真实生效；新的 first divergence 是 Reviewer 把 exact-revision provenance、grouped
-Claim 与已明确 local order 按 phrase 重复拆分。Q2/Q5 又证明 generic global-completeness Claim exception 与 `LIMITATION` 零 Claim branch
-互相冲突，且 opaque Boundary binding 被误作必须在正文披露。`FINDING-010-210` 已形成 current `@15/@8/@10` semantic Claim coverage、
-response-kind-aware rewrite 与 hidden Boundary binding candidate；144 项定向测试 PASS，fresh run-088 仍须证明真实 Answer/Review，run-087
-保持质量 FAIL。
-run-088 随后由 Ark 4 个 sealed `429 / AccountQuotaExceeded` call 触发合法 DeepSeek fallback；DeepSeek 52 个完成 call、1 个
-post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`，retry/人工审批/Production 仍为 0。Q4 fresh Conversation 零 dispatch
-Clarification 继续通过；Q1/Q5 在下一 Reviewer 前耗尽 authority，Q2 达到 Review limit，Q3 按 unknown no-retry 失败。新的 first
-divergence 是 comprehensive Reviewer 逐轮只报一个 defect并重复 Finding identity，focused Reviewer 让 closed assessment body 与
-decision/Finding 自相矛盾，Primary 又未在一个 replacement 中解决全部 ordered Findings。`FINDING-010-211` 已形成 current
-`@16/@9/@11` complete-Draft audit、focused exact closure、Reviewer-authored decision repair、未引用 duplicate local-code disambiguation 与
-all-Findings rewrite candidate；146 项定向测试 PASS，fresh run-089 仍须证明真实 Answer/Review，run-088 保持质量 FAIL。
-run-089 由 Ark 4 个 sealed `429 / AccountQuotaExceeded` call 再次触发合法 DeepSeek fallback；DeepSeek 27 个完成 call、1 个
-post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`，retry/人工审批/Production 仍为 0。Q4 fresh Conversation 零 dispatch
-Clarification 继续通过；Q1 的 focused closure guard 正确拒绝 Reviewer 矛盾 body，但同-profile repair 原样复制；Q3 在 World Model 与 Source
-Search Boundary 已允许 Limitation 时仍连续复制 forbidden exact query；Q5 的 Primary 两次返回 exact rejected Draft，comprehensive Reviewer 又在
-Limitation 上要求 Claim、误报已有 Boundary binding 并把 Search/interface 当实现证据。`FINDING-010-212` 已形成 current
-`@17/@10/@12` changed-replacement guard、typed closed-contract convergence directive、actual focused index diagnostic 与 response-kind-aware
-Limitation review candidate；147 项定向测试 PASS，fresh run-090 仍须证明真实 Answer/Review，run-089 保持质量 FAIL。
-run-090 的 Ark 33 个 call 中 31 个完成、1 个 pre-dispatch TLS failure、1 个 post-dispatch unknown；Q3 fallback 因 pricing evidence 超过
-900 秒在 DeepSeek credential/TLS/HTTP 前关闭，DeepSeek dispatch 0，retry/人工审批/Production 仍为 0。Q4 fresh Conversation 零
-dispatch Clarification 继续通过；Q1 的 coherent closed-contract repair 回退到 non-JSON prefix 后旧单向 category gate 未使用第二个 repair
-slot，Q2 的 audit-only relevance assessment 缺 Finding code且 generic repair 原样返回。`FINDING-010-213` 已形成 current
-`@18/@11/@13` distinct-category final repair、单义 audit-only diagnostic/typed closure 与 final-preflight directive candidate；模型边界 34
-项测试 PASS，相邻定向集与 fresh run-091 仍须证明真实 Answer/Review，run-090 保持质量 FAIL。
-run-091 的 Ark 38 个 call 中 37 个完成、1 个 post-dispatch `REMOTE_DISCONNECTED / PROVIDER_OUTCOME_UNKNOWN`，不存在可信 pre-dispatch
-unavailable verdict，故 DeepSeek dispatch/credential/TLS/HTTP 全为 0；retry、人工审批和 Production 仍为 0。Q4 fresh Conversation 零 dispatch
-Clarification 继续通过；Q1 以零 Citation 的混合事实/边界 Limitation 被错误交付，Q2 补证 action 后丢失完整 Review correction baseline 并在下一
-focused Review 前耗尽 authority，Q3 的 cognition-literal repair 原样重复非法 query，Q5 按 post-dispatch unknown no-retry 失败。
-`FINDING-010-214` 已形成 current `@19/@11/@14` 补证后全 Findings 保留、Limitation 零 SUPPORT、material cognition-literal replan 与
-resolved-candidate final-preflight 冗余 candidate；fresh run-092 仍须证明真实 Answer/Review，run-091 保持质量 FAIL。
-run-092 的 Ark 53 个 call 全部完成，TLS/credential/HTTP 均为 `53/53/53`；不存在 raw failure 或 trusted pre-dispatch unavailable verdict，
-故 DeepSeek 全链路 0 是 preferred route 持续可用时的正确结果。Q3 以 1 个 exact Source Citation 和 fresh Review/Delivery 成功，Q4 fresh
-Conversation 零 dispatch Clarification 继续通过；Q1/Q2/Q5 分别耗尽 dispatch 或 Review authority。三题共同 first divergence 是
-Reviewer 在明确“Draft 未披露、也未绑定 resolved Search diagnostic”时仍可返回 audit-only disposition 并制造无可删除对象的 global Finding；
-replacement Draft 后同一 Finding 重现。`FINDING-010-215` 已形成 current `@20/@12/@15` exact
-`draft_disclosed_fragments[]`、reference/fragment/disposition 三向闭合与 no-op audit-only rejection candidate；73 项 Agent/Tool/Model 测试
-PASS，相邻定向集与 fresh run-093 仍须证明真实 Answer/Review，run-092 保持质量 FAIL。
-run-093 随后以 Ark 3 个 sealed 429 合法自动激活 DeepSeek 并完成 28 个 fallback dispatch，证明备用路线与 standing authority 正常；Q1
-暴露 exact fragment 的 inline-code backtick presentation mismatch，Q2/Q5 暴露 original-question module scope 未进入 Source Search且多个
-query 重扫 canonical fallback 前缀。`FINDING-010-216/217` 已形成 current `@21/@13/@16` backtick-only normalization 与
-`COMPILED_SOURCE_OPERATION@3` Broker-recomputed prefix/rotating fallback contract；六模块 154 项、相邻十五模块 229 项定向测试 PASS，fresh run-094 仍须证明真实
-Answer/Review，run-093 保持质量 FAIL。
-run-094 随后以 Ark 4 个 sealed 429 合法自动激活 DeepSeek；DeepSeek 20 个 call 完成、1 个 post-dispatch unknown，retry、人工审批与
-Production 均为 0。Q1 以 2 个 exact Citation 取得 ACCEPTED，证明 backtick fragment closure 真实通过；Q4 零 dispatch Clarification 继续
-通过。Q5 的合法 `SOURCE_SEARCH(SOURCE, ElasticsearchRepository)` 暴露 question module prefix 初版把同 module POM/TEST paths 混入
-SOURCE restriction，Broker 按 class 正确失败关闭。`FINDING-010-218` 已把 scope 识别保留在完整 Request allowlist，同时只从 current
-evidence-class allowlist 选择 prefix；wire schema、route、rotation 与全部 fuse 不变。六模块 154 项、相邻十五模块 229 项定向测试 PASS，fresh run-095 待验证；
-Q2 的 post-dispatch unknown 与 Q3 limitation 不被追认为 product quality PASS。
-run-095 随后再次以 Ark 4 个 sealed 429 合法自动激活 DeepSeek；DeepSeek 27 个 call 完成、1 个 post-dispatch unknown，Q1/Q5
-ACCEPTED、Q4 零 dispatch Clarification，证明 evidence-class-only prefix closure 已真实通过。Q2 在 Q1 后闲置约 141 秒时复用已失效的
-DeepSeek keep-alive 并按 no-retry 失败；Q3 的 focused Reviewer 把全部 disclosed Boundary 判为 material/null code，却又返回额外
-Finding，generic repair 原样重复后失败。`FINDING-010-219/220` 分别形成 credential/HTTP 前的 stale-or-60-second-idle session rotation，
-以及 retained Finding 绑定 exact challenge 或删除 unbound Finding 并 APPROVE 的专用 repair closure。相邻十七模块 255 项定向测试 PASS；
-DeepSeek Adapter exact bytes 已恢复并由 current Conformance loader 重新核验通过；Engineering Chat runtime transport ref `@3` 与 run-096
-仍须证明真实 stale/idle rotation、Answer/Review，run-095 保持质量 FAIL。
-
-run-104 在 current standing scope 内由 Ark 两个 sealed 429 触发 DeepSeek fallback：Q1 的 DeepSeek 14/14 calls 完成并由 exact 15-call
-logical Turn fuse 失败关闭；Q2 首个 DeepSeek dispatch 返回 sealed HTTP 402，Q4 fresh Conversation 仍以零 dispatch Clarification 通过，
-同签名停止边界因此未发送 Q3/Q5。Q1 的最早偏差是 comprehensive Review 把阶段性脱敏的空 Boundary arrays 当成真实 absence，在
-add/delete binding、Claim 与 SUPPORT 要求之间振荡。`FINDING-010-233` 已形成 current `@30/@20/@24` presence-only count projection：
-保留可信 Boundary 存在性但不披露 exact value、不转移 focused ownership；模型协议 `37/37`、相邻定向测试 `137/137` PASS。DeepSeek 402 只作 Provider availability evidence，不作代码
-quality verdict；run-104 保持 Quality FAIL。
-
-旧
-`ENGINEERING_QA_ADAPTIVE_INVESTIGATION@3` 继续是兼容协议，不能作为本契约主 Agent 或 Chat 资格证据。
+原文中的具体配置、局部实现状态和运行记录已原样归位至项目路径 `docs/project/implementation-reference/engineering-conversation-history.md`。
+这些记录不能覆盖架构基线、证明当前代码已满足本契约，或恢复被用户暂停的开发。

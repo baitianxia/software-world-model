@@ -3,6 +3,8 @@ id: SYS-ADR-005
 kind: system-decision
 status: accepted
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: decision-rationale-only
 owners: [architecture]
 depends_on: [SYS-ADR-003]
 derived_from: [AD-028, AD-035, AD-036, AD-062, AD-114]
@@ -26,7 +28,6 @@ tests: []
 
 ## Consequences
 
-Structure View 已作为第一个专门 Semantic View Contract 被接受；ITER-006 进一步接受了只覆盖
-`JAVA_STATIC_CALL_GRAPH@1` 的最小 Behavior View；`JAVA_SOURCE_SEMANTICS@1` 的 implementation candidates/method query 也只
-是从 exact no-payload Bundle 重建的查询组织。完整运行时 Behavior、Business、History 和其他语言仍未接受；任何后续 View
-或索引即使启用也必须保持可重建、只读和非权威。
+各类 View 可以按受控 Contract 逐步提供 Structure、Behavior、Business、History 和 Operational 等投影，但任何 View 都只是
+从 exact Snapshot 重建的只读组织，不因某个 View 尚未实现或尚未启用而删减世界模型的认知维度。后续 View 或索引即使启用，也必须
+保持可重建、只读和非权威；具体 Profile 的实现与启用状态记录在项目实现参考中。

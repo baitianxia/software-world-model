@@ -87,6 +87,7 @@ from software_world_model.interface.engineering_chat_provider_launcher import (
     prepare_engineering_chat_provider_launcher,
 )
 from software_world_model.interface.engineering_chat_session_runtime import (
+    ENGINEERING_CHAT_LEGACY_AGENT_MODE,
     ENGINEERING_CHAT_SESSION_RUNTIME_STATUS,
     EngineeringChatEvidenceToolFactory,
     prepare_engineering_chat_session_runtime,
@@ -860,6 +861,7 @@ class EngineeringChatProviderRuntimeTests(unittest.TestCase):
                 fallback_provider_runtime=deepseek,
                 route_plan=plan,
                 checked_at=self.now,
+                agent_mode=ENGINEERING_CHAT_LEGACY_AGENT_MODE,
             )
             drifted_profile = LocalGitEvidenceClassProfile.create(
                 profile_ref=profile.profile_ref,

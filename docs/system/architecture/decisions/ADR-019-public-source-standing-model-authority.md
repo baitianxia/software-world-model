@@ -3,6 +3,8 @@ id: SYS-ADR-019
 kind: system-decision
 status: accepted
 authority: normative
+semantic_owner: SYS-ARCH-BASELINE
+authority_scope: standing-authority-decision-rationale
 owners: [architecture, application, security, ai, operations, quality]
 depends_on: [SYS-ADR-006, SYS-ADR-017]
 derived_from: [FINDING-010-029, FINDING-010-140, FINDING-010-154]
@@ -11,6 +13,8 @@ tests: [tests/test_public_source_model_authority.py, tests/test_model_gateway.py
 ---
 
 # ADR-019：公开来源采用持续模型调用权威
+
+> 范围说明：本文定义公开来源持续授权的边界、material delta、逐次机器派生和撤销/漂移原则。具体 Provider、模型、凭据、receipt、admission plugin、预算和运行状态只是实现引用；它们不能单独改变顶层架构或产生新的人工审批步骤。
 
 ## Context
 
@@ -32,7 +36,7 @@ Provider dispatch 逐次批准，并没有增加新的授权判断；它只是�
    - Provider/model/endpoint/Adapter/credential account、资格、redaction、Agent/Reviewer purpose、有序 route、每 Turn/整会话预算、
      有效期和撤销条件已经明确批准；
    - Sink 固定为 `EVALUATION_ONLY` 的 loopback 本机体验，不执行外部写入或 Production Activation。
-   ITER-010 的 `PUBLIC_OSS_EVALUATION_STANDING_AUTHORITY@1` 是该通用合同在当前 mall 评测范围内的项目实例，不是第二套权限语义。
+   具体项目可以在项目文档中绑定一个 standing-authority 实例，但该实例不能形成第二套权限语义。
 2. 在该持续权威内，用户提交 Turn 即表达本 Turn 的产品请求，不构成新的运维审批。可信 Application 必须从持续权威、exact Turn、相关
    Conversation/Cognition/Work State、当前 Evidence Package、Provider attempt、qualification、预算和调度状态，自动派生 exact
    Session/Turn/run authority、Authorized Input Manifest、one-use disclosure/dispatch receipt 与 terminal audit。派生对象是逐次、不可复用、
@@ -51,32 +55,22 @@ Provider dispatch 逐次批准，并没有增加新的授权判断；它只是�
    disclosure redaction；calls/tokens/time/no-progress 熔断；Provider 资格与身份重验；失败关闭；ADR-017 attempt 隔离；以及所选
    admission plugin 的逐 request policy 校验。符合插件策略的 admission 可由可信系统从持续权威自动派生；插件要求 override 时仍必须有
    本次 exact 人工决定。
-5. 历史 Conformance、Capability Qualification、Product Result、用户曾经查看过某仓库，或仓库名称中出现“open source”都不能自行
+5. 历史 Conformance、Capability Qualification、历史运行 Result、用户曾经查看过某仓库，或仓库名称中出现“open source”都不能自行
    创建持续权威。持续权威必须可撤销、可到期并绑定可验证 source/provider identities；任何 drift 只阻断受影响的新 dispatch，不能改写
    已密封审计结果。同一已批准公开 upstream 与 revision policy 内的新 clean exact commit 由 Source Authority 重新验证并由系统派生
    新 receipt，不是人工 delta；变成不同来源、无法证明公开或超出 standing policy 时才按 unknown/新边界处理。
 
-### 当前 ITER-010 配置实例
-
-当前 execution profile 配置把 DeepSeek 映射为备用路线，并选择 `DEEPSEEK_DISPATCH_ADMISSION@1` 作为其 admission plugin；该插件把非高峰
-窗口作为自动准入条件、把峰时运行作为 exact override。该映射只描述当前可替换配置，不定义本 ADR 的权限状态、分支或质量规则。
-
-当前 Artifact Session `@4` 把 standing authority 作为明确的父对象：launcher 先重验 owner-private closed document、公开 upstream、clean
-HEAD、exact commit/tree 与许可证路径对象，再由可信 Application 派生绑定 exact product、Source Profile/allowlist、World Model、Chat
-Binding、route/configuration/qualification、预算和时窗的 `PUBLIC_SOURCE_MODEL_SESSION_AUTHORITY@1`。Provider Session、逐 Turn attempt 与逐
-call one-use disclosure receipt 都直接或经不可变摘要链绑定 standing parent；过期、消费、Source/provider/account/profile/budget/admission
-drift 在 Source disclosure、credential 或 Provider network 前失败关闭。旧 Artifact Session `@1—@3` 只保留 exact-human-delta 兼容语义，
-不能取得该状态。
+具体 standing-authority、session artifact、admission plugin 和版本迁移实例属于项目实现参考；本 ADR 只定义其必须绑定的身份、边界、
+撤销、漂移检测和逐次派生规则。
 
 ## Consequences
 
-- 公开开源测试工程上的正常 Chat、canary 和评测不再因 run/Turn/dispatch 数量重复向人申请同一权限；系统仍为每次真实调用留下更精确的
+- 公开开源测试工程上的正常 Chat、canary 和运行验证不再因 run/Turn/dispatch 数量重复向人申请同一权限；系统仍为每次真实调用留下更精确的
   审计链。
 - “人工授权”与“机器派生 receipt”成为不同概念：前者决定边界及其 material delta，后者执行和证明边界。
 - 系统必须可靠证明公开来源分类并检测 authority drift；做不到时按 unknown 处理，而不是把本机目录默认当成公开数据。
-- 现有要求 post-freeze exact user-message grant 的 launcher/artifact 是兼容实现，不再是公开来源体验的目标产品契约；current `@4` 已以
-  standing-authority ref/digest 和自动派生链取代逐 run 人工消息依赖，并形成 deterministic local candidate。该本地闭合不等于 actual
-  current artifact、真实 dispatch 或 Browser 体验已经 PASS；这些仍须由 live receipt 与当前体验 Case 证明。
+- 兼容 launcher/artifact 可以采用逐次人工消息或 standing-authority 派生链，但实现方式不能改变本 ADR 的持续授权、逐次收据和
+  失败关闭边界；实现是否已取得真实运行资格由独立验证记录决定。
 
 ## Rejected alternatives
 
