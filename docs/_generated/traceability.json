@@ -4650,6 +4650,18 @@
       "tests/test_engineering_chat_browser.py"
     ]
   },
+  "FINDING-010-296": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-296.md",
+    "code": [
+      "src/software_world_model/application_services/conversational_engineering_routing.py",
+      "src/software_world_model/interface/engineering_chat_provider_launcher.py",
+      "src/software_world_model/interface/engineering_chat_session_runtime.py",
+      "src/software_world_model/interface/lightweight_engineering_chat.py"
+    ],
+    "tests": [
+      "tests/test_conversational_engineering_routing.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [

@@ -132,6 +132,34 @@ def engineering_agent_execution_profile_route_ref(
     return f"engineering-agent-execution-profile-route:{route_digest.value}"
 
 
+def engineering_agent_preferred_execution_profile_route_ref(
+    *,
+    preferred_execution_profile_ref: str,
+    preferred_execution_profile_digest: Digest,
+) -> str:
+    """Create a route identity for a preferred-only candidate.
+
+    A preferred-only candidate is useful while the fallback profile is not
+    needed.  It remains fail-closed if the preferred profile is unavailable;
+    a fallback can only be added by a later, explicitly composed session.
+    """
+
+    route_digest = digest_of(
+        [
+            "ENGINEERING_AGENT_PREFERRED_EXECUTION_PROFILE_ROUTE_REF@1",
+            (
+                EngineeringProviderRouteRole.PREFERRED.value,
+                _text(
+                    preferred_execution_profile_ref,
+                    "preferred execution profile reference",
+                ),
+                preferred_execution_profile_digest.value,
+            ),
+        ]
+    )
+    return f"engineering-agent-execution-profile-route:{route_digest.value}"
+
+
 def engineering_agent_dual_provider_route_ref(
     *,
     primary_configuration_digest: Digest,
@@ -235,7 +263,7 @@ class EngineeringProviderRoutePlan:
     schema: str
     chat_binding_digest: Digest
     provider_route_ref: str
-    routes: tuple[EngineeringProviderRouteSpec, EngineeringProviderRouteSpec]
+    routes: tuple[EngineeringProviderRouteSpec, ...]
     preferred_availability_owner_ref: str
     maximum_fallback_attempts: int
     request_retry_count: int
@@ -250,7 +278,7 @@ class EngineeringProviderRoutePlan:
         *,
         binding: EngineeringChatBinding,
         preferred: EngineeringProviderRouteSpec | None = None,
-        fallback: EngineeringProviderRouteSpec,
+        fallback: EngineeringProviderRouteSpec | None = None,
         primary: EngineeringProviderRouteSpec | None = None,
         preferred_availability_owner_ref: str = "provider-availability-boundary",
     ) -> "EngineeringProviderRoutePlan":
@@ -280,22 +308,31 @@ class EngineeringProviderRoutePlan:
             standing_authority_digest=preferred.standing_authority_digest,
             maximum_dispatches_per_turn=preferred.maximum_dispatches_per_turn,
         )
-        expected_fallback = EngineeringProviderRouteSpec.create(
-            ordinal=fallback.ordinal,
-            role=fallback.role,
-            execution_profile_ref=fallback.execution_profile_ref,
-            execution_profile_digest=fallback.execution_profile_digest,
-            session_disclosure_authority_digest=(
-                fallback.session_disclosure_authority_digest
-            ),
-            standing_authority_digest=fallback.standing_authority_digest,
-            maximum_dispatches_per_turn=fallback.maximum_dispatches_per_turn,
-        )
-        expected_ref = engineering_agent_execution_profile_route_ref(
-            preferred_execution_profile_ref=preferred.execution_profile_ref,
-            preferred_execution_profile_digest=preferred.execution_profile_digest,
-            fallback_execution_profile_ref=fallback.execution_profile_ref,
-            fallback_execution_profile_digest=fallback.execution_profile_digest,
+        expected_fallback = None
+        if fallback is not None:
+            expected_fallback = EngineeringProviderRouteSpec.create(
+                ordinal=fallback.ordinal,
+                role=fallback.role,
+                execution_profile_ref=fallback.execution_profile_ref,
+                execution_profile_digest=fallback.execution_profile_digest,
+                session_disclosure_authority_digest=(
+                    fallback.session_disclosure_authority_digest
+                ),
+                standing_authority_digest=fallback.standing_authority_digest,
+                maximum_dispatches_per_turn=fallback.maximum_dispatches_per_turn,
+            )
+        expected_ref = (
+            engineering_agent_execution_profile_route_ref(
+                preferred_execution_profile_ref=preferred.execution_profile_ref,
+                preferred_execution_profile_digest=preferred.execution_profile_digest,
+                fallback_execution_profile_ref=fallback.execution_profile_ref,
+                fallback_execution_profile_digest=fallback.execution_profile_digest,
+            )
+            if fallback is not None
+            else engineering_agent_preferred_execution_profile_route_ref(
+                preferred_execution_profile_ref=preferred.execution_profile_ref,
+                preferred_execution_profile_digest=preferred.execution_profile_digest,
+            )
         )
         if (
             binding.provider_status is not RuntimeCapabilityStatus.READY
@@ -305,13 +342,21 @@ class EngineeringProviderRoutePlan:
             or binding.world_model_authority_digest is None
             or binding.source_profile_ref is None
             or preferred != expected_preferred
-            or fallback != expected_fallback
+            or fallback is not None and fallback != expected_fallback
         ):
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
-                "dual Provider route requires a fully bound ready Engineering Chat",
+                "Provider route requires a fully bound ready Engineering Chat",
             )
         if (
+            preferred.ordinal != 1
+            or preferred.role is not EngineeringProviderRouteRole.PREFERRED
+        ):
+            raise DomainError(
+                ErrorCode.STRATEGY_CONTRACT_MISMATCH,
+                "preferred route must be the first ordered profile",
+            )
+        if fallback is not None and (
             preferred.ordinal != 1
             or preferred.role is not EngineeringProviderRouteRole.PREFERRED
             or fallback.ordinal != 2
@@ -328,14 +373,14 @@ class EngineeringProviderRoutePlan:
                 ErrorCode.STRATEGY_CONTRACT_MISMATCH,
                 "route must bind distinct ordered preferred and fallback profiles",
             )
-        routes = (preferred, fallback)
+        routes = (preferred,) if fallback is None else (preferred, fallback)
         core = {
             "schema": ENGINEERING_PROVIDER_ROUTE_SCHEMA,
             "chat_binding_digest": binding.digest.value,
             "provider_route_ref": expected_ref,
             "route_digests": tuple(item.digest.value for item in routes),
             "preferred_availability_owner_ref": availability_owner_ref,
-            "maximum_fallback_attempts": 1,
+            "maximum_fallback_attempts": 1 if fallback is not None else 0,
             "request_retry_count": 0,
             "late_result_policy": (
                 EngineeringProviderLateResultPolicy.QUARANTINE_AUDIT_ONLY.value
@@ -350,7 +395,7 @@ class EngineeringProviderRoutePlan:
             provider_route_ref=expected_ref,
             routes=routes,
             preferred_availability_owner_ref=availability_owner_ref,
-            maximum_fallback_attempts=1,
+            maximum_fallback_attempts=1 if fallback is not None else 0,
             request_retry_count=0,
             late_result_policy=(
                 EngineeringProviderLateResultPolicy.QUARANTINE_AUDIT_ONLY
@@ -975,9 +1020,10 @@ class EngineeringProviderRouteReceipt:
                 preferred_attempt_receipt=receipts[0],
             )
         if (
-            len(receipts) not in {1, 2}
+            len(receipts) not in ({1} if len(plan.routes) == 1 else {1, 2})
             or any(
                 receipt.logical_turn_request_digest != request.request_digest
+                or index >= len(plan.routes)
                 or receipt.route_spec_digest != plan.routes[index].digest
                 or receipt.execution_profile_ref
                 != plan.routes[index].execution_profile_ref
@@ -1142,7 +1188,7 @@ class ApplicationOwnedEngineeringProviderRouter(
             expected_plan = EngineeringProviderRoutePlan.create(
                 binding=request.binding,
                 preferred=self._plan.routes[0],
-                fallback=self._plan.routes[1],
+                fallback=(self._plan.routes[1] if len(self._plan.routes) > 1 else None),
                 preferred_availability_owner_ref=(
                     self._plan.preferred_availability_owner_ref
                 ),
@@ -1168,11 +1214,15 @@ class ApplicationOwnedEngineeringProviderRouter(
             prior_runtime=None,
         )
         runs = [primary]
-        availability_verdict = self._preferred_availability_verdict(
-            request=request,
-            preferred=primary,
+        availability_verdict = (
+            self._preferred_availability_verdict(
+                request=request,
+                preferred=primary,
+            )
+            if len(self._plan.routes) > 1
+            else None
         )
-        if availability_verdict is not None:
+        if availability_verdict is not None and len(self._plan.routes) > 1:
             fallback = self._execute_attempt(
                 request=request,
                 route=self._plan.routes[1],
@@ -1501,5 +1551,6 @@ __all__ = [
     "EngineeringProviderRouteRole",
     "EngineeringProviderRouteSpec",
     "engineering_agent_execution_profile_route_ref",
+    "engineering_agent_preferred_execution_profile_route_ref",
     "engineering_agent_dual_provider_route_ref",
 ]

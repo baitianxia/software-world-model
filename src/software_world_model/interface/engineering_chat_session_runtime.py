@@ -238,7 +238,7 @@ class EngineeringChatSessionRuntimeReceipt:
     route_plan_digest: Digest
     evidence_tool_factory_digest: Digest
     primary_provider_runtime_digest: Digest
-    fallback_provider_runtime_digest: Digest
+    fallback_provider_runtime_digest: Digest | None
     logical_turn_dispatch_budget_digest: Digest | None
     launcher_receipt_digest: Digest
     agent_mode: str
@@ -271,6 +271,8 @@ class EngineeringChatSessionRuntimeReceipt:
             ),
             "fallback_provider_runtime_digest": (
                 self.fallback_provider_runtime_digest.value
+                if self.fallback_provider_runtime_digest is not None
+                else None
             ),
             "logical_turn_dispatch_budget_digest": (
                 self.logical_turn_dispatch_budget_digest.value
@@ -320,7 +322,7 @@ class PreparedEngineeringChatSessionRuntime:
     evidence_tool_factory: EngineeringChatEvidenceToolFactory
     attempt_factory: object
     primary_provider_runtime: EngineeringChatProviderModelRuntime
-    fallback_provider_runtime: EngineeringChatProviderModelRuntime
+    fallback_provider_runtime: EngineeringChatProviderModelRuntime | None
     receipt: EngineeringChatSessionRuntimeReceipt
 
 
@@ -333,7 +335,7 @@ def prepare_engineering_chat_session_runtime(
     source_broker: SourceBroker,
     retrieval_worker: RetrievalWorker,
     primary_provider_runtime: EngineeringChatProviderModelRuntime,
-    fallback_provider_runtime: EngineeringChatProviderModelRuntime,
+    fallback_provider_runtime: EngineeringChatProviderModelRuntime | None,
     route_plan: EngineeringProviderRoutePlan,
     checked_at: datetime,
     loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
@@ -397,54 +399,59 @@ def prepare_engineering_chat_session_runtime(
     else:
         status = ENGINEERING_CHAT_SESSION_RUNTIME_STATUS
         blocking_gaps = ENGINEERING_CHAT_SESSION_RUNTIME_BLOCKING_GAPS
-    primary_route, fallback_route = route_plan.routes
+    primary_route = route_plan.routes[0]
+    fallback_route = route_plan.routes[1] if len(route_plan.routes) > 1 else None
     primary_logical_budget = (
         primary_provider_runtime.authorizer.logical_turn_dispatch_budget
     )
     fallback_logical_budget = (
         fallback_provider_runtime.authorizer.logical_turn_dispatch_budget
+        if fallback_provider_runtime is not None
+        else None
     )
-    if (
+    runtime_invalid = (
         primary_provider_runtime.status
         != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
-        or fallback_provider_runtime.status
-        != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
         or primary_provider_runtime.credential_resolved_at_preparation
-        or fallback_provider_runtime.credential_resolved_at_preparation
         or primary_provider_runtime.provider_dispatch_count_at_preparation != 0
-        or fallback_provider_runtime.provider_dispatch_count_at_preparation != 0
         or primary_provider_runtime.request_retry_allowed
-        or fallback_provider_runtime.request_retry_allowed
         or primary_provider_runtime.production_activation != "NOT_EXECUTED"
-        or fallback_provider_runtime.production_activation != "NOT_EXECUTED"
         or primary_provider_runtime.chat_binding_digest != binding.digest
-        or fallback_provider_runtime.chat_binding_digest != binding.digest
         or primary_provider_runtime.configuration.digest
         != primary_route.execution_profile_digest
-        or fallback_provider_runtime.configuration.digest
-        != fallback_route.execution_profile_digest
         or primary_provider_runtime.session_authority.digest
         != primary_route.session_disclosure_authority_digest
-        or fallback_provider_runtime.session_authority.digest
-        != fallback_route.session_disclosure_authority_digest
-        or primary_provider_runtime.gateway_repository_ref
-        == fallback_provider_runtime.gateway_repository_ref
-        or primary_provider_runtime.transport
-        is fallback_provider_runtime.transport
-        or primary_provider_runtime.model_boundary
-        is fallback_provider_runtime.model_boundary
-        or (primary_logical_budget is None)
-        != (fallback_logical_budget is None)
-        or (
-            primary_logical_budget is not None
-            and primary_logical_budget is not fallback_logical_budget
-        )
         or fixed_command_wired
         and primary_logical_budget is None
-    ):
+    )
+    if fallback_provider_runtime is not None:
+        runtime_invalid = runtime_invalid or (
+            fallback_route is None
+            or fallback_provider_runtime.status
+            != ENGINEERING_CHAT_PROVIDER_MODEL_RUNTIME_STATUS
+            or fallback_provider_runtime.credential_resolved_at_preparation
+            or fallback_provider_runtime.provider_dispatch_count_at_preparation != 0
+            or fallback_provider_runtime.request_retry_allowed
+            or fallback_provider_runtime.production_activation != "NOT_EXECUTED"
+            or fallback_provider_runtime.chat_binding_digest != binding.digest
+            or fallback_provider_runtime.configuration.digest
+            != fallback_route.execution_profile_digest
+            or fallback_provider_runtime.session_authority.digest
+            != fallback_route.session_disclosure_authority_digest
+            or primary_provider_runtime.gateway_repository_ref
+            == fallback_provider_runtime.gateway_repository_ref
+            or primary_provider_runtime.transport
+            is fallback_provider_runtime.transport
+            or primary_provider_runtime.model_boundary
+            is fallback_provider_runtime.model_boundary
+            or primary_logical_budget is not fallback_logical_budget
+        )
+    elif len(route_plan.routes) != 1:
+        runtime_invalid = True
+    if runtime_invalid:
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-            "Engineering Chat Session runtimes do not bind two distinct exact routes",
+            "Engineering Chat Session runtimes do not bind the exact route set",
         )
     evidence_factory = EngineeringChatEvidenceToolFactory(
         binding=binding,
@@ -472,12 +479,16 @@ def prepare_engineering_chat_session_runtime(
             dispatch_budget=dispatch_budget,
             clock=availability_clock,
         )
-        fallback_model = ModelBackedLightweightEngineeringAgent(
-            gateway=fallback_provider_runtime.gateway,
-            configuration=fallback_provider_runtime.configuration,
-            session_authority=fallback_provider_runtime.session_authority,
-            dispatch_budget=dispatch_budget,
-            clock=availability_clock,
+        fallback_model = (
+            ModelBackedLightweightEngineeringAgent(
+                gateway=fallback_provider_runtime.gateway,
+                configuration=fallback_provider_runtime.configuration,
+                session_authority=fallback_provider_runtime.session_authority,
+                dispatch_budget=dispatch_budget,
+                clock=availability_clock,
+            )
+            if fallback_provider_runtime is not None
+            else None
         )
         primary_lightweight = LightweightProviderAttemptDependencies.create(
             route=primary_route,
@@ -490,18 +501,22 @@ def prepare_engineering_chat_session_runtime(
             ),
             tool_factory=evidence_factory,
         )
-        fallback_lightweight = LightweightProviderAttemptDependencies.create(
-            route=fallback_route,
-            configuration=fallback_provider_runtime.configuration,
-            session_authority=fallback_provider_runtime.session_authority,
-            model=fallback_model,
-            gateway_repository_ref=fallback_provider_runtime.gateway_repository_ref,
-            disclosure_boundary_ref=(
-                "lightweight-disclosure:"
-                + dispatch_budget.digest.value
-                + ":fallback"
-            ),
-            tool_factory=evidence_factory,
+        fallback_lightweight = (
+            LightweightProviderAttemptDependencies.create(
+                route=fallback_route,
+                configuration=fallback_provider_runtime.configuration,
+                session_authority=fallback_provider_runtime.session_authority,
+                model=fallback_model,
+                gateway_repository_ref=fallback_provider_runtime.gateway_repository_ref,
+                disclosure_boundary_ref=(
+                    "lightweight-disclosure:"
+                    + dispatch_budget.digest.value
+                    + ":fallback"
+                ),
+                tool_factory=evidence_factory,
+            )
+            if fallback_provider_runtime is not None and fallback_route is not None
+            else None
         )
         attempt_factory = LightweightEngineeringChatProviderAttemptFactory(
             plan=route_plan,
@@ -535,13 +550,17 @@ def prepare_engineering_chat_session_runtime(
                 f"engineering-agent-response-control:{primary_route.execution_profile_ref}@1"
             ),
         )
-        fallback_dependencies = fallback_provider_runtime.attempt_dependencies(
-            route=fallback_route,
-            tool_factory=evidence_factory,
-            response_control_factory=response_control_factory,
-            response_control_ref=(
-                f"engineering-agent-response-control:{fallback_route.execution_profile_ref}@1"
-            ),
+        fallback_dependencies = (
+            fallback_provider_runtime.attempt_dependencies(
+                route=fallback_route,
+                tool_factory=evidence_factory,
+                response_control_factory=response_control_factory,
+                response_control_ref=(
+                    f"engineering-agent-response-control:{fallback_route.execution_profile_ref}@1"
+                ),
+            )
+            if fallback_provider_runtime is not None and fallback_route is not None
+            else None
         )
         attempt_factory = EngineeringChatProviderAttemptFactory(
             plan=route_plan,
@@ -556,12 +575,18 @@ def prepare_engineering_chat_session_runtime(
         product_tree=product_tree,
         evidence_tools=evidence_tools,
         primary_configuration=primary_provider_runtime.configuration,
-        fallback_configuration=fallback_provider_runtime.configuration,
+        fallback_configuration=(
+            fallback_provider_runtime.configuration
+            if fallback_provider_runtime is not None
+            else None
+        ),
         primary_session_authority=(
             primary_provider_runtime.session_authority
         ),
         fallback_session_authority=(
             fallback_provider_runtime.session_authority
+            if fallback_provider_runtime is not None
+            else None
         ),
         route_plan=route_plan,
         attempt_factory=attempt_factory,
@@ -581,6 +606,8 @@ def prepare_engineering_chat_session_runtime(
         ),
         "fallback_provider_runtime_digest": (
             fallback_provider_runtime.digest.value
+            if fallback_provider_runtime is not None
+            else None
         ),
         "logical_turn_dispatch_budget_digest": (
             primary_logical_budget.digest.value
@@ -618,7 +645,11 @@ def prepare_engineering_chat_session_runtime(
         route_plan_digest=route_plan.digest,
         evidence_tool_factory_digest=evidence_factory.digest,
         primary_provider_runtime_digest=primary_provider_runtime.digest,
-        fallback_provider_runtime_digest=fallback_provider_runtime.digest,
+        fallback_provider_runtime_digest=(
+            fallback_provider_runtime.digest
+            if fallback_provider_runtime is not None
+            else None
+        ),
         logical_turn_dispatch_budget_digest=(
             primary_logical_budget.digest
             if primary_logical_budget is not None

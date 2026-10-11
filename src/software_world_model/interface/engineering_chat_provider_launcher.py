@@ -176,7 +176,7 @@ class EngineeringChatProviderAttemptFactory:
         plan: EngineeringProviderRoutePlan,
         evidence_tool_configuration_digest: Digest,
         primary: EngineeringChatProviderAttemptDependencies,
-        fallback: EngineeringChatProviderAttemptDependencies,
+        fallback: EngineeringChatProviderAttemptDependencies | None = None,
         work_state_repository: EngineeringAgentWorkStateRepository | None = None,
         loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         available_operations: Sequence[EngineeringAgentToolOperation] = (
@@ -186,21 +186,27 @@ class EngineeringChatProviderAttemptFactory:
         operations = tuple(available_operations)
         if (
             primary.digest != _attempt_dependencies_digest(primary)
-            or fallback.digest != _attempt_dependencies_digest(fallback)
+            or fallback is not None
+            and fallback.digest != _attempt_dependencies_digest(fallback)
             or primary.route_spec_digest != plan.routes[0].digest
-            or fallback.route_spec_digest != plan.routes[1].digest
-            or primary.model_boundary_ref == fallback.model_boundary_ref
-            or primary.model_gateway_repository_ref
-            == fallback.model_gateway_repository_ref
-            or primary.disclosure_authorizer_ref
-            == fallback.disclosure_authorizer_ref
-            or primary.driver is fallback.driver
-            or primary.reviewer is fallback.reviewer
+            or fallback is not None
+            and (
+                len(plan.routes) < 2
+                or fallback.route_spec_digest != plan.routes[1].digest
+                or primary.model_boundary_ref == fallback.model_boundary_ref
+                or primary.model_gateway_repository_ref
+                == fallback.model_gateway_repository_ref
+                or primary.disclosure_authorizer_ref
+                == fallback.disclosure_authorizer_ref
+                or primary.driver is fallback.driver
+                or primary.reviewer is fallback.reviewer
+            )
+            or fallback is None and len(plan.routes) != 1
             or operations != ENGINEERING_CHAT_PROVIDER_OPERATIONS
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "attempt factory requires distinct exact execution-profile boundaries",
+                "attempt factory requires a valid preferred execution-profile boundary",
             )
         self.plan = plan
         self.evidence_tool_configuration_digest = (
@@ -226,7 +232,9 @@ class EngineeringChatProviderAttemptFactory:
                     evidence_tool_configuration_digest.value
                 ),
                 "primary_dependencies_digest": primary.digest.value,
-                "fallback_dependencies_digest": fallback.digest.value,
+                "fallback_dependencies_digest": (
+                    fallback.digest.value if fallback is not None else None
+                ),
                 "available_operations": tuple(item.value for item in operations),
                 "loop_limits": {
                     "maximum_agent_steps": loop_limits.maximum_agent_steps,
@@ -259,6 +267,11 @@ class EngineeringChatProviderAttemptFactory:
             if authority.role is EngineeringProviderRouteRole.PREFERRED
             else self.fallback
         )
+        if dependencies is None:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "fallback attempt is not prepared for this preferred-only session",
+            )
         if dependencies.route_spec_digest != authority.route_spec_digest:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
@@ -354,9 +367,9 @@ class EngineeringChatProviderLauncherReceipt:
     provider_route_ref: str
     route_plan_digest: Digest
     attempt_factory_digest: Digest
-    ordered_provider_types: tuple[str, str]
-    provider_configuration_digests: tuple[Digest, Digest]
-    session_disclosure_authority_digests: tuple[Digest, Digest]
+    ordered_provider_types: tuple[str, ...]
+    provider_configuration_digests: tuple[Digest, ...]
+    session_disclosure_authority_digests: tuple[Digest, ...]
     fixed_origin: str
     maximum_turns: int
     maximum_dispatches_per_turn: int
@@ -431,9 +444,9 @@ def prepare_engineering_chat_provider_launcher(
     product_tree: str,
     evidence_tools: EngineeringAgentEvidenceToolConfiguration,
     primary_configuration: EngineeringAgentModelConfiguration,
-    fallback_configuration: EngineeringAgentModelConfiguration,
+    fallback_configuration: EngineeringAgentModelConfiguration | None,
     primary_session_authority: EngineeringAgentSessionDisclosureAuthority,
-    fallback_session_authority: EngineeringAgentSessionDisclosureAuthority,
+    fallback_session_authority: EngineeringAgentSessionDisclosureAuthority | None,
     route_plan: EngineeringProviderRoutePlan,
     attempt_factory: EngineeringChatProviderAttemptFactoryPort,
     checked_at: datetime,
@@ -477,7 +490,8 @@ def prepare_engineering_chat_provider_launcher(
         or evidence_tools.source_profile_ref != binding.source_profile_ref
         or evidence_tools.provider_disclosure_policy
         != primary_configuration.provider_disclosure_policy_ref
-        or evidence_tools.provider_disclosure_policy
+        or fallback_configuration is not None
+        and evidence_tools.provider_disclosure_policy
         != fallback_configuration.provider_disclosure_policy_ref
         or "src/main/resources" not in binding.excluded_source_paths
         or "src/main/resources" not in evidence_tools.excluded_source_paths
@@ -486,8 +500,21 @@ def prepare_engineering_chat_provider_launcher(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "fixed Provider launcher evidence boundary drifted",
         )
-    configurations = (primary_configuration, fallback_configuration)
-    authorities = (primary_session_authority, fallback_session_authority)
+    configurations = (
+        (primary_configuration, fallback_configuration)
+        if fallback_configuration is not None
+        else (primary_configuration,)
+    )
+    authorities = (
+        (primary_session_authority, fallback_session_authority)
+        if fallback_session_authority is not None
+        else (primary_session_authority,)
+    )
+    if (fallback_configuration is None) != (fallback_session_authority is None):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "fallback configuration and disclosure authority must be paired",
+        )
     for route, configuration, authority in zip(
         route_plan.routes, configurations, authorities, strict=True
     ):
@@ -564,7 +591,7 @@ def prepare_engineering_chat_provider_launcher(
         "fixed_origin": ENGINEERING_CHAT_LOOPBACK_ORIGIN,
         "maximum_turns": required_conversation_turns,
         "maximum_dispatches_per_turn": required_dispatches_per_turn,
-        "maximum_fallback_attempts_per_turn": 1,
+        "maximum_fallback_attempts_per_turn": route_plan.maximum_fallback_attempts,
         "blocking_gaps": ENGINEERING_CHAT_PROVIDER_LAUNCHER_BLOCKING_GAPS,
         "ready_for_live": False,
         "listener_started": False,
@@ -586,18 +613,13 @@ def prepare_engineering_chat_provider_launcher(
         provider_route_ref=route_plan.provider_route_ref,
         route_plan_digest=route_plan.digest,
         attempt_factory_digest=attempt_factory.digest,
-        ordered_provider_types=(ordered_types[0], ordered_types[1]),
-        provider_configuration_digests=(
-            configuration_digests[0],
-            configuration_digests[1],
-        ),
-        session_disclosure_authority_digests=(
-            authority_digests[0], authority_digests[1]
-        ),
+        ordered_provider_types=ordered_types,
+        provider_configuration_digests=configuration_digests,
+        session_disclosure_authority_digests=authority_digests,
         fixed_origin=ENGINEERING_CHAT_LOOPBACK_ORIGIN,
         maximum_turns=required_conversation_turns,
         maximum_dispatches_per_turn=required_dispatches_per_turn,
-        maximum_fallback_attempts_per_turn=1,
+        maximum_fallback_attempts_per_turn=route_plan.maximum_fallback_attempts,
         blocking_gaps=ENGINEERING_CHAT_PROVIDER_LAUNCHER_BLOCKING_GAPS,
         ready_for_live=False,
         listener_started=False,

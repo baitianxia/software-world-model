@@ -115,7 +115,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
         plan: EngineeringProviderRoutePlan,
         evidence_tool_configuration_digest: Digest,
         primary: LightweightProviderAttemptDependencies,
-        fallback: LightweightProviderAttemptDependencies,
+        fallback: LightweightProviderAttemptDependencies | None = None,
         dispatch_budget_digest: Digest,
         capability_cognition: CapabilityCognitionIndex | None = None,
         loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
@@ -123,11 +123,16 @@ class LightweightEngineeringChatProviderAttemptFactory:
     ) -> None:
         if (
             primary.route_spec_digest != plan.routes[0].digest
-            or fallback.route_spec_digest != plan.routes[1].digest
-            or primary.model is fallback.model
-            or primary.model_boundary_ref == fallback.model_boundary_ref
-            or primary.gateway_repository_ref == fallback.gateway_repository_ref
-            or primary.disclosure_boundary_ref == fallback.disclosure_boundary_ref
+            or fallback is not None
+            and (
+                len(plan.routes) < 2
+                or fallback.route_spec_digest != plan.routes[1].digest
+                or primary.model is fallback.model
+                or primary.model_boundary_ref == fallback.model_boundary_ref
+                or primary.gateway_repository_ref == fallback.gateway_repository_ref
+                or primary.disclosure_boundary_ref == fallback.disclosure_boundary_ref
+            )
+            or fallback is None and len(plan.routes) != 1
             or (
                 capability_cognition is not None
                 and not isinstance(capability_cognition, CapabilityCognitionIndex)
@@ -135,7 +140,7 @@ class LightweightEngineeringChatProviderAttemptFactory:
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "lightweight attempt factory requires two distinct exact routes",
+                "lightweight attempt factory requires a valid preferred route",
             )
         self.plan = plan
         self.evidence_tool_configuration_digest = evidence_tool_configuration_digest
@@ -160,7 +165,9 @@ class LightweightEngineeringChatProviderAttemptFactory:
                     evidence_tool_configuration_digest.value
                 ),
                 "primary_dependencies_digest": primary.digest.value,
-                "fallback_dependencies_digest": fallback.digest.value,
+                "fallback_dependencies_digest": (
+                    fallback.digest.value if fallback is not None else None
+                ),
                 "dispatch_budget_digest": dispatch_budget_digest.value,
                 "operations": tuple(item.value for item in self.available_operations),
                 "cognition_operations": (
@@ -197,6 +204,11 @@ class LightweightEngineeringChatProviderAttemptFactory:
             if authority.role is EngineeringProviderRouteRole.PREFERRED
             else self.fallback
         )
+        if dependencies is None:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "fallback attempt is not prepared for this preferred-only session",
+            )
         if dependencies.route_spec_digest != authority.route_spec_digest:
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,

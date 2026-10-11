@@ -15,6 +15,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRouteSpec,
     SealedExecutionProfileAvailabilityBoundary,
     engineering_agent_execution_profile_route_ref,
+    engineering_agent_preferred_execution_profile_route_ref,
 )
 from software_world_model.application_services.engineering_conversation import (
     ConversationMessageKind,
@@ -182,6 +183,38 @@ def _binding_and_plan(
     )
 
 
+def _preferred_only_binding_and_plan():
+    preferred_digest = _profile_digest("virtual-model-a")
+    route_ref = engineering_agent_preferred_execution_profile_route_ref(
+        preferred_execution_profile_ref=_PREFERRED_PROFILE_REF,
+        preferred_execution_profile_digest=preferred_digest,
+    )
+    binding = EngineeringChatBinding.create(
+        product_revision="a" * 40,
+        project_name="mall",
+        repository_revision="b" * 40,
+        world_model_status=RuntimeCapabilityStatus.READY,
+        world_model_authority_digest=digest_of("world-model"),
+        source_profile_ref="mall-source-profile@1",
+        source_access_status=RuntimeCapabilityStatus.READY,
+        provider_status=RuntimeCapabilityStatus.READY,
+        provider_route_ref=route_ref,
+        known_limitations=("Preferred-only experimental route",),
+    )
+    preferred = EngineeringProviderRouteSpec.create(
+        ordinal=1,
+        role=EngineeringProviderRouteRole.PREFERRED,
+        execution_profile_ref=_PREFERRED_PROFILE_REF,
+        execution_profile_digest=preferred_digest,
+        session_disclosure_authority_digest=digest_of("preferred-session"),
+        maximum_dispatches_per_turn=15,
+    )
+    return binding, EngineeringProviderRoutePlan.create(
+        binding=binding,
+        preferred=preferred,
+    )
+
+
 def _failure(
     request,
     *,
@@ -327,6 +360,38 @@ def _preferred_failure(
 
 
 class ConversationalEngineeringRoutingTests(unittest.TestCase):
+    def test_preferred_only_route_executes_without_constructing_fallback(self) -> None:
+        binding, plan = _preferred_only_binding_and_plan()
+        factory = _Factory(
+            {
+                EngineeringProviderRouteRole.PREFERRED: lambda request: _success(
+                    request,
+                    label="preferred-only",
+                    dispatches=1,
+                    receipt_ref="preferred-only-success",
+                ),
+                EngineeringProviderRouteRole.FALLBACK: lambda request: self.fail(
+                    "preferred-only route must not construct a fallback"
+                ),
+            }
+        )
+        router = ApplicationOwnedEngineeringProviderRouter(
+            plan=plan,
+            attempt_factory=factory,
+            id_generator=SequentialIdGenerator(),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=router,
+            id_generator=SequentialIdGenerator(),
+        )
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.SUCCEEDED)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 0)
+        self.assertEqual(len(plan.routes), 1)
+        self.assertEqual(len(factory.authorities), 1)
+
     def test_attempt_authority_binds_public_source_standing_parent(self) -> None:
         factory = _Factory(
             {
