@@ -25,7 +25,7 @@ Route-0 的运行时组合把“备用路径已构造”误当成“首选路径
 - `EngineeringProviderRoutePlan`、Provider attempt factory、Launcher 和 Session runtime 过去都强制要求两条 route。
 - Router 只有在首选执行失败且收到可信不可用判定后才会创建备用 attempt；首选成功时不会创建备用 attempt。
 - 新增 preferred-only route composition：只保留首选 route，首选成功时不创建备用 authority 或 attempt；首选失败时保持失败关闭，不伪造备用模型。
-- 定向 `tests.test_conversational_engineering_routing`：21/21 PASS。
+- 定向 `tests.test_conversational_engineering_routing`：22/22 PASS。
 
 ## Decision / Disposition
 

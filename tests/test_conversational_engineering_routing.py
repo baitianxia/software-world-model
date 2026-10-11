@@ -392,6 +392,44 @@ class ConversationalEngineeringRoutingTests(unittest.TestCase):
         self.assertEqual(len(plan.routes), 1)
         self.assertEqual(len(factory.authorities), 1)
 
+    def test_preferred_only_unavailable_fails_closed_without_fallback_verdict(self) -> None:
+        boundary = _SealingAvailabilityBoundary()
+        factory = _Factory(
+            {
+                EngineeringProviderRouteRole.PREFERRED: lambda request: _failure(
+                    request,
+                    code="PROFILE_TEMPORARILY_UNAVAILABLE",
+                    classification=(
+                        EngineeringProviderFailureClassification.PROVIDER_UNAVAILABLE
+                    ),
+                    dispatches=0,
+                    receipt_ref="preferred-only-unavailable",
+                ),
+                EngineeringProviderRouteRole.FALLBACK: lambda request: self.fail(
+                    "preferred-only unavailable route must remain fail-closed"
+                ),
+            }
+        )
+        binding, plan = _preferred_only_binding_and_plan()
+        router = ApplicationOwnedEngineeringProviderRouter(
+            plan=plan,
+            attempt_factory=factory,
+            availability_boundary=boundary,
+            id_generator=SequentialIdGenerator(),
+        )
+        service = InMemoryEngineeringConversationService(
+            binding,
+            turn_executor=router,
+            id_generator=SequentialIdGenerator(),
+        )
+        submission = _submit(service)
+
+        self.assertEqual(submission.turn.state, ConversationTurnState.FAILED)
+        self.assertEqual(submission.turn.fallback_provider_attempt_count, 0)
+        self.assertIsNone(submission.turn.provider_availability_verdict_ref)
+        self.assertEqual(len(factory.authorities), 1)
+        self.assertEqual(boundary.calls, [])
+
     def test_attempt_authority_binds_public_source_standing_parent(self) -> None:
         factory = _Factory(
             {
