@@ -261,6 +261,15 @@ class LightweightEngineeringModelTest(unittest.TestCase):
             "lexical over source-derived identifiers and statements",
             step_system_prompt,
         )
+        self.assertIn(
+            "no evidence source has a required first position",
+            step_system_prompt,
+        )
+        self.assertIn(
+            "move between cognition and Source as observations expose gaps",
+            step_system_prompt,
+        )
+        self.assertNotIn("start with SEARCH_COGNITION", step_system_prompt)
         self.assertIn("interface or supertype", step_system_prompt)
         self.assertIn("one identifier or one exact phrase", step_system_prompt)
         self.assertIn("never concatenate separate search terms", step_system_prompt)

@@ -4628,6 +4628,15 @@
       "tests/test_engineering_chat_browser.py"
     ]
   },
+  "FINDING-010-294": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-294.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure/lightweight_engineering_model.py"
+    ],
+    "tests": [
+      "tests/test_lightweight_engineering_model.py"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
