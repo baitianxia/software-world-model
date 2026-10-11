@@ -47,6 +47,9 @@ operational_sequence_status: index-and-history-only
 
 `AUTHORIZED / REWORK / CAPABILITY-SEPARATED RECOVERY ACTIVE / STANDING SCOPE ACTIVE / NON-PRODUCTION`。
 
+本页记录迭代的既有授权和产品范围，不代表当前会话已经恢复执行；本轮是否启动产品开发只以
+`docs/project/current.md` 的“本轮工作范围”和用户最新指令为准。历史授权、门禁通过或本页的 `AUTHORIZED` 字段不会自动恢复开发。
+
 当前唯一执行决定是 [PDR-014](decisions/PDR-014-capability-separated-agent-and-world-model-recovery.md)。产品目标与 PDR-012 的 standing
 authority 不变；PDR-014 保留目标、边界和历史恢复依据，不再定义当前任务顺序。当前任务、用户结果、失败出口和下一动作只由
 [`EXECUTION-PLAN-CURRENT.md`](development-design/EXECUTION-PLAN-CURRENT.md) 定义。

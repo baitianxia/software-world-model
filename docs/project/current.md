@@ -7,10 +7,10 @@ owners: [project]
 depends_on: [PROJECT-GOVERNANCE-ITERATION-LIFECYCLE, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION, ROADMAP-M-002, ITER-010-INDEX, ITER-010-SLICE-001, ITER-010-PDR-012, ITER-010-PDR-014, FINDING-010-256, FINDING-010-257, FINDING-010-260, FINDING-010-261, FINDING-010-262, FINDING-010-263, FINDING-010-264, FINDING-010-265, FINDING-010-266, FINDING-010-269, FINDING-010-270, FINDING-010-273, FINDING-010-274, FINDING-010-275, FINDING-010-276, FINDING-010-277, FINDING-010-278, FINDING-010-279, FINDING-010-280, FINDING-010-281, FINDING-010-282, FINDING-010-283, SYS-ADR-018]
 code: []
 tests: []
-as_of: 2026-10-07
+as_of: 2026-10-11
 active_iteration: ITER-010-INDEX
 active_slice: ITER-010-SLICE-001
-worktree_status: clean-baseline-with-archived-candidate
+worktree_status: documentation-candidate-dirty
 strategy_relation: dual-core-world-model-cognition-and-conversational-lead-engineering-agent
 live_model_path: preferred-execution-profile-first-fallback-only-on-trusted-unavailability
 plan_revision_ref: ITER-010-PDR-012
@@ -34,20 +34,27 @@ next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 ITER-010-EXECUTION-PLAN-CURRENT` 才是唯一的开发顺序和当前任务来源。Proposal、Readiness、Verification、PDR
 正文中的旧阶段、旧运行记录和旧协议只能作为历史证据，不能生成新的任务顺序或前置门槛。
 
+状态只保留一套机器控制：Manifest 的 `plan_execution_control.current_action`、`locks` 和授权布尔值；本页的
+`next_action`、`next_action_case_id` 与任务计划中的 `current_task` 是该控制的必要镜像，不是第二套开关。不开新建
+`execution_mode`、状态转换表或监督状态；本轮只维护文档，不改变当前 action 的授权范围。
+迭代总索引中的旧状态行仅作历史导航，不是当前状态来源；当前状态以本页、引用的执行计划和对应 Manifest 为准。
+
 ITER-010 的产品目标和总体架构不变，但任务拆分已改为面向用户价值的单一纵向主线。Git 投入审计证明过去 186 个提交主要增长了回答、审核
 和输出协议，知识引擎没有获得相称投入；因此不得继续把旧模型边界、正文证明协议或逐题修复当作产品主线。
 
-当前唯一任务仍是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`；当前尚未形成可交付的产品体验，但开发输入已经对齐，可以进入该任务。在一个真实精确版本工程上同时贯通最小软件世界模型、Provider 透明 Agent、源码补证、
+当前保留的唯一产品任务仍是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`，不是本轮文档修复的执行指令。恢复产品开发后，在一个真实精确版本工程上同时贯通最小软件世界模型、Provider 透明 Agent、源码补证、
 自然答案、真实 Citation、fresh 独立复核和持续浏览器 Chat。它是方向体验出口，不冒充最终 MVP；必须先交付它，再进行异质问题判向和后续夯实。
 
 旧的 Phase A/B/C/D、C0/C1/C1.5/C2/C3/C4、N0/N1/N2/N3 只保留为历史或验收背景，不再作为当前任务顺序。当前执行顺序唯一见
 `ITER-010-EXECUTION-PLAN-CURRENT`。
 
+默认入口接入主 Agent、验证工程准备、Provider 现场验证和首条真实浏览器闭环属于该任务的实现或运行准备，不能倒置成开始实现的前提。
+
 历史 Proposal、PDR、Verification 和 Finding 中出现的箭头只记录当时的验证、归因或交付语境，不是当前运行时链路。当前运行时唯一有效的
 关系是 Agent 主导的可往返循环：世界模型与精确版本只读源码是并列证据路径，Reviewer 的缺口可以反馈回同一 Agent，Chat 负责承载和呈现结果。
 
 PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-014 只在其范围内替换执行路线。Manifest 中的
-`ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 因此仍保留身份，但不再代表旧协议循环。
+`ITER-010-ACTION-USER-DIRECTION-DECISION-001 / V-BROWSER-CHAT-MVP-BUILD-001` 保留为当前兼容 action 身份，不新增第二套执行游标。
 
 本轮讨论进一步明确运行分工：软件世界模型是指定版本工程的结构、关系、行为、边界、覆盖范围、来源和检索入口组成的系统认知，不是文字手册或
 答案库；Agent 负责理解问题、自适应选择认知和源码证据、组织答案及处理追问；模型负责推理与表达；源码是最终事实依据。World Model + source
@@ -61,13 +68,13 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 
 - 唯一开发分支：`codex/development`；唯一监督分支：`codex/supervision`；`main` 只接收已验收成果。
 - 其他本地开发分支全部转换为 `archive/branches/*` 标签后删除。旧临时工作树和 dirty candidate 只作恢复来源，不再作为开发或监督目标。
-- 当前 `codex/development` 已归档并建立干净基线（当前 HEAD）。原始候选变更保存在
+- 当前 `codex/development` 的 HEAD 是干净基线；当前工作树保留文档清理候选，尚未提交。原始候选变更保存在
   stash `654e1e6de26aa749850bddef7eeb5738287e5b4f`，被忽略的 `var/` 运行产物另存于 `/private/tmp/software-world-model-iter010-ignored-var-20261007.tar.gz`
   和 `/private/tmp/software-world-model-iter010-var-20261007`；它们只能作为恢复来源，不能作为当前开发或监督目标。
 - 内部实现可以并行，但只能由端到端结果合并验收；配置、Provider 收据、监督、定向测试和报告不再是浏览器体验的前置任务。
 - 最小可操作闭环形成后立即交付 loopback 地址、启动方式、精确版本、已知限制和可复现问题；不等待 Codex、全量回归、隐藏题或工程夯实。
 - 方向判定使用同一 Agent 的 source-only 与 World Model + source 两臂；只有方向成立后才进入多问题、多轮、Codex 比较和正式夯实。
-- `next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001` 是历史兼容的机器标识，不表示等待用户决定；在当前 standing scope 内，开发任务无需逐次授权，实际顺序只看 `TASK-1` 至 `TASK-4`。
+- `next_action: ITER-010-ACTION-USER-DIRECTION-DECISION-001` 是机器兼容标识，不表示等待用户决定；在当前 standing scope 内，开发任务无需逐次授权，实际顺序只看 `TASK-1` 至 `TASK-4`。
 - 普通失败按最早责任层修复：先区分 Source truth、World Model 认知、Agent 规划与工具使用、Evidence/Answer、Review 或 Web 呈现的偏差，
   再做一次通用修复；这些是诊断层次，不表示运行时必须按这个顺序执行，也不回写题面规则。
 
@@ -95,5 +102,4 @@ PDR-012 继续拥有可信 standing authority 和 Manifest 兼容 action；PDR-0
 Conversation、Turn、问题、候选、定向测试和外调不重复申请授权；每次外调仍自动生成 exact runtime record。只有私有/新 Source、新接收方
 或账户、扩大披露/预算、外部写入、非 loopback、Production 或破坏性操作才属于 scope delta。
 
-当前状态：`AUTHORIZED / NON-PRODUCTION`。当前执行入口、任务顺序和代码边界已经重新对齐；Provider 外调和浏览器体验仍需按
-当前任务的本地运行条件执行，不把历史收据当作本轮结果。
+持续授权范围：`AUTHORIZED / NON-PRODUCTION`。本轮工作范围是文档复核，未启动产品代码、Provider 外调或监督任务；后续开发仍需按当前任务的本地运行条件执行，不把历史收据当作本轮结果。

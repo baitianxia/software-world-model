@@ -30,6 +30,9 @@ product_goal_slice_gate_case_ids: [V-BROWSER-CHAT-MVP-BUILD-001, V-AGENT-FIRST-C
 [EXECUTION-PLAN-CURRENT.md](EXECUTION-PLAN-CURRENT.md)。历史四阶段、运行记录和旧验收顺序已移至
 [iteration-010-slice-001-history.md](../../../implementation-reference/iteration-010-slice-001-history.md)，不再作为编码输入。
 
+活动切片表示保留的产品范围，不表示当前会话已开始执行；是否恢复产品开发以
+`docs/project/current.md` 的本轮工作范围和用户最新指令为准。
+
 ## Product-goal contribution and cumulative integration
 
 在一个精确版本、只读的公开工程上，交付一个真实浏览器纵向闭环：用户问题和对话上下文进入 Agent；Agent 按需调用世界模型和源码；模型综合本轮证据生成自然答案；复核发现缺口时反馈同一 Agent；浏览器呈现答案和真实 Citation。

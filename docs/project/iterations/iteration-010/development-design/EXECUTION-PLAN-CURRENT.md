@@ -10,7 +10,7 @@ tests: []
 iteration: ITER-010
 slice: ITER-010-SLICE-001
 coding_input: true
-as_of: 2026-10-07
+as_of: 2026-10-11
 plan_shape: USER_VALUE_VERTICAL_SLICE@1
 task_count: 4
 current_task: TASK-1-MINIMUM-COMPLETE-EXPERIENCE
@@ -118,5 +118,4 @@ TASK-1 的最小端到端链，并交付新的用户可见结果。
 
 ## 6. 当前执行动作
 
-当前唯一动作是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。本轮修复后的代码与计划可进入该任务；先完成 Route-0 和第一条真实端到端
-体验，再决定是否扩展能力或进入夯实阶段。
+当前唯一动作是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`。本计划的 `current_task` 与 `current.md`、Manifest 兼容动作保持一致；恢复产品开发后先完成 Route-0 和第一条真实端到端体验。

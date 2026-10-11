@@ -41,8 +41,8 @@ Phase C ACTIVE、Reviewer 未激活和 Provider recovery 未激活的文字都�
 复用，full regression、hidden、跨工程和硬化仍不构成当前前置项。
 
 SLICE-001 是历史就绪材料，不是当前编码输入；当前工作区、开发分支和监督绑定目标以执行计划的声明为准。当前公开 mall exact
-revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效，因此 TASK-1 的产品代码和定向验证
-可以直接继续。PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-014、run-052/053 及
+revision、只读 Source、既有执行配置、披露、预算和 loopback evaluation 的 standing authority 仍有效；是否恢复 TASK-1 的产品代码和定向验证
+以 `docs/project/current.md` 的本轮工作范围和用户最新指令为准，不由本页自动触发。PDR-011 的历史失败 Result 已完成记录，不再是停工条件。已复核 Proposal、Manifest、Verification、SLICE-001、PDR-014、run-052/053 及
 run-074/075/076/077/078 trace、当前 System Contracts 与公开 mall exact revision；这些历史材料不重新构成当前任务前置条件。
 
 ## Outcome, scope and non-goals

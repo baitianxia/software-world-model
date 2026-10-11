@@ -10,7 +10,8 @@ Software World Model 把软件来源转化为可追溯、可审核、可复用�
 - 完整文档导航：[docs/README.md](docs/README.md)
 - Agent 阅读和回写规则：[AGENTS.md](AGENTS.md)
 
-Iteration 001 的 pre-Git 历史记录在本机体验范围给出完成裁决；提交 `476517b` 是其后的重构前仓库快照，不是原始运行身份。生产启用未执行。当前未提交工作区的 Strategy 实现与历史证明绑定的 `1.38.0` 不同，因此旧 Capability / Product 证明不能授权当前工作区，浏览器真实模型路径必须保持关闭。精确当前版本由代码拥有，状态只以 [current.md](docs/project/current.md) 及其引用的证据为准。
+Iteration 001 的 pre-Git 历史记录在本机体验范围给出完成裁决；提交 `476517b` 是其后的重构前仓库快照，不是原始运行身份。生产启用未执行。
+当前版本和工作树状态以 Git 实际状态为准；当前任务顺序以 [current.md](docs/project/current.md) 引用的执行计划为准，机器执行控制以对应 Iteration Manifest 为准，用户最新指令只改变当前工作范围。历史证明不代表当前候选已通过验证。
 
 ## 仓库目录
 
@@ -45,4 +46,5 @@ PYTHONPATH=src python3 -m software_world_model.interface.cli --help
 PYTHONPATH=src python3 -m software_world_model.interface.provider_cli status
 ```
 
-浏览器体验、证明绑定和失效后的处理方式见 Iteration 001 的结果记录。服务没有认证时只能绑定本机回环地址。
+当前浏览器工作入口见 [current.md](docs/project/current.md) 引用的执行计划；Iteration 001 的结果只作历史证据。
+默认浏览器入口接入主 Agent 是当前计划中的开发任务，不能把未连接的页面当作完整体验。服务没有认证时只能绑定本机回环地址。
