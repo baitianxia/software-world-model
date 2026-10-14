@@ -7809,6 +7809,18 @@
     "path": "docs/project/iterations/iteration-010/development-design/SLICE-003-formal-product-acceptance.md"
   },
   {
+    "id": "ITER-010-TASK-1-STEP-A",
+    "kind": "development-design",
+    "status": "current",
+    "authority": "current-development",
+    "owners": [
+      "engineering",
+      "architecture"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/development-design/TASK-1-STEP-A.md"
+  },
+  {
     "id": "ITER-010-VERIFICATION",
     "kind": "iteration-verification",
     "status": "current",

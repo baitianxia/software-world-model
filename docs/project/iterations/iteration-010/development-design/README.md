@@ -13,6 +13,8 @@ coding_input: true
 
 # ITER-010 Development Design
 
+- [TASK-1 步骤 A：只读源码组达到工具对等](TASK-1-STEP-A.md)（当前步骤，截止 2026-10-16）
+
 当前唯一活动设计是 [SLICE-001：世界模型与主工程 Agent 能力恢复](SLICE-001-engineering-qa-direction-preview.md)，其当前任务顺序唯一见
 [ITER-010 当前任务拆分计划](EXECUTION-PLAN-CURRENT.md)。PDR-014 的能力目标保留，但不再把知识构建、Agent harness、集成和浏览器拆成
 相互阻塞的内部阶段；它们必须在最小用户价值纵切中一起验证。

@@ -5989,6 +5989,15 @@
       "validation"
     ]
   },
+  "ITER-010-TASK-1-STEP-A": {
+    "path": "docs/project/iterations/iteration-010/development-design/TASK-1-STEP-A.md",
+    "code": [
+      "src/software_world_model/source_integration/exact_revision_tools.py"
+    ],
+    "tests": [
+      "tests/test_exact_revision_tools.py"
+    ]
+  },
   "ITER-011-SLICE-001": {
     "path": "docs/project/iterations/iteration-011/development-design/SLICE-001-answer-first-direction-probe.md",
     "code": [
