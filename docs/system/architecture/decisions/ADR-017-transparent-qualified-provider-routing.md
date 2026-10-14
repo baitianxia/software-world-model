@@ -8,6 +8,7 @@ authority_scope: execution-routing-decision-rationale
 owners: [architecture, ai, application, security, operations, quality]
 depends_on: [SYS-ADR-008]
 derived_from: [FINDING-010-092, FINDING-010-100, FINDING-010-101, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-236]
+amended_by: [SYS-ADR-020]
 code: [src/software_world_model/ai_infrastructure/model_gateway.py, src/software_world_model/ai_infrastructure/provider_http_failure_evidence.py, src/software_world_model/ai_infrastructure/model_egress_gateway.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/application_services/conversational_engineering_routing.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/infrastructure/sqlite_model_gateway_repository.py, src/software_world_model/interface/engineering_chat_browser.py, src/software_world_model/interface/engineering_chat_provider_launcher.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_qa_live.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/test_conversational_engineering_model.py, tests/test_conversational_engineering_routing.py, tests/test_engineering_chat_browser.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_provider_launcher.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_volcengine_ark_chat_adapter.py, tests/test_deepseek_chat_adapter.py, tests/test_engineering_qa_live.py, tests/test_engineering_qa_alpha_cli.py]
 ---
@@ -15,6 +16,8 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
 # ADR-017：对用户透明的合格执行配置有序路由
 
 > 范围说明：本文定义通用 route role、attempt 隔离、受信不可用裁决、零重试、失败关闭和持续授权边界。Provider/model/endpoint、HTTP 状态、字段、transport、receipt、预算和 admission plugin 的具体规则属于 Model Gateway/Provider Routing Contract 与 Operations；它们不能成为产品分支、默认 Chat 编排或顶层架构语义。
+
+> **ADR-020 amendment:** 本文的 route、preferred/fallback 和 attempt 术语自 ADR-020 起仅描述 Model Execution Runtime 内部策略。Application、Agent、Session、Response Control、Browser 和 UI 不再冻结、读取或投影这些术语；其唯一边界是 Provider-neutral ModelExecutionPort 的 logical request/result 与 opaque audit ref。
 
 ## Context
 
@@ -28,9 +31,9 @@ tests: [tests/test_model_gateway.py, tests/test_model_egress_gateway.py, tests/t
 
 ## Decision
 
-1. Engineering Session 在任何用户交互 dispatch 前，从 `SYS-ADR-019` 的有效 standing authority 或 exact human delta 冻结有序 route
-   `preferred → fallback`。产品、Agent 和 route branch 只能消费通用 route role、execution-profile ref/digest、顺序与受信 availability verdict；
-   不得读取 Provider/model 名称做分支、质量标准或故障分类。Session Authority 同时冻结每个 execution profile 各自的
+1. Model Execution Runtime 在任何用户交互 dispatch 前，从 `SYS-ADR-019` 的有效 standing authority 或 exact human delta 冻结内部有序候选
+   policy。产品、Agent、Session 和 route branch 只调用 ModelExecutionPort，不消费 route role、顺序或 availability verdict，也不得读取 Provider/model
+   名称做分支、质量标准或故障分类。Runtime Authority 同时冻结每个 execution profile 各自的
    Adapter/plugin、Provider/model、Configuration、current Conformance、Strategy Capability Qualification、endpoint、credential reference、
    disclosure/redaction scope、预算、transport policy 和 dispatch admission policy。这些具体身份只能出现在执行配置、资格、
    Adapter/plugin 实现和 runtime receipt 中。未预授权、identity 漂移或未满足已声明 admission policy 的 route 不可临时加入或发起外部连接。

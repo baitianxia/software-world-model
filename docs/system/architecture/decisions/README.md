@@ -40,7 +40,10 @@ ADR 解释为什么选择当前架构；规范正文唯一由 `SYS-ARCH-BASELINE
 | [ADR-017](ADR-017-transparent-qualified-provider-routing.md) | 以通用 `preferred → fallback` execution-profile route 和受信可用性裁决，对用户透明地处理真实执行配置不可用 |
 | [ADR-018](ADR-018-conversational-engineering-agent.md) | 软件世界模型提供持久认知，主工程 Agent 在受控工具和独立审核边界内承担语义多轮工程 Chat |
 | [ADR-019](ADR-019-public-source-standing-model-authority.md) | 公开开源 exact revision 与既定 Provider route 采用一次持续人工权威，由系统逐 Turn/调用派生 exact receipt |
+| [ADR-020](ADR-020-model-execution-boundary.md) | Provider 候选与容错由 Model Execution Runtime 独占，上层只依赖不透明逻辑执行端口 |
+| [ADR-021](ADR-021-cognition-advantage-and-agent-capability.md) | 认知表示与检索成为一等架构关注点；分级准入、只读工具对等、Turn Trace 与知识结晶、Reviewer 有界核验读取、回答路径收敛 |
 
 交付范围、暂停、某次运行实际选择哪个 Provider 和环境激活不改变长期架构选择，因此不进入当前 ADR 集合；Provider 路由协议本身由
 ADR-017 拥有。ADR-018 对 ADR-016 作部分修订：保留认知、来源、证据与审核底座，只替换固定多角色 Agent 本体。
-ADR-019 进一步区分一次性的人类边界决定与逐次机器控制记录；它不放宽 ADR-017 的 attempt 隔离、备用路线准入或模型调用审计。
+ADR-019 进一步区分一次性的人类边界决定与逐次机器控制记录；它不放宽 ADR-017 的 attempt 隔离、备用路线准入或模型调用审计。ADR-020 将 ADR-017
+的候选顺序和备用路线从 Application/Session 语义收回 Model Execution Runtime；保留其内部隔离、准入、零重试和失败关闭要求。ADR-021 部分修订 ADR-018：Turn 证据终态后转为非权威 Turn Trace，Reviewer 可做有界只读核验读取；主 Agent、证据分区与跨 Turn 不复用证据的原则不变。

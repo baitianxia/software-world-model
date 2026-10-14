@@ -12,6 +12,8 @@ iteration: ITER-010
 
 # ITER-010 Results
 
+- [架构评审 2026-10-14](architecture-review-2026-10-14.md)：基线 V1.4，结论 `FIT_WITH_ACTIONS`，动作排入 TASK-1 步骤 0/A/B/C。
+
 - [V-PLAN-RECOVERY-001 Result](v-plan-recovery-001.md)：一次性用户计划恢复入口以治理专用边界 PASS；可信父 runner 重放绑定两条 exact 用户消息，
   产品、模型、Provider、credential、TLS、HTTP 与 full regression 均为 0。它只恢复了独立采纳 PDR-010 的决策能力，没有形成、验证或解锁
   任何产品；当前完整体验开发权威来自 PDR-010 与 Manifest。

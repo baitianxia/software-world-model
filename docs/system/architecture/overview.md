@@ -58,13 +58,13 @@ flowchart LR
 
 - 软件来源、模型 Provider、交付 Adapter 和 Telemetry Backend 都是不可信外部边界。
 - 来源访问必须由 Source Integration 的 Broker/Worker 边界执行；主工程 Agent 只能提交由平台重新授权、编译的结构化 Proposal，Reviewer
-  不能执行任何来源或平台工具。
+  只能经同一边界做有界只读核验读取（V1.4），不能执行其他来源或平台工具。
 - Provider 响应只能形成 Proposal 或受控验证输入，必须由领域所有者校验。
 - Direct Investigation 的 Evidence Packet 是任务级固定输入，不是正式知识；World Model Query 的答案 worker 只读取 exact Snapshot/Read Set
   的 no-payload Read Bundle 和只读 View。默认 Engineering Conversation 从 exact Snapshot 形成 World Model Cognition，并由同一逻辑主工程
   Agent 持续理解对话、查询认知、经 Broker/Worker 在 exact revision 受控取证、观察后重规划和综合回答。每个候选答案仍密封含
-  `support/citation` 与 `boundary/audit` 分区的 Question Evidence Package；Reviewer 只读当前 Turn、受信对话上下文、Package 与 Draft，
-  具体 Finding 返回主 Agent 新工作 Revision。Citation 展示不得回流答案链。显式用例身份不能静默切换。
+  `support/citation` 与 `boundary/audit` 分区的 Question Evidence Package；Reviewer 只读当前 Turn、受信对话上下文、Package、Draft 与自身核验读取结果，
+  具体 Finding 返回主 Agent 新工作 Revision；Turn 终态后证据转为非权威 Turn Trace（V1.4）。Citation 展示不得回流答案链。显式用例身份不能静默切换。
 - 当前系统规范不等于部署授权；任何环境启用都需要与 exact subject 匹配的独立证据和显式授权。
 
 ## 演进方式

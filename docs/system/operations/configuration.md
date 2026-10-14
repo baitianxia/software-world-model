@@ -4,13 +4,16 @@ kind: system-operations
 status: current
 authority: operational
 owners: [operations, ai]
-depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ADR-017, SYS-ADR-018, SYS-ADR-019, SYS-ADR-020, SYS-CONTRACT-AI-MODEL-GATEWAY, SYS-CONTRACT-APPLICATION-ENGINEERING-CONVERSATION, SYS-QUALITY-SECURITY]
 derived_from: [FINDING-010-029, FINDING-010-103, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-179, FINDING-010-219, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-272]
 code: [src/software_world_model/ai_infrastructure/volcengine_ark_chat_adapter.py, src/software_world_model/ai_infrastructure/deepseek_chat_adapter.py, src/software_world_model/ai_infrastructure/conversational_engineering_model.py, src/software_world_model/application_services/deepseek_dispatch_admission.py, src/software_world_model/interface/provider_cli.py, src/software_world_model/interface/engineering_chat_candidate.py, src/software_world_model/interface/engineering_chat_provider_runtime.py, src/software_world_model/interface/engineering_chat_session_runtime.py, src/software_world_model/interface/engineering_chat_session_artifact.py, src/software_world_model/interface/engineering_chat_alpha_cli.py, src/software_world_model/interface/engineering_qa_alpha_cli.py]
 tests: [tests/test_volcengine_ark_chat_adapter.py, tests/test_ark_chat_conformance.py, tests/test_deepseek_chat_adapter.py, tests/test_deepseek_chat_conformance.py, tests/test_conversational_engineering_model.py, tests/test_deepseek_dispatch_admission.py, tests/test_engineering_chat_candidate.py, tests/test_engineering_chat_provider_runtime.py, tests/test_engineering_chat_session_artifact.py, tests/test_engineering_chat_alpha_cli.py, tests/test_engineering_qa_alpha_cli.py]
 ---
 
 # 非敏感模型配置
+
+本文是 Model Execution Runtime 的私有运行配置，不是 Application、Agent、Conversation、Session artifact、Browser 或 UI 的输入契约。表中的
+`preferred`、`fallback`、Provider、模型和连接策略只由运行时内部读取并写入内部审计；上层只看到通用 logical execution result 和不透明 audit ref。
 
 两个已登记的非敏感 Provider 配置为：
 

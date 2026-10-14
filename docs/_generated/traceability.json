@@ -5757,6 +5757,17 @@
       "tests/test_iteration_010_mvp_value_gate.py"
     ]
   },
+  "ITER-010-PDR-015": {
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-015-gate-simplification-and-architecture-v14-cutover.md",
+    "code": [
+      "scripts/docs.py",
+      "scripts/plan_gate.py"
+    ],
+    "tests": [
+      "tests/test_docs_gate.py",
+      "tests/test_plan_gate.py"
+    ]
+  },
   "ITER-010-RESULT-SLICE-001-STOP-REDIRECT": {
     "path": "docs/project/iterations/iteration-010/results/slice-001-stop-redirect.md",
     "code": [

@@ -14,6 +14,8 @@ tests: [tests/test_conversational_engineering_agent.py, tests/test_conversationa
 
 # ADR-018：世界模型增强的对话式主工程 Agent
 
+> 部分由 [ADR-021](ADR-021-cognition-advantage-and-agent-capability.md) 修订：Turn 证据终态后转为非权威 Turn Trace（不再释放），Reviewer 可经 Broker 做有界只读核验读取。其余决定不变。
+
 ## Context
 
 软件世界模型始终是软件在精确版本和上下文上的持久、版本化、可验证、可更新外部认知。现有

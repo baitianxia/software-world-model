@@ -73,7 +73,7 @@ Git Commit 是仓库内代码和文档的一致基线。Iteration Manifest 固�
 
 `python3 scripts/docs.py check` 检查元数据、ID 唯一性、依赖、System→Project 越界链接、代码/测试引用、Roadmap 权威、活动 Iteration/Slice
 授权闭包、Manifest 唯一长运行 action、Current 镜像、交接后继、未替换模板输入、Finding disposition 和完成验收，并验证生成索引没有漂移。
-`python3 scripts/plan_gate.py diff --base <trusted-base-ref>` 另用 base plan 检查候选 diff、Result 和单步迁移，防止候选树修改自己的白名单。
+`python3 scripts/plan_gate.py diff --base <trusted-base-ref>` 另用 base 动作检查候选 diff 的路径允许/禁止、门禁文件只能在 governance 动作下修改，以及是否新增明显密钥，防止候选树修改自己的白名单（2026-10-14 起不再检查 Result 封存与迭代状态机，见 ITER-010-PDR-015）。
 两套门禁绕过分别用 `tests/test_docs_gate.py` 与 `tests/test_plan_gate.py` 固化；CI 必须同时执行。
 
 上述检查目前不替代架构语义差分。架构基线的章节、关键概念、组件关系和架构图保留情况，必须由独立架构变更动作核对；普通产品 action 不得以文档检查通过作为修改 System 的依据。

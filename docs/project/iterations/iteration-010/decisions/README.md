@@ -4,7 +4,7 @@ kind: project-decision-index
 status: current
 authority: project
 owners: [project]
-depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, ITER-010-PDR-013, ITER-010-PDR-014]
+depends_on: [ITER-010-PDR-001, ITER-010-PDR-002, ITER-010-PDR-003, ITER-010-PDR-004, ITER-010-PDR-005, ITER-010-PDR-006, ITER-010-PDR-007, ITER-010-PDR-008, ITER-010-PDR-009, ITER-010-PDR-010, ITER-010-PDR-011, ITER-010-PDR-012, ITER-010-PDR-013, ITER-010-PDR-014, ITER-010-PDR-015]
 code: []
 tests: []
 iteration: ITER-010
@@ -26,3 +26,4 @@ iteration: ITER-010
 - [PDR-012：恢复以产品目标为中心的持续浏览器 Chat 开发（当前可信计划版本）](PDR-012-product-first-continuous-browser-chat-build.md)
 - [PDR-013：终止协议扩张和逐题修补，切换到 Agent 优先的产品收敛（已由 PDR-014 取代）](PDR-013-agent-first-convergence-cutover.md)
 - [PDR-014：按世界模型、Agent 和产品增益分层恢复 ITER-010（当前执行决定）](PDR-014-capability-separated-agent-and-world-model-recovery.md)
+- [PDR-015：门禁瘦身与架构 V1.4 治理切换](PDR-015-gate-simplification-and-architecture-v14-cutover.md)

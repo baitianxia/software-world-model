@@ -6,8 +6,8 @@ authority: normative
 semantic_owner: SYS-ARCH-BASELINE
 authority_scope: top-level-architecture
 owners: [architecture]
-depends_on: [SYS-PRODUCT-VISION, SYS-ADR-018]
-derived_from: [SYS-ADR-018, SYS-ADR-005, SYS-ADR-006, SYS-ADR-010]
+depends_on: [SYS-PRODUCT-VISION, SYS-ADR-018, SYS-ADR-021]
+derived_from: [SYS-ADR-018, SYS-ADR-005, SYS-ADR-006, SYS-ADR-010, SYS-ADR-021]
 code: [src/software_world_model]
 tests: [tests]
 ---
@@ -16,7 +16,7 @@ tests: [tests]
 
 # Software World Model 平台概要架构设计
 
-**版本：V1.3**  
+**版本：V1.4**
 **文档状态：概要架构基线**  
 **架构形态：模块化单体**
 
@@ -87,6 +87,9 @@ tests: [tests]
 | Knowledge Sufficiency Assessment | 独立判断固定 Snapshot 中的正式知识是否逐项满足某版 Knowledge Requirement 的结果 |
 | Build Intent | 平台根据更新目标、输入绑定、可用能力和发布条件规范化并冻结的知识构建契约 |
 | Capability Strategy | 某项能力的确定性、模型主导或混合实现方式 |
+| Cognition Retrieval Projection | 绑定 KnowledgeScope、Snapshot 和 Knowledge Schema，为 Agent 提供混合检索的可重建认知投影；不是知识来源（V1.4 新增） |
+| Turn Trace | 当前 Turn 终态后按保留策略保存的 Evidence Ledger、Question Evidence Package、Draft 与 Review 记录；非权威，不能成为后续 Turn 的证据或 Agent 输入（V1.4 新增） |
+| Knowledge Crystallization | 从已审核 Turn Trace 提议、经 Knowledge Update 重新读取来源后形成正式知识的过程（V1.4 新增） |
 | Platform Telemetry & Cost Governance | 关联平台运行轨迹、用量、成本和预算的横切能力，不是业务模块或正式知识来源 |
 
 ## 2. 建设背景、系统定位与架构驱动
@@ -304,6 +307,8 @@ Knowledge Schema 与 Snapshot 一同版本化。Schema 变化只能通过受控�
 
 一次性计划、搜索线索、模型思考状态和回答文本不进入软件世界模型。
 
+（V1.4 新增）真实任务的复用价值通过 Turn Trace 与 Knowledge Crystallization 回流：平台可以从已审核 Turn 中识别值得沉淀的认知，但沉淀必须经 Knowledge Update 重新读取来源、形成 Candidate 并准入发布（第 8.5 节），Turn Trace 正文本身永远不是正式知识。
+
 ### 4.9 正式知识单路径
 
 正式 `Knowledge Use` 的软件知识答案只使用已发布的正式知识。知识不足时可以触发 Knowledge Update，但来源调查结果必须完成 Evidence、Candidate、知识验证和 Snapshot 发布后才能进入正式知识路径。
@@ -319,6 +324,14 @@ Knowledge Schema 与 Snapshot 一同版本化。Schema 变化只能通过受控�
 架构只为已经纳入系统的能力和明确不变量增加对象、状态与协调机制，不为假设中的未来规模预建模块、表、状态机、分布式协议或空服务。当前条件下优先采用模块化单体内的局部事务、幂等、失败关闭和直接权威读取。
 
 可扩展性通过稳定 Contract、Provider / Strategy SPI、版本化引用和清晰所有权获得，而不是通过提前实现全部可能能力获得。未来能力只在本架构中保留启用条件和不得突破的不变量；条件出现后先完成相应详细设计或 ADR，再以新 Strategy 或新模块扩展，不能把占位实现解释成已经完成设计。
+
+### 4.12 认知优势优先（V1.4 新增）
+
+可信控制是世界模型的必要条件，不是它的价值来源。世界模型必须证明：同一 Agent 使用它时，答案比只读来源更正确、更完整或更省成本。由此：
+
+- 认知投资优先放在提问时现场推导昂贵或不可能的知识上，例如跨文件调用与数据路径、全库聚合与统计、模块职责与能力地图、多来源联合（代码与配置、部署、运行记录）和演化历史；单个文件即可直接读到的内容不是优先构建对象。
+- 每个认知层都必须能在评测与归因 Profile 中单独度量其对答案的贡献（第 6.10 节）；没有可度量贡献的层不作为扩展优先项。
+- 管控约束的是权威、权限和副作用，不是 Agent 的认知能力。对公开、exact revision、只读的来源，Agent 的读取能力不得低于对照基线（第 7.7 节工具对等）；高风险来源仍可按 Source 边界收紧。
 
 ## 5. 总体架构概览
 
@@ -456,6 +469,15 @@ Fact 与 Inference 的区别取决于认知性质和支持关系，不取决于�
 
 只有完成准入的 Entity、Fact 和 Inference 才能进入 Snapshot、Semantic View 和正常 Knowledge Use。生成方不能同时拥有正式身份分配、准入和发布权。
 
+（V1.4 新增）知识准入分为两条通道，二者都必须经过 Candidate、Knowledge Verifier 准入和 Snapshot Publication：
+
+| 准入通道 | 适用 Candidate | Verifier 职责 |
+|---|---|---|
+| 确定性通道 | 已激活确定性抽取 Strategy（如语言解析器、构建描述解析）产出、带精确来源锚点的 Entity 与 Fact | 机械核验 Schema 合法性、锚点可在 exact Artifact 上复现、抽取 Strategy 身份与激活依据，并按 Strategy 资格要求抽样重放；不做模型语义审核 |
+| 模型通道 | 模型提出或模型参与形成的 Fact、Inference 与语义身份 | 从权威输入重建依据，进行独立语义审核 |
+
+确定性通道降低的是审核方式的成本，不是准入要求：抽取 Strategy 不能自证结果正确，Verifier 仍独立于生成方。默认 Engineering Chat 中计为“世界模型认知”的内容必须来自已发布 Snapshot；直接从源码构建、未经准入发布的索引只能作为来源导航，按来源观察计入。
+
 知识准入的严格性表示每个正式命题都必须有合法支持和明确上下文，不表示 Snapshot 必须不存在分歧。来自存在分歧来源、可分别复核的独立 Fact 可以共同准入；它们的共存不构成正式冲突结论，只有完成准入的 Conflict Inference 才能表达冲突。
 
 ### 6.5 KnowledgeScope
@@ -538,6 +560,36 @@ Semantic View 可以同时组织 Entity、Fact 和 Inference：
 
 Environment、Version、Time 等属于 KnowledgeContext，不是额外 View。某个维度是否已经构建、覆盖、验收或可用于某个问题属于实现和契约状态，不能反向删减架构维度。所有 View 都是同一正式知识的可重建只读投影，不拥有第二套知识。
 
+### 6.10 认知表示与检索（V1.4 新增）
+
+本节定义世界模型以什么形态为 Agent 提供认知优势。字段、算法和存储选型仍属于详细设计。
+
+#### 认知分层
+
+| 层 | 典型内容 | 主要准入通道 | 对回答的价值 |
+|---|---|---|---|
+| L0 符号与结构 | 模块、包、文件、类型、方法、配置项、接口端点等身份与包含关系 | 确定性 | 精确定位，消除命名歧义 |
+| L1 关系 | 调用、继承/实现、导入、依赖、配置绑定、路由映射、持久化映射、消息收发 | 确定性为主，无法静态唯一解析时进入模型通道 | 跨文件导航，回答“谁调用谁、谁依赖谁” |
+| L2 行为路径 | 入口到主要协作者的可遍历路径，以及沿路径的条件、异常、状态读写和外部调用 | 确定性为主 | 回答“如何执行、在什么条件下变化” |
+| L3 职责与能力 | 模块/类型职责、能力地图、跨模块协作模式、配置对行为的影响 | 模型通道（Inference，必须锚定 L0—L2 正式前提） | 匹配用户期望的抽象层级，回答“系统做什么、怎么组织” |
+| L4 业务语义 | Business Entity、业务规则、技术实现与业务能力的映射 | 模型通道 | 跨系统业务理解 |
+
+每个成员都保留 exact revision/KnowledgeContext、来源锚点、Coverage 与 Unknown。L3/L4 的 Inference 不能替代其 L0—L2 前提；Agent 引用它们时，回答中的实质结论仍需由正式前提或当前 Turn 来源观察支持。
+
+#### 检索
+
+Cognition Retrieval Projection 为 Agent 提供混合检索：精确符号查找、名称与摘要上的字面/正则匹配、沿 L1/L2 关系的结构遍历与路径查询、以及对 L3/L4 已准入文本的语义相似检索。结果必须有界、排序，并携带命中成员的 Coverage 与 Unknown。投影绑定 Scope、Snapshot 和 Knowledge Schema，可丢弃、可重建；不可用时回退到权威主存的直接读取或明确返回不可用，不能返回过期 Snapshot 的结果。
+
+面向 Agent 的认知操作至少覆盖：概览（模块与能力地图）、搜索、关系遍历、路径查询和成员详情。操作名称属于 Contract。
+
+#### 增量构建
+
+Knowledge Update 可以以两个 exact revision 之间的变更集为输入：由来源锚点和正式依赖闭包计算受影响成员，只对其重新抽取、重验证；未受影响成员按 enrichment 语义继承。差量构建仍发布完整的新 Snapshot，不形成隐式 Delta，也不需要独立 Evolution Orchestrator。
+
+#### 语言与来源中立
+
+语言和来源专用抽取能力作为显式版本化 Strategy/Profile 在 Source 与 Knowledge 边界注册；认知分层、检索操作和 Agent 工具目录保持语言中立。
+
 ## 7. 逻辑组件架构
 
 ### 7.1 Interface Layer
@@ -556,10 +608,10 @@ Application Services 是入口无关的用例协调器集合：
 | Management | 管理 KnowledgeScope、Data Source、构建任务、配置、Capability Strategy 的资格、激活和生命周期 |
 | Knowledge Update | 协调来源获取、知识构建、准入和 Snapshot 发布 |
 | Knowledge Use | 管理固定 Snapshot Read Session，查询正式知识、依赖、上下文和 Semantic View，并执行独立 Knowledge Sufficiency Assessment |
-| Direct Evidence Answering | 在显式 `DIRECT_INVESTIGATION` Profile 下协调来源边界、密封 Evidence Packet 和独立答案审核；不写入 Snapshot |
-| World Model Query | 在显式 `WORLD_MODEL` Profile 下管理固定 Snapshot Read Session、查询完整性和独立答案审核；不访问 Source |
-| Engineering Conversation | 管理多轮 Turn、对话/工作状态、主 Agent 的 World Model Cognition 与 Source 观察组合、当前 Turn Evidence 和答案审核 |
-| Knowledge Maintenance Task | 接收当前 Turn 发现的可持久知识冲突，去重并把维护请求交给 Knowledge Update；不保存完整答案或当前 Turn 证据正文 |
+| Direct Evidence Answering | 在显式 `DIRECT_INVESTIGATION` Profile 下协调来源边界、密封 Evidence Packet 和独立答案审核；不写入 Snapshot。V1.4 修改：降为兼容 Profile，不再新增功能 |
+| World Model Query | 在显式 `WORLD_MODEL` Profile 下管理固定 Snapshot Read Session、查询完整性和独立答案审核；不访问 Source。V1.4 修改：作为评测与归因 Profile 使用，不是产品入口 |
+| Engineering Conversation | 唯一产品回答路径（V1.4 修改）；管理多轮 Turn、对话/工作状态、主 Agent 的 World Model Cognition 与 Source 观察组合、当前 Turn Evidence 和答案审核 |
+| Knowledge Maintenance Task | 接收当前 Turn 发现的可持久知识冲突，以及从 Turn Trace 形成的知识结晶提议（V1.4 新增），去重并把维护请求交给 Knowledge Update；任务本身不携带完整答案或 Turn 证据正文，只引用 Turn Trace |
 
 Application Services 负责跨模块编排和应用用例状态，不复制 Core Capabilities 的领域逻辑。所有 Agent 对核心能力的调用必须经过 Application Services。Application Layer 拥有预算、配额、速率和并发政策及其运行状态；目标 Application Service 决定自身用例循环，Web Task 的职责级推进由 Conversational Task Control 根据结构化 Proposal 和权威结果决定。
 
@@ -592,6 +644,7 @@ Conversational Task Control 是 Application Layer 内的逻辑职责，不要求
 - 正式知识任务的 Assessment 存在 Gap 时，可以提出或在授权为无副作用用例时执行相应调查；Knowledge Update 等有副作用命令必须交由 Conversational Task Control 授权和分派。默认 Chat 的补证由主 Agent 在当前 Turn 的授权边界内提出，不等待知识更新。
 - 在严格 Knowledge Use、Direct Evidence Answering 或 World Model Query Profile 中，基于各自固定权威输入形成 Answer Candidate；在默认 Engineering Chat 中，基于当前 Turn 的 World Model Cognition、受控 Source 观察和对话上下文形成带 Citation 的 Draft。当前 Turn Draft 不成为正式知识。
 - 不直接调用 Core Capabilities、Repository 或 Source Tool，不直接写入 Ledger、构造或发布正式知识；只有 Application/Broker 执行获准操作并记录观察。
+- （V1.4 新增）在默认 Engineering Chat 中，可使用的只读来源能力不低于第 7.7 节的工具对等目录。资源预算耗尽时，基于已有证据形成带明确限制的 Draft 并照常进入独立复核，不以无答案失败代替诚实限制。
 
 Task Execution Agent 是职责角色，可以由通用 Agent 或按真实任务边界划分的专职 Agent 实现；Agent Orchestrator 不依赖具体 Agent 数量和部署方式。
 
@@ -606,9 +659,9 @@ Response Control 是 Answer Candidate、审核状态、最终授权和逻辑交�
 
 Answer Review Agent 是独立语义审核角色，只产生 Assessment / Finding Proposal：
 
-- 只读取当前用户目标、受信对话上下文、当前 Turn 的密封证据边界和 Draft；严格 Profile 还可以读取该 Profile 已固定的权威输入。
+- 只读取当前用户目标、受信对话上下文、当前 Turn 的密封证据边界、Draft 及自身核验读取结果；严格 Profile 还可以读取该 Profile 已固定的权威输入。
 - 检查 Draft 是否回答问题、是否被允许的证据支持、是否遗漏、越界、误引、错误表达 Unknown 或混淆来源 Context。
-- 不访问 World Model、Source 或其他工具，不重新调查、不重新作答、不生成替代 Draft，不签发放行决定；具体 Finding 由同一 Application/Response Control 路由为当前证据修订或新 Attempt。
+- （V1.4 修改）不访问 World Model 或其他平台工具；可以经同一 Source Broker/Worker 发起有界只读核验读取（重读被引用位置、针对物质遗漏的定向搜索），核验观察只记录在独立的 Review Verification 记录中，不进入答案 Package、不能支持 Draft Claim。Reviewer 不补证、不重新作答、不生成替代 Draft，不签发放行决定；具体 Finding 由同一 Application/Response Control 路由为当前证据修订或新 Attempt，补证仍由主 Agent 完成。
 
 知识响应与平台操作响应使用不同权威依据；Gap、失败和无法验证响应同样需要审核。纯协议、认证和传输错误由 Interface Layer 返回，不伪装成业务答案。
 
@@ -625,6 +678,8 @@ Connector 扩展采用两级契约：
 - Connector Tool 表达列举、搜索、读取、比较等有界来源操作。
 
 Knowledge Update 路径把承载知识构建信息的结果形成 Artifact，交给 Application Services，再由 Knowledge Engine 提取并拥有 Evidence；Engineering Chat 路径由 Source Broker/Worker 受控执行读取，Application 将带 exact revision/context 的来源观察写入当前 Turn Evidence Ledger。来源观察是应用执行结果，不是 Knowledge Engine 的 Evidence 或正式知识；Source Integration 的知识构建端口仍止于 Artifact。
+
+（V1.4 新增）**只读工具对等。** 对公开或已授权、exact revision、只读的来源，Source Broker/Worker 为默认 Engineering Chat 提供不低于主流编码 Agent 读取能力的工具目录，至少包括：全树路径列举与 glob、字面与正则搜索、按路径与行段读取、exact revision 上的历史与 blame、结构化解析查询。Worker 可以在隔离沙箱中以注册的只读命令实现这些操作（无网络、无写入、临时文件系统、固定 checkout）；模型提交的是结构化操作参数，不获得任意 shell。Agent 可以读取 allowlist 内任何合法 exact-revision 路径；read candidate 只服务 Citation 身份，不是读取前置条件。资源熔断以 token、时延和字节为主，并保留无进展检测；调用次数上限只作为安全兜底，不作为常规规划约束。
 
 Source Integration 不生成 Evidence、Entity、Fact 或 Inference，也不判断知识是否充分。
 
@@ -680,6 +735,11 @@ Model Gateway 不定义任务语义、Strategy 选择、知识准入规则或审
 
 模型、Provider、模型名称、路由顺序、闲时策略和 Prompt 版本属于运行配置、资格、Adapter、运维或审计信息，不定义 Agent、View、Knowledge Engine 的职责，不决定知识真值或业务质量标准。
 
+模型执行容错的所有权进一步收敛到 Model Execution Runtime。Application、Agent、Conversation、Session Artifact、Response Control、Browser 和 UI
+只依赖一个 Provider-neutral 的 Model Execution Port：提交一个 logical interaction，接收一个 logical result 和不透明 execution-audit reference。
+候选配置、顺序、不可用裁决、准入、Attempt 隔离、Provider/model 身份及原始传输证据不得成为这些上层的输入、输出或分支条件；它们只能由运行时和内部审计持有。
+运行时可以在受信不可用裁决后重新启动一次完整 Agent chain，但对上层仍表现为同一 logical interaction，不能把 fallback 暴露成产品步骤。
+
 ### 7.12 主要静态依赖
 
 ```mermaid
@@ -716,7 +776,7 @@ flowchart TB
 6. Source Integration 与 Knowledge Engine 不直接依赖，由 Application Services 协调 Artifact 传递。
 7. Model Gateway 不拥有领域任务、知识准入或 Strategy 选择。
 8. 模块可以共用物理数据库，但不能绕过逻辑所有者访问其他模块的内部 Repository。
-9. Answer Review Agent 只消费平台提供的当前审核输入并产生审核 Proposal，不调用 World Model/Source 工具；Response Control 独占审核决定、最终授权和逻辑交付，Interface 与 Orchestrator 不能修改已授权正文。
+9. Answer Review Agent 只消费平台提供的当前审核输入并产生审核 Proposal，除第 7.6 节的有界只读核验读取外不调用 World Model/Source 工具；Response Control 独占审核决定、最终授权和逻辑交付，Interface 与 Orchestrator 不能修改已授权正文。
 
 ## 8. 关键运行流程
 
@@ -870,7 +930,11 @@ sequenceDiagram
     A-->>C: 密封 Package 与边界
     C->>X: 封存 Draft；绑定 Package 与当前 Turn
     X->>R: 当前用户目标、受信对话上下文、Package 与 Draft
-    R-->>X: Verdict 或具体 Finding；不重新调查、不重新作答
+    opt 有界只读核验（V1.4 新增）
+        R->>B: 核验读取请求
+        B-->>R: 核验观察；不进入 Package
+    end
+    R-->>X: Verdict 或具体 Finding；不补证、不重新作答
     alt Review 通过
         X-->>C: Final Response Authorization
         C->>X: 请求交付已授权答案
@@ -892,11 +956,37 @@ sequenceDiagram
 
 后续 Turn 必须重新读取当前有效认知或 exact revision/context 来源，不能沿用旧 Evidence、Citation、Package、Answer 或 locator 作为当前答案依据或来源读取授权。历史消息只用于理解问题。一个 Turn 内解析出的 Snapshot 和来源 revision 只约束该 Turn，不把答案与它们建立跨 Turn 的证据绑定。
 
+（V1.4 新增）Turn 进入终态后，Application 把该 Turn 的 Ledger、Package、Draft、Review 与 Review Verification 记录转为 Turn Trace（第 10.2 节）；Turn Trace 不进入任何后续 Turn 的 Agent 输入或证据。
+
 审核发现现有证据足够但答案有误时，由同一主 Agent 针对 Finding 修订 Draft；发现缺证时，由主 Agent 在绑定缺口的新受控 Attempt 中补证。任何新观察或新 Draft 都必须重新独立审核，旧 Review 不能放行新候选。Reviewer 不代替 Agent 补证或作答。
 
 严格 `WORLD_MODEL`、严格 `DIRECT_INVESTIGATION` 和 Management / Knowledge Update 任务仍使用各自固定的 Profile、权威输入和契约；它们的角色边界不改变默认 Engineering Conversation 的组合方式。Review 调用完成不等于响应获准，Response Control 仍负责完整审核覆盖、最终授权和交付。
 
 对显式正式 Knowledge Use 任务，Knowledge Requirement 的每个 Revision 不可原地修改；需求修订必须留在原任务边界内并重新调查、评估。显式更新发布新 Snapshot 后，调用方如采用新 Snapshot，须基于同一 Requirement 在新 Read Session 中重新完整评估；已打开的旧会话不被更新隐式改写。未准入 Candidate、模型记忆和调查 Preview 不成为正式知识答案依据。对 Management / Update 等有副作用任务，Agent 只向 Task Control 提出 Action Proposal，由其授权并经 Application 分派，返回不可变应用结果供 Agent 组织操作响应；这些职责保留，不要求默认 Chat 为回答而先更新知识。
+
+### 8.5 知识结晶（V1.4 新增）
+
+```mermaid
+sequenceDiagram
+    participant A as Application Services
+    participant TT as Turn Trace
+    participant U as Knowledge Update
+    participant S as Source Integration
+    participant K as Knowledge Engine
+
+    A->>TT: 选择已审核且具复用价值的 Turn
+    TT-->>A: 目标、Claim 与来源定位引用
+    A->>A: 形成 Crystallization Proposal 与去重键
+    A->>U: 以 Knowledge Maintenance Task 触发更新
+    U->>S: 重新读取 exact 来源
+    S-->>U: Artifact
+    U->>K: Candidate 构建、准入与发布
+    K-->>A: 新 Snapshot 或未满足依据
+```
+
+- 复用价值由 Application 的结晶 Strategy 判断，例如同类问题的重复出现、现场推导成本、跨问题共享的路径或职责结论。
+- Turn Trace 只提供“值得构建什么”和“到哪里取证”的线索；正式 Evidence 只能来自 Knowledge Update 重新读取的 Artifact。
+- 结晶失败不影响已交付答案，也不修改任何已发布 Snapshot。
 
 ## 9. AI 与可信架构
 
@@ -940,7 +1030,7 @@ sequenceDiagram
 
 知识生成与 Knowledge Verifier、答案生成与 Answer Review Agent 在职责、权威输入重建、模型执行上下文、权限和决策链上独立。它们可以使用同一基础模型，但生成方不能自证；模型只提交审核 Proposal，确定性平台 Owner 校验完整性并封存决定，审核失败必须关闭相应准入或响应路径。
 
-Reviewer 的职责限于 Draft—Evidence 的支持、一致性和对用户目标的完整性复核，不等于证明 Evidence 本身必然真实。当前架构明确不纳入独立的非回答式证据真实性核验，也不以第二份独立答案代替复核；这是一项已确认的当前边界，不是当前架构缺陷。只有开发验证在异质问题中提供了需要改变该边界的证据时，才另行形成架构决策；在此之前，该能力不是默认流程、不是当前验收前置条件，也不阻塞实现。
+（V1.4 修改）Reviewer 的职责是 Draft—Evidence 的支持、一致性和对用户目标的完整性复核。为发现证据包之外的物质遗漏和误引，Reviewer 可以做有界只读核验读取：重读被引用位置以确认引用内容与来源一致，并针对用户目标做定向搜索以识别明显遗漏。核验读取有独立预算，结果只用于形成 Finding，不进入答案 Package。Reviewer 仍不重新解决原问题、不以第二份独立答案代替复核；完整的非回答式证据真实性核验不纳入当前架构。
 
 ### 9.4 响应权威
 
@@ -970,10 +1060,10 @@ Reviewer 的职责限于 Draft—Evidence 的支持、一致性和对用户目�
 
 | 逻辑所有者 | 数据 |
 |---|---|
-| Application Layer | 用例与任务状态、任务边界、Agent 执行与委托授权、知识需求与读取会话、当前 Turn 的临时证据边界、充分性判断、构建意图、调查与应用结果、资源分配、答案审核与交付、Capability Strategy 的资格与受控激活 |
+| Application Layer | 用例与任务状态、任务边界、Agent 执行与委托授权、知识需求与读取会话、当前 Turn 的临时证据边界、充分性判断、构建意图、调查与应用结果、资源分配、答案审核与交付、Capability Strategy 的资格与受控激活、Turn Trace 及其保留策略（V1.4 新增） |
 | Source Integration | Data Source、Binding、来源上下文、来源操作结果、Artifact 和 Lineage |
 | Knowledge Engine | KnowledgeScope、Knowledge Schema、Candidate、Evidence、正式 Entity / Fact / Inference、准入与迁移决定、KnowledgeContext、依赖和 Snapshot |
-| Semantic View Engine | View 定义和可重建物化结果 |
+| Semantic View Engine | View 定义、Cognition Retrieval Projection（V1.4 新增）和可重建物化结果 |
 | Model Gateway | 模型配置、路由、调用明细，以及原始模型用量 / Provider Charge Observation |
 | 横切 Telemetry 基础设施 | 统一关联记录、规范用量与非控制性成本估值、预算消耗引用和审计索引；只引用各模块权威执行记录，不复制其业务所有权或 Resource Ledger |
 
@@ -989,14 +1079,14 @@ Reviewer 的职责限于 Draft—Evidence 的支持、一致性和对用户目�
 - 正式 Entity、Fact、Inference、KnowledgeContext 和依赖。
 - 知识准入决定及其依据；启用跨 Schema Adoption 时，另保存相应迁移或重建决定。
 - CURRENT Snapshot、全部已提交的不可变知识和 Snapshot，以及其 Knowledge Schema 和正式依赖；只有未来经过批准的物理 Cleanup 设计才能缩减该集合。
-- 正式知识用例的任务边界、Requirement Revision、Sufficiency Assessment 和不可变应用结果；对话运行与响应审核只保留不含完整证据、Draft 或 Review 正文的最小终态摘要、状态、去重墓碑和 Knowledge Maintenance Task 引用，不以审计为由持久保存答案与 Snapshot/来源证据的绑定。
+- 正式知识用例的任务边界、Requirement Revision、Sufficiency Assessment 和不可变应用结果；（V1.4 修改）对话运行与响应审核的完整记录作为 Turn Trace 按保留策略保存，用于审计、评测复现和知识结晶；它们不携带事实权威。
 - Conversation、Conversation Work State 和用户可见消息历史，用于多轮指代、追问、纠正和目标延续；它们不是后续 Turn 的事实依据。
 - 对正式知识和响应产生实质影响的模型、Capability 和 Strategy 版本。
 - 影响预算执行、成本归因和审计的关联、用量、估算成本及策略决策记录。
 
 Artifact 完整 Payload 由 Source Integration 本地保留策略管理；Candidate 与 Agent Working State 只保留恢复、审计或未决结果所需内容，物化 View 可重建。未启用物理 Cleanup 时，不删除已经提交的 Evidence、正式知识和 Snapshot；这不等同于对外提供通用历史查询能力。
 
-当前 Turn 的完整 Evidence Ledger、Question Evidence Package、原始 Observation、Answer Draft 和 Review 正文只在该 Turn 的有效生命周期内存在，终态后释放。用户可见消息历史不等于这些运行证据对象，不得借消息历史或 Work State 保存完整证据包或恢复其事实权威。未完成的 pending/unknown 不得在清理时伪装成终态。知识构建中的 Evidence 由 Knowledge Engine 按正式知识追溯责任保留，与当前 Turn 临时证据是两种不同的生命周期。
+（V1.4 修改）当前 Turn 的完整 Evidence Ledger、Question Evidence Package、原始 Observation、Answer Draft、Review 正文与 Review Verification 记录只在该 Turn 的有效生命周期内作为证据使用；终态后转为非权威 Turn Trace，由 Application 按保留策略（有期限、可删除、受访问控制）保存。Turn Trace 不能成为任何后续 Turn 的证据、Citation 或 Agent 输入，只能用于审计、评测复现和 Knowledge Crystallization 的线索。用户可见消息历史不等于这些运行证据对象，不得借消息历史或 Work State 恢复其事实权威。未完成的 pending/unknown 不得在清理时伪装成终态。知识构建中的 Evidence 由 Knowledge Engine 按正式知识追溯责任保留，与当前 Turn 临时证据是两种不同的生命周期。
 
 ### 10.3 Scope 级发布与跨 Scope 一致性
 
@@ -1021,6 +1111,7 @@ KnowledgeScope 的逻辑分片可以映射到同库分区、独立数据库或�
 - 额外构建的 Graph、Vector、Search、Cache 和物化 View 必须引用正式知识并可重建；Knowledge Engine 权威主存不属于 Projection。
 - 每个 Projection 必须绑定 KnowledgeScope、Snapshot 和 Knowledge Schema；旧 Projection 不能服务新的 Schema Snapshot，重建未完成时必须回退到兼容的权威主存读取或明确返回不可用。
 - 基础存储能够满足查询要求时不引入独立 Projection Module；只有出现明确的查询、性能或隔离需求时才启用相应 Projection。
+- （V1.4 新增）Cognition Retrieval Projection 是默认 Engineering Chat 的必需检索能力，可以由权威库内索引实现，不因此必须建立独立 Projection Module。
 
 ## 11. 工程、部署与非功能边界
 
@@ -1130,7 +1221,7 @@ Platform Telemetry & Cost Governance 贯穿平台运行链路，但不参与业�
 4. Entity、Fact、Inference 只有在知识准入后才成为正式知识；Candidate 和模型输出始终不可信。
 5. Fact 保留直接 Evidence 与 KnowledgeContext；Inference 只以正式 Fact 和受控上游 Inference 作为语义前提，并保留完整推导链与 KnowledgeContext。Evidence、Artifact 或 Entity 状态不能直接成为正式 Inference 的语义前提。
 6. Semantic View 只组织正式知识，不创造或扩张正式语义。
-7. Knowledge Verifier 与 Answer Review Agent 保持职责、权威输入和决策链独立；Answer Review Agent 只复核现有 Draft 与当前 Turn 证据，不重新调查或重新作答。
+7. Knowledge Verifier 与 Answer Review Agent 保持职责、权威输入和决策链独立；Answer Review Agent 只复核现有 Draft 与当前 Turn 证据，可以做有界只读核验读取，但不补证进答案包、不重新作答。
 8. 正式 `Knowledge Use` 响应只使用固定 Snapshot 中的正式知识；默认 Engineering Chat 可以使用当前 Turn 的受控 Source observation，但不得把它写入 Snapshot、跨 Turn 复用或伪装成正式知识。
 9. Snapshot 以单个 KnowledgeScope 为原子发布和逻辑分片边界；Scope 之间不使用分布式发布事务，多 Scope 读取必须绑定兼容的确切 Snapshot 集合并通过显式依赖受控收敛。
 10. Model Gateway 只提供受控模型访问；模型不能取得权限、准入、发布和放行的完整控制链。
@@ -1146,8 +1237,13 @@ Platform Telemetry & Cost Governance 贯穿平台运行链路，但不参与业�
 20. Web Chat 只进入 Conversational Task Control；Orchestrator 和 Review Agent 只产生 Proposal，Application Layer 的状态 Owner 分别控制任务、命令授权、审核决定、最终放行和交付。
 21. 未激活 Strategy 只能在隔离候选路径运行；生产领域结果封存前必须验证实际模型身份仍被有效激活依据覆盖。
 22. 默认 Engineering Conversation 中，World Model Cognition 与 Source observation 是可组合的同一 Turn 能力，不存在强制二选一或固定先后；严格 `WORLD_MODEL`、严格 `DIRECT_INVESTIGATION` 和兼容问答才是显式 Profile。
-23. 当前 Turn 的 Evidence Ledger、Question Evidence Package、Draft 和 Review 正文不得跨 Turn 持久化为答案依据；后续 Turn 必须重新读取有效认知或 exact revision 来源。
+23. 当前 Turn 的 Evidence Ledger、Question Evidence Package、Draft 和 Review 正文不得成为后续 Turn 的答案依据或 Agent 输入；它们只能作为非权威 Turn Trace 按保留策略保存，用于审计、评测复现和知识结晶。后续 Turn 必须重新读取有效认知或 exact revision 来源。
 24. 同一对象、同一 exact revision/context 下发现 World Model 与 Source observation 冲突时，只对当前问题中被 Source 直接核验的命题采用来源观察，并创建最小 Knowledge Maintenance Task；当前 Snapshot 不原地修改。无法证明对象与 Context 可比时，不自动选择赢家。
+25. 默认 Engineering Chat 中计为世界模型认知的内容必须来自已发布 Snapshot（经确定性或模型准入通道）；未发布的源码派生索引只能作为来源导航，按来源观察计入。
+26. 默认 Engineering Chat 的只读来源工具不得低于第 7.7 节的工具对等目录；read candidate 只服务 Citation 身份，不得成为合法 exact-revision 路径的读取前置条件。
+27. 知识结晶必须经 Knowledge Update 重新读取来源；Turn Trace 正文不得作为正式 Evidence 或 Candidate 的支持。
+28. 世界模型的每个认知层必须能在评测与归因 Profile 中单独度量其对答案的贡献。
+
 ## 14. 架构审计记录（非规范）
 
 本节仅记录已经完成的正文修订及其来源，不定义当前架构语义，不覆盖前文条款。阅读第 1 至 13 章即可获得当前完整架构；本节不是第二份规范或后置补丁。
@@ -1164,5 +1260,6 @@ Platform Telemetry & Cost Governance 贯穿平台运行链路，但不参与业�
 | Reviewer 边界 | 7.6、7.12—7.13、8.4、9.3、13 | 去除 Reviewer 调查和重新作答的含义，明确其复核对象与不能证明证据必然真实的能力边界。 |
 | 模型与 Provider 透明 | 4.1、7.11、13 | 将模型、Provider 与路由等具体身份保留在配置、资格和运行层，不定义产品职责、知识真值或质量标准。 |
 | 知识更新与对话解耦 | 4.9、7.2、8.2、8.4 | 补全独立触发来源，去除默认 Chat 必须等待知识更新的旧含义。 |
+| V1.4 认知优势与 Agent 能力（SYS-ADR-021） | 1.5、4.8、4.12、6.4、6.10、7.2、7.5—7.7、7.13、8.4、8.5、9.3、10.1、10.2、10.4、13 | 新增认知分层、混合检索、差量构建与认知优势原则；准入分确定性与模型通道；只读工具对等；Turn 证据转为非权威 Turn Trace 并支持知识结晶；Reviewer 有界核验读取；默认 Chat 为唯一产品回答路径。原有章节、概念和架构图全部保留，新增或修改处在正文以“V1.4 新增/修改”标记。 |
 
-审计中保留的验证触发点（不是当前缺陷）：当开发验证在异质问题中发现证据可以自洽却不正确，并且现有 Reviewer 边界不足以处理时，才评估是否增加独立的非回答式证据支持核验。本次没有采纳该新能力，没有授权 Reviewer 重新调查或以第二份答案替代复核；当前边界已经确认并适用于现阶段实现。后续如验证证据支持改变该边界，应通过架构决策并直接修订正文，而不是在本节追加覆盖规则。
+审计中保留的验证触发点（不是当前缺陷）：当开发验证在异质问题中发现证据可以自洽却不正确，并且现有 Reviewer 边界不足以处理时，才评估是否增加独立的非回答式证据支持核验。本次没有采纳该新能力，没有授权 Reviewer 重新调查或以第二份答案替代复核；当前边界已经确认并适用于现阶段实现。后续如验证证据支持改变该边界，应通过架构决策并直接修订正文，而不是在本节追加覆盖规则。V1.4 已按 SYS-ADR-021 引入 Reviewer 有界核验读取（第 9.3 节）；完整的非回答式证据真实性核验仍未纳入。

@@ -6,7 +6,7 @@ authority: normative
 semantic_owner: SYS-ARCH-BASELINE
 authority_scope: controlled-architecture-appendix
 owners: [architecture, application]
-depends_on: [SYS-ARCH-BASELINE, SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
+depends_on: [SYS-ARCH-BASELINE, SYS-ARCH-COMPONENTS, SYS-ARCH-INVARIANTS, SYS-ADR-015, SYS-ADR-016, SYS-ADR-017, SYS-ADR-019, SYS-ADR-020, SYS-CONTRACT-APPLICATION-ENGINEERING-QUESTION-ANSWERING]
 derived_from: [FINDING-008-024, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-139, FINDING-010-140, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236]
 code: [src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests/test_knowledge_update.py, tests/test_knowledge_use.py, tests/test_agentic_runtime.py]
@@ -87,20 +87,20 @@ immutable Requirement
 TLS、dispatch 和收据字段由 Profile Contract、资格和运行实现分别定义；它们不是本概要架构的部署参数。任何 request bytes 可能
 已发送后的失败都必须保持 `OUTCOME_UNKNOWN`，不得重发。
 
-若候选配置声明多个 execution profile，Application 必须在 Session 开始和任何问题 dispatch 前冻结有序 `preferred → fallback` route，以及每个
-route role 的 exact execution-profile ref/digest。产品、Agent 与路由流程只消费通用 role/profile reference，不读取 Provider/model 名称。Profile 的运行配置内部绑定
-current exact Conformance、同 Strategy/Configuration Capability Qualification、Provider/model/endpoint、Adapter/plugin、隔离 transport、
-credential reference、disclosure scope、预算和 admission policy。不能因 preferred execution profile 的实现、输出或质量缺口把它伪装成
-terminal unavailable，也不能临时跳过 preferred route。
+若候选配置声明多个 execution profile，Model Execution Runtime 在自己的内部边界冻结候选顺序和 exact execution-profile ref/digest。Application、
+Agent、Conversation、Session Artifact、Response Control 与 Browser 只调用一个 Provider-neutral Model Execution Port，不读取候选、route role、
+Provider/model 名称或 availability verdict。Profile 的运行配置内部绑定 current exact Conformance、同 Strategy/Configuration Capability Qualification、
+Provider/model/endpoint、Adapter/plugin、隔离 transport、credential reference、disclosure scope、预算和 admission policy。不能因 preferred
+execution profile 的实现、输出或质量缺口把它伪装成 terminal unavailable，也不能临时跳过运行时的内部候选规则。
 
 公开来源本机体验先执行下列 authority flow：
 
 ```text
 one standing human authority
   → verify public upstream + license/provenance + clean exact revision
-  → freeze approved preferred/fallback execution profiles / disclosure / budgets / loopback candidate boundary
+  → freeze approved model-execution policy / disclosure / budgets / loopback candidate boundary
   → user submits an exact Turn
-  → trusted Application derives exact Session / Turn / attempt authority
+  → trusted Application derives exact Session / Turn authority; Model Execution Runtime derives private attempts
   → Gateway derives one-use Manifest and disclosure / dispatch receipt for every call
   → terminal audit closes actual payload / Usage / transport / cost
 ```
@@ -110,15 +110,15 @@ one standing human authority
 Production，则停止派生并要求 exact human delta。公开来源仍经 Broker/Worker 只读执行，Source 内容仍按 prompt-injection-capable 的不可信
 data 处理。
 
-任何 execution profile 选择 admission plugin 时，该 route 必须执行下列通用 admission flow：
+任何 execution profile 选择 admission plugin 时，Model Execution Runtime 必须执行下列通用 admission flow；该流程不向 Application/Agent 暴露候选：
 
 ```text
-derive exact run / route role / execution profile / quality budget from standing authority or exact human delta
+derive exact run / internal execution policy / quality budget from standing authority or exact human delta
   → execute the frozen admission plugin against its trusted inputs and seal a non-dispatching preparation decision when the plugin uses JIT activation
   → at the route's first real request preflight, re-evaluate every time-sensitive input and seal the active generic dispatch-admission receipt, or bind an exact policy-specific override
   → before every new request on that route, revalidate the plugin verdict / override
   → only then allow socket/connected descriptor provisioning, TLS, credential resolution and HTTP
-  → otherwise fail before external network with that route's dispatch = 0
+  → otherwise fail before external network with that internal attempt's dispatch = 0
 ```
 
 完整最坏质量链必须在 active receipt 激活前满足插件的允许条件；preparation decision 不提前消耗 active duration，也不授权外调。条件失效后
@@ -128,19 +128,18 @@ derive exact run / route role / execution profile / quality budget from standing
 receipt 由可信系统派生，不是逐 run 人工审批。
 
 一次用户提交只产生一个 logical interaction unit；Engineering Conversation 中该单位是密封 Turn，兼容单轮协议中是 logical question。
-preferred-route attempt 使用自己的完整问答链和审计。只有该 attempt 密封 terminal、没有 authorized answer，且 preferred profile 登记的受信
-availability owner 从 exact raw receipts 密封 `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict，才创建一次 fallback-route attempt。Raw
-unavailable/HTTP/outcome 信号只是裁决输入，不能直接开启 fallback。Output-invalid、Reviewer reject、Capability/qualification、Application、Source、
-authorization/admission 或 Security failure 均为 non-eligible。格式修复、答案重写、补证后重答和 fresh Review 只能在当前 preferred profile 内以新的
-authorized model call 进行，每次都重建 call identity、Manifest 和 one-use receipts，不得重发同一 request；无合法新调用时当前 interaction 失败关闭。
+Model Execution Runtime 为每个内部 attempt 使用独立的完整问答链和审计。只有当前 attempt 密封 terminal、没有 authorized answer，且受信
+availability owner 从 exact raw receipts 密封“当前执行配置不可用”裁决，运行时才可以创建一次新的内部 attempt。Raw unavailable/HTTP/outcome
+信号只是裁决输入，不能直接开启新 attempt。Output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission
+或 Security failure 均为 non-eligible。格式修复、答案重写、补证后重答和 fresh Review 只能在当前执行配置内以新的 authorized model call 进行；无合法新调用时当前 interaction 失败关闭。
 Provider HTTP failure 先由原样委托 qualified Adapter 的 Gateway decorator 只密封受限的 transport/provider evidence，inner terminal 后绑定
 call/request/isolation，再经 auxiliary repository、Model Egress、model receipt、Turn 与 attempt 逐层重验。具体 status、error code/type、
 字段限制及其 unavailable 映射由 Model Gateway Contract 唯一负责；没有完整 evidence digest 或仅凭字符串相似性都 fail closed。用于定位
 Provider 明确指出的 request field 的参数名不得进入 availability、route 或 retry 判定。
-fallback attempt 从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
-Context 重新运行完整链，不能读取或拼接 preferred attempt 的 Ledger/Package/Draft/Review。迟到的 preferred-route 结果进入 quarantine 且不能覆盖。用户不选择
-Provider、不重提问题、不新建 Session；页面和 Result 按 logical interaction unit 汇总，并保留两个 attempt 的独立身份、availability-verdict、
-execution-profile/dispatch-admission/transport/call/terminal receipts、Usage、成本、失败分类与 outcome-unknown 重复计费风险。
+新的内部 attempt 从 immutable original interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition
+Context 重新运行完整链，不能读取或拼接先前 attempt 的 Ledger/Package/Draft/Review。迟到结果进入 quarantine 且不能覆盖。用户不选择 Provider、
+不重提问题、不新建 Session；页面和 Result 按 logical interaction unit 汇总，只得到通用 execution status、dispatch count 和不透明 audit ref。
+Provider/model、availability、transport、成本、失败分类与 outcome-unknown 风险只留在 Model Execution Runtime 的内部审计。
 
 ## 直接源码调查
 
@@ -170,24 +169,25 @@ Explicit Engineering Conversation
   → Agent observes and replans until evidence is sufficient, an honest limitation is reached, or a fuse closes the Turn
   → seal current Question Evidence Package with support/citation and boundary/audit partitions
   → same logical Agent synthesizes a cited conversational Draft
-  → fresh independent Reviewer checks current Turn, trusted conversation context, Package and Draft; returns only verdict/Finding, never a second answer
+  → fresh independent Reviewer checks current Turn, trusted conversation context, Package and Draft; may issue bounded read-only verification reads via Broker (kept out of the Package); returns only verdict/Finding, never a second answer
   → APPROVED Delivery, or specific Finding returned to a new Agent Work State Revision
   → same-package targeted rewrite, or new evidence Attempt through World Model / Broker tools (routed by Application from a concrete gap)
   → any new evidence creates a new Ledger / Package / Draft and fresh independent Review
+  → terminal Turn: Ledger / Package / Draft / Review become a non-authoritative Turn Trace under retention policy (V1.4)
 ```
 
 Conversation 在任何读取和模型调用前固定 exact 工程边界。软件世界模型为主 Agent 提供持久的系统认知，不是手册、地图、聊天记录或
 locator 缓存；这些都只是认知的投影。认知缺失、无关或 Coverage 不足是 Ledger/Package 的显式状态，不阻断当前 Turn 在同一授权 exact
 revision 中按需驱动只读调查；这不是从 `WORLD_MODEL` 静默切换到 `DIRECT_INVESTIGATION`。
 
-主 Agent 根据每次已密封 Observation 决定下一步并更新 Application-owned Work State，但不直接拥有任何 Tool。Source Broker 把其 Proposal
+主 Agent 根据每次已密封 Observation 决定下一步并更新 Application-owned Work State，但不直接拥有任何 Tool。V1.4 起 Broker 提供的只读工具目录须满足基线 7.7 节的工具对等要求，read candidate 不再是读取前置条件。Source Broker 把其 Proposal
 重新校验、绑定 exact revision/allowlist/remaining fuse 并编译；只有 Retrieval Worker 读取来源。每一步只追加到 Evidence Ledger，已确认
 prefix 不可改写。来源内容是不可信 data，不能成为权限或操作指令。
 
 Question Evidence Package 只有一个 seal/identity，但 `support/citation` 仅收可采信条目，`boundary/audit` 必须保留 Gap、Failure、Partial、
-Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划或执行补证，只返回具体 gap；该 gap 由同一逻辑主 Agent 在
-新的受信 Work State/Attempt 中处理。正式资格必须预密封 revision/call/operation/bytes/wall-time/no-progress 熔断，answerable 因熔断
-未获批准计失败，但熔断不能削减证据、Citation 或独立审核。
+Conflict、Unknown、拒绝和资源记录；后者不能支持肯定 Claim。Reviewer 不规划或执行补证，只返回具体 gap；它可以做有界只读核验读取以发现误引和包外物质遗漏，核验观察不进入 Package（V1.4）；该 gap 由同一逻辑主 Agent 在
+新的受信 Work State/Attempt 中处理。正式资格必须预密封 revision/token/bytes/wall-time/no-progress 熔断（调用次数只作安全兜底）；熔断后主 Agent 基于已有证据形成带限制的 Draft 并照常审核，
+评测中 answerable 因熔断未获批准计失败，但熔断不能削减证据、Citation 或独立审核（V1.4）。
 
 至少一个 fresh Reviewer 必须比较 current Turn 目标、用户纠正、Conversation Context、evidence scope 与 Draft scope。配置 placeholder
 只证明 key/injection，caller/getter/import 只证明可见关系，上游 local state 只证明局部结果，均不能自动扩张为 runtime value、DTO/
@@ -196,7 +196,7 @@ handler behavior 或下游 HTTP mapping。Reviewer Strategy 可以增加隔离 c
 后续 Turn 可以追问、指代、纠正、深入或总结。Application 密封 relevant history 与当前 Work State；先前答案、摘要和 Provider hidden state
 不是证据。用户纠正形成新 Conversation Revision，一次 Turn 失败只结束该 Turn，listener 和会话历史继续有效。
 
-已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞当前 Turn。
+已审核包/结论可在 Delivery 后异步提议 Knowledge Update，但必须重走 Evidence、Candidate、Admission 和 Publication，不阻塞当前 Turn。V1.4 起该提议从 Turn Trace 形成 Crystallization Proposal（基线 8.5 节），Trace 正文不作为正式 Evidence。
 
 ## 正式知识使用
 
