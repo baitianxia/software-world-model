@@ -96,6 +96,7 @@ from software_world_model.infrastructure.file_structure_read_bundle import (
 from software_world_model.infrastructure.file_capability_cognition import (
     load_capability_cognition,
 )
+from software_world_model.source_integration.exact_revision_tools import ReadScope
 from software_world_model.knowledge_engine.capability_cognition import (
     CapabilityCognitionIndex,
 )
@@ -1387,6 +1388,13 @@ def prepare_engineering_chat_artifact_session(
             else ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE
         ),
         capability_cognition=capability_cognition_index,
+        chat_read_scope=ReadScope(
+            repository=source_repository,
+            revision=repository_revision,
+            include_prefixes=tuple(source_allowlist),
+            exclude_prefixes=tuple(session_config.excluded_source_paths),
+        ),
+        turn_trace_directory=product_repository / "var" / "turn-trace",
     )
     if (
         runtime.receipt.status

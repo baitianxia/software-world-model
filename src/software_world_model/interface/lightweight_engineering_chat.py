@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
+from pathlib import Path
 from threading import Lock
 from typing import Callable
 
 from software_world_model.ai_infrastructure.conversational_engineering_model import (
     EngineeringAgentModelConfiguration,
     EngineeringAgentSessionDisclosureAuthority,
+)
+from software_world_model.application_services.chat_agent import (
+    ChatAgentLimits,
+    ChatAgentTurnExecutor,
 )
 from software_world_model.application_services.conversational_engineering_agent import (
     EngineeringAgentLoopLimits,
@@ -33,6 +39,25 @@ from software_world_model.cross_cutting import Digest, DomainError, ErrorCode, d
 from software_world_model.knowledge_engine.capability_cognition import (
     CapabilityCognitionIndex,
 )
+from software_world_model.source_integration.exact_revision_tools import (
+    ExactRevisionReadTools,
+    ReadScope,
+)
+
+
+CHAT_EXECUTOR_ENVIRONMENT_VARIABLE = "SWM_CHAT_EXECUTOR"
+CHAT_EXECUTOR_V14 = "chat-agent-v14"
+CHAT_EXECUTOR_LEGACY = "legacy-lightweight"
+
+
+def selected_chat_executor(read_scope: ReadScope | None) -> str:
+    """V1.4 Chat Agent by default; ``SWM_CHAT_EXECUTOR=legacy`` keeps the old loop."""
+
+    if read_scope is None:
+        return CHAT_EXECUTOR_LEGACY
+    if os.environ.get(CHAT_EXECUTOR_ENVIRONMENT_VARIABLE, "").strip().lower() == "legacy":
+        return CHAT_EXECUTOR_LEGACY
+    return CHAT_EXECUTOR_V14
 
 
 LightweightToolFactory = Callable[
@@ -120,6 +145,9 @@ class LightweightEngineeringChatProviderAttemptFactory:
         capability_cognition: CapabilityCognitionIndex | None = None,
         loop_limits: EngineeringAgentLoopLimits = EngineeringAgentLoopLimits(),
         trace_store: LightweightAgentTraceStore | None = None,
+        chat_read_scope: ReadScope | None = None,
+        turn_trace_directory: Path | None = None,
+        chat_agent_limits: ChatAgentLimits = ChatAgentLimits(),
     ) -> None:
         if (
             primary.route_spec_digest != plan.routes[0].digest
@@ -153,6 +181,18 @@ class LightweightEngineeringChatProviderAttemptFactory:
             EngineeringAgentToolOperation.SOURCE_READ,
         )
         self.trace_store = trace_store or LightweightAgentTraceStore()
+        self.chat_read_scope = chat_read_scope
+        self.turn_trace_directory = turn_trace_directory
+        self.chat_agent_limits = chat_agent_limits
+        self.executor_kind = selected_chat_executor(chat_read_scope)
+        if self.executor_kind == CHAT_EXECUTOR_V14 and not (
+            callable(getattr(primary.model, "step", None))
+            and callable(getattr(primary.model, "review_draft", None))
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "the V1.4 Chat Agent requires a model boundary with step and review_draft",
+            )
         self._dispatch_budget_digest = dispatch_budget_digest
         self._issued: set[Digest] = set()
         self._attempt_objects: list[object] = []
@@ -188,6 +228,16 @@ class LightweightEngineeringChatProviderAttemptFactory:
                 "maximum_tool_actions": loop_limits.maximum_tool_actions,
                 "maximum_reviews": loop_limits.maximum_reviews,
                 "request_retry_allowed": False,
+                "executor": self.executor_kind,
+                "chat_read_scope": (
+                    {
+                        "revision": chat_read_scope.revision,
+                        "include_prefixes": chat_read_scope.include_prefixes,
+                        "exclude_prefixes": chat_read_scope.exclude_prefixes,
+                    }
+                    if chat_read_scope is not None
+                    else None
+                ),
             }
         )
 
@@ -235,15 +285,27 @@ class LightweightEngineeringChatProviderAttemptFactory:
                     "lightweight attempt-scoped controls must be fresh",
                 )
             self._attempt_objects.extend((tool, delivery))
-        executor = ApplicationOwnedLightweightAgentTurnExecutor(
-            model=dependencies.model,
-            tool_port=tool,
-            delivery_control=delivery,
-            trace_store=self.trace_store,
-            attempt_ref=authority.attempt_id.value,
-            capability_cognition=self.capability_cognition,
-            limits=self.loop_limits,
-        )
+        if self.executor_kind == CHAT_EXECUTOR_V14:
+            assert self.chat_read_scope is not None
+            executor = ChatAgentTurnExecutor(
+                model=dependencies.model,  # type: ignore[arg-type]
+                tools=ExactRevisionReadTools(self.chat_read_scope),
+                delivery_control=delivery,
+                trace_store=self.trace_store,
+                attempt_ref=authority.attempt_id.value,
+                limits=self.chat_agent_limits,
+                trace_directory=self.turn_trace_directory,
+            )
+        else:
+            executor = ApplicationOwnedLightweightAgentTurnExecutor(
+                model=dependencies.model,
+                tool_port=tool,
+                delivery_control=delivery,
+                trace_store=self.trace_store,
+                attempt_ref=authority.attempt_id.value,
+                capability_cognition=self.capability_cognition,
+                limits=self.loop_limits,
+            )
         component_bases = {
             "PRIMARY_AGENT_DRIVER": dependencies.model_boundary_ref,
             "EVIDENCE_TOOL_RUNTIME": self.evidence_tool_configuration_digest.value,
@@ -273,6 +335,10 @@ def _text(value: str, label: str) -> str:
 
 
 __all__ = [
+    "CHAT_EXECUTOR_ENVIRONMENT_VARIABLE",
+    "CHAT_EXECUTOR_LEGACY",
+    "CHAT_EXECUTOR_V14",
     "LightweightEngineeringChatProviderAttemptFactory",
+    "selected_chat_executor",
     "LightweightProviderAttemptDependencies",
 ]

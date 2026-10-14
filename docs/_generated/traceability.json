@@ -5992,10 +5992,15 @@
   "ITER-010-TASK-1-STEP-A": {
     "path": "docs/project/iterations/iteration-010/development-design/TASK-1-STEP-A.md",
     "code": [
-      "src/software_world_model/source_integration/exact_revision_tools.py"
+      "src/software_world_model/source_integration/exact_revision_tools.py",
+      "src/software_world_model/application_services/chat_agent.py",
+      "src/software_world_model/ai_infrastructure/chat_agent_model.py",
+      "src/software_world_model/interface/lightweight_engineering_chat.py"
     ],
     "tests": [
-      "tests/test_exact_revision_tools.py"
+      "tests/test_exact_revision_tools.py",
+      "tests/test_chat_agent.py",
+      "tests/test_engineering_chat_session_artifact.py"
     ]
   },
   "ITER-011-SLICE-001": {

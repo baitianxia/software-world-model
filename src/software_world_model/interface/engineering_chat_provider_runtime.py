@@ -46,6 +46,9 @@ from software_world_model.ai_infrastructure.model_gateway import (
     ModelGatewayResult,
     ModelGatewayRepository,
 )
+from software_world_model.ai_infrastructure.chat_agent_model import (
+    chat_agent_output_schemas,
+)
 from software_world_model.ai_infrastructure.lightweight_engineering_model import (
     lightweight_engineering_output_schemas,
 )
@@ -401,6 +404,7 @@ def create_ark_engineering_chat_provider_model_runtime(
         output_schemas={
             **engineering_agent_output_schemas(),
             **lightweight_engineering_output_schemas(),
+            **chat_agent_output_schemas(),
         },
         live_qualification=qualification,
     )
@@ -463,6 +467,7 @@ def create_deepseek_engineering_chat_provider_model_runtime(
         output_schemas={
             **engineering_agent_output_schemas(),
             **lightweight_engineering_output_schemas(),
+            **chat_agent_output_schemas(),
         },
         live_qualification=qualification,
     )

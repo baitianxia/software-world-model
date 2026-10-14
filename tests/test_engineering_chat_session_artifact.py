@@ -694,6 +694,12 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
             session_config.file_digest,
         )
         self.assertEqual(cognition.calls, 0)
+        # Baseline V1.4: the default Chat uses the tool-parity Agent bound to
+        # the exact Source revision and the Session's allowlist.
+        self.assertEqual(prepared.runtime.attempt_factory.executor_kind, "chat-agent-v14")
+        scope = prepared.runtime.attempt_factory.chat_read_scope
+        self.assertEqual(scope.revision, prepared.runtime.launcher.service.binding.repository_revision)
+        self.assertIn("src/main/resources", scope.exclude_prefixes)
         self.assertEqual(prepared.runtime.launcher.service.statistics(), (0, 0))
         self.assertEqual(
             prepared.runtime.launcher.service.binding.conversation_input_policy_ref,

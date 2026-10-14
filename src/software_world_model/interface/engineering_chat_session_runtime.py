@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from threading import Lock
 from typing import Callable
 
@@ -35,9 +36,11 @@ from software_world_model.application_services.engineering_question_answering im
     SourceBroker,
     WorldModelCognitionProjector,
 )
+from software_world_model.ai_infrastructure.chat_agent_model import (
+    ModelBackedChatAgentModel,
+)
 from software_world_model.ai_infrastructure.lightweight_engineering_model import (
     LightweightDispatchBudget,
-    ModelBackedLightweightEngineeringAgent,
 )
 from software_world_model.cross_cutting import (
     Digest,
@@ -48,6 +51,7 @@ from software_world_model.cross_cutting import (
 from software_world_model.knowledge_engine.capability_cognition import (
     CapabilityCognitionIndex,
 )
+from software_world_model.source_integration.exact_revision_tools import ReadScope
 
 from .engineering_chat_provider_launcher import (
     ENGINEERING_CHAT_PROVIDER_OPERATIONS,
@@ -345,6 +349,8 @@ def prepare_engineering_chat_session_runtime(
     availability_clock: Callable[[], datetime] | None = None,
     agent_mode: str = ENGINEERING_CHAT_LEGACY_AGENT_MODE,
     capability_cognition: CapabilityCognitionIndex | None = None,
+    chat_read_scope: ReadScope | None = None,
+    turn_trace_directory: Path | None = None,
 ) -> PreparedEngineeringChatSessionRuntime:
     """Join prebuilt exact runtime assets without starting the product."""
 
@@ -472,7 +478,7 @@ def prepare_engineering_chat_session_runtime(
                 "source-only Agent requires the shared standing dispatch budget",
             )
         dispatch_budget = LightweightDispatchBudget(parent=primary_logical_budget)
-        primary_model = ModelBackedLightweightEngineeringAgent(
+        primary_model = ModelBackedChatAgentModel(
             gateway=primary_provider_runtime.gateway,
             configuration=primary_provider_runtime.configuration,
             session_authority=primary_provider_runtime.session_authority,
@@ -480,7 +486,7 @@ def prepare_engineering_chat_session_runtime(
             clock=availability_clock,
         )
         fallback_model = (
-            ModelBackedLightweightEngineeringAgent(
+            ModelBackedChatAgentModel(
                 gateway=fallback_provider_runtime.gateway,
                 configuration=fallback_provider_runtime.configuration,
                 session_authority=fallback_provider_runtime.session_authority,
@@ -526,6 +532,8 @@ def prepare_engineering_chat_session_runtime(
             dispatch_budget_digest=dispatch_budget.digest,
             capability_cognition=capability_cognition,
             loop_limits=loop_limits,
+            chat_read_scope=chat_read_scope,
+            turn_trace_directory=turn_trace_directory,
         )
         turn_trace_reader = lambda request_digest: tuple(
             item.public_view()
