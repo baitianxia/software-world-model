@@ -44,28 +44,59 @@ plan_execution_control:
   authorization_refs:
     - local-user-message-utf8:sha256:2755c56a091dc1928d5952dc64a238e04922891451c6471787ecd4d9bbe68e62
   current_action:
-    id: ITER-010-ACTION-GOVERNANCE-GATE-SIMPLIFICATION-001
+    id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: governance
+    kind: mvp-experience-development
     status: authorized
-    decision_ref: ITER-010-PDR-015
-    coding_allowed: false
-    external_execution_allowed: false
+    case_id: V-BROWSER-CHAT-MVP-BUILD-001
+    coding_allowed: true
+    external_execution_allowed: true
+    result_ref: ITER-010-RESULT-V-BROWSER-CHAT-MVP-BUILD-001
+    result_path: docs/project/iterations/iteration-010/results/v-browser-chat-mvp-build-001.md
+    evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
+    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-browser-chat-mvp-build-001.json
+    evidence_verifier: ITER010_MVP_LIGHT@3
+    runner_identity_paths:
+      - scripts/plan_gate.py
+      - validation/iteration_010_mvp/value_gate/runner.py
+      - tests/test_iteration_010_mvp_value_gate.py
+    produced_case_ids:
+      - V-BROWSER-CHAT-MVP-BUILD-001
+    prerequisite_case_ids:
+      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
     allowed_change_paths:
-      - docs/system/
-      - docs/project/**
+      - src/software_world_model/**
+      - tests/**
+      - validation/iteration_010_mvp/**
+      - validation/structure_world_model_iteration_010/**
+      - pyproject.toml
+      - README.md
+      - docs/project/iterations/iteration-010/**
+      - docs/project/current.md
       - docs/_generated/**
+    forbidden_change_paths:
+      - validation/iteration_010_mvp/value_gate/**
+      - tests/test_iteration_010_mvp_value_gate.py
+      - docs/project/governance/**
+      - docs/project/roadmap/**
       - scripts/docs.py
       - scripts/plan_gate.py
       - tests/test_docs_gate.py
       - tests/test_plan_gate.py
+      - AGENTS.md
       - .githooks/**
       - .github/workflows/**
-      - AGENTS.md
-      - README.md
-    forbidden_change_paths:
-      - src/software_world_model/**
-    restore_next_action_contract: browser_chat_mvp_build
+    transition:
+      pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+      fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+      invalid_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+    locks:
+      product_code_changes: false
+      prompt_or_reviewer_changes: false
+      web_canary: false
+      hardening: false
+      full_regression: false
+      provider_dispatch: false
   transition:
     pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001

@@ -29,8 +29,8 @@ next_action_case_id: V-BROWSER-CHAT-MVP-BUILD-001
 
 ### 2026-10-14 治理切换（PDR-015）
 
-用户同意按 FINDING-010-298 / SYS-ADR-021 修订架构（基线 V1.4）、修订开发治理并瘦身门禁。Manifest 的 `current_action` 暂为 governance
-动作 `ITER-010-ACTION-GOVERNANCE-GATE-SIMPLIFICATION-001`，用于提交这些文档与门禁变更；提交后恢复为
+用户同意按 FINDING-010-298 / SYS-ADR-021 修订架构（基线 V1.4）、修订开发治理并瘦身门禁。治理切换已于 2026-10-14 以 governance 动作
+`ITER-010-ACTION-GOVERNANCE-GATE-SIMPLIFICATION-001` 提交；Manifest 的 `current_action` 已恢复为
 `next_action_contracts.browser_chat_mvp_build` 中的产品动作，产品任务仍是 `TASK-1-MINIMUM-COMPLETE-EXPERIENCE`，截止 2026-10-21，按执行计划中的步骤 0/A/B/C 分别在 10-14、10-16、10-19、10-21 交付检查点并做架构评审。
 本节之后关于 `plan_revision_ref: ITER-010-PDR-012` 的说明为切换前状态。
 
