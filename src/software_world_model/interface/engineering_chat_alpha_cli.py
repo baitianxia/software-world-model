@@ -9,6 +9,7 @@ or individual authority controls.
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -208,39 +209,54 @@ def _run_access(output: TextIO) -> None:
 
 def _run_artifact_session(value: str | Path, output: TextIO) -> None:
     session_config = load_engineering_chat_artifact_session_config(value)
-    ark_route, deepseek_route = session_config.provider_routes
-    ark_database_path = _new_database_path(ark_route.gateway_database)
+    # Either Ark-to-DeepSeek or DeepSeek-only; the loader seals the order.
+    routes = session_config.provider_routes
+    ark_route = routes[0] if len(routes) == 2 else None
+    deepseek_route = routes[-1]
+    ark_database_path = (
+        _new_database_path(ark_route.gateway_database)
+        if ark_route is not None
+        else None
+    )
     deepseek_database_path = _new_database_path(deepseek_route.gateway_database)
     launch_receipt_path = _new_private_output_path(session_config.launch_receipt)
     terminal_receipt_path = _new_private_output_path(
         session_config.terminal_receipt
     )
-    if len(
-        {
-            session_config.path,
-            ark_database_path,
-            deepseek_database_path,
-            launch_receipt_path,
-            terminal_receipt_path,
-        }
-    ) != 5:
+    output_paths = [
+        session_config.path,
+        deepseek_database_path,
+        launch_receipt_path,
+        terminal_receipt_path,
+    ]
+    if ark_database_path is not None:
+        output_paths.append(ark_database_path)
+    if len(set(output_paths)) != len(output_paths):
         raise DomainError(
             ErrorCode.INVALID_ARGUMENT,
             "Chat Session config, Gateway databases, and receipts require distinct paths",
         )
-    _create_new_private_database(ark_database_path)
+    if ark_database_path is not None:
+        _create_new_private_database(ark_database_path)
     _create_new_private_database(deepseek_database_path)
     prepared: PreparedEngineeringChatArtifactSession | None = None
     try:
         with _private_file_creation_mask():
-            with (
-                SqliteDatabase(ark_database_path) as ark_database,
-                SqliteDatabase(deepseek_database_path) as deepseek_database,
-            ):
+            with ExitStack() as databases:
+                ark_database = (
+                    databases.enter_context(SqliteDatabase(ark_database_path))
+                    if ark_database_path is not None
+                    else None
+                )
+                deepseek_database = databases.enter_context(
+                    SqliteDatabase(deepseek_database_path)
+                )
                 prepared = prepare_engineering_chat_artifact_session(
                     session_config,
-                    ark_gateway_repository=SqliteModelGatewayRepository(
-                        ark_database
+                    ark_gateway_repository=(
+                        SqliteModelGatewayRepository(ark_database)
+                        if ark_database is not None
+                        else None
                     ),
                     deepseek_gateway_repository=SqliteModelGatewayRepository(
                         deepseek_database
@@ -252,14 +268,15 @@ def _run_artifact_session(value: str | Path, output: TextIO) -> None:
                     launch_receipt_path,
                     prepared.launch_receipt(),
                 )
-                admission = (
+                deepseek_runtime = (
                     prepared.runtime.fallback_provider_runtime
-                    .dispatch_admission_controller
+                    or prepared.runtime.primary_provider_runtime
                 )
+                admission = deepseek_runtime.dispatch_admission_controller
                 if admission is None:
                     raise DomainError(
                         ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                        "Engineering Chat fallback route is missing its dispatch gate",
+                        "Engineering Chat DeepSeek route is missing its dispatch gate",
                     )
                 # The preparation decision never grants fallback dispatch and must
                 # not block an otherwise valid preferred-only Browser Session.
@@ -294,6 +311,8 @@ def _run_artifact_session(value: str | Path, output: TextIO) -> None:
                 prepared.runtime.primary_provider_runtime,
                 prepared.runtime.fallback_provider_runtime,
             ):
+                if runtime is None:
+                    continue
                 close = getattr(runtime.transport, "close", None)
                 if callable(close):
                     close()

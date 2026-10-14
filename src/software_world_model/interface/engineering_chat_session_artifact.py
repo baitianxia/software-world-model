@@ -46,6 +46,7 @@ from software_world_model.application_services.conversational_engineering_routin
     EngineeringProviderRouteRole,
     EngineeringProviderRouteSpec,
     engineering_agent_execution_profile_route_ref,
+    engineering_agent_preferred_execution_profile_route_ref,
 )
 from software_world_model.application_services.conversational_engineering_tools import (
     EngineeringAgentEvidenceToolConfiguration,
@@ -248,6 +249,10 @@ _PROVIDER_ROUTE_FIELDS = frozenset(
     }
 )
 _PROVIDER_ROUTE_ORDER = ("VOLCENGINE_ARK", "DEEPSEEK")
+# A current (standing-authority) session may bind DeepSeek as its only route
+# when the Ark subscription is unavailable; the DeepSeek dispatch admission
+# (PDR-007 off-peak schedule) still gates every dispatch.
+_DEEPSEEK_ONLY_ROUTE_ORDER = ("DEEPSEEK",)
 _DEEPSEEK_DISPATCH_ADMISSION_FIELDS = frozenset(
     {
         "schema",
@@ -470,7 +475,7 @@ class PreparedEngineeringChatArtifactSession:
     product_candidate_tree: str
     cognition_profiles: tuple[PreparedEngineeringChatCognitionProfileArtifact, ...]
     world_model_read_authority_digest: Digest
-    ark_conformance_result_digest: Digest
+    ark_conformance_result_digest: Digest | None
     deepseek_conformance_result_digest: Digest
     public_source_session_authority: PublicSourceModelSessionAuthority | None
     preparation_schema: str
@@ -490,9 +495,8 @@ class PreparedEngineeringChatArtifactSession:
             },
             "session_config_file_digest": self.session_config.file_digest.value,
             "session_runtime": self.runtime.receipt.public_status(),
-            "provider_routes": (
-                self.runtime.primary_provider_runtime.public_status(),
-                self.runtime.fallback_provider_runtime.public_status(),
+            "provider_routes": tuple(
+                item.public_status() for item in _provider_runtimes(self.runtime)
             ),
             "world_model_artifacts": {
                 "read_authority_digest": (
@@ -529,18 +533,17 @@ class PreparedEngineeringChatArtifactSession:
         """Seal the zero-dispatch state before a future listener starts."""
 
         service = self.runtime.launcher.service
-        primary = self.runtime.primary_provider_runtime
-        fallback = self.runtime.fallback_provider_runtime
+        provider_runtimes = _provider_runtimes(self.runtime)
         lightweight_models = _active_lightweight_models(self.runtime)
-        admission = fallback.dispatch_admission_controller
+        admission = _deepseek_dispatch_admission_controller(self.runtime)
         if (
             service.statistics() != (0, 0)
             or service.provider_dispatch_count() != 0
             or self.runtime.evidence_tool_factory.created_tool_count != 0
-            or primary.model_boundary.audits
-            or fallback.model_boundary.audits
-            or primary.authorizer.disclosure_requests
-            or fallback.authorizer.disclosure_requests
+            or any(item.model_boundary.audits for item in provider_runtimes)
+            or any(
+                item.authorizer.disclosure_requests for item in provider_runtimes
+            )
             or any(
                 model is not None and model.audits
                 for model in lightweight_models
@@ -570,6 +573,8 @@ class PreparedEngineeringChatArtifactSession:
             "route_plan_digest": self.runtime.launcher.route_plan.digest.value,
             "ark_conformance_result_digest": (
                 self.ark_conformance_result_digest.value
+                if self.ark_conformance_result_digest is not None
+                else None
             ),
             "deepseek_conformance_result_digest": (
                 self.deepseek_conformance_result_digest.value
@@ -609,15 +614,12 @@ class PreparedEngineeringChatArtifactSession:
         service = self.runtime.launcher.service
         conversation_count, turn_count = service.statistics()
         lightweight_models = _active_lightweight_models(self.runtime)
-        provider_audits = (
-            _provider_terminal_audit(
-                self.runtime.primary_provider_runtime,
-                lightweight_model=lightweight_models[0],
-            ),
-            _provider_terminal_audit(
-                self.runtime.fallback_provider_runtime,
-                lightweight_model=lightweight_models[1],
-            ),
+        provider_audits = tuple(
+            _provider_terminal_audit(runtime, lightweight_model=model)
+            for runtime, model in zip(
+                _provider_runtimes(self.runtime),
+                lightweight_models,
+            )
         )
         provider_dispatch_count = sum(
             item["provider_dispatch_count"] for item in provider_audits
@@ -720,6 +722,11 @@ def load_engineering_chat_artifact_session_config(
             "Engineering Chat artifact session config contains missing or unknown fields",
         )
     routes = _provider_routes(decoded)
+    if len(routes) == 1 and schema not in _CURRENT_SESSION_CONFIG_SCHEMAS:
+        raise DomainError(
+            ErrorCode.CONTROL_STATE_DENIED,
+            "a DeepSeek-only route requires a current standing-authority session",
+        )
     authorization_message_digest = None
     if schema not in _CURRENT_SESSION_CONFIG_SCHEMAS:
         try:
@@ -843,6 +850,13 @@ def load_engineering_chat_artifact_session_config(
             ErrorCode.CONTROL_STATE_DENIED,
             "Engineering Chat artifact session bounds or exclusions drifted",
         )
+    if config.standing_authority is not None and tuple(
+        item.provider_type for item in config.standing_authority.provider_scopes
+    ) != tuple(item.provider_type for item in routes):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Engineering Chat Provider routes drift from the standing Provider scopes",
+        )
     conformance_paths = tuple(item.conformance_result for item in routes)
     database_paths = tuple(item.gateway_database for item in routes)
     if (
@@ -860,7 +874,7 @@ def load_engineering_chat_artifact_session_config(
 def prepare_engineering_chat_artifact_session(
     session_config: EngineeringChatArtifactSessionConfig,
     *,
-    ark_gateway_repository: ModelGatewayRepository,
+    ark_gateway_repository: ModelGatewayRepository | None,
     deepseek_gateway_repository: ModelGatewayRepository,
     at: datetime,
     clock: Callable[[], datetime] | None = None,
@@ -878,6 +892,12 @@ def prepare_engineering_chat_artifact_session(
         raise DomainError(
             ErrorCode.CONTROL_STATE_DENIED,
             "current Engineering Chat artifact requires the registered zh-CN input policy",
+        )
+    deepseek_only = len(session_config.provider_routes) == 1
+    if deepseek_only != (ark_gateway_repository is None):
+        raise DomainError(
+            ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+            "Gateway repositories do not match the configured Provider routes",
         )
     if ark_gateway_repository is deepseek_gateway_repository:
         raise DomainError(
@@ -1048,35 +1068,48 @@ def prepare_engineering_chat_artifact_session(
         )
     )
 
-    ark_route_config, deepseek_route_config = session_config.provider_routes
-    ark_provider = VolcengineArkModelConfiguration()
+    if deepseek_only:
+        if standing_authority is None:
+            raise DomainError(
+                ErrorCode.CONTROL_STATE_DENIED,
+                "a DeepSeek-only route requires a current standing authority",
+            )
+        ark_route_config = None
+        (deepseek_route_config,) = session_config.provider_routes
+    else:
+        ark_route_config, deepseek_route_config = session_config.provider_routes
     deepseek_provider = DeepSeekModelConfiguration()
-    ark_conformance_path = _canonical_regular_file(
-        ark_route_config.conformance_result,
-        "Ark Conformance result",
-    )
     deepseek_conformance_path = _canonical_regular_file(
         deepseek_route_config.conformance_result,
         "DeepSeek Conformance result",
-    )
-    ark_qualification = load_ark_chat_conformance_qualification(
-        ark_conformance_path,
-        ark_provider,
-        now=current,
     )
     deepseek_qualification = load_deepseek_chat_conformance_qualification(
         deepseek_conformance_path,
         deepseek_provider,
         now=current,
     )
-    ark_configuration = engineering_chat_ark_model_configuration(
-        provider_configuration=ark_provider,
-        qualification=ark_qualification,
-        maximum_calls=(
-            session_config.maximum_total_dispatches_per_provider
-        ),
-        at=current,
-    )
+    ark_provider = None
+    ark_qualification = None
+    ark_configuration = None
+    if ark_route_config is not None:
+        ark_provider = VolcengineArkModelConfiguration()
+        ark_conformance_path = _canonical_regular_file(
+            ark_route_config.conformance_result,
+            "Ark Conformance result",
+        )
+        ark_qualification = load_ark_chat_conformance_qualification(
+            ark_conformance_path,
+            ark_provider,
+            now=current,
+        )
+        ark_configuration = engineering_chat_ark_model_configuration(
+            provider_configuration=ark_provider,
+            qualification=ark_qualification,
+            maximum_calls=(
+                session_config.maximum_total_dispatches_per_provider
+            ),
+            at=current,
+        )
     deepseek_configuration = engineering_chat_deepseek_model_configuration(
         provider_configuration=deepseek_provider,
         qualification=deepseek_qualification,
@@ -1085,11 +1118,18 @@ def prepare_engineering_chat_artifact_session(
         ),
         at=current,
     )
-    route_ref = engineering_agent_execution_profile_route_ref(
-        preferred_execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
-        preferred_execution_profile_digest=ark_configuration.digest,
-        fallback_execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
-        fallback_execution_profile_digest=deepseek_configuration.digest,
+    route_ref = (
+        engineering_agent_preferred_execution_profile_route_ref(
+            preferred_execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
+            preferred_execution_profile_digest=deepseek_configuration.digest,
+        )
+        if ark_configuration is None
+        else engineering_agent_execution_profile_route_ref(
+            preferred_execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
+            preferred_execution_profile_digest=ark_configuration.digest,
+            fallback_execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
+            fallback_execution_profile_digest=deepseek_configuration.digest,
+        )
     )
     binding = EngineeringChatBinding.create(
         product_version="CONVERSATIONAL_ENGINEERING_AGENT@1",
@@ -1113,29 +1153,31 @@ def prepare_engineering_chat_artifact_session(
         product_tree=product_tree,
     )
     admission_config = session_config.deepseek_dispatch_admission
-    provider_scopes = (
+    # Ordered active Provider configurations: Ark then DeepSeek, or DeepSeek only.
+    active_configurations = tuple(
+        item for item in (ark_configuration, deepseek_configuration)
+        if item is not None
+    )
+    provider_scopes = tuple(
         _public_source_provider_scope(
-            ordinal=1,
+            ordinal=ordinal,
             route_role=(
-                standing_authority.provider_scopes[0].route_role
+                standing_authority.provider_scopes[ordinal - 1].route_role
                 if standing_authority is not None
-                else EngineeringProviderRouteRole.PREFERRED
+                else (
+                    EngineeringProviderRouteRole.PREFERRED
+                    if ordinal == 1
+                    else EngineeringProviderRouteRole.FALLBACK
+                )
             ),
-            configuration=ark_configuration,
-            dispatch_admission_policy_ref=NO_DISPATCH_ADMISSION_POLICY,
-        ),
-        _public_source_provider_scope(
-            ordinal=2,
-            route_role=(
-                standing_authority.provider_scopes[1].route_role
-                if standing_authority is not None
-                else EngineeringProviderRouteRole.FALLBACK
-            ),
-            configuration=deepseek_configuration,
+            configuration=configuration,
             dispatch_admission_policy_ref=(
                 DEEPSEEK_DISPATCH_ADMISSION_POLICY_REF
+                if configuration is deepseek_configuration
+                else NO_DISPATCH_ADMISSION_POLICY
             ),
-        ),
+        )
+        for ordinal, configuration in enumerate(active_configurations, start=1)
     )
     if standing_authority is not None:
         public_source_session_authority = PublicSourceModelSessionAuthority.derive(
@@ -1160,13 +1202,11 @@ def prepare_engineering_chat_artifact_session(
             chat_binding_digest=binding.digest,
             provider_route_ref=route_ref,
             provider_scopes=provider_scopes,
-            provider_configuration_digests=(
-                ark_configuration.digest,
-                deepseek_configuration.digest,
+            provider_configuration_digests=tuple(
+                item.digest for item in active_configurations
             ),
-            provider_qualification_refs=(
-                ark_configuration.qualification_ref,
-                deepseek_configuration.qualification_ref,
+            provider_qualification_refs=tuple(
+                item.qualification_ref for item in active_configurations
             ),
             maximum_turns=session_config.required_conversation_turns,
             maximum_dispatches_per_turn=(
@@ -1184,13 +1224,17 @@ def prepare_engineering_chat_artifact_session(
             expires_at=session_config.expires_at,
             derived_at=current,
         )
-        ark_authority = _derive_public_source_provider_session_authority(
-            session_config=session_config,
-            configuration=ark_configuration,
-            binding=binding,
-            product_candidate_digest=product_candidate_digest,
-            public_source_session_authority=public_source_session_authority,
-            provider_suffix="ark",
+        ark_authority = (
+            _derive_public_source_provider_session_authority(
+                session_config=session_config,
+                configuration=ark_configuration,
+                binding=binding,
+                product_candidate_digest=product_candidate_digest,
+                public_source_session_authority=public_source_session_authority,
+                provider_suffix="ark",
+            )
+            if ark_configuration is not None
+            else None
         )
         deepseek_authority = _derive_public_source_provider_session_authority(
             session_config=session_config,
@@ -1235,9 +1279,8 @@ def prepare_engineering_chat_artifact_session(
         SealedEngineeringAgentLogicalTurnDispatchBudget(
             chat_binding_digest=binding.digest,
             authorization_message_digest=authorization_compatibility_digest,
-            provider_binding_digests=(
-                ark_configuration.digest,
-                deepseek_configuration.digest,
+            provider_binding_digests=tuple(
+                item.digest for item in active_configurations
             ),
             maximum_turns=session_config.required_conversation_turns,
             maximum_dispatches_per_turn=(
@@ -1274,20 +1317,30 @@ def prepare_engineering_chat_artifact_session(
         admitted_at=current,
         clock=runtime_clock,
     )
-    primary_route = _route_spec(
-        ordinal=1,
-        role=EngineeringProviderRouteRole.PREFERRED,
-        execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
-        configuration=ark_configuration,
-        authority=ark_authority,
-    )
-    fallback_route = _route_spec(
-        ordinal=2,
-        role=EngineeringProviderRouteRole.FALLBACK,
-        execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
-        configuration=deepseek_configuration,
-        authority=deepseek_authority,
-    )
+    if ark_configuration is None:
+        primary_route = _route_spec(
+            ordinal=1,
+            role=EngineeringProviderRouteRole.PREFERRED,
+            execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
+            configuration=deepseek_configuration,
+            authority=deepseek_authority,
+        )
+        fallback_route = None
+    else:
+        primary_route = _route_spec(
+            ordinal=1,
+            role=EngineeringProviderRouteRole.PREFERRED,
+            execution_profile_ref=_PREFERRED_EXECUTION_PROFILE_REF,
+            configuration=ark_configuration,
+            authority=ark_authority,
+        )
+        fallback_route = _route_spec(
+            ordinal=2,
+            role=EngineeringProviderRouteRole.FALLBACK,
+            execution_profile_ref=_FALLBACK_EXECUTION_PROFILE_REF,
+            configuration=deepseek_configuration,
+            authority=deepseek_authority,
+        )
     route_plan = EngineeringProviderRoutePlan.create(
         binding=binding,
         preferred=primary_route,
@@ -1306,25 +1359,28 @@ def prepare_engineering_chat_artifact_session(
         excluded_source_paths=session_config.excluded_source_paths,
         provider_disclosure_policy=ENGINEERING_AGENT_DISCLOSURE_POLICY_REF,
     )
-    ark_repository_ref = _gateway_repository_ref(
-        session_config=session_config,
-        route=ark_route_config,
-    )
     deepseek_repository_ref = _gateway_repository_ref(
         session_config=session_config,
         route=deepseek_route_config,
     )
-    ark_runtime = create_ark_engineering_chat_provider_model_runtime(
-        repository=ark_gateway_repository,
-        gateway_repository_ref=ark_repository_ref,
-        binding=binding,
-        provider_configuration=ark_provider,
-        qualification=ark_qualification,
-        configuration=ark_configuration,
-        session_authority=ark_authority,
-        logical_turn_dispatch_budget=logical_turn_dispatch_budget,
-        at=current,
-        clock=runtime_clock,
+    ark_runtime = (
+        create_ark_engineering_chat_provider_model_runtime(
+            repository=ark_gateway_repository,
+            gateway_repository_ref=_gateway_repository_ref(
+                session_config=session_config,
+                route=ark_route_config,
+            ),
+            binding=binding,
+            provider_configuration=ark_provider,
+            qualification=ark_qualification,
+            configuration=ark_configuration,
+            session_authority=ark_authority,
+            logical_turn_dispatch_budget=logical_turn_dispatch_budget,
+            at=current,
+            clock=runtime_clock,
+        )
+        if ark_configuration is not None
+        else None
     )
     deepseek_runtime = create_deepseek_engineering_chat_provider_model_runtime(
         repository=deepseek_gateway_repository,
@@ -1372,8 +1428,12 @@ def prepare_engineering_chat_artifact_session(
         cognition_projector=cognition,
         source_broker=SourceBroker(source_profile=profile),
         retrieval_worker=worker,
-        primary_provider_runtime=ark_runtime,
-        fallback_provider_runtime=deepseek_runtime,
+        primary_provider_runtime=(
+            ark_runtime if ark_runtime is not None else deepseek_runtime
+        ),
+        fallback_provider_runtime=(
+            deepseek_runtime if ark_runtime is not None else None
+        ),
         route_plan=route_plan,
         checked_at=current,
         required_conversation_turns=(
@@ -1433,7 +1493,11 @@ def prepare_engineering_chat_artifact_session(
             if capability_config is not None
             else None
         ),
-        "ark_conformance_result_digest": ark_qualification.result_digest.value,
+        "ark_conformance_result_digest": (
+            ark_qualification.result_digest.value
+            if ark_qualification is not None
+            else None
+        ),
         "deepseek_conformance_result_digest": (
             deepseek_qualification.result_digest.value
         ),
@@ -1468,7 +1532,11 @@ def prepare_engineering_chat_artifact_session(
         product_candidate_tree=product_tree,
         cognition_profiles=prepared_cognition_profiles,
         world_model_read_authority_digest=cognition.read_authority_digest,
-        ark_conformance_result_digest=ark_qualification.result_digest,
+        ark_conformance_result_digest=(
+            ark_qualification.result_digest
+            if ark_qualification is not None
+            else None
+        ),
         deepseek_conformance_result_digest=deepseek_qualification.result_digest,
         public_source_session_authority=public_source_session_authority,
         preparation_schema=preparation_schema,
@@ -1942,14 +2010,23 @@ def _provider_routes(
     document: Mapping[str, object],
 ) -> tuple[EngineeringChatArtifactProviderRouteConfig, ...]:
     value = document.get("provider_routes")
-    if not isinstance(value, list) or len(value) != len(_PROVIDER_ROUTE_ORDER):
+    if not isinstance(value, list) or len(value) not in {
+        len(_PROVIDER_ROUTE_ORDER),
+        len(_DEEPSEEK_ONLY_ROUTE_ORDER),
+    }:
         raise DomainError(
             ErrorCode.INVALID_ARGUMENT,
-            "Engineering Chat artifact session requires exactly two Provider routes",
+            "Engineering Chat artifact session requires the Ark-to-DeepSeek "
+            "route or the DeepSeek-only route",
         )
+    route_order = (
+        _PROVIDER_ROUTE_ORDER
+        if len(value) == len(_PROVIDER_ROUTE_ORDER)
+        else _DEEPSEEK_ONLY_ROUTE_ORDER
+    )
     routes: list[EngineeringChatArtifactProviderRouteConfig] = []
     for ordinal, (item, provider_type) in enumerate(
-        zip(value, _PROVIDER_ROUTE_ORDER, strict=True),
+        zip(value, route_order, strict=True),
         start=1,
     ):
         if not isinstance(item, Mapping) or set(item) != _PROVIDER_ROUTE_FIELDS:
@@ -1964,7 +2041,7 @@ def _provider_routes(
         ):
             raise DomainError(
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
-                "Engineering Chat Provider routes are not exact Ark-to-DeepSeek order",
+                "Engineering Chat Provider routes are not an exact registered order",
             )
         routes.append(
             EngineeringChatArtifactProviderRouteConfig(
@@ -2159,29 +2236,48 @@ def _gateway_repository_ref(
     return f"sqlite-model-gateway:{route.provider_type}:{identity.value}"
 
 
+def _provider_runtimes(runtime: PreparedEngineeringChatSessionRuntime) -> tuple:
+    """Ordered Provider runtimes of one Session: preferred, then any fallback."""
+
+    if runtime.fallback_provider_runtime is None:
+        return (runtime.primary_provider_runtime,)
+    return (runtime.primary_provider_runtime, runtime.fallback_provider_runtime)
+
+
+def _deepseek_dispatch_admission_controller(
+    runtime: PreparedEngineeringChatSessionRuntime,
+):
+    controllers = tuple(
+        item.dispatch_admission_controller
+        for item in _provider_runtimes(runtime)
+        if item.dispatch_admission_controller is not None
+    )
+    return controllers[0] if len(controllers) == 1 else None
+
+
 def _active_lightweight_models(
     runtime: PreparedEngineeringChatSessionRuntime,
-) -> tuple[object | None, object | None]:
+) -> tuple[object | None, ...]:
+    route_count = len(_provider_runtimes(runtime))
     if runtime.receipt.agent_mode not in {
         ENGINEERING_CHAT_SOURCE_ONLY_AGENT_MODE,
         ENGINEERING_CHAT_WORLD_MODEL_SOURCE_AGENT_MODE,
     }:
-        return None, None
+        return (None,) * route_count
     factory = runtime.attempt_factory
     primary = getattr(getattr(factory, "primary", None), "model", None)
     fallback = getattr(getattr(factory, "fallback", None), "model", None)
+    models = (primary,) if route_count == 1 else (primary, fallback)
     if (
-        primary is None
-        or fallback is None
-        or primary is fallback
-        or not hasattr(primary, "audits")
-        or not hasattr(fallback, "audits")
+        any(item is None or not hasattr(item, "audits") for item in models)
+        or route_count == 2 and primary is fallback
+        or route_count == 1 and fallback is not None
     ):
         raise DomainError(
             ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
             "source-only Session lost its active lightweight model boundaries",
         )
-    return primary, fallback
+    return models
 
 
 def _provider_terminal_audit(

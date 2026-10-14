@@ -756,10 +756,15 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertNotIn("DEEPSEEK_API_KEY", public)
         self.assertNotIn("secret_reference", public)
 
-    def test_prepare_v3_composes_two_exact_profile_authorities(self) -> None:
-        document = self.document_v3()
+    def prepare_with_profile_doubles(
+        self,
+        document: dict[str, object],
+        *,
+        name: str,
+        ark_gateway_repository,
+    ):
         session_config = load_engineering_chat_artifact_session_config(
-            self.write_config(document, name="prepare-v3.json")
+            self.write_config(document, name=name)
         )
         ark_qualification, deepseek_qualification = (
             self.provider_qualifications()
@@ -885,6 +890,16 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
                 return_value=cognition,
             ) as multi_factory,
             patch(
+                "software_world_model.interface.engineering_chat_session_artifact._verify_public_source_mirror",
+                return_value=(
+                    "https://example.com/public/repo.git",
+                    self.source_tree,
+                    True,
+                    "blob",
+                    digest_of("public-source-mirror"),
+                ),
+            ),
+            patch(
                 "software_world_model.interface.engineering_chat_session_artifact.load_ark_chat_conformance_qualification",
                 return_value=ark_qualification,
             ),
@@ -895,10 +910,21 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         ):
             prepared = prepare_engineering_chat_artifact_session(
                 session_config,
-                ark_gateway_repository=_UnusedModelGatewayRepository(),
+                ark_gateway_repository=ark_gateway_repository,
                 deepseek_gateway_repository=_UnusedModelGatewayRepository(),
                 at=self.now,
             )
+        return prepared, cognition, projectors, multi_factory
+
+    def test_prepare_v3_composes_two_exact_profile_authorities(self) -> None:
+        document = self.document_v3()
+        prepared, cognition, projectors, multi_factory = (
+            self.prepare_with_profile_doubles(
+                document,
+                name="prepare-v3.json",
+                ark_gateway_repository=_UnusedModelGatewayRepository(),
+            )
+        )
         self.addCleanup(
             prepared.runtime.fallback_provider_runtime.transport.close
         )
@@ -922,6 +948,89 @@ class EngineeringChatSessionArtifactTests(unittest.TestCase):
         self.assertEqual(
             prepared.runtime.launcher.service.provider_dispatch_count(), 0
         )
+
+
+    def deepseek_only_document(self) -> dict[str, object]:
+        document = self.document_v4()
+        document["provider_routes"] = [
+            {
+                "ordinal": 1,
+                "provider_type": "DEEPSEEK",
+                "conformance_result": str(self.deepseek_conformance),
+                "gateway_database": str(self.root / "deepseek-gateway.sqlite3"),
+            }
+        ]
+        deepseek_scope = dict(document["standing_authority"]["provider_scopes"][1])
+        deepseek_scope.update(ordinal=1, route_role="PRIMARY")
+        document["standing_authority"]["provider_scopes"] = [deepseek_scope]
+        document["standing_authority"]["route_policy_ref"] = "deepseek-only@1"
+        return document
+
+    def test_loader_admits_deepseek_only_route_only_with_matching_standing_scope(
+        self,
+    ) -> None:
+        config = load_engineering_chat_artifact_session_config(
+            self.write_config(self.deepseek_only_document(), name="ds-only.json")
+        )
+        self.assertEqual(
+            tuple(item.provider_type for item in config.provider_routes),
+            ("DEEPSEEK",),
+        )
+        drifted = self.document_v4()
+        drifted["provider_routes"] = self.deepseek_only_document()[
+            "provider_routes"
+        ]
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(drifted, name="ds-drift.json")
+            )
+        legacy = self.document_v3()
+        legacy["provider_routes"] = drifted["provider_routes"]
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(legacy, name="ds-legacy.json")
+            )
+        reversed_routes = self.document_v4()
+        reversed_routes["provider_routes"] = list(
+            reversed(reversed_routes["provider_routes"])
+        )
+        with self.assertRaises(DomainError):
+            load_engineering_chat_artifact_session_config(
+                self.write_config(reversed_routes, name="ds-reversed.json")
+            )
+
+    def test_prepare_deepseek_only_binds_one_admission_gated_route(self) -> None:
+        with self.assertRaises(DomainError):
+            self.prepare_with_profile_doubles(
+                self.deepseek_only_document(),
+                name="ds-only-with-ark.json",
+                ark_gateway_repository=_UnusedModelGatewayRepository(),
+            )
+        prepared, cognition, _, _ = self.prepare_with_profile_doubles(
+            self.deepseek_only_document(),
+            name="ds-only-prepare.json",
+            ark_gateway_repository=None,
+        )
+        self.addCleanup(prepared.runtime.primary_provider_runtime.transport.close)
+        runtime = prepared.runtime
+        self.assertIsNone(runtime.fallback_provider_runtime)
+        self.assertEqual(
+            runtime.primary_provider_runtime.configuration.provider_type,
+            "DEEPSEEK",
+        )
+        self.assertIsNotNone(
+            runtime.primary_provider_runtime.dispatch_admission_controller
+        )
+        self.assertEqual(len(runtime.launcher.route_plan.routes), 1)
+        self.assertIsNone(prepared.ark_conformance_result_digest)
+        self.assertEqual(len(prepared.public_status()["provider_routes"]), 1)
+        launch = prepared.launch_receipt()
+        self.assertIsNone(launch["ark_conformance_result_digest"])
+        self.assertEqual(launch["provider_dispatch_count_at_seal"], 0)
+        terminal = prepared.terminal_receipt()
+        self.assertEqual(len(terminal["provider_audits"]), 1)
+        self.assertEqual(terminal["provider_dispatch_count"], 0)
+        self.assertEqual(cognition.calls, 0)
 
 
 if __name__ == "__main__":
