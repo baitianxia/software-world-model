@@ -27,7 +27,7 @@ tests: [tests/test_java_source_semantics.py, tests/test_capability_cognition.py,
 每次 Build Attempt 固定 frontend ref、runtime、language grammar、ABI、license、离线 runtime fileset digest 与
 canonical projection version。初始 frontend 为 `TREE_SITTER_JAVA_FRONTEND@1`：`tree-sitter==0.25.2`、
 `tree-sitter-java==0.23.5`、Java language ABI `14`，两者均按随 artifact 保存的 MIT license 使用。Attempt 在解析前重算
-fileset digest；版本、ABI、artifact 或 grammar 漂移均拒绝 Candidate，不能回退到 ITER-006 的手写 parser。
+fileset digest；版本、ABI、artifact 或 grammar 漂移均拒绝 Candidate，不能回退到旧的手写 parser。
 
 Frontend 只拥有确定语法树和 byte range，不拥有正式语义。Knowledge Candidate Generator 必须从 exact source bytes 独立形成
 canonical projection；独立 Oracle 以另一解析实现或人工冻结的精确期望核对 node identity、range、nesting 与 source order。
@@ -108,7 +108,8 @@ closure 再执行 consistency Oracle；此时失败不回滚 Snapshot，而是�
 
 ## Capability-cognition query projection
 
-PDR-014 Alpha 可以在提问前从同一 exact Source、冻结 Java frontend 和明确选择的 `src/main/java` roots 构建一份不可变的
+（V1.4 修改）Java 能力认知只有作为确定性抽取 Strategy 的 Candidate，经 Knowledge Verifier 确定性通道准入并发布到 Snapshot 后，才能在默认
+Engineering Chat 中计为世界模型认知；未经发布的投影只能作为来源导航，按来源观察计入（架构基线 6.4、6.10）。该能力可以在提问前从同一 exact Source、冻结 Java frontend 和明确选择的 `src/main/java` roots 构建一份不可变的
 `JAVA_CAPABILITY_COGNITION@1` 查询投影。它补齐 module/package/file/type/method 层级、contain/import/inherit/implements/invoke 关系和 Source
 可直接观察的 condition/throw/catch/state read/state write/call/external call/return 行为；每项必须保留 exact revision、tree、path、line、
 content digest、Coverage、Conflict 与 Unknown。行为按方法内 Source ordinal 排序；外部或歧义目标不得伪造成内部实体。

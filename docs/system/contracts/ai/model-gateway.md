@@ -4,7 +4,7 @@ kind: system-contract
 status: current
 authority: normative
 owners: [ai]
-depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
+depends_on: [SYS-ADR-015, SYS-ADR-017, SYS-ADR-019, SYS-ADR-020, SYS-CONTRACT-X-CAPABILITY-EXECUTION, SYS-QUALITY-SECURITY]
 derived_from: [DD-AI-MODEL-GATEWAY, FINDING-008-024, FINDING-008-025, FINDING-008-026, FINDING-008-032, FINDING-008-036, FINDING-010-029, FINDING-010-092, FINDING-010-099, FINDING-010-104, FINDING-010-105, FINDING-010-106, FINDING-010-139, FINDING-010-140, FINDING-010-154, FINDING-010-156, FINDING-010-198, FINDING-010-199, FINDING-010-219, FINDING-010-236, FINDING-010-242, FINDING-010-243, FINDING-010-244, FINDING-010-271]
 code: [src/software_world_model/ai_infrastructure, src/software_world_model/application_services, src/software_world_model/interface]
 tests: [tests]
@@ -53,22 +53,23 @@ Model Gateway 是所有外部模型调用的唯一入口，负责精确请求身
    state 的非空受限子集。子集只能由 Application 从冻结 evidence ledger、前序 Result 和预算派生，并按 contract canonical order
    表达；Gateway 拒绝 universe 外 operation、空子集、乱序/重复项或调用方自行扩张。模型 response 中越出子集的 operation 仍作为
    untrusted raw output 记录，但不能由 Gateway 或 Adapter 获得查询/FINISH 权力。
-10. 多 execution-profile 路由按 ADR-017/019 在 Session 开始前从 standing authority 或 exact human delta 冻结有序
-    `preferred → fallback` route，以及两个角色各自的 exact execution-profile ref/digest。产品、Agent 和 route branch 只能消费通用 route role、profile ref/digest、
-    顺序与受信 availability verdict；Provider/model 具体身份只属于配置、资格、Adapter/plugin 和 receipt。每个 profile 必须绑定 current Adapter Conformance、
+10. 多 execution-profile 候选由 Model Execution Runtime 按 ADR-017/019 在其内部从 standing authority 或 exact human delta 冻结有序
+    candidate policy，以及各候选的 exact execution-profile ref/digest。Application、Agent、Session、Response Control 和 Browser 只消费一个
+    Provider-neutral ModelExecutionPort 的 logical request/result 与不透明 execution-audit ref；不得消费 route role、`preferred → fallback`、
+    candidate 顺序或 availability verdict。Provider/model 具体身份只属于配置、资格、Adapter/plugin、Runtime 和内部 receipt。每个 profile 必须绑定 current Adapter Conformance、
     同一活动 Strategy/Configuration Capability Qualification、Provider/model/endpoint、secret reference、独立 disclosure scope、预算、transport 和 admission plugin。
     用户的一次提交只创建一个 logical interaction unit；Engineering Conversation 中该单位是一个密封 Turn，兼容单轮协议中是 logical question。每个 route 使用不同
     attempt identity、Manifest、execution-profile/disclosure/dispatch-admission/transport/call/terminal receipts、Ledger/Package/Answer/Review 和 transport audit。
-    只有 preferred-route attempt 已密封 terminal、没有 authorized answer，且 preferred profile 登记的受信 availability owner 密封 exact
-    `PREFERRED_EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能透明启动最多一次 fallback-route attempt。Gateway decoration boundary 对 HTTP failure 只密封
+    只有当前内部 attempt 已密封 terminal、没有 authorized answer，且 Model Execution Runtime 登记的受信 availability owner 密封 exact
+    `EXECUTION_PROFILE_UNAVAILABLE` verdict 时，才能在同一 logical interaction 内启动最多一次新的内部 attempt。Gateway decoration boundary 对 HTTP failure 只密封
     status 与字符集/长度受限的 provider code/type/optional parameter-name/request-id，证据必须绑定 call、provider request 与 isolation receipt，并在 repository
     replay 和 Model Egress round-trip 中重验；response body、header、credential、Secret Reference 与任意错误正文不得进入。Gateway 只保存
     raw unavailable/HTTP/outcome 证据，不得直接授予 fallback。optional parameter-name 只用于定位 Provider 明确指出的 request field，不能
     参与 availability verdict、路由或 retry；不满足 closed ASCII token/path 字符集与长度限制时必须丢弃。
     Output-invalid、Reviewer reject、Capability/qualification、Application、Source、authorization/admission 或 Security failure 均 non-eligible。Fallback attempt 必须从 immutable original
-    interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取 preferred attempt 中间态；
-    迟到的 preferred response 必须 quarantine 且永不覆盖。同一 Provider request retry 为 0，用户无需重提问题或新建 Session。availability owner 若基于 outcome unknown
-    形成 unavailable verdict，后续 fallback 必须记录潜在重复计费风险。
+    interaction input、Chat 时 exact relevant Application-sealed Conversation Context，以及同一 exact Cognition Context 重跑完整链，不得读取前一 attempt 中间态；
+    迟到的 attempt response 必须 quarantine 且永不覆盖。同一 Provider request retry 为 0，用户无需重提问题或新建 Session。availability owner 若基于 outcome unknown
+    形成 unavailable verdict，后续内部 attempt 必须记录潜在重复计费风险。
 11. 一个 prompt program 可以为不同 Capability 定义不同 semantic authority，但每次调用只能在 Manifest 构造前按 sealed
     execution stage 确定性选择唯一 entry。Manifest 必须记录版本化 selection transformation，prompt program digest 必须绑定全部
     stage-entry-content，Gateway 必须校验 stage、transformation 与所选 content digest；仅在完整 monolithic prompt 中声明其他 section
@@ -129,32 +130,8 @@ Execution Context、Manifest、Call Record、Provider DTO、重试状态和错�
 身份是非规范性执行证据。Provider 资格不等于 route admission；每个 planned run 仍须验证 current actual artifact、execution profile、
 admission plugin 的 current inputs/verdict 或 exact override，以及逐 dispatch/terminal receipt。这些 machine receipts 不等于逐 run 人工 grant。
 
-## 当前配置实例与历史实现证据
+## 当前配置实例
 
-当前 ITER-010 配置把 Ark 映射到 `preferred` execution profile，把 DeepSeek 映射到 `fallback` execution profile。当前 Ark 与 DeepSeek
-Adapter contract 都把 schema authority 与 leading semantic authority 合并为恰好一个 leading system message；自然语言任务或审核正文不得
-翻译 closed Schema 的 field name 与 enum protocol token，Adapter 也不得通过语言别名接受漂移输出。当前 Ark Engineering Chat profile 固定
-每 request 一个 verified TLS session、每 session 一个 HTTP dispatch、`Connection: close`、TLS 后逐 dispatch 解析 credential 与 retry 0。
-Ark Gateway request/result 对调用方仍为非流式单终态；Provider wire 使用 `stream:true`、`stream_options.include_usage:true`、
-`reasoning_effort:low` 与 SSE，`thinking` field 保持缺席。Adapter
-在 framing 层忽略 SSE comment keep-alive 和重复空分隔，但 application event 仍要求恰好一个 `data:` field，其他控制字段失败关闭；随后只在
-内存中按稳定 response/model identity、单 choice、finish reason、Usage 和 `[DONE]` 严格重组一个 terminal response。comment、partial content
-和 Provider reasoning channel 均不投影或持久化。已重组 choice 的 string content（包括 empty）进入 finish/schema 层：non-`stop`
-termination 与 closed-schema failure 都保留 terminal AdapterResponse/Usage 并分类为 `STRUCTURED_OUTPUT_INVALID`；missing/non-string content
-仍是 `PROVIDER_RESPONSE_INVALID`。中途断连仍为 outcome unknown，不能 retry 或直接授权 fallback。这些差异由各自
-Conformance 和 execution profile 拥有，不定义通用 route 分支。
+具体 Provider 到 execution profile 的映射、连接策略数值和实现证据属于运行配置，不定义系统语义；已归位到项目文档
+`docs/project/implementation-reference/provider-configuration-instances.md`，当前运行方式见 `operations/configuration.md`。
 
-当前 DeepSeek profile 使用 `PERSISTENT_VERIFIED_TLS_HTTP11_KEEP_ALIVE@2`，每条 session 最多 20 次 dispatch、transport lifetime 最多
-3 次 acquisition，并使用 `DEEPSEEK_DISPATCH_ADMISSION@1`。Engineering Chat 以独立 runtime lifecycle ref
-`DEEPSEEK_PERSISTENT_VERIFIED_TLS_HTTP11_NO_RETRY@3` 包住 exact qualified transport：fully consumed persistent socket 在下一次
-qualified transport call 前若 non-blocking readiness probe 为可读或异常，或自最后一次 HTTP completion 起已 idle 至少 60 秒，则 runtime
-先关闭，再由 base transport 在上述 acquisition bound 内取得 verified TLS。该 wrapper 不改变 Adapter request/response/TLS/credential/HTTP
-bytes 或 Session audit；已经开始的 HTTP 仍不 replay/retry。当前产品已用本地确定性测试闭合 logical-Turn/provider-attempt 双层身份、双 route、完整链
-fallback、late-result quarantine、typed unavailable raw evidence 与 Ark/DeepSeek Session audit；fresh Ark 与 DeepSeek Conformance 又已分别在 exact
-clean identity 上 PASS。当前状态是
-`ARK_QUALIFIED / DEEPSEEK_QUALIFIED / DUAL_PROVIDER_QUALIFICATION_CURRENT / DEEPSEEK_SCHEDULE_GATE_LOCAL_PASS /
-HTTP_EVIDENCE_AVAILABILITY_OWNER_LOCAL_CANDIDATE / LIVE_ROUTE_NOT_YET_REATTESTED /
-PUBLIC_SOURCE_STANDING_AUTHORITY_DERIVATION_LOCAL_CANDIDATE / NOT_LIVE`。Artifact Session `@4` 已在本地确定性测试中把 standing parent
-逐级绑定到 exact Session、Provider route、Turn attempt 与 one-use role disclosure receipt，并对 Source/provider/account/profile/budget/time
-drift 失败关闭；旧 `@1—@3` 不取得该状态。这些名称、策略与状态是当前配置实例和本地实现证据；current actual artifact、真实
-Gateway/transport dispatch 与 Browser 体验仍须验证，不能由 local candidate 推导 live PASS。

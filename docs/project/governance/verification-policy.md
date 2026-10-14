@@ -46,9 +46,9 @@ Codex 隔离比较。已有可代表当前方向的完整 MVP 时，可以复用
    向系统披露前密封。任一身份漂移烧毁并重跑基线。
 4. 四路都不得读取其他路的答案、世界模型产物或既有 verdict；全部答案先密封，再随机匿名。独立评测方不得参与答案生成，也不得看到
    来源标签、生成 trace 或先前 verdict。
-5. `PASS` 要求目标系统绝对质量门全部通过、逐题不得输给任一路 control、相对 current Codex 的总体盲评质量差值严格为正，并证明至少
-   一项非 locator 世界模型贡献。全体打平、任一重大错误/物质遗漏、双方失败、无法裁决或盲化无效均失败；成本、时延、调用次数、缓存
-   与复用只能另报，不能补偿答案质量。
+5. `PASS` 按 `SYS-PRODUCT-SUCCESS` 第 5 条的分层价值门判定：归因门（同一 Agent 下世界模型 + 源码相对只读源码重大错误不更多、总体严格
+   更好且有多项非 locator 贡献）与强基线门（相对 current Codex 逐题无劣化级差距、总体严格更好、题集至少 20 题覆盖两个未参与实现的工程）。
+   全体打平、无法裁决或盲化无效均失败；成本、时延、调用次数与复用另行报告，不补偿答案质量。
 6. Provider 不参与答案优劣比较。前三路整批使用同一 preferred execution profile；首个答案形成前该 profile 不可用时整批 `INVALID`
    并重新冻结，禁止混用 preferred/fallback execution profiles 或在同一批并行测试两个路由角色。具体 Provider/model 名称只能出现在冻结的
    execution profile 和执行收据中，不是比较协议、action 或 Case 的规范性语义。

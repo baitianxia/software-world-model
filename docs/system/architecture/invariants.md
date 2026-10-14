@@ -30,7 +30,7 @@ tests: [tests]
    固定的 exact Model Egress Gateway。`DIRECT_INVESTIGATION` 回答只能基于绑定 exact 来源目标和原问题的密封 Evidence Packet。
    Engineering Conversation 的主 Agent 只能消费 immutable current Turn、受信相关 Conversation/Work State Revision、对齐的 World Model
    Cognition Context 与已密封 Evidence Ledger prefix，并只能经 Application/Broker 使用工具；Reviewer 只能消费当前 Turn、受信对话
-   Context、绑定 exact repository/revision 的 Question Evidence Package 与 Draft。只有 Package 的 `support/citation` admissible entries
+   Context、绑定 exact repository/revision 的 Question Evidence Package、Draft 与自身经 Broker 取得的有界核验观察；核验观察不进入 Package（V1.4）。只有 Package 的 `support/citation` admissible entries
    能支持肯定 Claim/Citation；`boundary/audit` 必须保留 Gap/Failure/Partial/Conflict/Unknown 等边界且不能支持肯定 Claim，seal 不赋予
    条目真值。生成、审核和重写均不得用未授权输入、Provider 记忆或先前答案补洞；Citation 展示不能回流答案链。
 9. **INV-009 — Scope 一致性边界。** Knowledge Scope 是发布、并发和逻辑分片边界；跨 Scope 只能固定 exact 依赖。
@@ -50,24 +50,25 @@ tests: [tests]
 16. **INV-016 — 主 Agent 工具与审核隔离。** Engineering Conversation 中主 Agent 可根据目标、假设和 Observation 自适应提出 World Model
    query 或来源操作；Application/Broker 重新校验并编译，只有隔离 Retrieval Worker 可对授权 exact revision 执行 allowlisted 只读来源
    操作，全部步骤写入 append-only Evidence Ledger。Source 内容是不可信 data，不能改变权限或工具目录。主 Agent 不得直读 Repository、
-   Source Tool、Ledger write port、shell、网络、credential 或未密封内容；Reviewer 不得使用 World Model/Source 工具或继承主 Agent
-   上下文，只基于当前 Turn、受信对话 Context、Package 与 Draft 审核；Reviewer 只返回 verdict/Finding，不重新解决原问题或生成替代答案。
+   Source Tool、Ledger write port、shell、网络、credential 或未密封内容，但经 Broker 可用的只读工具目录不得低于基线 7.7 节的工具对等要求，
+   read candidate 不是合法 exact-revision 路径的读取前置条件（V1.4）；Reviewer 不得使用 World Model 工具或继承主 Agent
+   上下文，只能经同一 Broker 做有界只读核验读取，并基于当前 Turn、受信对话 Context、Package、Draft 与核验观察审核；Reviewer 只返回 verdict/Finding，不重新解决原问题或生成替代答案。
    Review 缺口返回主 Agent 新 Work State/Attempt，任何补证仍经同一
-   Broker/Worker 边界。预密封 revision/call/operation/bytes/wall-time/no-progress 高安全熔断只允许失败关闭，answerable 超限计失败，
-   不得取消证据绑定、Citation 或独立复核。
+   Broker/Worker 边界。预密封 revision/token/bytes/wall-time/no-progress 熔断（调用次数只作安全兜底）触发时，主 Agent 基于已有证据形成带限制说明的 Draft 并照常
+   独立复核；评测中 answerable 超限仍计失败，熔断不得取消证据绑定、Citation 或独立复核（V1.4）。
 17. **INV-017 — 工程答案的证据所有权。** 配置 placeholder/injection 只证明 key 与注入点，parameter/import/caller/registration 只证明
    签名或关系，上游 local state/decision 只证明该局部结果；它们分别不能替代具体 runtime value、未挂载 DTO/handler 实现或下游 HTTP/
    API mapping owner。每个工程 Chat Draft 必须由至少一个 fresh 独立 Reviewer 比较用户目标、对话约束、evidence scope 与 Draft scope；
    任何越界、遗漏或错误 Citation 都必须绑定具体 Finding。资格 Strategy 可采用多个 challenge，但固定双 focus 不是架构不变量。最终
    Authorization 只能绑定 current Package 上 finding-free 的独立 Review；预算不足以完成审核时必须失败关闭。
-18. **INV-018 — 执行配置路由透明但 Attempt 不混合。** Engineering Conversation 只依赖通用 route role 和受信可用性裁决，
-   不把 Provider、模型或实现身份暴露给产品分支、Agent 决策或质量规则。一次 Turn 的 preferred 与 fallback 是相互隔离的 Attempt；
-   只有首选 Attempt 已终止、没有授权答案且受信所有者证明执行配置真实不可用时，才允许最多一次 fallback。格式无效、审核拒绝、能力/
-   资格、应用、来源、授权/准入或安全失败不得伪装为不可用；同一外部请求不得重试，迟到结果不得覆盖已密封结果。每个 Attempt 都必须
-   独立完成证据、答案、审核和审计链，具体状态映射、字段、收据与准入规则由 Model Gateway/Provider Routing Contract 定义。
+18. **INV-018 — 模型执行由运行时独占且 Attempt 不混合。** Engineering Conversation、Agent、Session、Response Control 和 Browser 只依赖
+   Provider-neutral Model Execution Port，不能读取或分支于 route role、preferred、fallback、Provider、模型或实现身份。一次 Turn 的内部
+   execution attempts 相互隔离；只有当前 Attempt 已终止、没有授权答案且受信所有者证明当前执行配置真实不可用时，Model Execution Runtime 才允许
+   最多一次新的内部 Attempt。格式无效、审核拒绝、能力/资格、应用、来源、授权/准入或安全失败不得伪装为不可用；同一外部请求不得重试，迟到结果不得覆盖
+   已密封结果。每个 Attempt 都必须独立完成证据、答案、审核和审计链，Provider-specific 状态、字段、收据与准入规则只由 Model Gateway/Runtime 内部 Contract 定义。
 19. **INV-019 — 语义 Chat 状态分离。** 软件世界模型、Conversation Work State 和 Turn Evidence 是不同权威对象。后续 Turn 可引用、追问、
    纠正、深入或总结，但 Application 必须密封相关历史、有效约束和指代解析；用户纠正形成新 Revision，不改写历史。每个 Turn 的完整
-   Evidence Ledger/Package 只在该 Turn 内有效并在结束后释放；后续 Turn 必须重新查询当前 exact revision 的 World Model 或重新读取 Source。
+   Evidence Ledger/Package 只在该 Turn 内作为证据有效，终态后转为非权威 Turn Trace 按保留策略保存，只用于审计、评测复现和知识结晶（V1.4）；后续 Turn 必须重新查询当前 exact revision 的 World Model 或重新读取 Source。
    先前助手答案、摘要、Provider hidden state 或模型记忆都不是证据；一次 Turn 失败只结束该 Turn，不能污染后续 Turn、删除会话历史或关闭服务。
 20. **INV-020 — 人工边界与逐次机器审计分离。** 一次 standing human authority 可以覆盖其明确声明的公开来源、只读披露、
    执行配置、预算和环境边界；可信系统必须为每个实际 Session、Turn、Attempt 和 call 自动派生不可复用的控制记录。机器派生只执行

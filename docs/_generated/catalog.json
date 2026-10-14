@@ -7216,6 +7216,18 @@
     "path": "docs/project/iterations/iteration-009/verification-matrix.md"
   },
   {
+    "id": "ITER-010-ARCHITECTURE-REVIEW-2026-10-14",
+    "kind": "architecture-review",
+    "status": "current",
+    "authority": "project-evidence",
+    "owners": [
+      "architecture",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/results/architecture-review-2026-10-14.md"
+  },
+  {
     "id": "ITER-010-DECISIONS",
     "kind": "project-decision-index",
     "status": "current",
@@ -7506,6 +7518,20 @@
     ],
     "derived_from": [],
     "path": "docs/project/iterations/iteration-010/decisions/PDR-014-capability-separated-agent-and-world-model-recovery.md"
+  },
+  {
+    "id": "ITER-010-PDR-015",
+    "kind": "project-decision",
+    "status": "accepted",
+    "authority": "project-decision",
+    "owners": [
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/decisions/PDR-015-gate-simplification-and-architecture-v14-cutover.md"
   },
   {
     "id": "ITER-010-PROPOSAL",
@@ -8160,6 +8186,18 @@
     "path": "docs/project/implementation-reference/domain-implementation-status.md"
   },
   {
+    "id": "PROJECT-REFERENCE-ENGINEERING-CONVERSATION-CONTRACT-PRE-V14",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/engineering-conversation-contract-pre-v1.4.md"
+  },
+  {
     "id": "PROJECT-REFERENCE-ENGINEERING-CONVERSATION-HISTORY",
     "kind": "implementation-reference",
     "status": "historical",
@@ -8182,6 +8220,18 @@
     ],
     "derived_from": [],
     "path": "docs/project/implementation-reference/engineering-qa-history.md"
+  },
+  {
+    "id": "PROJECT-REFERENCE-PROVIDER-CONFIGURATION-INSTANCES",
+    "kind": "implementation-reference",
+    "status": "historical",
+    "authority": "historical-evidence",
+    "owners": [
+      "engineering",
+      "project"
+    ],
+    "derived_from": [],
+    "path": "docs/project/implementation-reference/provider-configuration-instances.md"
   },
   {
     "id": "PROJECT-REFERENCE-PROVIDER-ROUTING-HISTORY",
@@ -9110,7 +9160,8 @@
       "FINDING-010-275",
       "FINDING-010-276",
       "FINDING-010-277",
-      "FINDING-010-278"
+      "FINDING-010-278",
+      "FINDING-010-298"
     ],
     "path": "docs/system/contracts/application/engineering-conversation.md"
   },

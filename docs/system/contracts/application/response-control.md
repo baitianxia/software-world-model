@@ -18,7 +18,7 @@ Response Control 审核、授权并唯一交付用户可见响应。它同时处
 
 ## Ownership
 
-Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Engineering Question Answering、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。当前 Turn 的 Ledger/Package/Draft/Review 正文在该 Turn 终态后释放；对话可见消息和不含正文的最小交付/去重摘要可保留，但不能作为后续 Turn 的证据。
+Response Control 是 Answer Candidate、固定输入上的 Draft Revision、Claim Binding、Review、Authorization、Dispatch 与 Delivery 的唯一写者。Reviewer 只能提交 Proposal；Task Control、Engineering Question Answering、Direct Evidence Answering、World Model Query 与 Delivery Adapter 不能自行放行候选正文。当前 Turn 的 Ledger/Package/Draft/Review 正文在该 Turn 终态后转为 Application 拥有的非权威 Turn Trace，按保留策略保存（V1.4，SYS-ADR-021）；Turn Trace 与对话可见消息都不能作为后续 Turn 的证据或 Agent 输入。
 
 ## Invariants
 

@@ -39,53 +39,33 @@ user_plan_recovery:
 
 plan_execution_control:
   schema: DEVELOPMENT_PLAN_EXECUTION_CONTROL@1
-  plan_revision_ref: ITER-010-PDR-012
+  plan_revision_ref: ITER-010-PDR-015
   enforcement_mode: fail-closed
   authorization_refs:
     - local-user-message-utf8:sha256:2755c56a091dc1928d5952dc64a238e04922891451c6471787ecd4d9bbe68e62
   current_action:
-    id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
+    id: ITER-010-ACTION-GOVERNANCE-GATE-SIMPLIFICATION-001
     owner_slice_ref: ITER-010-SLICE-001
-    kind: mvp-experience-development
+    kind: governance
     status: authorized
-    case_id: V-BROWSER-CHAT-MVP-BUILD-001
-    coding_allowed: true
-    external_execution_allowed: true
-    result_ref: ITER-010-RESULT-V-BROWSER-CHAT-MVP-BUILD-001
-    result_path: docs/project/iterations/iteration-010/results/v-browser-chat-mvp-build-001.md
-    evidence_schema: DEVELOPMENT_PLAN_GATE_EVIDENCE@1
-    evidence_path: docs/project/iterations/iteration-010/results/evidence/v-browser-chat-mvp-build-001.json
-    evidence_verifier: ITER010_MVP_LIGHT@3
-    runner_identity_paths:
-      - scripts/plan_gate.py
-      - validation/iteration_010_mvp/value_gate/runner.py
-      - tests/test_iteration_010_mvp_value_gate.py
-    produced_case_ids:
-      - V-BROWSER-CHAT-MVP-BUILD-001
-    prerequisite_case_ids:
-      - V-PUBLIC-OSS-AUTHORITY-ADMISSION-001
+    decision_ref: ITER-010-PDR-015
+    coding_allowed: false
+    external_execution_allowed: false
     allowed_change_paths:
-      - src/software_world_model/**
-      - tests/**
-      - validation/iteration_010_mvp/**
-      - validation/structure_world_model_iteration_010/**
-      - pyproject.toml
-      - README.md
-      - docs/project/iterations/iteration-010/**
-      - docs/project/current.md
+      - docs/system/
+      - docs/project/**
       - docs/_generated/**
-    forbidden_change_paths:
-      - validation/iteration_010_mvp/value_gate/**
-      - tests/test_iteration_010_mvp_value_gate.py
-      - docs/project/governance/**
-      - docs/project/roadmap/**
       - scripts/docs.py
       - scripts/plan_gate.py
       - tests/test_docs_gate.py
       - tests/test_plan_gate.py
-      - AGENTS.md
       - .githooks/**
       - .github/workflows/**
+      - AGENTS.md
+      - README.md
+    forbidden_change_paths:
+      - src/software_world_model/**
+    restore_next_action_contract: browser_chat_mvp_build
   transition:
     pass_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
     fail_next_action_id: ITER-010-ACTION-USER-DIRECTION-DECISION-001
@@ -2165,7 +2145,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:93ef8684efb863f7f04b8cca3defa8bec8cd644f104dace7b442569108068d03
+  system_contract_set_digest: sha256:f3798ae3773f2b73c7f82e32dabf5a01922f331372ead8f9935739b0108cdebf
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

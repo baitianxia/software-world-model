@@ -58,7 +58,7 @@ scope: systemic
 - 默认 Engineering Chat 为唯一产品回答路径，其他 Profile 收敛为评测/兼容或程序化接口；
 - 产品价值门分为归因门与强基线门，并把复用与成本列为独立报告维度（不补偿质量）。
 
-详细 `engineering-conversation` 契约中与上述决定冲突的条款列入 ADR-021 的迁移清单，在实现迁移时逐项改写。
+`engineering-conversation` 契约已按上述决定重写为跨模块语义，原全文归档到 `docs/project/implementation-reference/`。
 
 ## Falsifiable acceptance evidence
 
