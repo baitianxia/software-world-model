@@ -9,6 +9,7 @@ import unittest
 
 from validation.structure_world_model_iteration_007 import slice1_freeze
 from software_world_model.interface import world_model_runtime
+from tests._environment import requires_path
 
 
 class Iteration007Slice1FreezeTests(unittest.TestCase):
@@ -48,6 +49,7 @@ class Iteration007Slice1FreezeTests(unittest.TestCase):
         )
         self.assertEqual(suite["world_model_result_count_at_seal"], 0)
 
+    @requires_path("var/iteration-006/live/run-008/candidate-stage", "ITER-006 accepted candidate stage")
     def test_candidate_stage_replaces_each_role_with_the_frozen_source(self) -> None:
         destination = self.root / "candidate-stage"
         slice1_freeze._candidate_stage(

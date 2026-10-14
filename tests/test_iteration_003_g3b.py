@@ -10,6 +10,7 @@ from software_world_model.cross_cutting import digest_of
 from validation.structure_world_model_iteration_003.g3b import evaluate_results
 from validation.structure_world_model_iteration_003.g3b import role_worker
 from validation.structure_world_model_iteration_003.g3b import run_g3b
+from tests._environment import requires_macos, requires_path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -49,6 +50,7 @@ class Iteration003G3bTests(unittest.TestCase):
         self.assertIn('(literal (param "GATEWAY_SOCKET"))', answer)
         self.assertIn("(deny network*)", projector)
 
+    @requires_macos("ITER-003 G3b sandbox profiles")
     def test_gateway_listener_handoff_receipt_is_exact(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory).resolve() / "gateway.sock"
@@ -267,6 +269,7 @@ class Iteration003G3bTests(unittest.TestCase):
         )
         self.assertEqual(value["status"], "FAIL")
 
+    @requires_path("var/iteration-003", "ITER-003 run evidence")
     def test_direct_baseline_p95_reproduces_the_sealed_result(self):
         terminals = evaluate_results._baseline_terminals("direct")
         values = [
@@ -286,6 +289,7 @@ class Iteration003G3bTests(unittest.TestCase):
             40,
         )
 
+    @requires_path("var/iteration-003", "ITER-003 run evidence")
     def test_quality_comparators_are_sealed_before_product_results(self):
         plan = json.loads(
             (
@@ -363,6 +367,7 @@ class Iteration003G3bTests(unittest.TestCase):
                 (evaluator_path, "src/software_world_model/interface/runtime.py")
             )
 
+    @requires_path("var/iteration-003", "ITER-003 run evidence")
     def test_digest_bound_newline_terminated_baseline_seal_is_accepted(self):
         seal = evaluate_results._load_relaxed(evaluate_results.BASELINE_SEAL)
         self.assertEqual(

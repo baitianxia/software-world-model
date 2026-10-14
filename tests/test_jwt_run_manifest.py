@@ -27,8 +27,10 @@ from validation.jwt_iteration_001.manifest import (
     verify_direct_oracle,
     verify_jwt_run_configuration,
 )
+from tests._environment import requires_mall_checkout
 
 
+@requires_mall_checkout()
 class JwtRunManifestTests(unittest.TestCase):
     def setUp(self) -> None:
         self.configuration = VolcengineArkModelConfiguration()

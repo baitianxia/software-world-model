@@ -22,6 +22,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from scripts.docs import safe_load_manifest
+from tests._environment import requires_mall_checkout, requires_tool
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -729,6 +730,7 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
             },
         )
 
+    @requires_tool("codex")
     def test_agent_baseline_protocols_and_prepared_mature_cli_are_exact(self) -> None:
         inputs = _manifest_external_inputs()
         direct_input = inputs["direct_investigation_baseline"]
@@ -864,6 +866,7 @@ class Iteration003FrozenAssetTests(unittest.TestCase):
 
 
 class Iteration003MetamorphicGeneratorTests(unittest.TestCase):
+    @requires_tool("mvn")
     def test_generator_is_independent_deterministic_and_maven_valid(self) -> None:
         parsed = ast.parse(GENERATOR_PATH.read_text(encoding="utf-8"), filename=str(GENERATOR_PATH))
         imported_modules = {
@@ -1051,6 +1054,7 @@ class Iteration003MetamorphicGeneratorTests(unittest.TestCase):
                 _git(repository, "worktree", "remove", "--force", str(revision_a_directory))
 
 
+@requires_mall_checkout()
 class Iteration003MallOracleTests(unittest.TestCase):
     def test_raw_git_poms_match_the_frozen_mall_oracle(self) -> None:
         oracle = _load_json(MALL_ORACLE_PATH)

@@ -18,6 +18,7 @@ from validation.jwt_iteration_001.direct_agent import (
     run_direct_agent,
 )
 from validation.jwt_iteration_001.manifest import seal_direct_oracle
+from tests._environment import requires_mall_checkout
 
 
 class ScriptedTransport:
@@ -113,6 +114,7 @@ def _response(content, ordinal):
     )
 
 
+@requires_mall_checkout()
 class JwtDirectAgentTests(unittest.TestCase):
     def setUp(self):
         self.configuration = VolcengineArkModelConfiguration()

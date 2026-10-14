@@ -41,6 +41,7 @@ from validation.jwt_iteration_001.world_model import (
     run_world_model,
     verify_world_model_result,
 )
+from tests._environment import requires_mall_checkout
 
 
 class WorldModelTransport:
@@ -386,6 +387,7 @@ def _planner(action):
     return step
 
 
+@requires_mall_checkout()
 class JwtWorldModelTests(unittest.TestCase):
     def setUp(self):
         self.configuration = VolcengineArkModelConfiguration()

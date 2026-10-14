@@ -198,6 +198,8 @@ class ArkChatConformanceTests(unittest.TestCase):
         self.assertNotIn("nonce-second", serialized)
 
     def test_result_is_exclusive_and_loads_as_live_qualification(self) -> None:
+        # The adapter checks validity against the real clock, so the sealed run must be recent.
+        self.clock_value = datetime.now(timezone.utc).replace(microsecond=0)
         result = self.run_result()
         with tempfile.TemporaryDirectory() as directory:
             path = seal_ark_chat_conformance_result(result, directory)
