@@ -2084,6 +2084,7 @@ answer_protocol:
   same_execution_profile_application_repair_dispatch_is_transport_request_retry: false
   preauthorized_cross_profile_fallback_after_required_availability_verdict_allowed: true
   provider_fallback_contract_ref: SYS-ADR-017
+  model_execution_boundary_architecture_decision: SYS-ADR-020
   exact_provider_outcome-unknown_preserved-after-binding-revalidation: true
   status: frozen
 
@@ -2091,6 +2092,7 @@ readiness_inputs:
   required_architecture_decision: SYS-ADR-018
   current_architecture_decision: SYS-ADR-018
   provider_route_architecture_decision: SYS-ADR-017
+  model_execution_boundary_architecture_decision: SYS-ADR-020
   legacy_compatibility_architecture_decision: SYS-ADR-016
   legacy_architecture_amended_by: SYS-ADR-018
   architecture_change_target: SYS-ADR-018
@@ -2136,6 +2138,7 @@ readiness_inputs:
     - docs/system/architecture/decisions/ADR-017-transparent-qualified-provider-routing.md
     - docs/system/architecture/decisions/ADR-018-conversational-engineering-agent.md
     - docs/system/architecture/decisions/ADR-019-public-source-standing-model-authority.md
+    - docs/system/architecture/decisions/ADR-020-model-execution-boundary.md
     - docs/system/architecture/domain-model.md
     - docs/system/architecture/invariants.md
     - docs/system/architecture/overview.md
@@ -2162,7 +2165,7 @@ readiness_inputs:
     - docs/system/quality/acceptance-principles.md
     - docs/system/quality/attributes.md
     - docs/system/quality/security-boundaries.md
-  system_contract_set_digest: sha256:8d01c2c9ddb300d2ecaa408ebfa6532657048927d215d01bc9e9a6c9c923de71
+  system_contract_set_digest: sha256:93ef8684efb863f7f04b8cca3defa8bec8cd644f104dace7b442569108068d03
   exact_baseline_status: clean-exact-iteration-009-slice-001-technical-subject-with-rejected-direction-recorded
   legacy_investigation_budget_status: frozen-iteration-010-engineering-qa-adaptive-investigation-3.0.0
   mature_source_agent_protocol_status: frozen-codex-cli-1.0.0

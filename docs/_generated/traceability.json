@@ -4662,6 +4662,28 @@
       "tests/test_conversational_engineering_routing.py"
     ]
   },
+  "FINDING-010-297": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-297.md",
+    "code": [
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface",
+      "src/software_world_model/ai_infrastructure"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "FINDING-010-298": {
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-298.md",
+    "code": [
+      "src/software_world_model/knowledge_engine/capability_cognition.py",
+      "src/software_world_model/application_services/java_capability_cognition.py",
+      "src/software_world_model/application_services/lightweight_engineering_agent.py"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
   "ITER-001-DESIGN-INDEX": {
     "path": "docs/project/iterations/iteration-001/development-design/README.md",
     "code": [
@@ -6181,6 +6203,28 @@
       "tests/test_conversational_engineering_routing.py",
       "tests/test_engineering_chat_session_artifact.py",
       "tests/test_engineering_chat_provider_runtime.py"
+    ]
+  },
+  "SYS-ADR-020": {
+    "path": "docs/system/architecture/decisions/ADR-020-model-execution-boundary.md",
+    "code": [
+      "src/software_world_model/ai_infrastructure",
+      "src/software_world_model/application_services",
+      "src/software_world_model/interface"
+    ],
+    "tests": [
+      "tests"
+    ]
+  },
+  "SYS-ADR-021": {
+    "path": "docs/system/architecture/decisions/ADR-021-cognition-advantage-and-agent-capability.md",
+    "code": [
+      "src/software_world_model/knowledge_engine",
+      "src/software_world_model/application_services",
+      "src/software_world_model/source_integration"
+    ],
+    "tests": [
+      "tests"
     ]
   },
   "SYS-ARCH-BASELINE": {

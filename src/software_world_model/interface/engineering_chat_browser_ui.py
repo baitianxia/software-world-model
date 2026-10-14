@@ -22,7 +22,7 @@ ENGINEERING_CHAT_BROWSER_HTML = r'''<!doctype html>
       <h1>持续对话入口</h1>
       <p id="experience-scope" class="lede">正在读取当前运行的实际能力边界…</p>
       <button id="new-conversation" class="secondary" type="button">＋ 新对话</button>
-      <div class="status"><span id="status-dot" class="dot"></span><div><strong id="runtime-status">正在读取运行状态…</strong><p id="provider-status" class="small"></p></div></div>
+      <div class="status"><span id="status-dot" class="dot"></span><div><strong id="runtime-status">正在读取运行状态…</strong><p id="execution-status" class="small"></p></div></div>
       <div class="facts">
         <div class="fact"><span>产品版本</span><code id="product-version">—</code></div>
         <div class="fact"><span>工程 / exact revision</span><code id="project-version">—</code></div>
@@ -40,7 +40,7 @@ ENGINEERING_CHAT_BROWSER_HTML = r'''<!doctype html>
       <form id="composer" class="composer">
         <label class="small" for="message">输入工程问题</label>
         <div class="composer-row"><textarea id="message" maxlength="16000" placeholder="例如：登录流程是怎样的？" required></textarea><button id="send" class="primary" type="submit">发送 Turn →</button></div>
-        <p id="notice" class="notice">Provider 未配置时会记录失败 Turn；Conversation 仍可继续。</p>
+        <p id="notice" class="notice">执行能力未配置时会记录失败 Turn；Conversation 仍可继续。</p>
       </form>
     </section>
   </main>
@@ -88,7 +88,7 @@ function renderHealth(value) {
     ?"本运行已接入受控主工程 Agent 执行器；只有经过当前 Evidence、fresh Review 和 Delivery Authorization 的 Turn 才会显示为成功。答案质量仍待真实验收。"
     :"本运行只验证 Conversation、Turn、消息历史和失败隔离。Provider 与工程 Agent 未接通，每个 Turn 会如实失败，不会伪造答案。";
   byId("runtime-status").textContent=`${value.status} · ${value.implementation_scope}`;
-  byId("provider-status").textContent=`Provider ${value.provider.status} · dispatch ${value.provider.external_dispatch?"ENABLED":"DISABLED"}`;
+  byId("execution-status").textContent=`执行能力 ${value.execution.status} · dispatch ${value.execution.external_dispatch?"ENABLED":"DISABLED"}`;
   byId("product-version").textContent=`${value.product.version} @ ${value.product.revision}`;
   byId("project-version").textContent=`${value.project.name} @ ${value.project.repository_revision}`;
   const list=byId("limitations");
@@ -180,7 +180,7 @@ function messageNode(message, turns) {
       state.className=`small${failed?" turn-failure":""}`;
       state.textContent=failed
         ?turnFailureSummary(turn)
-        :`Turn ${turn.sequence} · ${turn.state} · ${turn.quality_status} · Provider dispatch ${turn.provider_dispatch_count}`;
+        :`Turn ${turn.sequence} · ${turn.state} · ${turn.quality_status} · Execution dispatch ${turn.execution_dispatch_count}`;
       article.append(state);
       if (turn.evidence_package_ref||turn.review_ref||turn.delivery_authorization_ref||(turn.citations||[]).length) {
         article.append(turnEvidenceNode(turn));
@@ -193,13 +193,7 @@ function messageNode(message, turns) {
 }
 
 function turnFailureSummary(turn) {
-  const httpStatus=Number.isInteger(turn.provider_http_status)
-    ?` · HTTP ${turn.provider_http_status}`
-    :"";
-  const providerEvidence=turn.provider_failure_code
-    ?` · Provider evidence ${turn.provider_failure_classification} / ${turn.provider_failure_code}${httpStatus}`
-    :"";
-  return `Turn ${turn.sequence} · FAILED · Execution ${turn.failure.code}${providerEvidence} · Provider dispatch ${turn.provider_dispatch_count}`;
+  return `Turn ${turn.sequence} · FAILED · Execution ${turn.failure.code} · dispatch ${turn.execution_dispatch_count}`;
 }
 
 function renderProjection(value) {

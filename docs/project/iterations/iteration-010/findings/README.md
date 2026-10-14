@@ -12,6 +12,7 @@ iteration: ITER-010
 
 # ITER-010 Findings
 
+- [FINDING-010-298](FINDING-010-298.md)：架构评审发现基线对权威与准入规定充分，但缺少世界模型认知优势、检索与增量更新的设计；Chat 认知绕过正式准入、Agent 只读工具弱于对照基线、Turn 证据终态即释放、Reviewer 无法发现包外遗漏、回答路径过多、价值门与架构优势错位。处置为 `SYS-ADR-021` 与基线 V1.4 增量修订。
 - [FINDING-010-278](FINDING-010-278.md)：run-158 q5 暴露每个 Source Observation 都从局部 Citation index `1` 开始，而 Primary 将多个 Observation
   的 index 当作全局序号；current Application 保持严格 binding，按不可变 Observation prefix 给同一主 Agent 一次机械 replan，新增 Observation
   才形成新 prefix 的一次机会，同一 prefix 第二次非法仍 `CONTROL_STATE_DENIED`。保留 rejected receipt/answer/findings，不自动映射、重编号或合成

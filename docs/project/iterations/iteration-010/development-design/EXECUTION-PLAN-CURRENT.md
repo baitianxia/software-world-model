@@ -4,7 +4,7 @@ kind: development-design
 status: current
 authority: current-development
 owners: [project, engineering, quality]
-depends_on: [ITER-010-SLICE-001, ITER-010-PDR-014, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION]
+depends_on: [ITER-010-SLICE-001, ITER-010-PDR-014, FINDING-010-297, SYS-ADR-020, PROJECT-GOVERNANCE-DEVELOPMENT-DESIGN, PROJECT-GOVERNANCE-PLAN-EXECUTION]
 code: []
 tests: []
 iteration: ITER-010
@@ -40,7 +40,7 @@ POM 介绍或只完成一个内部模块代替。
 - 普通失败留在当前任务，先定位最早责任层，再做一次最小通用修复并复验原问题和未参与修复的问题。
 - Provider、模型名称、调用时段和具体 Prompt 不是任务语义；模型透明路由由运行配置负责。
 - 只有 scope/safety 变化或用户明确停止、转向、拒绝时才等待。其他失败继续在当前任务内处理。
-- 任何任务不得通过修改 `docs/system/architecture/**` 改变系统语义；架构目录保持用户批准的冻结状态。
+- 普通任务不得通过修改 `docs/system/architecture/**` 改变系统语义；本轮唯一例外是已由 FINDING-010-297 登记并由 SYS-ADR-020 接受的模型执行边界迁移。该迁移必须按架构变更流程完成，之后架构目录重新冻结；其他任务不得借此修改无关语义。
 
 ## 3. 唯一任务顺序
 

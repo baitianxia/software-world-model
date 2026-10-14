@@ -5561,6 +5561,35 @@
     "path": "docs/project/iterations/iteration-010/findings/FINDING-010-296.md"
   },
   {
+    "id": "FINDING-010-297",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "implementation-evidence",
+    "owners": [
+      "project",
+      "architecture",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-297.md"
+  },
+  {
+    "id": "FINDING-010-298",
+    "kind": "implementation-finding",
+    "status": "dispositioned",
+    "authority": "implementation-evidence",
+    "owners": [
+      "project",
+      "architecture",
+      "product",
+      "engineering",
+      "quality"
+    ],
+    "derived_from": [],
+    "path": "docs/project/iterations/iteration-010/findings/FINDING-010-298.md"
+  },
+  {
     "id": "ITER-001-DECISIONS",
     "kind": "project-decision-index",
     "status": "historical",
@@ -8732,6 +8761,43 @@
     "path": "docs/system/architecture/decisions/ADR-019-public-source-standing-model-authority.md"
   },
   {
+    "id": "SYS-ADR-020",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "application",
+      "ai",
+      "security",
+      "operations",
+      "quality"
+    ],
+    "derived_from": [
+      "FINDING-010-297"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-020-model-execution-boundary.md"
+  },
+  {
+    "id": "SYS-ADR-021",
+    "kind": "system-decision",
+    "status": "accepted",
+    "authority": "normative",
+    "owners": [
+      "architecture",
+      "product",
+      "application",
+      "knowledge",
+      "source",
+      "quality",
+      "security"
+    ],
+    "derived_from": [
+      "FINDING-010-298"
+    ],
+    "path": "docs/system/architecture/decisions/ADR-021-cognition-advantage-and-agent-capability.md"
+  },
+  {
     "id": "SYS-ADR-INDEX",
     "kind": "system-decision-index",
     "status": "current",
@@ -8754,7 +8820,8 @@
       "SYS-ADR-018",
       "SYS-ADR-005",
       "SYS-ADR-006",
-      "SYS-ADR-010"
+      "SYS-ADR-010",
+      "SYS-ADR-021"
     ],
     "path": "docs/system/architecture/architecture-baseline.md"
   },

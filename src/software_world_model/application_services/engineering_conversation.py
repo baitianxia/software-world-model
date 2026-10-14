@@ -92,6 +92,8 @@ class EngineeringChatBinding:
     source_access_status: RuntimeCapabilityStatus
     provider_status: RuntimeCapabilityStatus
     provider_route_ref: str | None
+    execution_status: RuntimeCapabilityStatus
+    execution_policy_ref: str | None
     conversation_input_policy_ref: str | None
     excluded_source_paths: tuple[str, ...]
     known_limitations: tuple[str, ...]
@@ -110,6 +112,8 @@ class EngineeringChatBinding:
         source_access_status: RuntimeCapabilityStatus = RuntimeCapabilityStatus.NOT_CONFIGURED,
         provider_status: RuntimeCapabilityStatus = RuntimeCapabilityStatus.NOT_CONFIGURED,
         provider_route_ref: str | None = None,
+        execution_status: RuntimeCapabilityStatus | None = None,
+        execution_policy_ref: str | None = None,
         conversation_input_policy_ref: str | None = None,
         excluded_source_paths: Sequence[str] = ("src/main/resources",),
         known_limitations: Sequence[str],
@@ -123,6 +127,15 @@ class EngineeringChatBinding:
         )
         source_profile_ref = _optional_text(source_profile_ref, "Source Profile")
         provider_route_ref = _optional_text(provider_route_ref, "Provider route")
+        execution_status = (
+            provider_status if execution_status is None else execution_status
+        )
+        execution_policy_ref = _optional_text(
+            execution_policy_ref
+            if execution_policy_ref is not None
+            else provider_route_ref,
+            "Model Execution policy",
+        )
         conversation_input_policy_ref = _optional_text(
             conversation_input_policy_ref, "Conversation input policy"
         )
@@ -164,6 +177,14 @@ class EngineeringChatBinding:
                 ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
                 "ready Provider status requires an exact Provider route",
             )
+        if (
+            execution_status is RuntimeCapabilityStatus.READY
+            and execution_policy_ref is None
+        ):
+            raise DomainError(
+                ErrorCode.AUTHORITY_RECORD_INCONSISTENT,
+                "ready execution status requires an opaque execution policy reference",
+            )
         core = {
             "schema": "ENGINEERING_CHAT_BINDING@2",
             "product_version": product_version,
@@ -180,6 +201,8 @@ class EngineeringChatBinding:
             "source_access_status": source_access_status.value,
             "provider_status": provider_status.value,
             "provider_route_ref": provider_route_ref,
+            "execution_status": execution_status.value,
+            "execution_policy_ref": execution_policy_ref,
             "conversation_input_policy_ref": conversation_input_policy_ref,
             "excluded_source_paths": exclusions,
             "known_limitations": limitations,
@@ -195,6 +218,8 @@ class EngineeringChatBinding:
             source_access_status=source_access_status,
             provider_status=provider_status,
             provider_route_ref=provider_route_ref,
+            execution_status=execution_status,
+            execution_policy_ref=execution_policy_ref,
             conversation_input_policy_ref=conversation_input_policy_ref,
             excluded_source_paths=exclusions,
             known_limitations=limitations,
@@ -755,10 +780,17 @@ class EngineeringTurnExecutionOutcome:
         )
 
 
-class EngineeringConversationTurnExecutor(Protocol):
+class ModelExecutionPort(Protocol):
+    """Provider-neutral execution port owned by the Model Execution Runtime."""
+
     def execute(
         self, request: EngineeringTurnExecutionRequest
     ) -> EngineeringTurnExecutionOutcome: ...
+
+
+# Compatibility alias: existing infrastructure adapters can migrate without
+# making Provider routing a new application contract.
+EngineeringConversationTurnExecutor = ModelExecutionPort
 
 
 class ConversationNotFoundError(LookupError):
@@ -778,13 +810,13 @@ class InMemoryEngineeringConversationService:
         id_generator: IdGenerator | None = None,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
-        if binding.provider_status is RuntimeCapabilityStatus.READY and turn_executor is None:
+        if binding.execution_status is RuntimeCapabilityStatus.READY and turn_executor is None:
             raise DomainError(
                 ErrorCode.CONTROL_STATE_DENIED,
                 "a ready Provider binding requires a qualified Turn executor",
             )
         if turn_executor is not None and (
-            binding.provider_status is not RuntimeCapabilityStatus.READY
+            binding.execution_status is not RuntimeCapabilityStatus.READY
             or binding.world_model_status is not RuntimeCapabilityStatus.READY
         ):
             raise DomainError(
@@ -1137,12 +1169,12 @@ def _access_failure_outcome(
     request: EngineeringTurnExecutionRequest,
 ) -> EngineeringTurnExecutionOutcome:
     failure_code = (
-        "PROVIDER_NOT_QUALIFIED"
-        if request.binding.provider_status is RuntimeCapabilityStatus.NOT_QUALIFIED
-        else "PROVIDER_NOT_CONFIGURED"
+        "MODEL_EXECUTION_NOT_QUALIFIED"
+        if request.binding.execution_status is RuntimeCapabilityStatus.NOT_QUALIFIED
+        else "MODEL_EXECUTION_NOT_CONFIGURED"
     )
     failure_message = (
-        "当前 Chat Access 尚未配置或取得 Provider 资格；本 Turn 已失败关闭，"
+        "当前 Chat Access 尚未配置或取得模型执行资格；本 Turn 已失败关闭，"
         "没有生成或授权工程答案。Conversation 仍可继续使用。"
     )
     return EngineeringTurnExecutionOutcome.failed(

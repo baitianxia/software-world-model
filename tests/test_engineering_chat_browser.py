@@ -128,8 +128,9 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertIn("turnEvidenceNode", script["body"].decode())
         self.assertIn("turnTrajectoryNode", script["body"].decode())
         self.assertIn("turnFailureSummary", script["body"].decode())
-        self.assertIn("Provider evidence", script["body"].decode())
-        self.assertIn("provider_http_status", script["body"].decode())
+        self.assertIn("execution_dispatch_count", script["body"].decode())
+        self.assertNotIn("Provider evidence", script["body"].decode())
+        self.assertNotIn("provider_http_status", script["body"].decode())
         self.assertIn("fresh Review", script["body"].decode())
         self.assertIn("citation.locator", script["body"].decode())
 
@@ -138,8 +139,9 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["implementation_scope"], "CHAT_ACCESS_ONLY")
         self.assertEqual(value["quality"], "NOT_ACCEPTED")
         self.assertEqual(value["production_activation"], "NOT_EXECUTED")
-        self.assertEqual(value["provider"]["status"], "NOT_CONFIGURED")
-        self.assertFalse(value["provider"]["external_dispatch"])
+        self.assertEqual(value["execution"]["status"], "NOT_CONFIGURED")
+        self.assertFalse(value["execution"]["external_dispatch"])
+        self.assertNotIn("provider", value)
         self.assertEqual(value["statistics"]["provider_dispatch_count"], 0)
 
     def test_qualified_executor_projection_exposes_reviewed_success(self) -> None:
@@ -221,7 +223,8 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         )
         self.assertEqual(health["implementation_scope"], "CONVERSATIONAL_AGENT_EXECUTOR")
         self.assertTrue(health["capabilities"]["semantic_agent_execution"])
-        self.assertTrue(health["provider"]["external_dispatch"])
+        self.assertTrue(health["execution"]["external_dispatch"])
+        self.assertNotIn("provider", health)
         self.assertEqual(value["submitted_turn"]["state"], "SUCCEEDED")
         self.assertEqual(value["submitted_turn"]["quality_status"], "ACCEPTED")
         self.assertEqual(value["submitted_turn"]["delivery_state"], "AUTHORIZED")
@@ -288,13 +291,13 @@ class EngineeringChatBrowserTests(unittest.TestCase):
         self.assertEqual(value["submitted_turn"]["state"], "FAILED")
         self.assertEqual(
             value["submitted_turn"]["failure"]["code"],
-            "PROVIDER_NOT_CONFIGURED",
+            "MODEL_EXECUTION_NOT_CONFIGURED",
         )
-        self.assertEqual(value["submitted_turn"]["provider_dispatch_count"], 0)
+        self.assertEqual(value["submitted_turn"]["execution_dispatch_count"], 0)
         self.assertEqual(value["submitted_turn"]["delivery_state"], "NOT_AUTHORIZED")
         self.assertEqual(value["submitted_turn"]["quality_status"], "NOT_ACCEPTED")
 
-    def test_failed_turn_projects_execution_and_raw_provider_failure_layers(
+    def test_failed_turn_projects_execution_and_keeps_provider_details_private(
         self,
     ) -> None:
         class ProviderHttpFailureExecutor:
@@ -346,16 +349,10 @@ class EngineeringChatBrowserTests(unittest.TestCase):
 
         turn = value["submitted_turn"]
         self.assertEqual(turn["failure"]["code"], "AGENT_MODEL_CALL_REJECTED")
-        self.assertEqual(
-            turn["provider_failure_classification"], "PROVIDER_HTTP_ERROR"
-        )
-        self.assertEqual(turn["provider_failure_code"], "PROVIDER_HTTP_ERROR")
-        self.assertEqual(turn["provider_http_status"], 503)
-        self.assertEqual(
-            turn["provider_http_failure_evidence_digest"],
-            digest_of("gateway-http-failure-evidence").value,
-        )
-        self.assertEqual(turn["provider_dispatch_count"], 1)
+        self.assertEqual(turn["execution_dispatch_count"], 1)
+        self.assertTrue(turn["execution_audit_ref"])
+        self.assertNotIn("provider_failure_classification", turn)
+        self.assertNotIn("provider_http_status", turn)
 
     def test_failure_does_not_stop_next_turn_and_get_returns_full_history(self) -> None:
         created = self.create_conversation()

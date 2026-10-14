@@ -226,10 +226,10 @@ class EngineeringChatBrowserApplication:
                     and binding.source_access_status is RuntimeCapabilityStatus.READY
                 ),
             },
-            "provider": {
-                "status": binding.provider_status.value,
-                "route_ref": binding.provider_route_ref,
+            "execution": {
+                "status": binding.execution_status.value,
                 "external_dispatch": self._service.semantic_agent_execution,
+                "audit_visibility": "OPAQUE",
                 "qualification": (
                     "READY"
                     if self._service.semantic_agent_execution
@@ -410,7 +410,8 @@ def _snapshot_view(
             "name": binding.project_name,
             "repository_revision": binding.repository_revision,
         },
-        "provider_status": binding.provider_status.value,
+        "execution_status": binding.execution_status.value,
+        "execution_audit_visibility": "OPAQUE",
         "known_limitations": list(binding.known_limitations),
     }
 
@@ -480,33 +481,10 @@ def _turn_view(
             else None
         ),
         "delivery_state": turn.delivery_state,
-        "provider_dispatch_count": turn.provider_dispatch_count,
-        "model_dispatch_receipt_refs": list(
-            turn.model_dispatch_receipt_refs
-        ),
-        "provider_failure_classification": (
-            turn.provider_failure_classification.value
-            if turn.provider_failure_classification is not None
-            else None
-        ),
-        "provider_failure_code": turn.provider_failure_code,
-        "provider_http_status": turn.provider_http_status,
-        "provider_http_failure_evidence_digest": (
-            turn.provider_http_failure_evidence_digest.value
-            if turn.provider_http_failure_evidence_digest is not None
-            else None
-        ),
-        "provider_route_receipt_ref": turn.provider_route_receipt_ref,
-        "provider_availability_verdict_ref": (
-            turn.provider_availability_verdict_ref
-        ),
-        "provider_attempt_receipt_refs": list(
-            turn.provider_attempt_receipt_refs
-        ),
-        "fallback_provider_attempt_count": (
-            turn.fallback_provider_attempt_count
-        ),
-        "provider_duplicate_cost_risk": turn.provider_duplicate_cost_risk,
+        "execution_dispatch_count": turn.provider_dispatch_count,
+        # Provider/route/transport evidence remains in the private execution
+        # audit. The browser receives only an opaque logical-turn reference.
+        "execution_audit_ref": turn.digest.value,
         "retry_count": turn.retry_count,
         "agent_trajectories": [dict(item) for item in trajectories],
         "quality_status": turn.quality_status,

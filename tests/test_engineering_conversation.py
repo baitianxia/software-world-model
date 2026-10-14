@@ -80,7 +80,7 @@ class EngineeringConversationTests(unittest.TestCase):
 
         turn = submission.turn
         self.assertEqual(turn.state, ConversationTurnState.FAILED)
-        self.assertEqual(turn.failure_code, "PROVIDER_NOT_CONFIGURED")
+        self.assertEqual(turn.failure_code, "MODEL_EXECUTION_NOT_CONFIGURED")
         self.assertEqual(turn.provider_dispatch_count, 0)
         self.assertEqual(turn.retry_count, 0)
         self.assertEqual(turn.delivery_state, "NOT_AUTHORIZED")

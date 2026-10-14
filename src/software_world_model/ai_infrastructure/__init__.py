@@ -47,6 +47,12 @@ from .model_gateway import (
     ReplayClassification,
     RuntimeAccessMode,
 )
+from .model_execution_runtime import (
+    LogicalModelExecutionRequest,
+    LogicalModelExecutionResult,
+    ModelExecutionCoordinator,
+    ModelExecutionPort,
+)
 from .provider_http_failure_evidence import (
     ModelProviderHTTPFailureEvidence,
     ProviderHTTPFailureCapturingAdapter,
@@ -747,6 +753,10 @@ __all__ = [
     "ProviderUnavailable",
     "ReplayClassification",
     "RuntimeAccessMode",
+    "LogicalModelExecutionRequest",
+    "LogicalModelExecutionResult",
+    "ModelExecutionCoordinator",
+    "ModelExecutionPort",
     "DEFAULT_RESPONSES_ENDPOINT",
     "OpenAIResponsesNoToolsAdapter",
     "OutputSchemaDefinition",
